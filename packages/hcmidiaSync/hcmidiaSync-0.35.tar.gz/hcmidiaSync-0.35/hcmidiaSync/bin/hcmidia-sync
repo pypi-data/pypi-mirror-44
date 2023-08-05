@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+from hcmidiaSync import *
+import sys
+import getopt
+
+def main(argv):
+	hosts = {}
+	hosts['origemHost'] = 'http://192.168.0.76/hcmedia'
+   	hosts['screenlyHost'] = 'http://192.168.0.11'
+   	try:
+   		opts, args = getopt.getopt(argv,"hs:o:",["sHost=","oHost="])
+   	except getopt.GetoptError:
+		print 'sync.py -s <screenlyHost> -o <origemHost>'
+		sys.exit(2)
+   	for opt, arg in opts:
+		if opt == '-h':
+			print 'sync.py -s <screenlyHost> -o <origemHost>'
+			sys.exit()
+		elif opt in ("-s", "--sHost"):
+			hosts['screenlyHost'] = arg
+		elif opt in ("-o", "--oHost"):
+			hosts['origemHost'] = arg
+	return hosts
+
+
+hosts = main(sys.argv[1:])
+hcmidiaSync.host = hosts['screenlyHost']
+hcmidiaSync.hcmidia_host = hosts['origemHost']
+
+print hcmidiaSync.hcmidia_host
+hcmidiaSync.sync()

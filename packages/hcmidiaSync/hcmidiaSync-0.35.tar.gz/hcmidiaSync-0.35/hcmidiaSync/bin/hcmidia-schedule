@@ -1,0 +1,23 @@
+#!/bin/sh
+
+while getopts o:s:m: option
+do
+case "${option}"
+in
+o) OHOST=${OPTARG};;
+s) SHOST=${OPTARG};;
+m) MIN=${OPTARG};;
+esac
+done
+
+if [ -z "$OHOST" ]; then
+    echo "-o OriginHost missing"
+elif [ -z "$SHOST" ]; then
+    echo "-s ScreenlyHost missing"
+elif [ -z "$MIN" ]; then
+    echo "-m Minutos missing"
+else
+	(crontab -l 2>/dev/null; echo "*/"$MIN" * * * * /usr/local/bin/hcmidia-sync -s " $SHOST " -o " $OHOST) | crontab -
+fi
+
+
