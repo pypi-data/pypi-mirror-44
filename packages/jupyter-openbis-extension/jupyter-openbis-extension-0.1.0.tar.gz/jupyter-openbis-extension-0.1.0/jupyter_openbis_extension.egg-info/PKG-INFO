@@ -1,0 +1,212 @@
+Metadata-Version: 2.1
+Name: jupyter-openbis-extension
+Version: 0.1.0
+Summary: Extension for Jupyter notebooks to connect to openBIS and download/upload datasets, inluding the notebook itself
+Home-page: https://sissource.ethz.ch/sispub/jupyter-openbis-integration
+Author: Swen Vermeul |  ID SIS | ETH Zürich
+Author-email: swen@ethz.ch
+License: Apache Software License Version 2.0
+Description: # Jupyter-OpenBIS-Extension
+        
+        ## Requirements
+        
+        The jupyter-openbis-extension needs at least **Python 3.3** in order to run. The Jupyter notebook server starts this extension during startup and must therefore run under the same Python version. The kernel can be anything (Python 2.7, Julia, R, Perl...)
+        
+        This extension has been successfully tested with Safari 12.0.3, Chrome 72.0 and Firefox 66.0. There is a known incompatibility before Firefox 61.0b13.
+        
+        ## Development with Vagrant
+        
+        If you want to use a predefined development environment, follow these steps:
+        
+        1. Install latest version of VirtualBox (<https://www.virtualbox.org>)
+        
+        2. Install latest version of Vagrant (<https://www.vagrantup.com/downloads.html>)
+        
+        3. vagrant plugin install vagrant-vbguest vagrant-notify-forwarder vagrant-disksize
+         
+        4. cd vagrant
+        
+        5. vagrant up
+        
+        After the setup is complete, you'll have
+        
+        * Jupyter with openBIS extension running at <http://localhost:8888>.
+        * openBIS running at <http://localhost:8122>, with credentials admin/password.
+        * Experiment /DEFAULT/DEFAULT with a lot of datasets for testing.
+        
+        ## Install the extension
+        
+        If you haven't done yet: download the latest jupyter-openbis-extension from pip. It will automatically install the various dependencies, e.g. Pandas and NumPy.
+        
+        ```
+        pip install --upgrade jupyter-openbis-extension
+        ```
+        
+        or, if you would like to develop:
+        
+        ```
+        $ git clone git@sissource.ethz.ch:sispub/jupyter-openbis-extension.git
+        $ cd jupyter-openbis-extension
+        $ virtualenv venv
+        $ source venv/bin/activate
+        (venv) $ pip install -e .
+        (venv) $ jupyter serverextension enable --py jupyter-openbis-extension
+        (venv) $ jupyter nbextension install --py jupyter-openbis-extension --user --symlink
+        (venv) $ jupyter nbextension enable jupyter-openbis-extension --user --py
+        ```
+        
+        **Register the Jupyter server extension** which will communicate both with openBIS and the notebook:
+        
+        ```
+        jupyter serverextension enable --py jupyter-openbis-extension
+        ```
+        
+        **Register the notebook extension**, the client side of the Jupyter notebook, which will communicate with the server extension via AJAX calls:
+        
+        ```
+         jupyter nbextension install --py jupyter-openbis-extension --user
+        ```
+        If you are developing, you should consider creating a link to the JavaScript source instead:
+        
+        ```
+         jupyter nbextension install --py jupyter-openbis-extension --user --symlink
+        ```
+        
+        Finally, activate the notebook extension.
+        
+        ```
+        jupyter nbextension enable jupyter-openbis-extension --user --py
+        ``` 
+        
+        **Create a configuration file**: `~/.jupyter/openbis-connections.yaml` It should contain connection information to your server(s), for example:
+        
+        ```
+        connections:
+            - name                : TEST local openBIS instance
+              url                 : https://localhost:8443
+              verify_certificates : false
+              username            : username
+              password            : password
+            - name                : PRODUCTION openBIS instance
+              url                 : https://openbis.example.com
+              verify_certificates : true
+              username            : username
+              password            : password
+        ```
+        **Note  1**: You do not need the usernames or passwords anymore. With the current version, you are able to enter username and password directly from within a Jupyter notebook.
+        
+        **Note 2**: You can place this file in any of these directories (on Mac OS X):
+        
+        ```
+        /Users/your_username/jupyter-openbis-extension/notebooks
+        /Users/your_username/.jupyter
+        /Users/your_username/.pyenv/versions/3.6.0/etc/jupyter  # or wherever your jupyter installation is located
+        /usr/local/etc/jupyter
+        /etc/jupyter
+        ```
+        These directories are produced by Jupyters' `nb_server_app.config_file_paths` method.
+        
+        ## Launching Jupyter notebook
+        
+        Now you are **ready to launch jupyter notebook!**
+        
+        ```
+        $ jupyter notebook
+        ```
+        Observe the terminal. It should tell you which server(s) have been successfully connected (and which not):
+        
+        ```
+        $ jupyter notebook
+        Registered: https://localhost:8443
+        Cannot establish connection to: https://localhost:8443
+        Registered: https://openbis.example.com
+        Successfully connected to: https://openbis.example.com
+        ```
+        **Congratulations!** You can retry non-successful connections later, directly from the GUI.
+        
+        
+        ## Uninstall Jupyter extension
+        
+        ```
+        jupyter serverextension disable --py jupyter-openbis-extension
+        jupyter nbextension disable --py jupyter-openbis-extension --user
+        jupyter nbextension uninstall --py jupyter-openbis-extension --user
+        ```
+        This should remove the registrations in `~/.jupyter/jupyter_notebook_config.json` and `~/.jupyter/nbconfig/notebook.json`. The symbolic link in `~/Library/Jupyter/nbextension/` (Mac OS X) should have been removed too. If not, you can remove it manually.
+         
+        
+        
+        ## Manual installation (if above should fail)
+        
+        ### Install the Python module(s)
+        - clone the project: 
+        ```
+        git clone git@sissource.ethz.ch:sispub/jupyter-openbis-extension.git
+        ```
+        - cd into the extension `cd jupyter-openbis-extension`
+        - install the python module normally: `pip install .`
+        - or, for development, install just a symbolic link: `pip install -e .`
+        - this extension needs Jupyter and pyBIS 1.7.2 in order to run, so it will load / upgrade it if not yet present
+        - the jupyter-openbis-extension needs at least Python 3.3 in order to run. Therefore, your Jupyter notebook server (but not the kernel!) needs to run under at least Python 3.3 too.
+        
+        ### Register the Jupyter Notebook Server Extension (server-side, as the name suggests)
+        - in the terminal, enter the following:
+        
+        ``
+        jupyter serverextension enable --py jupyter-openbis-extension
+        ``
+        
+        - OR (1) register it manually:
+        - open the file `~/.jupyter/jupyter_notebook_config.py`
+        - add the following:
+        
+        ```
+        c.NotebookApp.server_extensions = [
+            'jupyter-openbis-extension.server'
+        ]
+        ```
+        
+        - OR (2) register it in `~/.jupyter/jupyter_notebook_config.json` manually, if the automatic registration fails for some reasons:
+        ```
+        {
+          "NotebookApp": {
+            "nbserver_extensions": {
+              "jupyter-openbis-extension.server": true
+            }
+          }
+        }
+        ```
+        
+        ### Register the Jupyter Notebook Extension (client-side)
+        
+        Inside the folder `~/Library/Jupyter/nbextension/` (Mac OS X) create a symbolic **link to the folder that contains the Java Script**:
+        
+        ```
+        ln -s /path/to/jupyter-openbis-extension/nbextension/dialog.js jupyter-openbis-extension
+        ```
+        In the file `~/.jupyter/nbconfig/notebook.json` the JavaScript gets activated like this:
+        
+        ```
+        {
+          "load_extensions": {
+            "jupyter-openbis-extension/dialog": true
+          }
+        }
+        ```
+        **Check** that the nbextension has been installed and activated:
+        
+        ```
+        $ jupyter nbextension list
+        Known nbextensions:
+          config dir: /Users/your-username/.jupyter/nbconfig
+            notebook section
+              jupyter-openbis-extension/dialog  enabled 
+              - Validating: OK
+        ```
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.3
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.3
+Description-Content-Type: text/markdown
