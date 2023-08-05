@@ -1,0 +1,118 @@
+# Global Memo  
+## Install  
+```
+pip install gmemo
+```
+## usage  
+gmemo is command-line application.  
+```
+$ gmemo --help
+usage: gmemo [option | text]
+Options and arguments:
+-a     : Display all lines.
+-h N   : Display N lines from the begining.
+-t N   : Display N lines from the end.
+$ gmemo
+>>> --help
+Commands:
+-q        : Quit gmemo.
+-s --save : Save curret memo.
+--replace : Replace line.
+--reset   : Initialize memo.
+>>> global
+>>> memo
+>>> test
+>>> -s
+----------------
+save succeeded!!
+----------------
+>>> -q
+$ cd somewhere
+$ gmemo
+global
+memo
+test
+>>> add
+>>> text
+>>> --save
+----------------
+save succeeded!!
+----------------
+>>> -q
+$ gmemo
+global
+memo
+test
+add
+text
+>>> --replace
+------------------------------
+input line number for replace.
+------------------------------
+  1 | global
+  2 | memo
+  3 | test
+  4 | add
+  5 | text
+>>> 3
+-------------------
+replace target line
+-------------------
+test
+>>> replaced
+-------------------
+replace succeeded!!
+-------------------
+global
+memo
+replaced
+add
+text
+>>> -q
+$ gmemo add text from argument
+$ gmemo 
+global
+memo
+test
+add
+text
+add text from argument
+>>> --reset
+>>> reset
+>>> -s
+----------------
+save succeeded!!
+----------------
+>>> -q
+$ gmemo
+reset
+>>> --reset
+>>> 1
+>>> 2
+>>> 3
+>>> 4
+>>> 5
+>>> -s
+----------------
+save succeeded!!
+----------------
+>>> -q
+$ gmemo -h 3
+1
+2
+3
+$ gmemo -t 2
+4
+5
+$ gmemo -a
+1
+2
+3
+4
+5
+```
+## Memo location  
+Memo stored in home directory.  
+```
+~/.global_memo_v0_0_1
+```
