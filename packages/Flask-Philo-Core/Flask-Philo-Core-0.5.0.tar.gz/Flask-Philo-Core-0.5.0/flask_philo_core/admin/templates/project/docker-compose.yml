@@ -1,0 +1,48 @@
+version: '3'
+services:
+{%- if SQLAlchemy %}
+  postgresql:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.postgresql
+    ports:
+      - 5432:5432
+{% endif %}
+
+{%- if Redis %}
+  redis:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.redis
+    ports:
+      - 6379:6379
+{% endif %}
+
+{%- if Elasticsearch %}
+  elasticsearch:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.elasticsearch
+    ports:
+      - 9200:9200
+      - 9300:9300
+{% endif %}
+
+  python:
+    build:
+      context: ../
+      dockerfile: ./tools/Dockerfile.python
+    volumes:
+      - ../:/philo
+  {%- if SQLAlchemy or Redis or Elasticsearch %}
+    links:
+    {%- if SQLAlchemy %}
+      - postgresql:pgdb
+    {%- endif %}
+    {%- if Redis %}
+      - redis:redisdb
+    {%- endif %}
+    {%- if Elasticsearch %}
+      - elasticsearch:elasticsearchdb
+    {%- endif %}
+  {%- endif %}
