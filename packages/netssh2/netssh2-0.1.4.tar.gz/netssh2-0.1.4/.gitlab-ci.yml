@@ -1,0 +1,61 @@
+---
+image: fedora:latest
+
+stages:
+    - build
+    - test
+    - release
+
+# This is ran before every job
+before_script:
+- dnf install -y which python-pip
+
+pep-8:
+    stage: test
+    script:
+        # Install netssh2 so all required dependencies are installed
+        - python setup.py install
+        # Remove installation files
+        - rm -rf build/ netssh2.egg-info .eggs
+        # Install python syntax check tools
+        - pip install flake8 pylint
+        # We should enable Errors, Warnings and Flake errors once they are fixed
+        - flake8 --exclude .git --max-line-length=120 .
+        # Run pylint for general errors in code
+        # W0511(fixme) spots all fixme and todo comments
+        - pylint --disable W0511 --max-line-length=120 --msg-template "{path} {line} \[{msg_id}({symbol}), {obj}\] {msg}" netssh2 tests
+        # Run pylint for python 2/3 compatibility errors (--py3k disables all other checkers)
+        # Run it as separate to
+        - pylint --py3k --max-line-length=120 --msg-template "{path} {line} \[{msg_id}({symbol}), {obj}\] {msg}" netssh2 tests
+
+regression:
+    stage: test
+    script:
+        - dnf install -y tox
+        # Install netssh2 so all required dependencies are installed
+        - python setup.py install
+        # Remove installation files
+        - rm -rf build/ netssh2.egg-info .eggs
+        # Run tox tests
+        - tox
+
+build:
+    stage: build
+    script:
+        - pip install wheel twine
+        - python setup.py sdist bdist_wheel
+        - twine check dist/*
+    artifacts:
+        paths:
+            - dist/
+
+release-pypi:
+    stage: release
+    variables:
+        TWINE_USERNAME: $PYPI_USERNAME
+        TWINE_PASSWORD: $PYPI_PASSWORD
+    script:
+        - pip install twine
+        - twine upload dist/*
+    only:
+        - tags
