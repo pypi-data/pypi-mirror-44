@@ -1,0 +1,144 @@
+(ns basilisp.test
+  (:import
+   inspect))
+
+(def ^:private collected-tests
+  (atom []))
+
+(def ^:private current-ns
+  (atom nil))
+
+(defn ^:private add-test!
+  "Add the test named by test-var to the test suite for ns."
+  [test-var]
+  (swap! collected-tests conj test-var))
+
+(def ^:dynamic *test-name* nil)
+(def ^:dynamic *test-section* nil)
+(def ^:dynamic *test-failures* nil)
+
+(defn line-no
+  "Get the line number from the current interpreter stack.
+
+  This is a horrible hack and it requires each particular assertion case
+  to define their frame offset from here, but it seems to be the most
+  accessible way of determining the line number without capturing it
+  for every test (including non-failing tests)."
+  [n]
+  (.-lineno (nth (inspect/stack) n)))
+
+(defmulti gen-assert
+  (fn [expr _]
+    (cond
+      (list? expr) (first expr)
+      :else        :default)))
+
+(defmethod gen-assert '=
+  [expr msg]
+  `(when-not ~expr
+    (swap! *test-failures*
+           conj
+           {:test-name    *test-name*
+            :test-section *test-section*
+            :message      ~msg
+            :expr         (quote ~expr)
+            :actual       ~(nth expr 2)
+            :expected     ~(second expr)
+            :line         (line-no 1)
+            :type         :failure})))
+
+(defmethod gen-assert 'thrown?
+  [expr msg]
+  (let [exc-type (second expr)
+        body     (nthnext expr 2)]
+    `(try
+       (let [result# (do ~@body)]
+         (swap! *test-failures*
+                conj
+                {:test-name    *test-name*
+                 :test-section *test-section*
+                 :message      ~msg
+                 :expr         (quote ~expr)
+                 :actual       result#
+                 :expected     (quote ~exc-type)
+                 :line         (line-no 1)
+                 :type         :failure}))
+       (catch ~exc-type _ nil)
+       (catch builtins/Exception e#
+         (swap! *test-failures*
+                conj
+                {:test-name    *test-name*
+                 :test-section *test-section*
+                 :message      (str "Expected " ~exc-type "; got " (builtins/type e#) " instead")
+                 :expr         (quote ~expr)
+                 :actual       e#
+                 :expected     ~exc-type
+                 :line         (line-no 1)
+                 :type         :failure})))))
+
+(defmethod gen-assert :default
+  [expr msg]
+  `(let [computed# ~expr]
+     (when-not computed#
+       (swap! *test-failures*
+              conj
+              {:test-name    *test-name*
+               :test-section *test-section*
+               :message      ~msg
+               :expr         (quote ~expr)
+               :actual       computed#
+               :expected     computed#
+               :line         (line-no 1)
+               :type         :failure}))))
+
+(defmacro is
+  "Assert that expr is true. Must appear inside of a deftest form."
+  ([expr]
+   `(is ~expr (str "Test failure: " (pr-str (quote ~expr)))))
+  ([expr msg]
+   `(try
+      ~(gen-assert expr msg)
+      (catch builtins/Exception e#
+        (swap! *test-failures*
+               conj
+               {:test-name    *test-name*
+                :test-section *test-section*
+                :message      (str "Unexpected exception thrown during test run: " (builtins/repr e#))
+                :expr         (quote ~expr)
+                :actual       e#
+                :expected     (quote ~expr)
+                :line         (line-no 1)
+                :type         :error})))))
+
+(defmacro testing
+  "Wrapper for test cases to provide additional messaging and context
+  around the test or group of tests contained inside. Must appear inside
+  of a deftest form."
+  [msg & body]
+  `(binding [*test-section* (if *test-section*
+                              (str *test-section* " :: " ~msg)
+                              ~msg)]
+     ~@body))
+
+(defmacro deftest
+  "Define a new test function. Assertions can be made with the is macro.
+  Group tests with the testing macro.
+
+  Tests defined by deftest will be run by default by the PyTest test
+  runner using Basilisp's builtin PyTest hook."
+  [name-sym & body]
+  (let [test-name-sym (with-meta name-sym {:test true})
+        test-name-str (name test-name-sym)
+        test-ns-name  `(quote ~(symbol (name *ns*)))]
+    `(do
+       (defn ~test-name-sym
+         []
+         (binding [*ns*            (the-ns ~test-ns-name)
+                   *test-name*     ~test-name-str
+                   *test-section*  nil
+                   *test-failures* (atom [])]
+           ~@body
+           {:failures (deref *test-failures*)}))
+
+       (add-test! (var ~test-name-sym))
+       (reset! current-ns (the-ns ~test-ns-name)))))
