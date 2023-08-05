@@ -1,0 +1,56 @@
+{% extends "salebox/checkout/_base.html" %}
+
+{% block checkout %}
+
+    {% if has_addresses %}
+        <form method="post" id="shipping_address_choose">
+            {% csrf_token %}
+            <p>Pick your delivery address:</p>
+            {{ shipping_address_list | safe }}
+            <p>Or, <a href="#" onclick="$('#shipping_address_choose').hide(); $('#shipping_address_add').show();">enter a new address</a></p>
+
+            <br>
+            <div>
+                <input type="checkbox" name="invoice_required" id="invoice_required" onchange="($(this).is(':checked')) ? $('#invoice_address_choose').show() : $('#invoice_address_choose').hide()"{% if invoice_required %} checked{% endif %}>
+                <label for="invoice_required">Would you like a tax invoice?</label>
+            </div>
+
+            <div id="invoice_address_choose"{% if not invoice_required %} style="display: none"{% endif %}>
+                <p>Pick your invoice address:</p>
+                {{ invoice_address_list | safe }}
+                <p>Or, <a href="#" onclick="$('#shipping_address_choose').hide(); $('#invoice_address_add').show();">enter a new address</a></p>
+            </div>
+
+            <br>
+            <button class="btn btn-primary">Next</button>
+        </form>
+
+        <div id="shipping_address_add" style="display: none">
+            <p>Enter your delivery address:</p>
+            {{ add_shipping_form | safe }}
+            <p>Or, <a href="#" onclick="$('#shipping_address_add').hide(); $('#shipping_address_choose').show();">use an existing address</a></p>
+        </div>
+
+        <div id="invoice_address_add" style="display: none">
+            <p>Enter your invoice address:</p>
+            {{ add_invoice_form | safe }}
+            <p>Or, <a href="#" onclick="$('#invoice_address_add').hide(); $('#shipping_address_choose').show();">use an existing address</a></p>
+        </div>
+    {% else %}
+        <p>Enter your delivery address:</p>
+        {{ add_shipping_form | safe }}
+    {% endif %}
+{% endblock %}
+
+
+{% comment %}
+    <p>Do you want a tax invoice?</p>
+    <button class="btn btn-primary btn-sm" onclick="$('#form_tax_invoice').show(); $('#tax_invoice_reqd').val(true); return false;">Yes</button>
+    <button class="btn btn-secondary btn-sm" onclick="$('#form_tax_invoice').hide(); $('#tax_invoice_reqd').val(false); return false;">No</button>
+    <input type="hidden" id="tax_invoice_reqd" name="tax_invoice_reqd" value="false" />
+    <div id="form_tax_invoice" style="display: none;">
+        <p>Address #1: <input type="radio" name="invoice_address" checked /></p>
+        <p>Address #2: <input type="radio" name="invoice_address" /></p>
+        <p>Address #3: <input type="radio" name="invoice_address" /></p>
+    </div>
+{% endcomment %}
