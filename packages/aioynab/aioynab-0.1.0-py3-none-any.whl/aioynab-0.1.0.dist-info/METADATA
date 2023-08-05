@@ -1,0 +1,92 @@
+Metadata-Version: 2.1
+Name: aioynab
+Version: 0.1.0
+Summary: This module provides a YNAB API client implemented using python 3 asyncio.
+Home-page: https://github.com/boralyl/aioynab
+Author: Aaron Godfrey
+License: MIT
+Keywords: python,ynab,asyncio
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Description-Content-Type: text/x-rst
+Requires-Dist: aiohttp (<4.0.0,>=3.0.0)
+Requires-Dist: uvloop (<0.13.0,>=0.12.0)
+Provides-Extra: docs
+Requires-Dist: sphinx (<2.0.0,>=1.5.4) ; extra == 'docs'
+Requires-Dist: sphinx-autodoc-typehints (<2.0.0,>=1.2.4) ; extra == 'docs'
+Requires-Dist: sphinx-rtd-theme (<1.0.0,>=0.2.4) ; extra == 'docs'
+Requires-Dist: sphinxcontrib-httpdomain (<2.0.0,>=1.5.0) ; extra == 'docs'
+Provides-Extra: tests
+Requires-Dist: aioresponses ; extra == 'tests'
+Requires-Dist: codecov ; extra == 'tests'
+Requires-Dist: coverage (<5.0.0,>=4.4.1) ; extra == 'tests'
+Requires-Dist: flake8 (<4.0.0,>=3.3.0) ; extra == 'tests'
+Requires-Dist: pytest (<5.0.0,>=4.0.0) ; extra == 'tests'
+
+aioynab
+=======
+|build| |docs| |codecov|
+
+YNAB_ API client implemented using python 3 asyncio.
+
+Install
+-------
+
+aioynab can easily be installed using pip:
+
+.. code-block:: bash
+
+    $ pip install aioynab
+
+Quick Start
+-----------
+
+First create a personal access token in your `YNAB account <https://app.youneedabudget.com/settings/developer>`_.
+Create a client with that value like the example below.
+
+.. code-block:: python
+
+    import asyncio
+
+    from aioynab.client import Client
+
+
+    loop = asyncio.get_event_loop()
+    client = Client('ynab-personal-access-token')
+    budgets = loop.run_until_complete(client.budgets()))
+    budget_id = budgets['budgets'][0]['budget_id']
+    accounts = loop.run_until_complete(client.accounts(budget_id))
+    account_id = accounts['accounts'][0]['account_id']
+    transactions = loop.run_until_complete(client.account_transactions(budget_id, account_id))
+
+Documentation
+-------------
+
+Consult the docs_ for further information.
+
+.. _ynab: https://api.youneedabudget.com/
+
+.. _docs: https://aioynab.readthedocs.io/en/latest/?badge=latest
+
+.. |build| image:: https://api.travis-ci.com/boralyl/aioynab.svg?branch=master
+    :alt: Build Status
+    :scale: 100%
+    :target: https://travis-ci.org/boralyl/aioynab
+
+.. |docs| image:: https://readthedocs.org/projects/aioynab/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://aioynab.readthedocs.io/en/latest/?badge=latest
+
+.. |codecov| image:: https://codecov.io/gh/boralyl/aioynab/branch/master/graph/badge.svg
+    :alt: Code Coverage
+    :scale: 100%
+    :target: https://codecov.io/gh/boralyl/aioynab
+
+
