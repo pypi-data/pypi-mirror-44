@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Recurrence network analysis of the logistic map &#8212; pyunicorn 0.6.0.post1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.6.0.post1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Methods" href="../methods.html" />
+    <link rel="prev" title="Constructing and analyzing a climate network" href="climate_network_1.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../methods.html" title="Methods"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="climate_network_1.html" title="Constructing and analyzing a climate network"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../tutorials.html" accesskey="U">Tutorials</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../sitemap.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../sitemap.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../download.html">Download</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="climate_network_1.html">Constructing and analyzing a climate network</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Recurrence network analysis of the logistic map</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../methods.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_doc.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="recurrence-network-analysis-of-the-logistic-map">
+<h1>Recurrence network analysis of the logistic map<a class="headerlink" href="#recurrence-network-analysis-of-the-logistic-map" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial demonstrates how to use <code class="docutils literal"><span class="pre">timeseries</span></code> for a nonlinear time
+series analysis of a realization of the chaotic logistic map.</p>
+<p>This tutorial is also available as an ipython notebook.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tutorial on how to handle recurrence plots and recurrence networks using</span>
+<span class="sd">Python, based on the timeseries package.</span>
+
+<span class="sd">Written as part of a PhD thesis in Physics by Jonathan F. Donges</span>
+<span class="sd">(donges@pik-potsdam.de) at the Potsdam Institute of Climate Impact Research</span>
+<span class="sd">(PIK) and Humboldt University Berlin,</span>
+
+<span class="sd">Copyright 2008-2019.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># array object and fast numerics</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># plotting facilities</span>
+<span class="kn">import</span> <span class="nn">pylab</span>
+
+<span class="kn">from</span> <span class="nn">pyunicorn.timeseries</span> <span class="k">import</span> <span class="n">RecurrencePlot</span><span class="p">,</span> <span class="n">RecurrenceNetwork</span>
+
+
+<span class="c1">#</span>
+<span class="c1">#  Functions</span>
+<span class="c1">#</span>
+<span class="k">def</span> <span class="nf">logistic_map</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a time series of length T using the logistic map</span>
+<span class="sd">    x_(n+1) = r*x_n(1-x_n) at parameter r and using the initial condition x0.</span>
+
+<span class="sd">    INPUT: x0 - Initial condition, 0 &lt;= x0 &lt;= 1</span>
+<span class="sd">            r - Bifurcation parameter, 0 &lt;= r &lt;= 4</span>
+<span class="sd">            T - length of the desired time series</span>
+<span class="sd">    TODO: Cythonize</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#  Initialize the time series array</span>
+    <span class="n">timeSeries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">timeSeries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">timeSeries</span><span class="p">)):</span>
+        <span class="n">xn</span> <span class="o">=</span> <span class="n">timeSeries</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">timeSeries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">xn</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">xn</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">timeSeries</span>
+
+
+<span class="k">def</span> <span class="nf">logistic_map_lyapunov_exponent</span><span class="p">(</span><span class="n">timeSeries</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the Lyapunov exponent of the logistic map for different r.</span>
+
+<span class="sd">    INPUT: timeSeries - The time series generated by a logistic map</span>
+<span class="sd">                    r - the bifurcation parameter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lyap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">timeSeries</span><span class="p">)))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">lyap</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Settings</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Parameters of logistic map</span>
+<span class="n">r</span> <span class="o">=</span> <span class="mf">3.679</span>  <span class="c1"># Bifurcation parameter</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="mf">0.7</span>   <span class="c1"># Initial value</span>
+
+<span class="c1">#  Length of the time series</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">150</span>
+
+<span class="c1">#  Settings for the embedding</span>
+<span class="n">DIM</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Embedding dimension</span>
+<span class="n">TAU</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Embedding delay</span>
+
+<span class="c1">#  Settings for the recurrence plot</span>
+<span class="n">EPS</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># Fixed threshold</span>
+<span class="n">RR</span> <span class="o">=</span> <span class="mf">0.05</span>   <span class="c1"># Fixed recurrence rate</span>
+<span class="c1"># Distance metric in phase space -&gt;</span>
+<span class="c1"># Possible choices (&quot;manhattan&quot;,&quot;euclidean&quot;,&quot;supremum&quot;)</span>
+<span class="n">METRIC</span> <span class="o">=</span> <span class="s2">&quot;supremum&quot;</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Main script</span>
+<span class="c1">#</span>
+<span class="c1">#  Create a time series using the logistic map</span>
+<span class="n">time_series</span> <span class="o">=</span> <span class="n">logistic_map</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+<span class="c1">#  Print the time series</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">time_series</span><span class="p">)</span>
+<span class="c1">#  Plot the time series</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_series</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+<span class="c1">#  You can include LaTex labels...</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;$n$&quot;</span><span class="p">)</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;$x_n$&quot;</span><span class="p">)</span>
+
+<span class="c1">#  Generate a recurrence plot object with fixed recurrence threshold EPS</span>
+<span class="n">rp</span> <span class="o">=</span> <span class="n">RecurrencePlot</span><span class="p">(</span><span class="n">time_series</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">DIM</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">TAU</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">METRIC</span><span class="p">,</span>
+                    <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">EPS</span><span class="p">)</span>
+
+<span class="c1">#  Show the recurrence plot</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">rp</span><span class="o">.</span><span class="n">recurrence_matrix</span><span class="p">())</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;$n$&quot;</span><span class="p">)</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;$n$&quot;</span><span class="p">)</span>
+<span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1">#  Calculate and print the recurrence rate</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Recurrence rate:&quot;</span><span class="p">,</span> <span class="n">rp</span><span class="o">.</span><span class="n">recurrence_rate</span><span class="p">())</span>
+
+<span class="c1">#  Calculate some standard RQA measures</span>
+<span class="n">DET</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">determinism</span><span class="p">(</span><span class="n">l_min</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">LAM</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">laminarity</span><span class="p">(</span><span class="n">v_min</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Determinism:&quot;</span><span class="p">,</span> <span class="n">DET</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Laminarity:&quot;</span><span class="p">,</span> <span class="n">LAM</span><span class="p">)</span>
+
+<span class="c1">#  Generate a recurrence plot object with fixed recurrence rate RR</span>
+<span class="n">rp</span> <span class="o">=</span> <span class="n">RecurrencePlot</span><span class="p">(</span><span class="n">time_series</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">DIM</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">TAU</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">METRIC</span><span class="p">,</span>
+                    <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recurrence_rate</span><span class="o">=</span><span class="n">RR</span><span class="p">)</span>
+
+<span class="c1">#  Calculate and print the recurrence rate again to check if it worked...</span>
+<span class="n">RR</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">recurrence_rate</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Recurrence rate:&quot;</span><span class="p">,</span> <span class="n">RR</span><span class="p">)</span>
+
+<span class="c1">#  Calculate some standard RQA measures</span>
+<span class="n">DET</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">determinism</span><span class="p">(</span><span class="n">l_min</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">LAM</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">laminarity</span><span class="p">(</span><span class="n">v_min</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Determinism:&quot;</span><span class="p">,</span> <span class="n">DET</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Laminarity:&quot;</span><span class="p">,</span> <span class="n">LAM</span><span class="p">)</span>
+
+<span class="c1">#  Generate a recurrence network at fixed recurrence rate</span>
+<span class="n">rn</span> <span class="o">=</span> <span class="n">RecurrenceNetwork</span><span class="p">(</span><span class="n">time_series</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">DIM</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">TAU</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">METRIC</span><span class="p">,</span>
+                       <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recurrence_rate</span><span class="o">=</span><span class="n">RR</span><span class="p">)</span>
+
+<span class="c1">#  Calculate average path length, transitivity and assortativity</span>
+<span class="n">L</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">average_path_length</span><span class="p">()</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">transitivity</span><span class="p">()</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">global_clustering</span><span class="p">()</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">rn</span><span class="o">.</span><span class="n">assortativity</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average path length:&quot;</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transitivity:&quot;</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Global clustering:&quot;</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assortativity:&quot;</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../methods.html" title="Methods"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="climate_network_1.html" title="Constructing and analyzing a climate network"
+             >previous</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../tutorials.html" >Tutorials</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2008-2019, Jonathan F. Donges and pyunicorn authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>
