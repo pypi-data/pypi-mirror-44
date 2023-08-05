@@ -1,0 +1,179 @@
+# Copyright 2018 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- job:
+    name: kuryr-kubernetes-tempest
+    parent: kuryr-kubernetes-tempest-base
+    description: |
+      Kuryr-Kubernetes tempest job using octavia
+    required-projects:
+      - openstack/barbican
+      - openstack/octavia
+      - openstack/python-barbicanclient
+      - openstack/python-octaviaclient
+    pre-run: playbooks/get_amphora_tarball.yaml
+    host-vars:
+      controller:
+        devstack_plugins:
+          octavia: https://git.openstack.org/openstack/octavia
+          barbican: https://git.openstack.org/openstack/barbican
+    vars:
+      devstack_localrc:
+        OCTAVIA_AMP_IMAGE_FILE: "/tmp/test-only-amphora-x64-haproxy-ubuntu-xenial.qcow2"
+        OCTAVIA_AMP_IMAGE_SIZE: 3
+        OCTAVIA_AMP_IMAGE_NAME: "test-only-amphora-x64-haproxy-ubuntu-xenial"
+      devstack_local_conf:
+        post-config:
+          $OCTAVIA_CONF:
+            controller_worker:
+              amp_active_retries: 9999
+      devstack_services:
+        octavia: true
+        o-api: true
+        o-cw: true
+        o-hk: true
+        o-hm: true
+
+- job:
+    name: kuryr-kubernetes-tempest-centos-7
+    parent: kuryr-kubernetes-tempest
+    nodeset: openstack-centos-7-single-node
+    voting: false
+
+- job:
+    name: kuryr-kubernetes-tempest-py36
+    parent: kuryr-kubernetes-tempest
+    description: |
+      Tempest with DevStack running on Python 3.6
+    vars:
+      devstack_localrc:
+        USE_PYTHON3: true
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized
+    parent: kuryr-kubernetes-tempest
+    description: |
+        Kuryr-Kubernetes tempest job running kuryr containerized
+    vars:
+      devstack_localrc:
+        KURYR_K8S_CONTAINERIZED_DEPLOYMENT: true
+    voting: false
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-l2
+    parent: kuryr-kubernetes-tempest-containerized
+    description: |
+        Kuryr-Kubernetes tempest job using octavia in l2 mode, kuryr containerized
+    vars:
+      devstack_localrc:
+        KURYR_K8S_OCTAVIA_MEMBER_MODE: L2
+
+- job:
+    name: kuryr-kubernetes-tempest-openshift
+    parent: kuryr-kubernetes-tempest
+    description: |
+      Kuryr-Kubernetes tempest job using OpenShift
+    vars:
+      devstack_localrc:
+        DOCKER_CGROUP_DRIVER: "systemd"
+        KURYR_SUBNET_DRIVER: namespace
+        KURYR_SG_DRIVER: namespace
+        KURYR_ENABLED_HANDLERS: vif,lb,lbaasspec,namespace
+      devstack_services:
+        kubernetes-api: false
+        kubernetes-controller-manager: false
+        kubernetes-scheduler: false
+        kubelet: false
+        coredns: false
+        openshift-master: true
+        openshift-node: true
+        openshift-dnsmasq: true
+        openshift-dns: true
+    voting: false
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-pools-namespace
+    description: |
+      Tempest with containers, port pools and namespace subnet driver
+    parent: kuryr-kubernetes-tempest-containerized
+    vars:
+      devstack_localrc:
+        KURYR_SUBNET_DRIVER: namespace
+        KURYR_SG_DRIVER: namespace
+        KURYR_ENABLED_HANDLERS: vif,lb,lbaasspec,namespace
+        KURYR_USE_PORT_POOLS: true
+        KURYR_POD_VIF_DRIVER: neutron-vif
+        KURYR_VIF_POOL_DRIVER: neutron
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-network-policy
+    description: |
+      Tempest with Octavia, containers and network policy driver
+    parent: kuryr-kubernetes-tempest-containerized
+    vars:
+      tempest_test_regex: '^(kuryr_tempest_plugin.tests.scenario.test_network_policy.TestNetworkPolicyScenario)'
+      devstack_localrc:
+        KURYR_ENABLED_HANDLERS: vif,lb,lbaasspec,namespace,pod_label,policy,kuryrnetpolicy
+        KURYR_SG_DRIVER: policy
+        KURYR_SUBNET_DRIVER: namespace
+    voting: false
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-py36
+    description: |
+      Tempest with Kuryr running on Python3.6 containers
+    parent: kuryr-kubernetes-tempest-containerized
+    vars:
+      devstack_localrc:
+        KURYR_CONTAINERS_USE_PY3: True
+        USE_PYTHON3: true
+    voting: true
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-openshift
+    description: Tempest with containers and OpenShift
+    parent: kuryr-kubernetes-tempest-openshift
+    vars:
+      devstack_localrc:
+        KURYR_K8S_CONTAINERIZED_DEPLOYMENT: true
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-openshift-serial
+    description: Tempest running in serial, containers and OpenShift
+    parent: kuryr-kubernetes-tempest-containerized-openshift
+    vars:
+      devstack_localrc:
+        KURYR_K8S_SERIAL_TESTS: True
+      tempest_concurrency: 1
+
+
+- job:
+   name: kuryr-kubernetes-tempest-openshift-ingress
+   parent: kuryr-kubernetes-tempest-openshift
+   description: |
+     Kuryr-Kubernetes tempest job using ingress controller and OpenShift
+   vars:
+     devstack_localrc:
+       KURYR_ENABLE_INGRESS: true
+       KURYR_ENABLED_HANDLERS: vif,lb,lbaasspec,namespace,ocproute,ingresslb
+   voting: false
+
+- job:
+    name: kuryr-kubernetes-tempest-containerized-crio
+    parent: kuryr-kubernetes-tempest-containerized
+    nodeset: openstack-single-node-bionic
+    vars:
+      devstack_localrc:
+        CONTAINER_ENGINE: crio
+    voting: false
