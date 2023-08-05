@@ -1,0 +1,86 @@
+#!python
+# -*- coding: utf-8 -*-
+"""
+Minerva Node command line script
+"""
+import sys
+import argparse
+import logging
+import signal
+from time import sleep
+import threading
+from operator import not_
+
+import psycopg2
+
+from minerva.util import after, compose, retry_while
+from minerva.db import connect
+
+from minerva_node.node import Node
+from minerva_node import version
+
+
+SIGNAL_MAP = {
+    signal.SIGHUP: "SIGHUP",
+    signal.SIGKILL: "SIGKILL",
+    signal.SIGTERM: "SIGTERM",
+    signal.SIGINT: "SIGINT",
+    signal.SIGUSR1: "SIGUSR1"
+}
+
+NO_JOB_TIMEOUT = 1
+
+
+class StartupError(Exception):
+    pass
+
+
+def main():
+    """
+    Script entry point
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-v", "--version", action="version",
+        version="%(prog)s {}".format(version.__version__)
+    )
+
+    stop_event = threading.Event()
+
+    stop_node = after(stop_event.set, log_signal)
+
+    signal.signal(signal.SIGTERM, stop_node)
+    signal.signal(signal.SIGINT, stop_node)
+    signal.signal(signal.SIGHUP, stop_node)
+
+    handler_map = {
+        psycopg2.OperationalError: lambda exc: logging.error(
+            "could not connect to database ({}), waiting".format(exc)
+        )
+    }
+
+    retry_condition = compose(not_, stop_event.is_set)
+
+    conn = retry_while(
+        connect, handler_map, retry_condition
+    )
+
+    if conn:
+        node = Node(conn)
+        node.run()
+        logging.info("started")
+        while node.is_alive():
+            sleep(1)
+
+    logging.info("stopped")
+
+
+def log_signal(signum, _frame):
+    logging.info(
+        "received {0!s} signal".format(SIGNAL_MAP.get(signum, signum))
+    )
+
+
+if __name__ == "__main__":
+    sys.exit(main())
