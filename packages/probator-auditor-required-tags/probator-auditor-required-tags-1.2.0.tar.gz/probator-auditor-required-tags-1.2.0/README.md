@@ -1,0 +1,134 @@
+# probator-auditor-required-tags
+
+Please open issues in the [Probator](https://gitlab.com/probator/probator/issues/new?labels=auditor-required-tags) repository
+
+## Description
+
+This auditor reviews, alerts and potentially takes action on AWS objects that are found not to be compliant with the tagging requirements.
+
+## Configuration Options
+
+| Option name           | Default Value                             | Type   | Description                                                                 |
+|-----------------------|-------------------------------------------|--------|-----------------------------------------------------------------------------|
+| alert\_settings       | See notes below                           | JSON   | Alert and enforcement settings for supported resources                      |
+| always\_send\_email   | True                                      | bool   | Send emails even in collect mode                                            |
+| audit\_ignore\_tag    | probator:ignore                           | string | Probator will ignore alerting/enforcement if resources are tagged with this |
+| audit\_scope          | aws\_ec2\_instance                        | string | Select resources (aws\_ec2\_instance, aws\_s3\_bucket)                      |
+| collect\_only         | True                                      | bool   | Do not shutdown resources, only update caches                               |
+| confirm\_shutdown     | True                                      | bool   | Require manual confirmation before shutting down instances                  |
+| email\_subject        | Resources missing required tags           | string | Subject of the new issues email notifications                               |
+| enabled               | False                                     | bool   | Enable the Required Tags auditor                                            |
+| interval              | 30                                        | int    | How often the auditor executes, in minutes                                  |
+| partial\_owner\_match | False                                     | bool   | Allow partial matches of the Owner tag                                      |
+| permanent\_recipient  | []                                        | array  | List of email addresses to receive all alerts                               |
+| required\_tags        | ['owner', 'accounting', 'name']           | array  | List of required tags                                                       |
+
+### Example `alert_settings`:
+
+```json
+{
+    "global": {
+        "actions": [
+            {
+                "name": "alert:1",
+                "age": "now",
+                "action": "alert",
+                "order": 0
+            },
+            {
+                "name": "alert:2",
+                "age": "3 weeks",
+                "action": "alert",
+                "order": 1
+            },
+            {
+                "name": "alert:3",
+                "age": "3 weeks, 6 days",
+                "action": "alert",
+                "order": 2
+            },
+            {
+                "name": "stop",
+                "age": "4 weeks",
+                "action": "stop",
+                "order": 3
+            },
+            {
+                "name": "remove",
+                "age": "12 weeks",
+                "action": "remove",
+                "order": 4
+            }
+        ],
+        "requiredTags": {
+            "Name": null,
+            "owner": "([a-zA-Z0-9._%+-]+[^+]@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})"
+        },
+        "extraConfig": {}
+    },
+    "aws_ec2_instance": {
+        "requiredTags": {
+            "ssmEnabled": "^(true|false)$"
+        }
+    }
+}
+```
+
+The `global` section is applied to all resources, with some restrictions that we will cover in the detail sections below. In addition to the
+`global` section, you can also define additional tags for some resource types or override the `actions` to use a different schedule for
+specific resource types
+
+#### `actions`
+
+The `actions` block defines the set of actions to be taken. Using the example above, we can see that there are a total of 5 actions that
+will be taken for all resources.
+
+  1. Upon detection, send an alert immediately (`age` = `now`)
+  1. After 3 weeks, send another alert
+  1. After another 6 days, send a third alert
+  1. After 4 weeks, stop the instance (also sends a notification)
+  1. Finally after 12 weeks, remove the resource (also sends a notification)
+  
+Actions can be overridden for specific resources, however if you provide a new action schedule, the global schedule will be ignored for the
+resource type.
+
+##### Valid action types
+
+Currently only three types of actions are supported: `alert`, `stop` and `remove`.
+
+**alert**
+
+Sends a notification to each of the registered owners for the resource account
+
+**stop**
+
+Stops the resource, if applicable. As an example, this will stop an EC2 Instance if it is running. The state of the resource will be
+evaluated on each execution of the auditor, so if the resource is started again the stop action will be applied again
+
+**remove**
+
+Deletes the resource completely, for example if the resource is an EC2 Instance, it will be terminated.
+
+#### `required_tags`
+
+The `required_tags` is a dictionary like object, where the keys are the names of the tags and the value is a regular expression pattern that
+will be used to validate the tag value of the resource. If a tag fails to match the provided regular expression, the resource will be marked
+as not compliant, with a note detailing that the tag failed matching the regular expression.
+
+If any value is valid, you can provide an `null` value instead of a regular expression, to avoid any matching from happening, instead of
+using a blank / global expression such as `.*`
+
+#### `extra_config`
+
+This section can be used to provide extra information that may be needed to validate a tag. At this time, this is not actively used by the
+base auditor functions, but can be helpful in cases where you implement custom action methods
+
+
+## Implementing action methods
+
+Action methods are simple methods which accept a single argument being the `Resource` object that the action needs to be performed on. See
+[probator_auditor_required_tags/actions.py](probator_auditor_required_tags/actions.py) for example implementations.
+
+Action methods are dynamically loaded using entry points defined in [setup.py](setup.py#L22), in the namespace
+`probator_auditor_required_tags.actions`. The name of the entry point must be `<resource_type>_<action>`. For example the action to remove
+an S3 bucket would be `aws_s3_bucket_remove`.
