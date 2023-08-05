@@ -1,0 +1,130 @@
+{% load materialize_nav %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    {# Load CSS and JavaScript #}
+    {% material_icons_url %}
+    {% materialize_css_url %}
+    {% materialize_nav_css_url %}
+
+    <style>
+    {% if SHOW_SIDENAV and FIXED_SIDENAV %}
+      header, main, footer {
+        padding-left: 300px;
+      }
+
+      @media only screen and (max-width : 992px) {
+        header, main, footer {
+          padding-left: 0;
+        }
+      }
+
+    {% endif %}
+    </style>
+
+    {% block head %}{% endblock %}
+
+    <title>{% block title %}{% if title %}{{ title }}{% endif %}{% endblock %}</title>
+  </head>
+  <body>
+    <header>
+    {% block navbar %}
+      <nav class="primary-color">
+        <div class="nav-wrapper">
+          {% if SHOW_SIDENAV and not FIXED_SIDENAV %}
+          <a href="#" data-target="nav-mobile" class="sidenav-trigger show-on-large"><i class="material-icons">menu</i></a>
+          {% endif %}
+
+          {% block site_name %}
+          <a href="/" class="brand-logo center">{{ site_name }}</a>
+          {% endblock %}
+
+          <!-- Navbar navigation items -->
+          <ul id="navbar-items" class="right hide-on-med-and-down">
+          {% block nav_items %}
+            <!--<li><a href="/my/url">Sass</a></li>-->
+          {% endblock %}
+          </ul>
+        </div>
+      </nav>
+    {% endblock %}
+    </header>
+
+    {% if SHOW_SIDENAV %}
+      {% block sidenav %}
+        <ul id="nav-mobile" class="sidenav{% if FIXED_SIDENAV %} sidenav-fixed{% endif %}">
+          {% if title %}
+          <li><h4 class="center">{{ site_name }}</h4></li>
+          <li><div class="divider"></div></li>
+          {% endif %}
+
+          {% block sidenav_items %}
+          <!-- SideNav Link Items -->
+          <!--<li><div class="user-view">-->
+          <!--<div class="background">-->
+          <!--<img src="images/office.jpg">-->
+          <!--</div>-->
+          <!--<a href="#user"><img class="circle" src="images/yuna.jpg"></a>-->
+          <!--<a href="#name"><span class="white-text name">John Doe</span></a>-->
+          <!--<a href="#email"><span class="white-text email">jdandturk@gmail.com</span></a>-->
+          <!--</div></li>-->
+          <!--<li><a href="#!"><i class="material-icons">cloud</i>First Link With Icon</a></li>-->
+          {% endblock %}
+        </ul>
+      {% endblock %}
+    {% endif %}
+
+    {% block container %}
+    <main id='container' class="container">
+      {% block contents %}{% endblock contents %}
+    </main>
+    {% endblock container %}
+
+    <footer>
+    {% block footer %}{% endblock %}
+    </footer>
+
+    {% block modals %}{% endblock modals %}
+
+    {% materialize_js_url %}
+    {% materialize_jquery_url %}
+    {% materialize_nav_js_url %}
+    {% materialize_nav_color_js_url %}
+
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% materialize_messages %}
+
+    <script type="text/javascript">
+      // Color variables
+      var primary_color = "{{ PRIMARY_COLOR }}";
+      var secondary_color = "{{ SECONDARY_COLOR }}";
+      var primary_color_light = "{{ PRIMARY_COLOR_LIGHT }}";
+      var primary_color_dark = "{{ PRIMARY_COLOR_DARK }}";
+      var success_color = "{{ SUCCESS_COLOR }}";
+      var error_color = "{{ ERROR_COLOR }}";
+      var link_color = "{{ LINK_COLOR }}";
+
+      // Auto Init materialize javascript components
+      M.AutoInit();
+
+      // Turn off the container for small screens
+      if(is_small()){
+        turn_off_container();
+      }
+
+      check_pickers();
+      check_card_reveal();
+      check_table_of_contents();
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+    <script type="text/javascript">
+      // Change the CSS Colors from the context variables
+      change_css_colors();
+    </script>
+  </body>
+</html>
