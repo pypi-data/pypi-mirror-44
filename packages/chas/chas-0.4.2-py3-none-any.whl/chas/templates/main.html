@@ -1,0 +1,60 @@
+<!doctype html>
+<head>
+    <script src="{{ url_for('static', filename='jquery.js') }}"></script>
+    <style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+    </style>
+    <title>Chas</title>
+</head>
+<body>
+<table>
+    <tr>
+      <th>Name</th>
+      <th>Next run</th>
+      <th>Last run</th>
+      <th>Last status</th>
+      <th>Run</th>
+    </tr>
+    {% for job in chas.get_jobs() %}
+        <tr>
+            <td>{{ job.name }}</td>
+            {% if job.next_run is string %}
+                <td>{{ job.next_run }}</td>
+            {% else %}
+                <td>{{ job.next_run.strftime("%d-%m-%Y %H:%M:%S") }}</td>
+            {% endif %}
+            {% if job.last_run is string %}
+                <td>{{ job.last_run }}</td>
+            {% else %}
+                <td>{{ job.last_run.strftime("%d-%m-%Y %H:%M:%S") }}</td>
+            {% endif %}
+            <td>{{ job.last_state.status }}
+                {% if job.last_state.detail is not none %}
+                ({{ job.last_state.detail }})
+                {% endif %}
+            </td>
+            <td>
+                <form class="form_job_run">
+                    <input type="hidden" name="job_name" value="{{ job.name }}" />
+                    <input type="submit" value="Run"></input>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
