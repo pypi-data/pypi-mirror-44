@@ -1,0 +1,160 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
+import getopt
+
+
+from svmon_client import report
+
+from svmon_client import operating_system_parser
+from svmon_client import services
+from svmon_client import json_operations
+
+def main(argv):
+    
+    try:
+      opts, args = getopt.getopt(argv,'h:t:S:THVpd:',['help','version','site=','test',\
+		'host=','tag=','print','dump','type=','list-service-type','show-config','send'])
+    except getopt.GetoptError:
+        print (help_info())
+        sys.exit(0)
+    if len(opts) == 0:
+        print (help_info())
+        sys.exit(0)
+    svmonreport = report.SVMONReport()
+    print_service = 0
+    save = 0
+    send = 0
+    readfile =0
+    filename=""
+    for opt, arg in opts:
+#        print opt,arg
+        if opt in ['-H', '--help']:
+            print (help_info())
+            sys.exit(0)
+        if opt in ['-V','--version']:
+            print (version_info())
+            sys.exit(0)
+        if opt in ['-S', '--site']:
+            svmonreport.set_site(arg)
+        if opt in ['-h','--host']:
+            svmonreport.set_host(arg)
+        if opt in ['-t','--type']:
+            #print(arg)
+            #print(type(arg))
+            if services.in_service_list(arg):
+            	svmonreport.set_service_type(arg)
+            else:
+                print("Such service type is not supported, the supported list gives:")
+                exit(0)
+        #if opt in ['-v','--tag']:
+        #    tags.append(arg)
+        if opt in ['-p','--print']:
+            print_service = 1
+        if opt in ['-T','--test']:
+            svmonreport.set_site("SITE")
+            svmonreport.set_host("HOST")
+            svmonreport.set_service_type("svmon_client")
+            svmonreport.set_operating_system(operating_system_parser.get_os_from_file())
+            svmonreport.refresh_service_name_and_tag()
+            reports= svmonreport.print_report()
+
+            if len(reports) > 0:
+                for item in reports:
+                    print(item)
+            else:
+                print("reporting zero service components")
+
+
+            print("You have successfully installed svmon client")
+            exit(0)
+
+        if opt in ['-d', '--dump']:
+            save=1
+        if opt in ['--list-service-type']:
+            print(service_type_info())
+        if opt in ['--show-config']:
+            svmonreport.print_config_file()
+        if opt in ['--send']:
+            send=1
+
+
+     	       
+    if save == 1:
+        print("Saving configurations ....")
+        svmonreport.save_to_json()
+
+
+
+    if print_service == 1:
+        svmonreport.set_operating_system(operating_system_parser.get_os_from_file())
+        svmonreport.refresh_service_name_and_tag()
+        reports = svmonreport.print_report()
+        if len(reports) > 0:
+            for item in reports:
+                print(item)
+        else:
+            print("reporting zero service components in printing")
+            exit(0)
+
+
+    if send == 1:
+        svmonreport.set_operating_system(operating_system_parser.get_os_from_file())
+        svmonreport.refresh_service_name_and_tag()
+        svmonreport.send_report_to_svmon_server()
+        exit(0)
+
+         
+        
+
+def help_info():
+    return '''    
+    SVMON client --  Service Versions Monitoring
+    SVMON collects information of softwares in EUDAT services
+    and their components. SVMON client supports the following
+    options.
+
+      -H or --help         Help information
+      -V or --version      Show SVMON client version
+      -S or --site         Declear the host site
+      -T or --test         Test the installation of SVMON client
+      -h or --host         Declear the host name
+      -t or --type         Declear the service type
+      -p or --print        Print the collected info to the stardard output
+      -d or --dump         Save configurations to a file in JSON format, defualt "svmon_client/config.json".
+      --list-service-type  List all supported service types
+      --show-config        Show the site,host, service type configurations.
+      --send               Send the reports to SVMON server.
+    
+   If you have problems with SVMON client usage, please contact us(jie.yuan@kit.edu). 
+
+     '''
+
+def service_type_info():
+    return '''
+Currently, we are supporting following service types:
+
+b2safe
+gitlab
+svmon    
+b2access         --todo
+b2find           --todo
+b2handle         --todo  
+b2drop           --todo
+dpmt             --todo
+eudat_website    --todo
+b2gether         --todo 
+gocdb            --todo
+
+Please contact us(jie.yuan@kit.edu) if you plan to add other services.
+    '''
+
+def version_info():
+    return "This is SVMON client version" + services.get_version() + "\n"
+
+if __name__=="__main__":
+    import sys
+ #   print sys.version
+    main(sys.argv[1:])
+    
+
