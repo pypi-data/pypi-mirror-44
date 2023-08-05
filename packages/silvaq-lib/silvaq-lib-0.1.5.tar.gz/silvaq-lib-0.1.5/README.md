@@ -1,0 +1,66 @@
+# common tool library for silvaq
+
+# silvaq-pylib
+我自己常用的功能封装起来，方便自己日常使用
+
+- version 0.1.5 :
+    -  新增了日期常规方法
+
+## 工具库
+1. [x] file 文件相关
+2. [x] dir  目录相关
+3. [x] time 日期、时间相关
+4. [x] mail 发送邮件相关
+5. [x] logger 日志相关
+
+
+# 安装
+```bash
+pip3 install silvaq-pylib
+```
+# 更新
+```bash
+pip3 install  --upgrade silvaq-pylib
+```
+
+# 使用
+```python
+from silvaq_libs import file as silva_file
+from silvaq_libs import dir as silva_dir
+from silvaq_libs.mail import Server as SilvaMailServer
+from silvaq_libs.logger  import Logger as SilvaLogger
+
+if __name__ == '__main__':
+    
+    # for files
+    silva_file.exist("/tmp/test.txt")
+    
+    #for dir 
+    silva_dir.maketree("a/b/c/d")
+    
+    # for mail
+    params_dict = {
+        'host': "server_host",
+        'sender': "sender",
+        'password': "password",
+        'username': 'username',
+        'port': 25,
+    }
+    to="somebody"
+    sub="somesub"
+    con="somecon"
+    SilvaMailServer(**params_dict).send_mail(to,sub,con)
+    
+    #for logger
+    logger = SilvaLogger("log_path","log_file_prefix","log_file_suffix","halder_container_cap")
+    logger.log("some con")
+    logger.log("some con again")
+    # ... more log here
+    # notice  目前所有配置都是默认项，所以日志是实时写入的，如果有需求想用缓冲请自行查阅并修改创建hander时open 的buffer
+    # todo 这一项将提供可选方法
+    logger.commit() 
+
+```
+
+
+
