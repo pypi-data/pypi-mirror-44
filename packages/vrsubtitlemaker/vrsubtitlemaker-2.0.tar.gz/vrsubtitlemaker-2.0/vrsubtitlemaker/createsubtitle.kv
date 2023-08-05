@@ -1,0 +1,211 @@
+#: import ColorPicker kivy.uix.colorpicker.ColorPicker
+#: import FigureCanvasKivyAgg kivy.garden.matplotlib.backend_kivyagg.FigureCanvasKivyAgg
+#: import plt matplotlib.pyplot
+
+<CreateSubtitle>:
+  id: createsubtitle
+
+  GridLayout: # GUI
+
+    cols: 2
+    rows: 1
+    padding: "10px"
+    spacing: "10px"
+
+    GridLayout: # Options Panel
+
+      cols: 1
+      rows: 5
+      padding: "10px"
+      spacing: "10px"
+
+      size_hint_x: 0.5
+
+      canvas:
+        Color:
+          rgba: (0.3,0.3,0.3,1)
+        Rectangle:
+          pos: self.pos
+          size: self.size
+
+      GridLayout: # Subtitle
+        cols: 2
+        rows: 1
+        size_hint_y: 0.2
+
+        Label:
+          text: "Subtitle"
+          size_hint_x: 0.2
+        TextInput: 
+          id: text
+          hint_text: "Input Subtitle"
+          multiline: True
+          on_text: createsubtitle.DynamicPreview()
+      # END GridLayout Subtitle
+
+      GridLayout: # Colors
+        cols: 2
+        rows: 2
+        size_hint_y: 0.6
+
+        Label: 
+          text: "Font Color"
+          size_hint_x: 0.5
+          size_hint_y: 0.2
+        Label: 
+          text: "Background Color"
+          size_hint_x: 0.5
+          size_hint_y: 0.2
+        ColorPicker:
+          id: font_color
+          size_hint_x: 0.5
+          color: (0,0,0,1)
+          on_color: createsubtitle.DynamicPreview()
+        ColorPicker:
+          id: bg_color
+          size_hint_x: 0.5
+          color: (1,1,1,0.2)
+          on_color: createsubtitle.DynamicPreview()
+      # END GridLayout Colors
+
+      GridLayout: # Size
+        cols: 6
+        rows: 1
+        size_hint_y: 0.05
+
+        Label: 
+          text: "Font size"
+          size_hint_x: 0.1
+        TextInput: 
+          id: font_size_input
+          text: "50"
+          size_hint_x: 0.1
+          multiline: False
+          on_text: 
+            font_size_slider.value = max(font_size_slider.min, min(font_size_slider.max, int(font_size_input.text)))
+            createsubtitle.DynamicPreview()
+        Slider:
+          id: font_size_slider
+          size_hint_x: 0.3
+          min: 1
+          max: 200
+          value: 50
+          on_value:
+            font_size_input.text = str(int(font_size_slider.value))
+            createsubtitle.DynamicPreview()
+
+        Label: 
+          text: "Padding"
+          size_hint_x: 0.1
+        TextInput: 
+          id: padding_input
+          text: "30"
+          multiline: False
+          size_hint_x: 0.1
+          on_text: 
+            padding_slider.value = max(padding_slider.min, min(padding_slider.max, int(padding_input.text)))
+            createsubtitle.DynamicPreview()
+        Slider:
+          id: padding_slider
+          size_hint_x: 0.3
+          min: 0
+          max: 100
+          value: 30
+          on_value:
+            padding_input.text = str(int(padding_slider.value))
+            createsubtitle.DynamicPreview()
+      # END GridLayout Size
+
+      GridLayout: # Other options
+        cols: 4
+        rows: 1
+        size_hint_y: 0.05
+
+        Label: 
+          text: "Smooth border"
+          size_hint_x: 0.4
+        CheckBox: 
+          id: smooth_border_chkbox
+          size_hint_x: 0.1
+          active: True
+          on_press:
+            createsubtitle.DynamicPreview()
+
+        Label: 
+          text: "Dynamic Preview"
+          size_hint_x: 0.4
+        CheckBox: 
+          id: dynamic_preview_chkbox
+          size_hint_x: 0.1
+          active: False
+          on_press:
+            createsubtitle.DynamicPreview()
+      # END GridLayout Other options
+
+      GridLayout: # Click
+        cols: 2
+        rows: 1
+        size_hint_y: 0.1
+        spacing: "10px"
+
+        Button:
+          id: refresh_cmd
+          text: "Preview"
+          on_press: createsubtitle.GeneratePreview()
+
+        Button:
+          id: save_cmd
+          text: "Save"
+          on_press: createsubtitle.Save()
+      # End GridLayout Click
+
+    GridLayout: # Preview
+      id: preview_container
+
+      cols: 1
+      rows: 1
+      padding: "10px"
+      spacing: "10px"
+
+      size_hint_x: 0.5
+
+      canvas:
+        Color:
+          rgba: (0.3,0.3,0.3,1)
+        Rectangle:
+          pos: self.pos
+          size: self.size
+      
+    # END GridLayout Preview
+
+# END CreateSubtitle
+
+<SaveDialog>:
+  text_input: text_input
+  BoxLayout:
+    size: (300, 500)
+    pos: root.pos
+    orientation: "vertical"
+    FileChooserListView:
+      id: filechooser
+      path: "."
+      on_selection: text_input.text = self.selection and self.selection[0] or ''
+
+    TextInput:
+      id: text_input
+      size_hint_y: None
+      height: 30
+      multiline: False
+
+    BoxLayout:
+      size_hint_y: None
+      height: 30
+      Button:
+        text: "Cancel"
+        on_release: root.cancel()
+
+      Button:
+        text: "Save"
+        on_release: root.save(filechooser.path, text_input.text)
+# END SaveDialog
+

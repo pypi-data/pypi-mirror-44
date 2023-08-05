@@ -1,0 +1,512 @@
+#: import ColorPicker kivy.uix.colorpicker.ColorPicker
+#: import FigureCanvasKivyAgg kivy.garden.matplotlib.backend_kivyagg.FigureCanvasKivyAgg
+#: import FocusBehavior kivy.uix.behaviors.FocusBehavior
+#: import LayoutSelectionBehavior kivy.uix.recycleview.layout.LayoutSelectionBehavior
+#: import plt matplotlib.pyplot
+
+<AddPatterns>:
+  id: addpatterns
+
+  GridLayout: # GUI
+
+    cols: 2
+    rows: 1
+    padding: "10px"
+    spacing: "10px"
+
+    GridLayout: # Control Panel
+
+      cols: 1
+      rows: 3
+      padding: "10px"
+      spacing: "10px"
+
+      size_hint_x: 0.4
+
+      GridLayout: # Load Image
+        cols: 1
+        rows: 2
+        size_hint_y: 0.3
+
+        canvas:
+          Color:
+            rgba: (0.3,0.3,0.3,1)
+          Rectangle:
+            pos: self.pos
+            size: self.size
+
+        Label:
+          text: "Step1: Load a VR image or choose a background"
+          size_hint_y: 0.1
+
+        GridLayout: #
+          cols: 2
+          rows: 1
+          size_hint_y: 0.9
+          padding: "10px"
+          spacing: "10px"
+
+          GridLayout: #
+            cols: 1
+            rows: 2
+            size_hint_x: 0.4
+            Button: 
+              id: load_vr_image_cmd
+              text: "Load VR Image"
+              on_press: addpatterns.LoadVRImage()
+            GridLayout:
+              cols: 1
+              rows: 2
+
+              Button:
+                id: use_plain_background
+                text: "Use plain color"
+                on_press: addpatterns.UsePlainBackground()
+              GridLayout: # Width/Height
+                cols: 2
+                rows: 2
+                Label:
+                  text: "Width"
+                  size_hint_x: 0.4
+                TextInput: 
+                  id: width_input
+                  text: "3840"
+                  size_hint_x: 0.2
+                  multiline: False
+                Label:
+                  text: "Height"
+                  size_hint_x: 0.4
+                TextInput: 
+                  id: height_input
+                  text: "3840"
+                  size_hint_x: 0.2
+                  multiline: False
+              # END GridLayout Width/Height
+          # END
+
+          ColorPicker: 
+            id: bg_color
+            text: "Load VR Image"
+            size_hint_x: 0.6
+            color: (0,0,0,1)
+        # END
+      # END GridLayout Load Image
+
+      GridLayout: # Load Patterns
+        cols: 1
+        rows: 3
+        size_hint_y: 0.5
+
+        canvas:
+          Color:
+            rgba: (1, 1, 1, 0.3)
+          Rectangle:
+            pos: self.pos
+            size: self.size
+
+        Label:
+          text: "Step2: Load Patterns"
+          size_hint_y: 0.05
+
+        GridLayout: # Main
+          cols: 3
+          rows: 1
+          size_hint_y: 0.6
+          padding: "10px"
+          spacing: "10px"
+
+          GridLayout: # List of Patterns 
+            cols: 1
+            rows: 2
+            size_hint_x: 0.4
+            spacing: "10px"
+
+            canvas:
+              Color:
+                rgba: (1, 1, 1, 0.3)
+              Rectangle:
+                pos: self.pos
+                size: self.size
+
+            RV:
+              id: patterns_list
+              size_hint_y: 0.9
+              viewclass: 'SelectableLabel'
+              data: []
+              on_touch_down:
+                print("hello")
+              # on_touch_up:
+              #   print("up")
+              SelectableRecycleBoxLayout:
+                default_size: None, dp(30)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'
+                multiselect: False
+                touch_multiselect: True
+
+            GridLayout: #
+              cols: 2
+              rows: 1
+              size_hint_y: 0.1
+
+              Button:
+                id: add_new_pattern
+                text: "+"
+                on_press: addpatterns.AddNewPattern()
+              Button:
+                id: remove_selected_pattern
+                text: "-"
+                on_press: addpatterns.RemoveSelectedPattern()
+            # END
+          # END List of Patterns
+
+          GridLayout: # Options
+            cols: 1
+            rows: 5
+            size_hint_x: 0.6
+            padding: "10px"
+            spacing: "10px"
+
+            canvas:
+              Color:
+                rgba: (1, 1, 1, 0.3)
+              Rectangle:
+                pos: self.pos
+                size: self.size
+
+            GridLayout: # Azimuth
+              cols: 3
+              rows: 1
+              Label:
+                text: "Azimuth Angle"
+                size_hint_x: 0.4
+              TextInput: 
+                id: azimuth_input
+                text: "0"
+                size_hint_x: 0.2
+                multiline: False
+                on_text: 
+                  azimuth_slider.value = float(azimuth_input.text)
+                  addpatterns.azimuth = azimuth_slider.value
+                  addpatterns.UpdateAuxiliary()
+              Slider:
+                id: azimuth_slider
+                size_hint_x: 0.4
+                min: -180
+                max: 180
+                value: 0
+                on_value:
+                  azimuth_input.text = "%d" % azimuth_slider.value
+                  addpatterns.azimuth = azimuth_slider.value
+                  addpatterns.UpdateAuxiliary()
+            # END Azimuth
+
+            GridLayout: # Elevation
+              cols: 3
+              rows: 1
+              Label:
+                text: "Elevation Angle"
+                size_hint_x: 0.4
+              TextInput: 
+                id: elevation_input
+                text: "0"
+                size_hint_x: 0.2
+                multiline: False
+                on_text: 
+                  elevation_slider.value = float(elevation_input.text)
+                  addpatterns.elevation = elevation_slider.value
+                  addpatterns.UpdateAuxiliary()
+              Slider:
+                id: elevation_slider
+                size_hint_x: 0.4
+                min: -90
+                max: 90
+                value: 0
+                on_value:
+                  elevation_input.text = "%d" % elevation_slider.value
+                  addpatterns.elevation = elevation_slider.value
+                  addpatterns.UpdateAuxiliary()
+            # END Elevation
+
+            GridLayout: # Depth
+              cols: 3
+              rows: 1
+
+              Label:
+                text: "Depth (m)"
+                size_hint_x: 0.4
+              TextInput: 
+                id: depth_input
+                text: "10.0"
+                size_hint_x: 0.2
+                multiline: False
+                on_text: 
+                  depth_slider.value = float(depth_input.text)
+                  addpatterns.depth = depth_slider.value
+                  addpatterns.UpdateAuxiliary()
+              Slider:
+                id: depth_slider
+                size_hint_x: 0.4
+                min: 0.1
+                max: 100
+                value: 10
+                on_value:
+                  depth_input.text = "%.1f" % depth_slider.value
+                  addpatterns.depth = depth_slider.value
+                  addpatterns.UpdateAuxiliary()
+            # END Depth
+            
+            GridLayout: # PPC
+              cols: 3
+              rows: 1
+              Label:
+                text: "Pixel per cm"
+                size_hint_x: 0.4
+              TextInput: 
+                id: ppc_input
+                text: "1.0"
+                size_hint_x: 0.2
+                multiline: False
+                on_text: 
+                  ppc_slider.value = float(ppc_input.text)
+                  addpatterns.ppc = ppc_slider.value
+                  addpatterns.UpdateAuxiliary()
+              Slider:
+                id: ppc_slider
+                size_hint_x: 0.4
+                min: 0.1
+                max: 10
+                value: 1
+                on_value:
+                  ppc_input.text = "%.1f" % ppc_slider.value
+                  addpatterns.ppc = ppc_slider.value
+                  addpatterns.UpdateAuxiliary()
+            # END PPC
+
+            GridLayout: # CMD
+              cols: 3
+              rows: 1
+              Button:
+                id: place_cmd
+                text: "Place"
+                size_hint_x: 0.3
+                on_press: addpatterns.PlacePattern()
+              Button:
+                id: undo_cmd
+                text: "Undo"
+                size_hint_x: 0.3
+                on_press: addpatterns.UndoPlacePattern()
+              Button:
+                id: export_cmd
+                text: "Export Preview"
+                size_hint_x: 0.4
+                on_press: addpatterns.ExportPreview()
+            # END CMD
+          # END Options 
+        # END Main
+
+        GridLayout: # Pattern Preview
+          cols: 1
+          rows: 1
+
+          id: pattern_preview_container
+          size_hint_y: 0.35
+          padding: "10px"
+
+        # END Pattern Preview
+
+      # END GridLayout Load pattern
+
+      GridLayout: # Batch
+        cols: 1
+        rows: 5
+        size_hint_y: 0.2
+        padding: "10px"
+        spacing: "10px"
+
+        canvas:
+          Color:
+            rgba: (0.3,0.3,0.3,1)
+          Rectangle:
+            pos: self.pos
+            size: self.size
+
+        Label:
+          text: "Step3: Run Batch Job"
+          size_hint_y: 0.1
+
+        GridLayout: # Inputdir
+          cols: 3
+          rows: 1
+          Label:
+            text: "Input Dir"
+            size_hint_x: 0.2
+          TextInput:
+            id: inputdir_input
+            text: ""
+            size_hint_x: 0.7
+            multiline: False
+          Button:
+            id: select_inputdir_cmd
+            text: "..."
+            size_hint_x: 0.1
+            on_press: addpatterns.BatchJobSelectInputDir()
+        # END GridLayout Inputdir
+
+        GridLayout: # Outputdir
+          cols: 3
+          rows: 1
+          Label:
+            text: "Output Dir"
+            size_hint_x: 0.2
+          TextInput:
+            id: outputdir_input
+            text: ""
+            size_hint_x: 0.7
+            multiline: False
+          Button:
+            id: select_outputdir_cmd
+            text: "..."
+            size_hint_x: 0.1
+            on_press: addpatterns.BatchJobSelectOutputDir()
+        # END GridLayout Outputdir
+
+        GridLayout: # CMD
+          cols: 1
+          rows: 1
+          Button:
+            id: run_batch_job_cmd
+            text: "Run"
+            size_hint_x: 1
+            on_press: addpatterns.BatchJobRun()
+        # END GridLayout CMD
+
+        GridLayout: # Progressbar
+          cols: 1
+          rows: 2
+          ProgressBar:
+            id: pbar
+            min: 0
+            max: 100
+            value: 0
+          Label:
+            id: status
+            text: "Status: Ready."
+        # END GridLayout Progressbar
+
+      # END GridLayout Batch
+    # END Control
+
+    GridLayout: # Preview
+
+      cols: 1
+      rows: 2
+      padding: "10px"
+      spacing: "10px"
+
+      size_hint_x: 0.6
+
+      canvas:
+        Color:
+          rgba: (0.3,0.3,0.3,1)
+        Rectangle:
+          pos: self.pos
+          size: self.size
+      
+      GridLayout: # Display mode
+        cols: 3
+        rows: 1
+        size_hint_y: None
+        height: 30
+        ToggleButton:
+          size_hint_x: 0.8
+          id: display_mode_all
+          text: "Preview"
+          group: "display_mode"
+          state: 'down'
+
+        Button:
+          size_hint_x: 0.2
+          id: toggle_auxiliary
+          text: "Toggle Auxiliary"
+          active: True
+          on_press: addpatterns.ToggleAuxiliary()
+        # ToggleButton:
+        #   id: display_mode_left
+        #   text: "Left eye"
+        #   group: "display_mode"
+        # ToggleButton:
+        #   id: display_mode_right
+        #   text: "Right eye"
+        #   group: "display_mode"
+      # END GridLayout # Display mode 
+
+      GridLayout: # Preview Container
+        id: preview_container
+        cols: 1
+        rows: 1
+      # END GridLayout Preview Container
+
+    # END GridLayout Preview
+
+# End Addpattern
+
+<LoadDialog>:
+  BoxLayout:
+    size: (300, 500)
+    pos: root.pos
+    orientation: "vertical"
+    FileChooserListView:
+      id: filechooser
+      path: "."
+
+    BoxLayout:
+      size_hint_y: None
+      height: 30
+      Button:
+        text: "Cancel"
+        on_release: root.cancel()
+
+      Button:
+        text: "Load"
+        on_release: root.load(filechooser.path, filechooser.selection)
+
+<SaveDialog>:
+  text_input: text_input
+  BoxLayout:
+    size: (300, 500)
+    pos: root.pos
+    orientation: "vertical"
+    FileChooserListView:
+      id: filechooser
+      path: "."
+      on_selection: text_input.text = self.selection and self.selection[0] or ''
+
+    TextInput:
+      id: text_input
+      size_hint_y: None
+      height: 30
+      multiline: False
+
+    BoxLayout:
+      size_hint_y: None
+      height: 30
+      Button:
+        text: "Cancel"
+        on_release: root.cancel()
+
+      Button:
+        text: "Save"
+        on_release: root.save(filechooser.path, text_input.text)
+
+<SelectableLabel>:
+  # Draw a background to indicate selection
+  canvas.before:
+    Color:
+      rgba: (1,1,0,0.8) if self.selected else (1,1,1,0.1)
+    Rectangle:
+      pos: self.pos
+      size: self.size
+  color: (0,0,0,1) if self.selected else (1,1,1,1)
