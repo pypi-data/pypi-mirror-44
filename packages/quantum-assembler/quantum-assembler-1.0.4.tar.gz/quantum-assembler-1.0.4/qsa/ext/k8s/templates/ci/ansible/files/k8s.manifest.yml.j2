@@ -1,0 +1,12 @@
+- name: {{ spec.name }}
+  loop: '{{ spec.loop }}'
+  tags:
+  {%- for tag in spec.tags %}
+  - "{{ tag }}"
+  {%- endfor %}
+  k8s:
+    state: {{ spec.k8s.state }}
+    {%- if spec.k8s.namespace %}
+    namespace: {{ spec.k8s.namespace }}
+    {%- endif %}
+    definition: "{% raw %}{{ item }}{% endraw %}"

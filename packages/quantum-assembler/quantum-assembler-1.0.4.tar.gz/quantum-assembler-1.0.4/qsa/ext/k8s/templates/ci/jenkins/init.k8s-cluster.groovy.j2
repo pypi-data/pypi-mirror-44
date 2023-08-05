@@ -1,0 +1,180 @@
+///////////////////////////////////////////////////////////////////////
+//
+//  {{ quantum.project.name|upper }} JENKINS INIT SCRIPT
+//
+//  Configures folders, jobs, secrets and other items for the
+//  {{ quantum.project.name|upper }} project.
+//
+///////////////////////////////////////////////////////////////////////
+import com.cloudbees.hudson.plugins.folder.Folder
+import hudson.model.StringParameterValue
+{%- if USE_GIT %}
+import hudson.plugins.git.BranchSpec
+import hudson.plugins.git.GitSCM
+import hudson.plugins.git.UserRemoteConfig
+{%- endif %}
+{%- if USE_GIT %}
+import hudson.triggers.SCMTrigger
+{%- endif %}
+import hudson.triggers.TimerTrigger
+import hudson.triggers.Trigger
+import jenkins.model.Jenkins
+import org.jenkinsci.plugins.envinject.EnvInjectJobProperty
+import org.jenkinsci.plugins.envinject.EnvInjectJobPropertyInfo
+{%- if USE_GIT %}
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
+{%- endif %}
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
+
+
+Map opts = [
+  basePath: '{{ quantum.jenkins.folder or '' }}',
+  displayName: '{{ DISPLAY_NAME }}',
+  projectName: '{{ DISPLAY_NAME }}',
+  {%- if quantum.jenkins.folder %}
+  projectFolder: '{{ quantum.jenkins.folder }}/{{ quantum.project.name }}',
+  {%- else %}
+  projectFolder: 'deploy-{{ quantum.project.name }}',
+  {%- endif %}
+  remote: '{{ quantum.ci.origin.remote }}',
+  pollInterval: '{{ quantum.ci.origin.poll or "noop" }}',
+  webhook: '{{ quantum.ci.origin.webhook or "noo" }}',
+  {%- if quantum.ci.origin.credentials not in ('noop', None) %}
+  credentialsId: '{{ quantum.ci.origin.credentials }}',
+  {%- elif quantum.ci.origin.credentials == 'noop' %}
+  credentialsId: null,
+  {%- else %}
+  credentialsId: '{{ quantum.project.name }}.secrets.origin',
+  {%- endif %}
+  {%- if DEPLOYMENT_ENVIRONMENTS %}
+  environments: [
+    {%- for env in DEPLOYMENT_ENVIRONMENTS %}
+    [
+      name: '{{ env.name }}',
+      alias: '{{ env.alias or env.name }}',
+      jobName: 'deploy-{{ env.name }}',
+      {%- if quantum.jenkins.folder %}
+      jobFullName: '{{ quantum.jenkins.folder }}/deploy-{{ env.name }}',
+      {%- else %}
+      jobFullName: 'deploy-{{ env.name }}',
+      {%- endif %}
+      {%- if env.production %}
+      isProduction: true,
+      {%- else %}
+      isProduction: false,
+      {%- endif %}
+      {%- if env.deploy_branches %}
+      deployFromBranches: '{{ env.deploy_branches }}'
+      {%- elif env.production %}
+      deployFromBranches: '*/master'
+      {%- else %}
+      deployFromBranches: '*/develop'
+      {%- endif %}
+    ],
+    {%- endfor %}
+    [
+      name: 'global',
+      alias: 'global',
+      jobName: 'deploy-global',
+      {%- if quantum.jenkins.folder %}
+      jobFullName: '{{ quantum.jenkins.folder }}/deploy-global',
+      {%- else %}
+      jobFullName: 'deploy-global',
+      {%- endif %}
+      isProduction: true,
+      deployFromBranches: '*/master'
+    ]
+  ]
+  {%- else %}
+  environments: []
+  {%- endif %}
+]
+
+Jenkins jenkins = Jenkins.instance
+def baseFolder = jenkins.getItemByFullName(opts.basePath)
+def projectFolder = jenkins.getItemByFullName(opts.projectFolder)
+List<Trigger> triggers = []
+
+// Ensure that the folder structure for this project
+// exists and is up-to-date.
+def parent = null
+if (!baseFolder && !!opts.basePath) {
+  for (String folderName: opts.basePath.split('/')) {
+    parent = (!!parent) ? parent : jenkins
+    folder = parent.getItem(folderName)
+    if (!folder) {
+      folder = parent.createProject(Folder.class, folderName)
+    }
+    parent = folder
+  }
+  baseFolder = jenkins.getItemByFullName(basePath)
+  assert baseFolder : "Base folder should exist at this point."
+}
+parent = (!!opts.basePath) ? baseFolder : jenkins
+if (!projectFolder) {
+  projectFolder = parent.createProject(Folder.class, opts.projectFolder)
+}
+if (!!opts.displayName) {
+  projectFolder.setDisplayName(opts.displayName)
+}
+
+
+// Configure pipeline trigger(s).
+{%- if USE_GIT %}
+switch (opts.pollInterval) {
+  case 'default':
+    triggers << new SCMTrigger('H/5 * * * *')
+    break
+  case 'noop':
+    break
+  case null:
+    break
+  default:
+    triggers << new SCMTrigger(pollInterval)
+}
+{%- endif %}
+
+def flow = null
+def job = null
+def prop = null
+def vars = null
+for (Map env: opts.environments) {
+  {%- if USE_GIT %}
+  if (!!env.deployFromBranches) {
+    branches = [new BranchSpec(env.deployFromBranches)]
+    UserRemoteConfig origin = new UserRemoteConfig(opts.remote, null,
+      null, opts.credentialsId)
+    GitSCM scm = new GitSCM([origin], branches, false, null, null, null, [])
+    flow = new CpsScmFlowDefinition(scm, 'Jenkinsfile')
+  }
+  {%- endif %}
+  job = projectFolder.getItem(env.jobName)
+  if (!job) {
+    job = projectFolder.createProject(WorkflowJob, env.jobName)
+  }
+  job.setDisplayName("Deploy to ${env.name} environment")
+
+  // Configure job properties.
+  prop = job.getProperty(EnvInjectJobProperty.class)
+  if (!prop) {
+    vars  = [
+      "K8S_DEPLOYMENT_ENV=${env.name}",
+      "K8S_DEPLOYMENT_ALIAS=${env.alias}",
+      "K8S_NAMESPACE_PREFIX=${env.alias}-"
+    ]
+    prop = new EnvInjectJobProperty(
+      new EnvInjectJobPropertyInfo('', vars.join('\n'), '', '', false, null))
+    job.addProperty(prop)
+  }
+  prop.setOn(true)
+
+  // Enforce some global options.
+  job.setConcurrentBuild(false)
+  job.addTrigger(new TimerTrigger('H/30 * * * *'))
+  if (!!flow) {
+    job.setDefinition(flow)
+  }
+  job.save()
+}
+

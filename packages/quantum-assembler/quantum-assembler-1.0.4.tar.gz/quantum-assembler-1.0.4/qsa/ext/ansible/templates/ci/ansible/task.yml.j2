@@ -1,0 +1,11 @@
+- name: {{ task.name }}
+  tags:
+  {%- for tag in task.tags %}
+  - {{ tag }}
+  {%- endfor %}
+  {%- if task.when %}
+  {%- block module_options %}{% endblock %}
+  when: {{ task.when }}
+  {%- endif %}
+  {{ task.__module__ }}:
+    {{ task.__params__|yaml|indent(4) }}

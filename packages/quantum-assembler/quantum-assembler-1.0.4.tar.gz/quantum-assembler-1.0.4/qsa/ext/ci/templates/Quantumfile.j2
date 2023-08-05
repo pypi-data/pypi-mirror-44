@@ -1,0 +1,70 @@
+---
+ci:
+  # Specifies the delivery platform for continuous integration services.
+  # Choose from 'jenkins', 'gitlab' or 'gitlab+jenkins'.
+  using: {{ spec.ci.using|default('noop') }}
+
+  # The deployment strategy based on the branches in the version
+  # control system. Choose from 'gitflow' (master/develop),
+  # 'trunk' (each commit to master is deployed) or 'trunk+tagged'
+  # (each tagged commit to master is deployed). Note that the
+  # default strategy differs per project type.
+  strategy: {{ spec.ci.strategy|default('noop') }}
+
+  # Set this value to 'true' if each commit that is a candidate
+  # for deployment should be signed by a trusted GPG key.
+  signed: false
+
+  # Configures the origin VCS for the project sources.
+  origin:
+    # The remote from which the CI/CD may fetch the sources.
+    remote: {{ spec.ci.origin.remote or 'null' }}
+
+    # Identifies the credentials to use by the CI to checkout
+    # the project sources.
+    credentials: {{ spec.ci.origin.credentials or 'null' }}
+
+    # Specific the poll interval for this repository in the
+    # crontab format.
+    poll: {{ spec.ci.origin.poll or 'null' }}
+
+    # Enable build triggers through incoming webhooks. Choose
+    # from 'gitlab' or 'noop'.
+    webhook: {{ spec.ci.origin.webhook }}
+
+  # Configures Docker registries in various stages during the
+  # build process.
+  container_registries:
+    default:
+      url: {{ spec.ci.container_registries.default.url or 'docker.io' }}
+      secret: {{ spec.ci.container_registries.default.secret or 'null' }}
+    base:
+      url: {{ spec.ci.container_registries.base.url or 'docker.io' }}
+      secret: {{ spec.ci.container_registries.base.secret or 'null' }}
+    build:
+      url: {{ spec.ci.container_registries.build.url or 'docker.io' }}
+      secret: {{ spec.ci.container_registries.build.secret or 'null' }}
+    publish:
+      url: {{ spec.ci.container_registries.publish.url or 'docker.io' }}
+      secret: {{ spec.ci.container_registries.publish.secret or 'null' }}
+
+  # Configures notification systems.
+  {%- if spec.ci.notifications %}
+  notifications:
+    {{ spec.ci.notifications|yaml|indent(4) }}
+  {%- else %}
+  notifications: {}
+  {%- endif %}
+
+  # Specifies secrets (identified by name) that are mounted in the workspace
+  # before running a CI/CD pipeline.
+  {%- if spec.ci.mounted_secrets %}
+  mounted_secrets:
+  {%- for secret in spec.ci.mounted_secrets %}
+  - kind: {{ secret.kind }}
+    name: {{ secret.name }}
+    path: {{ secret.path }}
+  {%- endfor %}
+  {%- else %}
+  mounted_secrets: []
+  {%- endif %}

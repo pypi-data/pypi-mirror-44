@@ -1,0 +1,173 @@
+///////////////////////////////////////////////////////////////////////
+//
+//  {{ quantum.project.name|upper }} JENKINS INIT SCRIPT
+//
+//  Configures folders, jobs, secrets and other items for the
+//  {{ quantum.project.name|upper }} project.
+//
+///////////////////////////////////////////////////////////////////////
+{%- set USE_GITLAB=quantum.ci.origin.webhook == 'gitlab' %}
+import com.cloudbees.hudson.plugins.folder.*
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider.FolderCredentialsProperty
+import com.cloudbees.plugins.credentials.domains.Domain
+import hudson.plugins.git.BranchSpec
+import hudson.plugins.git.GitSCM
+import hudson.plugins.git.UserRemoteConfig
+import hudson.triggers.SCMTrigger
+import jenkins.model.Jenkins
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
+{%- if quantum.ci.origin.webhook == 'gitlab' %}
+import com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty
+import com.dabsquared.gitlabjenkins.GitLabPushTrigger
+import com.dabsquared.gitlabjenkins.trigger.TriggerOpenMergeRequest
+import com.dabsquared.gitlabjenkins.trigger.filter.BranchFilterType;
+{%- endif%}
+
+Jenkins jenkins = Jenkins.instance
+
+// Ensure that both the base and the project-specific folders
+// exist. If there is no base folder defined, the project
+// folder is created at the root level.
+String base_path = '{{ spec.jenkins.folder or "" }}'
+def base_folder = jenkins.getItemByFullName(base_path)
+String displayName = '{{ quantum.project.display_name or ""}}'
+def parent = null
+String project_name = '{{ quantum.project.name }}'
+def project_folder = (!!base_path) ?
+  jenkins.getItemByFullName("${base_path}/${project_name}")
+  : jenkins.getItemByFullName(project_name)
+String remote = '{{ quantum.ci.origin.remote }}'
+String pollInterval = '{{ quantum.ci.origin.poll or "noop" }}'
+String webhook = '{{ quantum.ci.origin.webhook or "noop" }}'
+if (!!!base_folder && !!base_path) {
+  for (String folder_name: base_path.split('/')) {
+    parent = (!!parent) ? parent : jenkins
+    folder = parent.getItem(folder_name)
+    if (!!!folder) {
+      folder = parent.createProject(Folder.class, folder_name)
+    }
+    parent = folder
+  }
+  base_folder = jenkins.getItemByFullName(base_path)
+  assert base_folder : "Base folder should exist at this point."
+}
+parent = (!!base_path) ? base_folder : jenkins
+if (!!!project_folder) {
+  project_folder = parent.createProject(Folder.class, project_name)
+}
+if (!!displayName) {
+  project_folder.setDisplayName(displayName)
+}
+
+{%- if quantum.ci.strategy in ('trunk', 'trunk+tagged') %}
+
+// The deployment strategy for this project is based on the trunk-based
+// development model, meaning that each commit to master may be deployed
+// or published to a production environment.{% if quantum.ci.strategy == 'trunk+tagged' %} Since not all commits
+// represent a new version of the project artifact, this pipeline is
+// only triggered when a commit tag is present.{% endif %}
+assert remote : "Variable 'remote' is expected to be non-empty"
+def branches = [new BranchSpec('*/master')]
+{%- if quantum.ci.origin.credentials not in ('noop', None) %}
+def credentialsId = '{{ quantum.ci.origin.credentials }}'
+{%- elif quantum.ci.origin.credentials == 'noop' %}
+def credentialsId = null
+{%- else %}
+def credentialsId = '{{ quantum.project.name }}.secrets.origin'
+{%- endif %}
+
+// Configure the remote sources for this project and ensure that
+// the job exists, so we can configure it later.
+UserRemoteConfig origin = new UserRemoteConfig(remote, null,
+  null, credentialsId)
+GitSCM scm = new GitSCM([origin], branches, false, null, null, null, [])
+FlowDefinition flow = (FlowDefinition) new CpsScmFlowDefinition(scm, 'Jenkinsfile')
+def job = project_folder.getItem('{{ quantum.project.name }}-trunk')
+if (!!!job) {
+  job = project_folder.createProject(WorkflowJob, '{{ quantum.project.name }}-trunk')
+}
+
+if(!!displayName) {
+  job.setDisplayName("${displayName} (Trunk)")
+}
+
+// Configure poll-based trigger.
+switch (pollInterval) {
+  case 'default':
+    job.addTrigger(new SCMTrigger('H/5 * * * *'))
+    break
+  case 'noop':
+    break
+  case null:
+    break
+  default:
+    job.addTrigger(new SCMTrigger(pollInterval))
+}
+
+// Configure webhook based trigger
+trigger = null
+switch (webhook) {
+  {%- if quantum.ci.origin.webhook == 'gitlab' %}
+  case 'gitlab':
+    def opts = [
+      triggerOnPush: true,
+      triggerOnMergeRequest: true,
+      triggerOnAcceptedMergeRequest: true,
+      triggerOnClosedMergeRequest: false,
+      triggerOpenMergeRequestOnPush: TriggerOpenMergeRequest.never,
+      triggerOnNoteRequest: true,
+      noteRegex: "Jenkins please retry a build",
+      skipWorkInProgressMergeRequest: true,
+      ciSkip: true,
+      setBuildDescription: true,
+      addNoteOnMergeRequest: false,
+      addCiMessage: false,
+      addVoteOnMergeRequest: false,
+      acceptMergeRequestOnSuccess: false,
+      branchFilterType: BranchFilterType.RegexBasedFilter, // NameBasedFilter, RegexBasedFilter, All
+      includeBranchesSpec: null,
+      excludeBranchesSpec: null,
+      sourceBranchRegex: '^master$',
+      targetBranchRegex: null,
+      mergeRequestLabelFilterConfig: null,
+      secretToken: System.getenv('GITLAB_SECRET'),
+      triggerOnPipelineEvent: false,
+      triggerOnApprovedMergeRequest: true,
+      pendingBuildName: "{{ quantum.project.display_name or quantum.project.name }}",
+      cancelPendingBuildsOnUpdate: true
+    ]
+    trigger = new GitLabPushTrigger(opts.triggerOnPush,
+      opts.triggerOnMergeRequest, opts.triggerOnAcceptedMergeRequest,
+      opts.triggerOnClosedMergeRequest, opts.triggerOpenMergeRequestOnPush,
+      opts.triggerOnNoteRequest, opts.noteRegex, opts.skipWorkInProgressMergeRequest,
+      opts.ciSkip, opts.setBuildDescription, opts.addNoteOnMergeRequest,
+      opts.addCiMessage, opts.addVoteOnMergeRequest, opts.acceptMergeRequestOnSuccess,
+      opts.branchFilterType, opts.includeBranchesSpec, opts.excludeBranchesSpec,
+      opts.sourceBranchRegex, opts.targetBranchRegex,
+      opts.mergeRequestLabelFilterConfig, opts.secretToken, opts.triggerOnPipelineEvent,
+      opts.triggerOnApprovedMergeRequest, opts.pendingBuildName, opts.cancelPendingBuildsOnUpdate
+    )
+    break
+  {% endif %}
+  case 'github':
+    break
+}
+if (!!trigger) {
+  job.addTrigger(trigger)
+}
+
+
+job.setDefinition(flow)
+{%- if USE_GITLAB %}
+
+// This is needed so that the webhook will function properly.
+job.addProperty(new GitLabConnectionProperty('Gitlab'))
+{%- endif %}
+job.setConcurrentBuild(false)
+job.save()
+{%- if MUST_SCHEDULE|default(False) %}
+job.scheduleBuild2(60)
+{%- endif %}
+{%- endif %}

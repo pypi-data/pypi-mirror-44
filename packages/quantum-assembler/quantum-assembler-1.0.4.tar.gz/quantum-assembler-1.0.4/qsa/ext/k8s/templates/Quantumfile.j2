@@ -1,0 +1,41 @@
+---
+k8s:
+  # The default namespace used in this project. Commonly, this
+  # is 'default' but certain use-cases may require different
+  # behavior.
+  default_namespace: {{ spec.k8s.default_namespace|default('default') }}
+
+  {%- if spec.k8s.cluster %}
+  cluster:
+    # A symbolic name that identifies the Kubernetes cluster.
+    {%- set cluster=spec.k8s.cluster %}
+    name: {{ cluster.name }}
+
+    # The default namespace used in this cluster. Commonly, this
+    # is 'default' but certain use-cases may require different
+    # behavior.
+    default_namespace: {{ cluster.default_namespace|default('default') }}
+
+    # Specifies the context name in a kubectl configuration
+    # file that is used to connect to the cluster management
+    # endpoint.
+    {%- if cluster.context %}
+    context: {{ cluster.context }}
+    {%- else %}
+    context: null
+    {%- endif %}
+    {%- if cluster.dmz %}
+    dmz:
+      {{ cluster.dmz|yaml|indent(6) }}
+    {%- else %}
+    dmz: null
+    {%- endif %}
+    {%- if cluster.namespaces %}
+    namespaces:
+      {{ cluster.namespaces|yaml|indent(6) }}
+    {%- else %}
+    namespaces: null
+    {%- endif %}
+  {%- else %}
+  cluster: null
+  {%- endif %}
