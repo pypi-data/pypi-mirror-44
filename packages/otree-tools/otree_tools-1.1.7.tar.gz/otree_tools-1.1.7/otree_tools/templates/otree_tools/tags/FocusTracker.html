@@ -1,0 +1,70 @@
+{% load static %}
+{# todo: build type_correspondence in non hardcoded way #}
+<script>
+
+    var type_correspondence = {{type_correspondence | safe}},
+        initial_state_for_msg,
+        before_images_loaded,
+        focus_tracker_ws_scheme = window.location.protocol == "https:" ? "wss" : "ws",
+        focus_tracker_ws_path = focus_tracker_ws_scheme + '://' + window.location.host + "/focustracker/{{ participant.code}}/{{page_name}}/{{page_index}}",
+        focus_tracker_socket = new WebSocket(focus_tracker_ws_path);
+
+    function WaitForSocketConnection(socket, callback) {
+        setTimeout(
+            function () {
+                if (socket.readyState === 1) {
+                    if (callback != null) {
+                        callback();
+                    }
+                    return;
+
+                } else {
+                    WaitForSocketConnection(socket, callback);
+                }
+
+            }, 5); // wait 5 milisecond for the connection...
+    }
+
+
+    function focus_tracker_sendingEvent(event_num_type, timestamp) {
+        var event_desc_type = type_correspondence[event_num_type];
+        var msg = JSON.stringify({
+            'event_desc_type': event_desc_type,
+            'event_num_type': event_num_type,
+            'timestamp': timestamp,
+        });
+        WaitForSocketConnection(focus_tracker_socket, function () {
+            focus_tracker_socket.send(JSON.stringify(msg));
+        });
+
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initial_state_for_msg = 0;
+        before_images_loaded = new Date().getTime();
+        focus_tracker_sendingEvent(initial_state_for_msg, before_images_loaded);
+
+    });
+
+
+
+    window.addEventListener('focus', function () {
+        focus_tracker_sendingEvent(4, new Date().getTime());
+
+    });
+
+    window.addEventListener('blur', function () {
+        focus_tracker_sendingEvent(2, new Date().getTime());
+    });
+
+
+    $(function () {
+        $('form#form').on('submit', function () {
+            var submittingformtime = new Date().getTime();
+            $(window).unbind('blur');
+            focus_tracker_sendingEvent(5, submittingformtime);
+        });
+    })
+    ;
+</script>
+
