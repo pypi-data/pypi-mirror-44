@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block userlinks %}{% url 'django-admindocs-docroot' as docsroot %}{% if docsroot %}<a href="{{ docsroot }}">{% trans 'Documentation' %}</a> / {% endif %}{{ title }} / <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; {% trans "Latch Status" %}
+</div>
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block content_title %}<h1>{{ title }}</h1>{% endblock %}
+{% block content %}
+
+{% if configured %}
+<p>{% trans "Latch is configured: <b>Yes</b>" %}</p>
+{% else %}
+<p>{% trans "Latch is configured: <b>No</b>" %}</p>
+{% endif %}
+
+{% if accountid %}
+<p>{% blocktrans %}
+Your accountId is: <b>{{accountid}}</b>
+{% endblocktrans %}
+</p>
+<p>
+{% blocktrans %}
+Account status: <b>{{account_status}}</b>
+{% endblocktrans %}
+</p>
+{% else %}
+<p>
+{% blocktrans %}
+Your account is <b>not latched</b>
+{% endblocktrans %}
+</p>
+{% endif %}
+
+{% if error %}
+<p>{% trans "Latch connection error" %}</p>
+{% endif %}
+
+{% endblock %}
