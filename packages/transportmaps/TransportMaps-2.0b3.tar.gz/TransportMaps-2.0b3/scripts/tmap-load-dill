@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+
+#
+# This file is part of TransportMaps.
+#
+# TransportMaps is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# TransportMaps is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with TransportMaps.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Transport Maps Library
+# Copyright (C) 2015-2018 Massachusetts Institute of Technology
+# Uncertainty Quantification group
+# Department of Aeronautics and Astronautics
+#
+# Author: Transport Map Team
+# Website: transportmaps.mit.edu
+# Support: transportmaps.mit.edu/qa/
+#
+
+from __future__ import print_function
+
+import sys
+import getopt
+import os
+import shutil
+import dill as pickle
+import time
+import datetime
+
+sys.path.append(os.getcwd())
+
+def usage():
+    usage_str = "Usage: tmap-load-dill [-h -I] --fname=FNAME"
+    print(usage_str)
+
+def full_usage():
+    usage()
+
+def description():
+    docs_str = """DESCRIPTION
+Load a dill file into the object stg.
+
+OPTIONS
+  --fname=FNAME           file name
+  -I                      enter interactive mode after finishing
+  -h                      print this help
+"""
+    print(docs_str)
+
+def full_doc():
+    full_usage()
+    description()
+
+argv = sys.argv[1:]
+FNAME = None
+INTERACTIVE = False
+try:
+    opts, args = getopt.getopt(argv,"hI",["fname="])
+except getopt.GetoptError as e:
+    full_usage()
+    print(e)
+for opt, arg in opts:
+    if opt == '-h':
+        full_doc()
+        sys.exit()
+    elif opt == '--fname':
+        FNAME = arg
+    # Interactive
+    elif opt == "-I":
+        INTERACTIVE = True
+    else:
+        raise RuntimeError("Input option %s not recognized." % opt)
+
+def tstamp_print(msg, *args, **kwargs):
+    tstamp = datetime.datetime.fromtimestamp(
+        time.time()
+    ).strftime('%Y-%m-%d %H:%M:%S')
+    print(tstamp + " " + msg, *args, **kwargs)
+        
+if FNAME is None:
+    full_usage()
+    tstamp_print("ERROR: Either --fname must be specified")
+    sys.exit(3)
+
+def store(stg, fname):
+    if os.path.exists(fname):
+        shutil.copyfile(fname, fname + '.bak')
+    with open(fname, 'wb') as ostr:
+        pickle.dump(stg, ostr)
+    try:
+        os.remove(fname + '.bak')
+    except:
+        pass
+    
+with open(FNAME, 'rb') as istr:
+    stg = pickle.load(istr)
+    tstamp_print("File successfully loaded.")
+
+if INTERACTIVE:
+    from IPython import embed
+    embed()
