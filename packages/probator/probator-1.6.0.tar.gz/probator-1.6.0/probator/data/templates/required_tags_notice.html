@@ -1,0 +1,114 @@
+<div>
+    {% if issues %}
+    <div>
+        <p>
+            The following resources are not compliant with the Required Tagging standards.
+        </p>
+        <p>
+            Resources that are not tagged appropriately within a month of being detected as non-compliant will be
+            stopped automatically until tags have been added.
+            To prevent this from happening have the owners of the resources to tag their assets correctly.
+        </p>
+
+        <div>
+            <h2>Issues</h2>
+            <table style="border: 0; border-spacing: 0">
+                <thead>
+                <tr>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 250px; text-align: left; padding: 4px;">
+                        Resource
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 150px; text-align: left; padding: 4px;">
+                        Resource Type
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 150px; text-align: left; padding: 4px;">
+                        Account
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 125px; text-align: left; padding: 4px;">
+                        Region
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 125px; text-align: left; padding: 4px;">
+                        Current State
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 250px; text-align: left; padding: 4px;">
+                        Missing tags
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 250px; text-align: left; padding: 4px;">
+                        Notes
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for data in issues %}
+                <tr>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ data.resource.id }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ data.resource.resource_type }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ data.resource.account.account_name }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ data.resource.location }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ data.issue.state }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">{{ ', '.join(data.issue.missing_tags) }}</td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                        {% if data.issue.notes %}
+                        {% for note in data.issue.notes %}
+                        <p>{{ note }}</p>
+                        {% endfor %}
+                        {% else %}
+                        <i>No Notes</i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    {% if fixed %}
+    <div>
+        <p>
+            The following resources are now compliant with the Required Tags standards and are no longer subject to
+            being stopped.
+        </p>
+
+        <div>
+            <h2>Fixed Issues</h2>
+            <table style="border: 0px; border-spacing: 0px;">
+                <thead>
+                <tr>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 150px; text-align: left; padding: 4px;">
+                        Account
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 125px; text-align: left; padding: 4px;">
+                        Region
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 400px; text-align: left; padding: 4px;">
+                        Resource
+                    </th>
+                    <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 400px; text-align: left; padding: 4px;">
+                        Resource Type
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for resource in fixed %}
+                <tr>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                        {{ resource.account.account_name }}
+                    </td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                        {{ resource.location }}
+                    </td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                        {{ resource.id }}
+                    </td>
+                    <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                        {{ resource.resource_type }}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
