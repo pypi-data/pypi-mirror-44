@@ -1,0 +1,112 @@
+============
+Photo Import
+============
+
+A tool for importing photos from one directory into a hierarchical
+folder structure in another directory based on the EXIF data of the
+photos.
+
+**This only works with Python 3.** Python 2 will be end-of-lifed after
+2019, but there is `an issue`_ open for discussion of any compelling
+reasons why this should be made backwards-ly compatible.
+
+The idea is that you're able to sort a folder full of photos (such as
+those straight off a memory card) into a navigable hierarchy like the
+following:
+
+.. code:: bash
+
+   $ tree Photos
+   Photos
+   └── 2019
+       ├── 03
+       │   ├── 11
+       │   │   ├── photo1.jpg
+       │   │   ├── photo2.jpg
+       │   │   └── photo3.jpg
+       │   ├── 12
+       │   │   └── photo4.jpg
+       │   └── 13
+       └── 04
+           └── 01
+               ├── photo5.jpg
+               └── photo6.jpg
+
+----------
+Usage
+----------
+
+Installation
+============
+
+The ``photo-import`` command can be installed via ``pip`` as follows:
+
+.. code:: bash
+
+   $ pip install photo-import
+   $ photo-import --version
+   0.0.2
+
+Usage
+==========
+
+Basic usage is as follows:
+
+.. code:: bash
+
+   $ photo-import /path/to/source/image.jpg /path/to/photos/
+
+This will move ``image.jpg`` into an appropriate folder within the
+``/path/to/photos/`` directory, resulting in, for example,
+``/path/to/photos/2019/03/11/image.jpg``.
+
+Further usage instructions are provided by using the ``--help`` option:
+
+.. code:: bash
+
+   $ photo-import --help
+
+
+-----------
+Development
+-----------
+
+Running from source
+===================
+
+There's also a "runner" python script provided in the root of this
+repository for convenience when the source code is checked out locally:
+
+.. code:: bash
+
+   $ pip install -r requirements.txt
+   $ python runner.py --version
+   0.0.2
+   $ ./runner.py --version
+   0.0.2
+
+Commit message format
+=====================
+
+Commit messages should conform to the `conventional commits`_ standard, and to
+help with this you should install the `commitizen`_ tool:
+
+.. code:: bash
+
+   $ pip install -r dev-requirements.txt
+   $ git add .
+   $ cz commit
+
+Tests
+==========
+
+To run the test suite locally, use ``pytest``:
+
+.. code:: bash
+
+   $ pip install -r requirements.txt
+   $ pytest
+
+.. _an issue: https://gitlab.com/eddarmitage/photo-import/issues/10
+.. _conventional commits: https://www.conventionalcommits.org/en/
+.. _commitizen: https://pypi.org/project/commitizen/
