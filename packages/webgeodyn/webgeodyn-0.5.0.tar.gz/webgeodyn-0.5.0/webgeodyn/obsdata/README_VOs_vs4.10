@@ -1,0 +1,37 @@
+ Virtual Observatory Model 
+- version 4.10, 21st June 2017 -
+%==========================================================================
+- VO data selection and correction:
+    -CHAMP data from 2000-07-19 to 2010-09-17, 15 sec data sampling rate
+    -Swarm data from 2013-11-29 to 2017-04-30, 15 sec data sampling rate
+    -Gross outliers deviating more than 500nT from CHAOS-6-x3 removed
+    -Dark time (max 10deg above horizont) 
+    -Geomagnetically quiet conditions (kp<30,dDst<3,Em<0.8,Bz>0nT,abs(By)<10nT) 
+    -Estimates of CHAOS-6-x3 magnetospheric plus induced fields removed
+    -Estimates of CM4 ionospheric plus induced fields removed
+    -Estimates CHAOS-6-x3 crustal field for SH degree n=20-120 (static part) removed 
+%==========================================================================
+- VO model setup
+    -200 globally distributed VOs
+    -VO data search range is 850km around each VO location
+    -VO data are collected for 4 months ad a time starting from january (i.e. 3 data points pr year)
+    -VO altitudes are 300km during CHAMP period
+    -VO altitudes are 500km during Swarm period
+    -Data along-track and cross-track(for Swarm only) differences and sums are used
+    -VO fit using cubic potential description
+
+The VO processing is as follows:
+From the collected data, within the search radius of a given VO, the CHAOS-6-x3 internal time-dependent 
+(n=1-20) field and external field predictions are removed. The residual field is fitted by a cubic potential
+and solved for at the VO location. Afterwards the CHAOS-6-x3 main field (n=1-14) prediction at the VO location
+is added back.  
+%==========================================================================
+Output files: The VOs are listed starting from the North pole by ascending time. 
+
+VO_CHAMP_MF  -> contains main field during CHAMP period. Format:  colatitude, longitude, year, month, time(in mjd), radius, B_r, B_theta, B_phi, no. of data
+VO_CHAMP_SV  -> contains secular variation during CHAMP period. Format:  colatitude, longitude, time, radius, dB_r, dB_theta, dB_phi
+
+VO_SWARM_MF  -> contains main field during Swarm period. Format:  colatitude, longitude, year, month, time(in mjd), radius, B_r, B_theta, B_phi, no. of data
+VO_SWARM_SV  -> contains secular variation during Swarm period. Format:  colatitude, longitude, time, radius, dB_r, dB_theta, dB_phi
+%==========================================================================
+

@@ -1,0 +1,135 @@
+Metadata-Version: 2.1
+Name: webgeodyn
+Version: 0.5.0
+Summary: A web-based plot tool to visualize Earth core flows
+Home-page: https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn
+Author: Nicolas Gillet, Loïc Huder, Yannick Martin, Franck Thollard
+Author-email: loic.huder@univ-grenoble-alpes.fr
+License: UNKNOWN
+Description: # webgeodyn
+        
+        [![build status](https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn/badges/master/build.svg)](https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn/pipelines)
+        [![coverage report](https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn/badges/master/coverage.svg)](https://geodynamo.gricad-pages.univ-grenoble-alpes.fr/webgeodyn/htmlcov/)
+        [![documentation](https://img.shields.io/website/https/geodynamo.gricad-pages.univ-grenoble-alpes.fr/webgeodyn/index.html.svg?label=documentation&up_color=cyan)](https://geodynamo.gricad-pages.univ-grenoble-alpes.fr/webgeodyn/index.html)
+        
+        **webgeodyn** is a web-based plot tool to visualize Earth core flows and scalar fields at the Core Mantle Boundary (CMB). It consists in a Tornado web server, that can be started locally, that provides a set of visualisations tools on a variety of data formats.
+        
+        ## Installation
+        ### Requirements
+        The installation of webgeodyn requires Python 3 to be installed.
+        
+        The other dependencies will be automatically installed by the next step but are listed here for the sake of completeness:
+        * _numpy_
+        * _scipy_
+        * _h5py_
+        * _tornado_
+        
+        ### Installing the package
+        webgeodyn can be installed 
+        - ##### from pip:
+        ```sh
+        pip3 install webgeodyn [--user]
+        ```
+        Put the `--user` flag if you are not installing in a [virtual environment](https://docs.python.org/3/library/venv.html).
+        - ##### from the git repository :
+        Clone first the webgeodyn repository
+        ```sh
+        git clone https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn
+        ```
+        Then install the package:
+        ```sh
+        cd webgeodyn
+        python3 setup install [--user]
+        ```
+        Again, put the `--user` if needed.
+        
+        Whatever the method used, you can test if the install succeed by importing webgeodyn in Python3:
+        ```
+        python3 -c "import webgeodyn; print(webgeodyn.__version__)"
+        ```
+        This command should return the installed version.
+        
+        ## Running the example
+        You can give a first try at starting the web server by running the example:
+        ```sh
+        python3 webgeodyn/example.py
+        ```
+        or in the Python console:
+        ```python
+        >>> import webgeodyn.example
+        ```
+        This starts the server locally and should open your browser and display a page ressembling the one at https://geodyn.univ-grenoble-alpes.fr/. If not, try to type `http://localhost:8080` in your browser. 
+        
+        You can try the different visualisations tools provided on the loaded example model ([CHAOS-6](http://www.space.dtu.dk/english/Research/Scientific_data_and_models/Magnetic_Field_Models)).
+        
+        Note that this example will also try to load the result from the latest `pygeodyn` computation (if present in `~/pygeodyn_results/Current_computation/`).
+        
+        ## Running the server with your data
+        The server can be used to visualise any data of supported format. For that, it is necessary to follow the template of `example.py`:
+        - First, load the data under the form of `Model` objects, of a given name and format, in a `Models` dictionary. 
+        - Then, the server must be started with the loaded `Models`.
+        
+        This is shown in details below:
+        
+        ```python
+        # 0.Import the necessary submodules
+        import webgeodyn.server
+        import webgeodyn.models
+        
+        # 1.Initialising the Models dictionary
+        models = webgeodyn.models.Models()
+        
+        # 2.Loading your data in the Models dictionary
+        # Syntax: models.loadModel('/path/to/the/model/directory', "Name of the model", "Format of the model")
+        models.loadModel('pygeodyn_results/Current_computation', 'Current pygeodyn computation', 'pygeodyn_hdf5')
+        # Several models can be loaded. Example for CHAOS
+        models.loadModel('webgeodyn/webgeodyn/example_data/CHAOS-6-x4', 'CHAOS-6-x4 model', 'CHAOS')
+        
+        # 3.Start the server with the loaded Models
+        webgeodyn.server.startServer(models)
+        ```
+        By copying this code in a Python file of your own, you should be able to use the visualisation tools on data of supported formats.
+        
+        The format of the models, that define the format of the files to read, are the modules of `webgeodyn.inout`. Here are a few:
+        - `pygeodyn_hdf5`: to read HDF5 files generated by [pygeodyn](https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/pygeodyn)
+        - `chaos`: to read [CHAOS](http://www.space.dtu.dk/english/Research/Scientific_data_and_models/Magnetic_Field_Models) splines files
+        - `covobs`: to read [COVOBS](http://www.space.dtu.dk/english/Research/Scientific_data_and_models/Magnetic_Field_Models) realisations files
+        
+        A list of the formats can be displayed by running:
+        ```python
+        import webgeodyn.inout
+        print(webgeodyn.inout._formats)
+        ```
+        
+        If you need the support of a new format of file, you can follow the templates given in [webgeodyn/inout](webgeodyn/inout/README.md) to implement your own loading function. Otherwise, you can contact us using the information given below.
+        
+        ## Developer documentation 
+        Documentation of the submodules and methods of the package are available [on line](https://geodynamo.gricad-pages.univ-grenoble-alpes.fr/webgeodyn/index.html).
+        
+        If [Sphinx](http://www.sphinx-doc.org/) is installed and the files were cloned from the repository, it is possible to generate the documentation locally using:
+        
+        ```bash
+        cd doc && ./make_all_doc.sh
+        ```
+        The documentation will then be available in HTML format for both Python and JavaScript at doc/html/index.html.
+        
+        ## Conditions of use
+        The work is licensed under the [GNU GPLv3](./LICENSE.txt). 
+        
+        ## Git repository
+        The source code is stored on a Git repository (https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/pygeodyn) which can also be used to give feedbacks through [Issues](https://gricad-gitlab.univ-grenoble-alpes.fr/Geodynamo/webgeodyn/issues).
+        
+        ## Contact information
+        For scientific inquiries, contact [Nicolas Gillet](mailto:nicolas.gillet@univ-grenoble-alpes.fr). For technical problems, contact [Loïc Huder](mailto:loic.huder@univ-grenoble-alpes.fr) or [Franck Thollard](mailto:franck.thollard@univ-grenoble-alpes.fr).
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: JavaScript
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Education
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Description-Content-Type: text/markdown

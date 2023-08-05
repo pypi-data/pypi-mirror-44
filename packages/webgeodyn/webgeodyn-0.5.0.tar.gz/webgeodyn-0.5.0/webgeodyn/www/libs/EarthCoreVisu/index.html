@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/Map" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+<head>
+    <meta charset="utf-8"/>
+    <title>Earth core visu</title>
+    <meta itemprop="name"                                      content="earthcorevisu"/>
+    <meta itemprop="description"     name="description"        content="Animated visualisation of flow on earth core surface"/>
+    <meta itemprop="author"          name="author"             content="Yannick Martin - Geodynamo - ISTerre"/>
+
+    <!--
+    <meta property="og:type"        content="website"/>
+    <meta property="og:title"       content="EarthCoreVisu"/>
+    <meta property="og:description" content=""/>
+    <meta property="og:url"         content="http://earth.nullschool.net"/>
+    <meta property="og:image"       content="http://earth.nullschool.net/preview.jpg"/>
+    -->
+
+    <link rel="shortcut icon" href="favicon.png"/>
+    <link rel="apple-touch-icon" sizes="120x120" href="/iphone-icon.png"/>
+    <link rel="apple-touch-icon" sizes="152x152" href="/ipad-icon.png"/>
+
+    <link rel="stylesheet" type="text/css" href="libs/semantic/semantic.css">
+    <link rel="stylesheet" type="text/css" href="libs/jqueryui/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="earthcorevisu.css">
+
+    <script src="libs/jquery/jquery-3.2.1.min.js" charset="utf-8"></script>
+    <script src="libs/jquery/jquery.mousewheel.min.js" charset="utf-8"></script>
+
+    <script src="libs/jqueryui/jquery-ui.min.js" charset="utf-8"></script>
+
+    <script src="libs/mathjs/math.min.js" charset="utf-8"></script>
+
+    <script src="libs/d3/d3.js" charset="utf-8"></script>
+    <script src="libs/d3.geo.projection/d3-geo-projection.js" charset="utf-8"></script>
+
+    <script src="libs/topojson/topojson.js" charset="utf-8"></script>
+
+    <script src="libs/semantic/semantic.js" charset="utf-8"></script>
+
+    <script src="libs/gif/gif.js" charset="utf-8"></script>
+    <script src="libs/gif/gif.worker.js" charset="utf-8"></script>
+
+    <script src="libs/ccapture/CCapture.all.min.js" charset="utf-8"></script>
+    <!--<script src="libs/ccapture/CCapture.js" charset="utf-8"></script>
+    <script src="libs/ccapture/Whammy.js" charset="utf-8"></script>-->
+
+    <script src="earthcorevisu.js" charset="utf-8"></script>
+
+</head>
+<body data-lang="en">
+
+    <div class="ui compact segment" id="canvasdiv" style="width:49%; height:49%; display:inline-block">
+    </div>
+    <div class="ui compact segment" id="canvasdiv2" style="width:49%; height:49%; margin:0; padding:0; display:inline-block">
+    </div>
+    <div class="ui compact segment" id="canvasdiv3" style="width:49%; height:49%; margin:0; padding:0; display:inline-block">
+    </div>
+    <div class="ui compact segment" id="canvasdiv4" style="width:49%; height:49%; margin:0; padding:0; display:inline-block">
+    </div>
+
+
+    <script>
+      /// IDEAS :
+      /// http://christopheviau.com/var/d33d/
+
+      var globeController = null;
+      var globeController2 = null;
+      var res = 1;
+      var overlay = new earthcorevisu.VectorData([181*res,360*res]);
+      //var colorScales = new earthcorevisu.ColorScales();
+
+      overlay.stepθ = 1/res;
+      overlay.stepφ = 1/res;
+      var data = math.zeros([181*res,360*res,3])
+
+      for (var ith=0;ith<181*res;ith++) {
+        for (var iph=0;iph<360*res;iph++) {
+          var th = ith/res;
+          var ph = iph/res;
+          data[ith][iph][0] = 0;//Math.sin(th/18*Math.PI); //vtheta
+          data[ith][iph][1] = Math.sin(ph/36*Math.PI + Math.PI/2); //vphi
+          data[ith][iph][2] = Math.sqrt(data[ith][iph][1]*data[ith][iph][1] + data[ith][iph][0]*data[ith][iph][0]); //magv
+        }
+      }
+      overlay.setData(data);
+
+      var overlay2 = new earthcorevisu.ScalarData([181*res,360*res]);
+      overlay2.stepθ = 1/res;
+      overlay2.stepφ = 1/res;
+
+      var data2 = math.zeros([181*res,360*res])
+
+      for (var ith=0;ith<181*res;ith++) {
+        for (var iph=0;iph<360*res;iph++) {
+          var th = ith/res
+          var ph = iph/res
+          data2[ith][iph] = 3 * Math.sin(ph/36*Math.PI + Math.PI);
+        }
+      }
+      overlay2.setData(data2);
+
+      var realUData = null;
+      var realUData2 = null;
+      var realDIVHU = null;
+      var realBr = null;
+      $.getJSON("data/U.json").done(function(json) {
+        var ntheta = json.U.length;
+        var nphi = json.U[0].length;
+
+        realUData = new earthcorevisu.VectorData([ntheta,nphi]);
+        realUData.stepθ = json.theta_step;
+        realUData.stepφ = json.phi_step;
+        realUData.setData(json.U);
+      }).always(function(){
+
+        $.getJSON("data/minusDIVHU.json").done(function(json) {
+          var ntheta = json.dataarray.length;
+          var nphi = json.dataarray[0].length;
+
+          realDIVHU = new earthcorevisu.ScalarData([ntheta,nphi]);
+          realDIVHU.stepθ = json.theta_step;
+          realDIVHU.stepφ = json.phi_step;
+          realDIVHU.setData(json.dataarray);
+        }).always(function() {
+          $.getJSON("data/BR.json").done(function(json) {
+            var ntheta = json.dataarray.length;
+            var nphi = json.dataarray[0].length;
+
+            realBr = new earthcorevisu.ScalarData([ntheta,nphi]);
+            realBr.stepθ = json.theta_step;
+            realBr.stepφ = json.phi_step;
+            realBr.setData(json.dataarray);
+          }).always(function(){
+            $.getJSON("data/U2.json").done(function(json) {
+              var ntheta = json.U.length;
+              var nphi = json.U[0].length;
+
+              realUData2 = new earthcorevisu.VectorData([ntheta,nphi]);
+              realUData2.stepθ = json.theta_step;
+              realUData2.stepφ = json.phi_step;
+              realUData2.setData(json.U);
+              //realUData = new ScalarData([181*res,360*res])
+            }).always(function(){
+              /*globeController = new GlobeController(
+                {
+                  projectionName: "Aitoff",
+                  parentDivName: "#canvasdiv",
+                  libPath: 'libs/earthcore',
+                  title: 'Test data',
+                  overlay: {
+                    opacity:    1,
+                    data:       realBr,
+                    colorScale: "DivPRGn",
+                    colorScaleInvert : true,
+                    logColors:   false,
+                    show:       true,
+                    unit:       "nT",
+                    title:      "Br",
+                    hiddenColor:"rgba(0,0,0,0.75)"
+                  },
+                  flow: {
+                    opacity:    1,
+                    data:       realUData,
+                    colorScale: "YlOrBr",
+                    colorScaleInvert : true,
+                    logColors:   false,
+                    show:       true,
+                    timestep:   0.6,
+                    unit:       "km/yr",
+                    title:      "Core surface flow",
+                  },
+                  map: {
+                    opacity: 0.9,
+                  }
+                });*/
+                globeController2 = new earthcorevisu.GlobeController(
+                  {
+                    projectionName: "Aitoff",
+                    parentDivName: "#canvasdiv2",
+                    title: 'Test data',
+                    overlay: {
+                      opacity:    1,
+                      data:       realUData,
+                      colorScale: "BuRd",
+                      colorScaleInvert : false,
+                      logColors:   true,
+                      show:       true,
+                      unit:       "km/yr",
+                      title:      "Flow norm",
+                      hiddenColor:"rgba(0,0,0,0.75)",
+                      min: null,
+                      max: null
+                    },
+                    flow: {
+                      opacity:    1,
+                      data:       realUData,
+                      colorScale: "white",
+                      colorScaleInvert : false,
+                      logColors:   false,
+                      show:       true,
+                      timestep:   0.6,
+                      unit:       "km/yr",
+                      title:      "Core surface flow",
+                      maxParticleSize: 5,
+                      minParticleSize: 1,
+                    },
+                    export: {
+                      format: "webm",
+                    }
+                  });
+              /*globeController2 = new GlobeController("Azimuthal equal area (North)",'#canvasdiv2','libs/earthcore');
+              globeController2.setOverlayData(realUData,false);
+              globeController2.setFlowData(realUData,null,false);
+              globeController2.globe.doDrawMap();
+              globeController3 = new GlobeController("Azimuthal equal area (South)",'#canvasdiv3','libs/earthcore');
+              globeController3.setOverlayData(realUData,false);
+              globeController3.setFlowData(realUData,null,false);
+              globeController3.globe.doDrawMap();
+              globeController4 = new GlobeController("Aitoff",'#canvasdiv4','libs/earthcore');
+              globeController4.setOverlayData(realUData,false);
+              globeController4.setFlowData(realUData,null,false);
+              globeController4.globe.doDrawMap();*/
+            });
+          });
+        });
+
+      })
+
+      //Aitoff
+      //Azimuthal equal area (South)
+      //Azimuthal equal area (North)
+      //Orthographic
+
+      $( window ).resize(function(){
+        //globeController.parentDiv.width($(window).width() - 2*rem());
+        //globeController.parentDiv.height($(window).height() - 2 * rem());
+        //globeController.resize();
+        globeController2.resize();
+      })
+      //overlay.particles.initGenerator(overlay2)
+
+      //$(document).on('mouseup', function(){
+      //  overlay.drawOverlay();
+      //});
+      // Create a capturer that exports an animated GIF
+      // Notices you have to specify the path to the gif.worker.js
+
+
+    </script>
+</body>
+</html>
