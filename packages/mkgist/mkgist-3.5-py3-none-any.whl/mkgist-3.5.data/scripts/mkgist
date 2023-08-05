@@ -1,0 +1,182 @@
+#!python
+"""
+A small utility for making gists from the command line
+Author: Michael Noronha <michaeltnoronha@gmail.com>
+"""
+
+import os
+import sys
+import json
+import argparse
+import pyperclip
+import requests
+import datetime
+
+from os.path import isabs, expanduser
+from getpass import getpass
+
+BASE_DIR = os.getcwd()
+ENDPOINT = "https://api.github.com/gists"
+REPO_URL = "https://github.com/mtn/mkgist/issues"
+CONF_DIR = os.path.expanduser("~/.mkgist")
+SECRETS_FILE = os.path.expanduser("~/.mkgist/conf")
+ERROR_FILE = os.path.expanduser("~/.mkgist/errors")
+
+
+def create_secrets_file():
+    print("(First use) Please retreive a personal access token")
+    print("Link: https://github.com/settings/tokens/new")
+    print("It must have the 'gist' scope")
+
+    try:
+        secrets = {}
+        secrets["access_token"] = getpass("Token: ")
+
+        if not os.path.isdir(CONF_DIR):
+            os.mkdir(CONF_DIR)
+        with open(SECRETS_FILE, "w") as secrets_file:
+            secrets_file.write(json.dumps(secrets))
+
+        print("Done!")
+        return secrets
+    except Exception as e:
+        if os.path.isfile(SECRETS_FILE):
+            os.remove(SECRETS_FILE)
+        print("An error occurred while setting up the token")
+        exit()
+
+def process_files(arg_filenames, request_data):
+    filenames = []
+    for filename in arg_filenames:
+        if "/" not in filename:
+            name = filename
+        else:
+            name = filename[filename.rfind("/") + 1 :]
+        filenames.append(name)
+
+        if not "files" in request_data:
+            request_data["files"] = {name: {"content": None}}
+        else:
+            request_data["files"][name] = {"content": None}
+
+        try:
+            if isabs(expanduser(filename)):
+                with open(expanduser(filename), "r") as content_file:
+                    request_data["files"][name]["content"] = content_file.read()
+            else:
+                with open("{}/{}".format(BASE_DIR, filename), "r") as content_file:
+                    try:
+                        request_data["files"][name]["content"] = content_file.read()
+                    except:
+                        print("Failed while reading file {}".format(name))
+                        exit(1)
+        except IOError:
+            print("An error occured when opening file {}".format(filename))
+            exit(1)
+
+    return request_data, filenames
+
+
+def process_stdin(request_data):
+    print("Reading from STDIN. If not piping, press Ctrl-D on a newline to finish.")
+
+    request_data["files"] = {}
+    request_data["files"]["out"] = {"content": None}
+    request_data["files"]["out"]["content"] = sys.stdin.read()
+
+    return request_data
+
+
+def handle_raw(as_json, args, filenames):
+    if args.filenames:
+        if len(filenames) > 1:
+            for name in filenames:
+                print("{}:\n{}\n".format(name, as_json["files"][name]["raw_url"]))
+            exit()
+        else:
+            url = as_json["files"][args.filenames[0]]["raw_url"]
+    else:
+        url = as_json["files"]["out"]["raw_url"]
+
+    return url
+
+
+def process_result(res, args, filenames):
+    try:
+        as_json = res.json()
+        if "html_url" in as_json:
+            if args.raw:
+                url = handle_raw(as_json, args, filenames)
+            else:
+                url = as_json["html_url"]
+
+            if args.nocopy:
+                print(url)
+            else:
+                print("made it here")
+                pyperclip.copy(url)
+                print("made it here")
+                pyperclip.paste()
+                print("made it here")
+                print("Gist URL copied to clipboard.")
+        else:
+            print(as_json["message"].rstrip())
+    except:
+        print("An error occured, logged to ~/.mkgist/errors")
+        if not os.path.isdir(CONF_DIR):
+            os.mkdir("~/.mkgist")
+        with open(ERROR_FILE, "a") as error_log:
+            print(f"Logging error to {ERROR_FILE}.\nPlease report this at {REPO_URL}")
+            error_log.write(f"Error from {datetime.datetime.now()}:\n")
+            error_log.write(f"{res.text}")
+
+def run(args):
+    request_data = {"public": args.public}
+
+    if args.description:
+        request_data["description"] = args.description
+
+    if args.filenames:
+        request_data, filenames = process_files(args.filenames, request_data)
+    else:
+        filenames = []
+        request_data = process_stdin(request_data)
+
+    res = requests.post(
+        ENDPOINT,
+        data=json.dumps(request_data),
+        headers={"Authorization": f"token {SECRETS['access_token']}"}
+    )
+
+    process_result(res, args, filenames)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Utility for making gists")
+    parser.add_argument(
+        "filenames", help="Name of file(s) to make into gist", nargs="*"
+    )
+    parser.add_argument("-d", "--description", help="description for gist")
+    parser.add_argument("-r", "--raw", action="store_true", help="fetch raw link")
+    parser.add_argument(
+        "-n",
+        "--nocopy",
+        action="store_true",
+        help="print result url to screen instead of overwriting clipboard",
+    )
+    parser.add_argument("-p", "--public", action="store_true", help="make gist public")
+    args = parser.parse_args()
+
+    # Load secrets, which contains access token
+    if not os.path.isfile(SECRETS_FILE):
+        SECRETS = create_secrets_file()
+    else:
+        SECRETS = json.load(open(SECRETS_FILE))
+        if not "access_token" in SECRETS:
+            SECRETS = create_secrets_file()
+
+    try:
+        run(args)
+    except KeyboardInterrupt:
+        print("Exiting")
+        exit(0)
