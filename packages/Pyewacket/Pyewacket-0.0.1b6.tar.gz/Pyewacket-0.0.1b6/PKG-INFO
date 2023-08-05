@@ -1,0 +1,1157 @@
+Metadata-Version: 2.1
+Name: Pyewacket
+Version: 0.0.1b6
+Summary: Drop-in Replacement for the Python Random Library.
+Home-page: https://sharpdesigndigital.com
+Author: Broken aka Robert Sharp
+Author-email: webmaster@sharpdesigndigital.com
+License: Free for non-commercial use
+Description: # Pyewacket
+        ### Fast, fault-tolerant, drop-in replacement for the Python3 random module
+        
+        Built atop the RNG Storm Engine. While Storm is a high quality random engine, Pyewacket is not appropriate for cryptography of any kind. Pyewacket is meant for games, data science, A.I. and experimental programming, not security.
+        
+        
+        **Recommended Installation:** `$ pip install Pyewacket`
+        
+        
+        *While there are still a number of optimizations to be made, Pyewacket is functional and passing all tests for everything implemented so far. See todo list for details about what isn't done yet.*
+        
+        
+        ### Pyewacket serves three main goals:
+        1. Provide a feature rich and familiar API for generating random numbers and values.
+            - Faithful to the random module API, but not a slave to it.
+        2. Go fast!
+            - RNG Storm Engine.
+        3. Fix things
+            - Exceptions that can be avoided with balance, symmetry and sound mathematics, will be.
+            - Do or do not, there is no try/except. Alright, sometimes try is unavoidable, but only in truly exceptional cases where calculus fails.
+        
+        
+        ## Random Integers
+        - `Pyewacket.randbelow(n: int) -> int`
+            - Back by popular demand. While randrange(a, b, c) is handy when you need it, it's more complex than needed much of the time. Mathematically, randbelow(n) is equivalent to randrange(n).
+            - Pyewacket.randbelow is 10x - 12x faster than `Random._randbelow()` and it's fault tolerant by default.
+            - @param n :: expanded acceptable input domain to include non-positive values of n.
+            - @return :: random integer in range (n, 0] or [0, n)
+            - Analytic continuation about zero to achieve full domain coverage for a function that normally only takes positive, non-zero values as input. I think this lambda is beautiful in every sense of the word. Let it wash over you like poetry.
+            - `lambda f, n: f(n) if n > 0 else -f(-n) if n < 0 else 0`
+            - This lambda is not part of the actual implementation, but it represents the idea of AC pretty well. AC will invert the meaning of a function for negative input. Thus turning randbelow into randabove for all negative input n.
+        
+        ```python
+        from Pyewacket import randbelow
+        
+        
+        """ Standard """
+        randbelow(10)       # -> [0, 10) by whole numbers
+        
+        """ Extras """
+        randbelow(0)        # -> [0, 0) => 0
+        randbelow(-10)      # -> (-10, 0]
+        ```
+        
+        - `Pyewacket.randint(a: int, b: int) -> int`
+            - @param a, b :: both are required,
+            - @return :: random integer in range [a, b] or [b, a]
+            - Inclusive on both sides, for a == b returns a
+            - Removed the asymmetric requirement of a < b
+        
+        ```python
+        from Pyewacket import randint
+        
+        
+        """ Standard """
+        randint(1, 10)      # -> [1, 10]
+        
+        """ Extras """
+        randint(10, 1)      # -> [1, 10]
+        randint(10, 10)     # -> [10, 10] => 10
+        ```
+        
+        - `Pyewacket.randrange(start: int, stop: int = 0, step: int = 1) -> int`
+            - Fault tolerant and about 20x faster than random.randrange()
+            - @param start :: required
+            - @param stop :: optional, default=0
+            - @parma step :: optional, default=1
+            - @return :: random integer in range (stop, start] or [start, stop) by |step|
+            - Removed the requirements of start < stop, and step > 0
+            - Always returns start for start == stop or step == 0
+            - Always inclusive on the side closer to zero and exclusive on the other side. Because zero is always the most natural place to start no matter what direction you're going. This matches the symmetry of the analytic continuation of Pyewacket.randbelow(). Also, the unit vector, no matter what direction it's pointing, always includes and points away from zero.
+            - Ignores sign of step, but it could be a trigger for reversing the inclusivity rule.
+        
+        ```python
+        from Pyewacket import randbelow, randint, randrange
+        
+        
+        """ Standard """
+        randrange(10)           # -> [0, 10) by whole numbers
+        randrange(1, 10)        # -> [1, 10) by whole numbers
+        randrange(1, 10, 2)     # -> [1, 10) by 2, odd numbers
+        
+        """ Extras """
+        randrange(0)            # -> [0, 0) -> 0
+        randrange(-10)          # -> (-10, 0] by 1
+        randrange(10, 1)        # -> [1, 10) by 1
+        randrange(10, 0, 2)     # -> [0, 10) by 2, even numbers
+        randrange(10, 10, 0)    # -> [10, 10) => 10
+        ```
+        
+        ## Random Floating Point
+        - `Pyewacket.random() -> float`
+            - random float in range [0.0, 1.0] or [0.0, 1.0) depending on rounding.
+            - This is the only function that doesn't show a performance increase, this is as expected.
+            - Roughly the same speed as random.random()
+        - `Pyewacket.uniform(a: float, b: float) -> float`
+            - random float in [a, b] or [a, b) depending on rounding
+            - 4x faster
+        - `Pyewacket.expovariate(lambd: float) -> float`
+            - 5x faster
+        - `Pyewacket.gammavariate(alpha, beta) -> float`
+            - 10x faster
+        - `Pyewacket.weibullvariate(alpha, beta) -> float`
+            - 4x faster
+        - `Pyewacket.betavariate(alpha, beta) -> float`
+            - 16x faster
+        - `Pyewacket.paretovariate(alpha) -> float`
+            - 4x faster
+        - `Pyewacket.gauss(mu: float, sigma: float) -> float`
+            - 10x faster
+        - `Pyewacket.normalvariate(mu: float, sigma: float) -> float`
+            - 10x faster
+        - `Pyewacket.lognormvariate(mu: float, sigma: float) -> float`
+            - 10x faster
+        - `Pyewacket.vonmisesvariate(mu: float, kappa: float) -> float`
+            - 4x faster
+        - `Pyewacket.triangular(low: float, high: float, mode: float = None)`
+            - 10x faster
+        
+        ## Random Sequence Values
+        - `Pyewacket.choice(seq: List) -> Value`
+            - An order of magnitude faster than random.choice().
+            - @param seq :: any zero indexed object, list or tuple.
+            - @return :: random value from the list, can be any object type that can be put into a list.
+        - `Pyewacket.choices(population, weights=None, *, cum_weights=None, k=1)`
+            - Only 2x performance gain for this algorithm so far.
+            - See Weighted Choice in Fortuna for a better approach. https://pypi.org/project/Fortuna/
+        - `Pyewacket.shuffle(array: list) -> None`
+            - Shuffles a list in place.
+            - @param array :: must be a mutable list.
+            - Approximately 20 times faster than random.shuffle().
+            - Implements Knuth 2 Shuffle Algorithm. Knuth 2 is twice as fast as Knuth 1 or Fisher-Yates for every test case. This is likely due to the combination of walking backward and rotating backward into the back side of the list. With this combination it can never modify the data it still needs to walk through. Fresh snow all the way home, aka very low probability for cache misses.
+        - `Pyewacket.knuth(array: list) -> None`, shuffle alternate.
+            - Original Knuth Shuffle Algorithm.
+            - Walks forward and rotates backward, but to the front side of the list.
+        - `Pyewacket.fisher_yates(array: list) -> None`, shuffle alternate.
+            - Fisher-Yates Shuffle Algorithm. Used in random.shuffle().
+            - Walks backward and rotates forward, into oncoming traffic.
+        - `Pyewacket.sample(population: List, k: int)`
+            - @param population :: list or tuple.
+            - @param k :: number of unique samples to get.
+            - @return :: size k list of samples.
+            - Performance gains range (5x to 20x) depending on len(population) and the ratio of k to len(population). Higher performance gains are seen when k == pop size.
+        
+        
+        ## Testing Suite
+        - `distribution_timer(func: staticmethod, *args, **kwargs) -> None`
+            - For statistical analysis of a non-deterministic function.
+            - @param func :: Function method or lambda to analyze. `func(*args, **kwargs)`
+            - @optional_kw num_cycles=10000 :: Total number of samples for distribution analysis.
+            - @optional_kw post_processor=None :: Used to scale a large set of data into a smaller set of groupings for better visualization of the data, esp. useful for distributions of floats. For many functions in quick_test(), math.floor() is used, for others round() is more appropriate. For more complex post processing - lambdas work nicely. Post processing only affects the distribution, the statistics and performance results are unaffected.
+        - `quick_test()`
+            - Runs a battery of tests for every random distribution function in the module.
+        
+        
+        ## Development Log
+        - ToDo:
+            - seed()
+            - getrandbits()
+        
+        ##### Pyewacket v0.0.1b6
+        - Rearranged tests to be more consistant and match the documentation.
+        
+        ##### Pyewacket v0.0.1b5
+        - Documentation Upgrade
+        - Minor Performance Tweaks
+        
+        ##### Pyewacket v0.0.1b4
+        - Public Beta
+        
+        ##### Pyewacket v0.0.1b3
+        - quick_test()
+        - Extended Functionality
+            - sample()
+            - expovariate()
+            - gammavariate()
+            - weibullvariate()
+            - betavariate()
+            - paretovariate()
+            - gauss()
+            - normalvariate()
+            - lognormvariate()
+            - vonmisesvariate()
+            - triangular()
+        
+        ##### Pyewacket v0.0.1b2
+        - Basic Functionality
+            - random()
+            - uniform()
+            - randbelow()
+            - randint()
+            - randrange()
+            - choice()
+            - choices()
+            - shuffle()
+        
+        ##### Pyewacket v0.0.1b1
+        - Initial Design & Planning
+        
+        
+        ## Pywacket Distribution and Performance Test Suite
+        ```
+        >>> from Pyewacket import quick_test
+        >>> quick_test()
+        
+        Output Distribution: Random.random()
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 125ns
+        Raw Samples: 0.012998264145302474, 0.0840767830247312, 0.4035154582140005, 0.5083781217502346, 0.9674115450047303
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 1.6926437449771292e-05
+         Median: (0.49635181638724457, 0.49663199475829534)
+         Maximum: 0.9999668017181624
+         Mean: 0.4981160180563525
+         Std Deviation: 0.2897393796641115
+        Post-processor Distribution using lambda1 method:
+         0: 10.19%
+         1: 10.14%
+         2: 9.66%
+         3: 10.58%
+         4: 9.66%
+         5: 9.93%
+         6: 9.93%
+         7: 9.79%
+         8: 10.3%
+         9: 9.82%
+        
+        Output Distribution: random()
+        Approximate Single Execution Time: Min: 31ns, Mid: 31ns, Max: 125ns
+        Raw Samples: 0.8154939905188263, 0.10413073604111953, 0.23089703665109368, 0.8614967013102615, 0.49283619983849797
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 9.055289542758964e-06
+         Median: (0.5025908337529288, 0.5026308472664768)
+         Maximum: 0.9999523608695805
+         Mean: 0.5050614080633075
+         Std Deviation: 0.2877023055748328
+        Post-processor Distribution using lambda2 method:
+         0: 9.44%
+         1: 9.73%
+         2: 10.18%
+         3: 10.05%
+         4: 10.31%
+         5: 9.66%
+         6: 10.24%
+         7: 10.21%
+         8: 9.52%
+         9: 10.66%
+        
+        Output Distribution: Random.uniform(0.0, 10.0)
+        Approximate Single Execution Time: Min: 218ns, Mid: 250ns, Max: 718ns
+        Raw Samples: 5.553911945894895, 4.396392437391059, 4.094062084619532, 4.87631314834873, 5.565805393915991
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.0005493010123713837
+         Median: (5.079519756301797, 5.079722416235946)
+         Maximum: 9.99948149707751
+         Mean: 5.046116581845691
+         Std Deviation: 2.869515701259223
+        Post-processor Distribution using floor method:
+         0: 9.66%
+         1: 9.45%
+         2: 10.04%
+         3: 9.95%
+         4: 10.03%
+         5: 10.58%
+         6: 10.12%
+         7: 9.85%
+         8: 10.26%
+         9: 10.06%
+        
+        Output Distribution: uniform(0.0, 10.0)
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 187ns
+        Raw Samples: 4.392951162912716, 7.172049027123219, 1.8694972976688373, 4.386492036321314, 7.090666834137275
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.000692974966366114
+         Median: (5.000438583644794, 5.000581313872885)
+         Maximum: 9.999870079253789
+         Mean: 5.016534976099465
+         Std Deviation: 2.863563426403059
+        Post-processor Distribution using floor method:
+         0: 9.42%
+         1: 10.04%
+         2: 10.01%
+         3: 10.13%
+         4: 10.39%
+         5: 9.73%
+         6: 10.39%
+         7: 10.04%
+         8: 9.9%
+         9: 9.95%
+        
+        Output Distribution: Random.triangular(0.0, 10.0, 0.0)
+        Approximate Single Execution Time: Min: 468ns, Mid: 531ns, Max: 812ns
+        Raw Samples: 4.67576895476117, 5.9345664114119785, 6.443773916966315, 6.765152783396465, 2.8220879021376275
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.0013051461701767408
+         Median: (2.9581599592868093, 2.958975837030998)
+         Maximum: 9.946873014067227
+         Mean: 3.3556226989097193
+         Std Deviation: 2.3581082371131115
+        Post-processor Distribution using floor method:
+         0: 18.82%
+         1: 16.71%
+         2: 15.04%
+         3: 13.09%
+         4: 10.76%
+         5: 9.59%
+         6: 6.8%
+         7: 5.25%
+         8: 2.94%
+         9: 1.0%
+        
+        Output Distribution: triangular(0.0, 10.0, 0.0)
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 125ns
+        Raw Samples: 4.631125222225638, 6.675759584909944, 5.013757429265398, 3.328625168270128, 0.8089960699475951
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00011516248837994958
+         Median: (2.9284965443733246, 2.929286211729023)
+         Maximum: 9.913305100944871
+         Mean: 3.325284909237705
+         Std Deviation: 2.364534513540724
+        Post-processor Distribution using floor method:
+         0: 19.53%
+         1: 17.03%
+         2: 14.23%
+         3: 13.24%
+         4: 10.53%
+         5: 9.44%
+         6: 7.06%
+         7: 5.0%
+         8: 2.97%
+         9: 0.97%
+        
+        Output Distribution: Random._randbelow(10)
+        Approximate Single Execution Time: Min: 562ns, Mid: 593ns, Max: 1843ns
+        Raw Samples: 3, 4, 5, 7, 6
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 9
+         Mean: 4.473
+         Std Deviation: 2.8841121355247314
+        Sample Distribution:
+         0: 10.09%
+         1: 10.38%
+         2: 10.12%
+         3: 10.09%
+         4: 9.83%
+         5: 9.74%
+         6: 9.84%
+         7: 10.19%
+         8: 9.46%
+         9: 10.26%
+        
+        Output Distribution: randbelow(10)
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 156ns
+        Raw Samples: 9, 2, 5, 1, 2
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.5724
+         Std Deviation: 2.8706066045746885
+        Sample Distribution:
+         0: 9.22%
+         1: 10.01%
+         2: 10.14%
+         3: 9.92%
+         4: 9.82%
+         5: 9.68%
+         6: 10.05%
+         7: 10.41%
+         8: 10.41%
+         9: 10.34%
+        
+        Output Distribution: Random.randint(1, 10)
+        Approximate Single Execution Time: Min: 1187ns, Mid: 1250ns, Max: 1593ns
+        Raw Samples: 10, 9, 10, 5, 6
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 1
+         Median: 5
+         Maximum: 10
+         Mean: 5.5008
+         Std Deviation: 2.8742695598273755
+        Sample Distribution:
+         1: 9.94%
+         2: 10.2%
+         3: 9.87%
+         4: 9.81%
+         5: 10.32%
+         6: 9.64%
+         7: 10.46%
+         8: 9.93%
+         9: 9.51%
+         10: 10.32%
+        
+        Output Distribution: randint(1, 10)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 218ns
+        Raw Samples: 10, 2, 1, 4, 3
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 1
+         Median: 6
+         Maximum: 10
+         Mean: 5.5301
+         Std Deviation: 2.8920806356393842
+        Sample Distribution:
+         1: 10.1%
+         2: 9.96%
+         3: 9.91%
+         4: 9.95%
+         5: 9.6%
+         6: 9.44%
+         7: 10.44%
+         8: 9.87%
+         9: 10.52%
+         10: 10.21%
+        
+        Output Distribution: Random.randrange(10)
+        Approximate Single Execution Time: Min: 875ns, Mid: 1031ns, Max: 1500ns
+        Raw Samples: 3, 4, 5, 7, 1
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.5139
+         Std Deviation: 2.87061506180876
+        Sample Distribution:
+         0: 10.03%
+         1: 9.97%
+         2: 9.8%
+         3: 9.63%
+         4: 10.39%
+         5: 9.9%
+         6: 10.05%
+         7: 9.99%
+         8: 10.52%
+         9: 9.72%
+        
+        Output Distribution: randrange(10)
+        Approximate Single Execution Time: Min: 125ns, Mid: 125ns, Max: 781ns
+        Raw Samples: 5, 4, 5, 1, 1
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 9
+         Mean: 4.4852
+         Std Deviation: 2.8772224107427093
+        Sample Distribution:
+         0: 10.22%
+         1: 9.89%
+         2: 9.96%
+         3: 10.33%
+         4: 10.05%
+         5: 9.81%
+         6: 9.68%
+         7: 9.96%
+         8: 10.23%
+         9: 9.87%
+        
+        Output Distribution: Random.randrange(0, 10)
+        Approximate Single Execution Time: Min: 1031ns, Mid: 1125ns, Max: 1375ns
+        Raw Samples: 6, 9, 5, 3, 5
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.5293
+         Std Deviation: 2.83847621175878
+        Sample Distribution:
+         0: 9.56%
+         1: 9.7%
+         2: 9.68%
+         3: 10.16%
+         4: 10.24%
+         5: 10.69%
+         6: 10.21%
+         7: 10.02%
+         8: 10.08%
+         9: 9.66%
+        
+        Output Distribution: randrange(0, 10)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 156ns
+        Raw Samples: 1, 1, 8, 1, 0
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.4997
+         Std Deviation: 2.868139210752021
+        Sample Distribution:
+         0: 10.17%
+         1: 9.83%
+         2: 9.79%
+         3: 10.15%
+         4: 9.86%
+         5: 10.11%
+         6: 10.14%
+         7: 10.01%
+         8: 10.25%
+         9: 9.69%
+        
+        Output Distribution: Random.randrange(0, 10, 2)
+        Approximate Single Execution Time: Min: 1437ns, Mid: 1687ns, Max: 3031ns
+        Raw Samples: 2, 6, 2, 8, 4
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 8
+         Mean: 3.9422
+         Std Deviation: 2.837510230189601
+        Sample Distribution:
+         0: 20.71%
+         2: 20.37%
+         4: 19.64%
+         6: 19.66%
+         8: 19.62%
+        
+        Output Distribution: randrange(0, 10, 2)
+        Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 156ns
+        Raw Samples: 0, 6, 8, 8, 0
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 8
+         Mean: 3.9978
+         Std Deviation: 2.8299109525919643
+        Sample Distribution:
+         0: 19.62%
+         2: 21.04%
+         4: 19.42%
+         6: 19.67%
+         8: 20.25%
+        
+        Output Distribution: Random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        Approximate Single Execution Time: Min: 750ns, Mid: 812ns, Max: 937ns
+        Raw Samples: 4, 1, 7, 0, 5
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.5585
+         Std Deviation: 2.8800706989105445
+        Sample Distribution:
+         0: 9.62%
+         1: 9.89%
+         2: 9.8%
+         3: 9.91%
+         4: 10.19%
+         5: 9.99%
+         6: 9.95%
+         7: 9.59%
+         8: 10.45%
+         9: 10.61%
+        
+        Output Distribution: choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 125ns
+        Raw Samples: 1, 8, 8, 8, 6
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 9
+         Mean: 4.4757
+         Std Deviation: 2.888086497035959
+        Sample Distribution:
+         0: 10.17%
+         1: 10.29%
+         2: 10.06%
+         3: 10.09%
+         4: 9.87%
+         5: 9.96%
+         6: 9.86%
+         7: 9.37%
+         8: 10.11%
+         9: 10.22%
+        
+        Output Distribution: Random.sample([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], k=3)
+        Approximate Single Execution Time: Min: 4593ns, Mid: 4750ns, Max: 8906ns
+        Raw Samples: [2, 3, 5], [6, 0, 4], [9, 3, 4], [3, 7, 2], [2, 1, 3]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 9
+         Mean: 4.4753
+         Std Deviation: 2.8720749975373465
+        Sample Distribution:
+         0: 10.15%
+         1: 10.19%
+         2: 10.04%
+         3: 9.8%
+         4: 10.19%
+         5: 9.9%
+         6: 9.94%
+         7: 10.13%
+         8: 9.89%
+         9: 9.77%
+        
+        Output Distribution: sample([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], k=3)
+        Approximate Single Execution Time: Min: 843ns, Mid: 875ns, Max: 1062ns
+        Raw Samples: [3, 8, 9], [0, 6, 9], [7, 6, 8], [1, 5, 3], [7, 4, 5]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 5
+         Maximum: 9
+         Mean: 4.5266
+         Std Deviation: 2.8683994163158575
+        Sample Distribution:
+         0: 9.78%
+         1: 9.99%
+         2: 9.55%
+         3: 10.25%
+         4: 10.09%
+         5: 10.3%
+         6: 9.77%
+         7: 10.13%
+         8: 9.83%
+         9: 10.31%
+        
+        Timer only: _random.shuffle(some_list) of size 10:
+        Approximate Single Execution Time: Min: 7062ns, Mid: 7406ns, Max: 11312ns
+        
+        Timer only: shuffle(some_list) of size 10:
+        Approximate Single Execution Time: Min: 531ns, Mid: 562ns, Max: 656ns
+        
+        Timer only: knuth(some_list) of size 10:
+        Approximate Single Execution Time: Min: 968ns, Mid: 1000ns, Max: 1031ns
+        
+        Timer only: fisher_yates(some_list) of size 10:
+        Approximate Single Execution Time: Min: 968ns, Mid: 1000ns, Max: 2312ns
+        
+        Output Distribution: Random.choices([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 9, 8, 7, 6, 5, 4, 3, 2, 1], k=3)
+        Approximate Single Execution Time: Min: 3156ns, Mid: 3218ns, Max: 5687ns
+        Raw Samples: [9, 4, 0], [2, 1, 4], [0, 0, 0], [5, 8, 1], [1, 5, 0]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 3
+         Maximum: 9
+         Mean: 3.0171
+         Std Deviation: 2.458457238025327
+        Sample Distribution:
+         0: 17.76%
+         1: 16.6%
+         2: 14.6%
+         3: 12.78%
+         4: 11.08%
+         5: 8.62%
+         6: 7.52%
+         7: 5.24%
+         8: 3.85%
+         9: 1.95%
+        
+        Output Distribution: choices([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 9, 8, 7, 6, 5, 4, 3, 2, 1], k=3)
+        Approximate Single Execution Time: Min: 1906ns, Mid: 2156ns, Max: 3812ns
+        Raw Samples: [1, 2, 6], [2, 8, 1], [1, 3, 2], [0, 3, 4], [3, 7, 4]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 3
+         Maximum: 9
+         Mean: 3.019
+         Std Deviation: 2.472620145723662
+        Sample Distribution:
+         0: 17.97%
+         1: 16.71%
+         2: 14.5%
+         3: 12.49%
+         4: 10.84%
+         5: 8.84%
+         6: 7.18%
+         7: 5.6%
+         8: 3.95%
+         9: 1.92%
+        
+        Output Distribution: Random.choices([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], cum_weights=[10, 19, 27, 34, 40, 45, 49, 52, 54, 55], k=3)
+        Approximate Single Execution Time: Min: 2718ns, Mid: 2812ns, Max: 4437ns
+        Raw Samples: [5, 0, 5], [4, 8, 0], [1, 7, 8], [0, 5, 1], [3, 1, 3]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 3
+         Maximum: 9
+         Mean: 3.0291
+         Std Deviation: 2.461799999172068
+        Sample Distribution:
+         0: 17.91%
+         1: 16.22%
+         2: 14.32%
+         3: 13.2%
+         4: 10.69%
+         5: 9.23%
+         6: 7.17%
+         7: 5.6%
+         8: 3.62%
+         9: 2.04%
+        
+        Output Distribution: choices([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], cum_weights=[10, 19, 27, 34, 40, 45, 49, 52, 54, 55], k=3)
+        Approximate Single Execution Time: Min: 1437ns, Mid: 1515ns, Max: 3125ns
+        Raw Samples: [3, 2, 4], [5, 4, 7], [1, 0, 1], [6, 0, 5], [4, 1, 2]
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 3
+         Maximum: 9
+         Mean: 2.9752
+         Std Deviation: 2.4424130482270634
+        Sample Distribution:
+         0: 18.35%
+         1: 16.49%
+         2: 14.83%
+         3: 12.63%
+         4: 10.9%
+         5: 8.67%
+         6: 7.41%
+         7: 5.46%
+         8: 3.49%
+         9: 1.77%
+        
+        Output Distribution: Random.normalvariate(0.0, 2.8)
+        Approximate Single Execution Time: Min: 656ns, Mid: 718ns, Max: 906ns
+        Raw Samples: 0.5930272777209413, -0.47797300789432534, -2.1019380237834957, -0.4723026100350704, -0.4496695044655188
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -12.088179925409266
+         Median: (-0.012324637099808482, -0.012044945973750774)
+         Maximum: 9.955174998304587
+         Mean: -0.0070620004893537525
+         Std Deviation: 2.8132845189363174
+        Post-processor Distribution using round method:
+         -12: 0.01%
+         -10: 0.06%
+         -9: 0.07%
+         -8: 0.22%
+         -7: 0.7%
+         -6: 1.52%
+         -5: 2.83%
+         -4: 5.16%
+         -3: 8.15%
+         -2: 11.34%
+         -1: 13.17%
+         0: 13.55%
+         1: 13.76%
+         2: 11.09%
+         3: 7.84%
+         4: 5.1%
+         5: 2.83%
+         6: 1.41%
+         7: 0.74%
+         8: 0.29%
+         9: 0.14%
+         10: 0.02%
+        
+        Output Distribution: normalvariate(0.0, 2.8)
+        Approximate Single Execution Time: Min: 125ns, Mid: 156ns, Max: 312ns
+        Raw Samples: 3.1706278613491965, 3.6574720875994187, -2.275747864378095, 4.326414066173328, -3.135249595256448
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -10.890423534384194
+         Median: (0.0011985381998108058, 0.0027786871337978692)
+         Maximum: 10.570000101216161
+         Mean: 0.007342869674920708
+         Std Deviation: 2.8144761726539627
+        Post-processor Distribution using round method:
+         -11: 0.02%
+         -10: 0.02%
+         -9: 0.09%
+         -8: 0.29%
+         -7: 0.59%
+         -6: 1.35%
+         -5: 3.24%
+         -4: 5.26%
+         -3: 7.93%
+         -2: 10.55%
+         -1: 13.27%
+         0: 14.45%
+         1: 13.08%
+         2: 10.88%
+         3: 8.46%
+         4: 5.08%
+         5: 2.84%
+         6: 1.49%
+         7: 0.73%
+         8: 0.24%
+         9: 0.08%
+         10: 0.05%
+         11: 0.01%
+        
+        Output Distribution: Random.gauss(1.0, 1.0)
+        Approximate Single Execution Time: Min: 593ns, Mid: 593ns, Max: 1156ns
+        Raw Samples: 0.7120070882580258, -0.29764540760410685, 2.033945496798204, -0.8503062310437042, 0.3692271865994241
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -3.359576662673504
+         Median: (0.9856090902210608, 0.9856546337914275)
+         Maximum: 5.0914893111748745
+         Mean: 0.9922302355809425
+         Std Deviation: 1.0002759976973903
+        Post-processor Distribution using round method:
+         -3: 0.02%
+         -2: 0.58%
+         -1: 6.08%
+         0: 24.4%
+         1: 39.01%
+         2: 23.11%
+         3: 6.04%
+         4: 0.73%
+         5: 0.03%
+        
+        Output Distribution: gauss(1.0, 1.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 218ns
+        Raw Samples: 2.711161776385261, 2.143321491256298, 0.21163716799234947, 0.011365852520925266, 0.9892766413964316
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -2.9312711186170617
+         Median: (0.9855366681561074, 0.9864120767687009)
+         Maximum: 5.541341474708732
+         Mean: 0.9959291857563403
+         Std Deviation: 1.0056627222736383
+        Post-processor Distribution using round method:
+         -3: 0.04%
+         -2: 0.5%
+         -1: 6.16%
+         0: 24.85%
+         1: 37.93%
+         2: 23.47%
+         3: 6.32%
+         4: 0.71%
+         5: 0.01%
+         6: 0.01%
+        
+        Output Distribution: Random.lognormvariate(0.0, 0.5)
+        Approximate Single Execution Time: Min: 781ns, Mid: 890ns, Max: 1531ns
+        Raw Samples: 0.6160287409271726, 1.8324509183774187, 0.955163626280501, 0.578895009812598, 0.6169501996251227
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.1633912190376701
+         Median: (0.9864841594111071, 0.9865734176720258)
+         Maximum: 8.448200224941578
+         Mean: 1.1249521005904621
+         Std Deviation: 0.6063635270568627
+        Post-processor Distribution using round method:
+         0: 8.74%
+         1: 70.45%
+         2: 17.45%
+         3: 2.81%
+         4: 0.42%
+         5: 0.09%
+         6: 0.02%
+         7: 0.01%
+         8: 0.01%
+        
+        Output Distribution: lognormvariate(0.0, 0.5)
+        Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 250ns
+        Raw Samples: 0.4862130391635644, 1.3691871282475665, 1.077423752814334, 1.3414434768983654, 1.9015404617981928
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.15493218776862422
+         Median: (1.000836226276059, 1.0009285118982114)
+         Maximum: 6.535897327159081
+         Mean: 1.1374168325024776
+         Std Deviation: 0.6119312852435634
+        Post-processor Distribution using round method:
+         0: 8.18%
+         1: 70.58%
+         2: 17.83%
+         3: 2.81%
+         4: 0.44%
+         5: 0.11%
+         6: 0.04%
+         7: 0.01%
+        
+        Output Distribution: Random.expovariate(1.0)
+        Approximate Single Execution Time: Min: 312ns, Mid: 375ns, Max: 875ns
+        Raw Samples: 2.171240626638392, 3.0070848861894484, 0.4691229312413158, 1.6779018548838955, 0.5178344741879356
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.0001108910312373615
+         Median: (0.6971824775172758, 0.6972403354574873)
+         Maximum: 9.442825975807686
+         Mean: 1.0042423365395818
+         Std Deviation: 1.0252041161684906
+        Post-processor Distribution using floor method:
+         0: 63.47%
+         1: 23.02%
+         2: 8.46%
+         3: 2.88%
+         4: 1.39%
+         5: 0.4%
+         6: 0.22%
+         7: 0.08%
+         8: 0.05%
+         9: 0.03%
+        
+        Output Distribution: expovariate(1.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 187ns
+        Raw Samples: 0.9260325077887819, 0.036615327981158304, 0.9130273769161751, 1.300319104829159, 0.1914926336362293
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 8.553575385506888e-05
+         Median: (0.7007296988092121, 0.7011433814823741)
+         Maximum: 9.316857049510938
+         Mean: 0.9941761901894112
+         Std Deviation: 0.9794981381056284
+        Post-processor Distribution using floor method:
+         0: 63.2%
+         1: 23.4%
+         2: 8.69%
+         3: 3.11%
+         4: 1.05%
+         5: 0.36%
+         6: 0.1%
+         7: 0.04%
+         8: 0.04%
+         9: 0.01%
+        
+        Output Distribution: Random.vonmisesvariate(0, 0)
+        Approximate Single Execution Time: Min: 281ns, Mid: 296ns, Max: 437ns
+        Raw Samples: 0.08577179899973336, 6.049940139440558, 0.5044318410628879, 2.5358999686789323, 6.113470730663246
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.0019618805490201224
+         Median: (3.198524794137351, 3.198676926645815)
+         Maximum: 6.279569304570442
+         Mean: 3.1735089351626025
+         Std Deviation: 1.8161931222391179
+        Post-processor Distribution using floor method:
+         0: 15.56%
+         1: 15.39%
+         2: 16.06%
+         3: 15.81%
+         4: 16.46%
+         5: 16.12%
+         6: 4.6%
+        
+        Output Distribution: vonmisesvariate(0, 0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 77ns, Max: 156ns
+        Raw Samples: 4.669859381969691, 0.7979976849780615, 2.4717694896796267, 4.297595769372298, 3.4795232706688073
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.000183295698807474
+         Median: (3.0886262864776435, 3.088920290854218)
+         Maximum: 6.282533789310254
+         Mean: 3.1181350830868175
+         Std Deviation: 1.8307471757275202
+        Post-processor Distribution using floor method:
+         0: 16.53%
+         1: 15.97%
+         2: 16.18%
+         3: 15.7%
+         4: 15.16%
+         5: 15.55%
+         6: 4.91%
+        
+        Output Distribution: Random.gammavariate(2.0, 1.0)
+        Approximate Single Execution Time: Min: 1312ns, Mid: 1577ns, Max: 2218ns
+        Raw Samples: 4.796009051217658, 2.5588128532777596, 1.061423361078811, 1.7185771068277527, 5.646378113979173
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.015464898311536638
+         Median: (1.6869050579053622, 1.6870713754806705)
+         Maximum: 12.607644999191049
+         Mean: 2.004733475293573
+         Std Deviation: 1.4137920838699123
+        Post-processor Distribution using round method:
+         0: 9.0%
+         1: 34.77%
+         2: 27.3%
+         3: 15.19%
+         4: 7.66%
+         5: 3.45%
+         6: 1.56%
+         7: 0.66%
+         8: 0.18%
+         9: 0.13%
+         10: 0.03%
+         11: 0.06%
+         13: 0.01%
+        
+        Output Distribution: gammavariate(2.0, 1.0)
+        Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 218ns
+        Raw Samples: 1.400721481695334, 1.617580988927482, 1.2689662602473293, 2.2794879221091966, 4.507748832291918
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.014454491619661725
+         Median: (1.6946287939179534, 1.6946538773921362)
+         Maximum: 12.072731788570229
+         Mean: 2.0071354843118594
+         Std Deviation: 1.4157723677980187
+        Post-processor Distribution using round method:
+         0: 9.11%
+         1: 34.76%
+         2: 26.97%
+         3: 15.65%
+         4: 7.21%
+         5: 3.66%
+         6: 1.61%
+         7: 0.55%
+         8: 0.26%
+         9: 0.14%
+         10: 0.04%
+         11: 0.03%
+         12: 0.01%
+        
+        Output Distribution: Random.betavariate(3.0, 3.0)
+        Approximate Single Execution Time: Min: 2562ns, Mid: 2781ns, Max: 4750ns
+        Raw Samples: 0.47931615077792106, 0.7240379823243803, 0.45652108525038004, 0.30503815686335617, 0.49284646316045766
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.0066914414962923885
+         Median: (0.5018831143105688, 0.5019774521951034)
+         Maximum: 0.9841042667041499
+         Mean: 0.5010755610854323
+         Std Deviation: 0.1884985606931819
+        Post-processor Distribution using round method:
+         0: 49.66%
+         1: 50.34%
+        
+        Output Distribution: betavariate(3.0, 3.0)
+        Approximate Single Execution Time: Min: 156ns, Mid: 187ns, Max: 281ns
+        Raw Samples: 0.7680664409465507, 0.3390177944214646, 0.5450482106505082, 0.37363960411292346, 0.1868484263916002
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.021051156006731284
+         Median: (0.4958481167211107, 0.4958509632040114)
+         Maximum: 0.9742586819712881
+         Mean: 0.4989102190141408
+         Std Deviation: 0.18794659961308374
+        Post-processor Distribution using round method:
+         0: 50.96%
+         1: 49.04%
+        
+        Output Distribution: Random.paretovariate(4.0)
+        Approximate Single Execution Time: Min: 281ns, Mid: 312ns, Max: 468ns
+        Raw Samples: 1.0171076052975592, 1.0265328786941286, 1.3067474104394723, 1.0111933132937005, 1.7221949017413332
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 1.0000137370311148
+         Median: (1.1886456368174607, 1.1887431874066272)
+         Maximum: 7.928052700003265
+         Mean: 1.329288041668601
+         Std Deviation: 0.44921600547913065
+        Post-processor Distribution using floor method:
+         1: 93.69%
+         2: 5.19%
+         3: 0.74%
+         4: 0.22%
+         5: 0.06%
+         6: 0.07%
+         7: 0.03%
+        
+        Output Distribution: paretovariate(4.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 281ns
+        Raw Samples: 1.2354133742738347, 1.0849095830209727, 1.9355243112696066, 1.0750167510851978, 1.877247718066934
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 1.0000816555392331
+         Median: (1.189139561596937, 1.1891917703960984)
+         Maximum: 16.765728539036477
+         Mean: 1.3357447741578463
+         Std Deviation: 0.4968337794138987
+        Post-processor Distribution using floor method:
+         1: 93.61%
+         2: 5.22%
+         3: 0.75%
+         4: 0.2%
+         5: 0.15%
+         6: 0.03%
+         9: 0.02%
+         12: 0.01%
+         16: 0.01%
+        
+        Output Distribution: Random.weibullvariate(1.0, 1.0)
+        Approximate Single Execution Time: Min: 468ns, Mid: 468ns, Max: 812ns
+        Raw Samples: 0.3875296402873728, 3.578203404538266, 4.006832637656319, 0.29757989927915496, 1.2551929121819305
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 5.43719274496732e-05
+         Median: (0.6936053648764988, 0.693783415891484)
+         Maximum: 8.848302263195594
+         Mean: 0.9977132202272788
+         Std Deviation: 0.9947485618722824
+        Post-processor Distribution using floor method:
+         0: 63.24%
+         1: 23.13%
+         2: 8.74%
+         3: 3.13%
+         4: 1.04%
+         5: 0.48%
+         6: 0.15%
+         7: 0.06%
+         8: 0.03%
+        
+        Output Distribution: weibullvariate(1.0, 1.0)
+        Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 343ns
+        Raw Samples: 0.607271249451256, 0.1496417834877304, 0.007353003006799029, 0.3347005939515252, 0.5165337655771994
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 2.1026932063736618e-05
+         Median: (0.7080966058468359, 0.7086468556180514)
+         Maximum: 11.539519087393366
+         Mean: 1.0145207034565435
+         Std Deviation: 1.0284385151860722
+        Post-processor Distribution using floor method:
+         0: 62.85%
+         1: 23.59%
+         2: 8.31%
+         3: 3.2%
+         4: 1.24%
+         5: 0.53%
+         6: 0.11%
+         7: 0.1%
+         8: 0.03%
+         9: 0.03%
+         11: 0.01%
+        
+        
+        Total Test Time: 1.8498 sec
+        ```
+        
+Keywords: Pyewacket
+Platform: Darwin
+Platform: Linux
+Classifier: Development Status :: 4 - Beta
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Cython
+Classifier: Programming Language :: C++
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires: Cython
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
