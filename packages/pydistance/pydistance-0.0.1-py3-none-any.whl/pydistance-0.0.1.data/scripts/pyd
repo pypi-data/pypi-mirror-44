@@ -1,0 +1,115 @@
+#!python
+
+import datetime
+import json
+import os
+import sys
+import time
+
+import click
+from geopy.geocoders import Nominatim
+import gmplot
+import googlemaps
+
+from pydistance import Solution, TravelSolution, Point, hill_climb, simulated_annealing, geometric_median
+
+geolocator = Nominatim(user_agent=f"pydistance-{int(time.time())}")
+
+# TODO: change distance calculation to be based on lat/lnt instead of cartesian coordinates
+# TODO: make a memoization decorator for python methods. Use in TravelSolution
+# TODO: hill-climbing goes to a local-optima. Can this be fixed like with SA?
+# TODO: allow the update temperature function for SA to be configured.
+
+def raw_addrs(file_name):
+    addrs = []
+    with open(file_name, newline='\n') as file:
+        for row in file:
+            yield row
+
+def raw_to_location(addr):
+    try:
+        return geolocator.geocode(addr)
+    except Exception as e:
+        return None
+
+def locations(file_name):
+    with open(file_name, "r") as f:
+        return json.load(f)
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.option("--addrs-file", default="addrs.txt", help="File containing address information in the format (address, city, state, zipcode)")
+@click.option("--output-file", default="addrs.json", help="File to output enriched location information")
+def enrich(addrs_file, output_file):
+    """Enrich the locations with lat, lng information"""
+    locations = [raw_to_location(addr) for addr in raw_addrs(addrs_file)]
+    locations = filter(lambda x: x is not None, locations)
+
+    d = []
+    for location in locations:
+        d.append(
+            dict(
+                address=location.address,
+                altitude=location.altitude,
+                longitude=location.longitude,
+                latitude=location.latitude,
+                raw=location.raw,
+                )
+        )
+    with open(output_file, 'w') as f:
+        f.write(json.dumps(d))
+
+@cli.command()
+@click.option("--addrs-file", default="addrs.json", help="File containing address information with lat,lng")
+@click.argument("api_key", envvar="GOOGLE_API_KEY")
+def distance(addrs_file, api_key):
+    """Dumb command to test the distance_matrix api"""
+    locs = locations(addrs_file)
+    median = geometric_median(locs)
+    src = [(loc["latitude"], loc["longitude"]) for loc in locs]
+    dst = [(median[1], median[0])]
+    gmaps = googlemaps.Client(key=api_key)
+    r = gmaps.distance_matrix(origins=src, destinations=dst)
+    print(json.dumps(r))
+
+@cli.command()
+@click.option("--addrs-file", default="addrs.json", help="File containing address information with lat,lng")
+@click.argument("api_key", envvar="GOOGLE_API_KEY")
+def plot(addrs_file, api_key):
+    """Plot all employee addresses and the best determined office locations"""
+    locs = locations(addrs_file)
+
+    # Plot addresses centred around median
+    median = geometric_median(locs)
+    gmap = gmplot.GoogleMapPlotter(median[1], median[0], 12, apikey=api_key)
+    lats = [loc["latitude"] for loc in locs]
+    longs = [loc["longitude"] for loc in locs]
+    gmap.scatter(lats, longs, "cornflowerblue", size=40)
+
+    # Plot Solutions
+    gmaps = googlemaps.Client(key=api_key)
+    points = [Point(loc["longitude"], loc["latitude"]) for loc in locs]
+    start = Point(median[0], median[1])
+    sol1 = Solution(start, points)
+    sol2 = TravelSolution(start, points, gmaps, 0.01)
+
+    h_sol1 = hill_climb(sol1)
+    h_sol2 = hill_climb(sol2)
+    sa_sol1 = simulated_annealing(sol1, iters=10)
+
+    gmap.marker(median[1], median[0], "red", title="Geometric Median")
+    gmap.marker(h_sol1.loc.y, h_sol1.loc.x, "green", title="Hill Climb : Regular Distance")
+    gmap.marker(h_sol2.loc.y, h_sol2.loc.x, "pink", title="Hill Climb : Car Travel time (radius 0.01)")
+    gmap.marker(sa_sol1.loc.y, sa_sol1.loc.x, "orange", title="SA : Regular Distance")
+
+    # Plot heatmap
+    print("Plotting...")
+    gmap.heatmap(lats, longs, radius=100)
+    file_name = f"my_map-{str(datetime.datetime.now()).replace(' ', '-')}.html"
+    gmap.draw(file_name)
+
+if __name__ == '__main__':
+    click.CommandCollection(sources=[cli])()
