@@ -1,0 +1,45 @@
+Metadata-Version: 2.1
+Name: tornado-problem-details
+Version: 0.0.0
+Summary: RFC-7807 Error documents for Tornado
+Home-page: https://github.com/dave-shawley/tornado-problem-details
+Author: Dave Shawley
+Author-email: daveshawley@gmail.com
+License: UNKNOWN
+Description: RFC-7807 implementation for Tornado
+        ===================================
+        This library provides a version of ``tornado.web.RequestHandler.send_error``
+        that speaks ``application/problem+json`` instead of HTML.
+        
+        .. code-block:: python
+        
+           from tornado import web
+           import problemdetails
+        
+        
+           class MyHandler(problemdetails.ErrorWriter, web.RequestHandler):
+              def get(self):
+                 try:
+                    self.do_something_hard()
+                 except SomeException as error:
+                    self.send_error(500, title="Failed to do_something_hard")
+        
+        .. code-block:: http
+        
+           HTTP/1.1 500 Internal Server Error
+           Content-Type: application/problem+json
+        
+           {
+              "title": "Failed to do_something_hard",
+              "type": "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+           }
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Planning
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Classifier: Topic :: Software Development :: Libraries
+Provides-Extra: dev
