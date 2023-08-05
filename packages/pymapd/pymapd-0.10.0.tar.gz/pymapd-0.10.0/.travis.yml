@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+language: python
+env:
+  matrix:
+    - PYTHON=3.7
+    - PYTHON=3.6
+    - PYTHON=3.5
+before_install:
+  - docker pull mapd/core-os-cpu:latest
+  - docker run -d --ipc=host -p 6274:6274 --name=mapd mapd/core-os-cpu:latest
+  - docker ps -a
+  - export PATH="$HOME/miniconda3/bin:$PATH"
+install:
+  - ci/install-travis.sh
+script:
+  - echo "script start"
+  - source activate omnisci-dev
+  - pytest tests
+  - flake8 --ignore=F401
