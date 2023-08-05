@@ -1,0 +1,155 @@
+Metadata-Version: 1.2
+Name: apig-wsgi
+Version: 2.1.1
+Summary: Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB.
+Home-page: https://github.com/adamchainz/apig-wsgi
+Author: Adam Johnson
+Author-email: me@adamj.eu
+License: ISC License
+Description: =========
+        apig-wsgi
+        =========
+        
+        .. image:: https://img.shields.io/travis/adamchainz/apig-wsgi/master.svg
+                :target: https://travis-ci.org/adamchainz/apig-wsgi
+        
+        .. image:: https://img.shields.io/pypi/v/apig-wsgi.svg
+                :target: https://pypi.python.org/pypi/apig-wsgi
+        
+        Wrap a WSGI application in an AWS Lambda handler function for running on
+        API Gateway or an ALB.
+        
+        A quick example:
+        
+        .. code-block:: python
+        
+            from apig_wsgi import make_lambda_handler
+            from myapp.wsgi import app
+        
+            # Configure this as your entry point in AWS Lambda
+            lambda_handler = make_lambda_handler(app)
+        
+        
+        Installation
+        ============
+        
+        Use **pip**:
+        
+        .. code-block:: sh
+        
+            pip install apig-wsgi
+        
+        Python 3.4+ supported.
+        
+        Usage
+        =====
+        
+        ``make_lambda_handler(app, binary_support=False)``
+        --------------------------------------------------
+        
+        ``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's
+        ``Flask()`` object.
+        
+        If you want to support sending binary responses, set ``binary_support`` to
+        ``True``. ALB's support binary responses by default, but on API Gateway you
+        need to make sure you have ``'*/*'`` in the 'binary media types' configuration
+        on your Rest API (whilst API Gateway supports a list of binary media types,
+        using ``'*/*'`` is the best way to do it, since it is used to match the request
+        'Accept' header as well, which WSGI applications are likely to ignore).
+        
+        Note that binary responses aren't sent if your response has a 'Content-Type'
+        starting 'text/html' or 'application/json' - this is to support sending larger
+        text responses.
+        
+        
+        History
+        -------
+        
+        Pending Release
+        ---------------
+        
+        .. Insert new release notes below this line
+        
+        2.1.1 (2019-03-31)
+        ------------------
+        
+        * Revert adding ``statusDescription`` because it turns out API Gateway doesn't
+          ignore it but instead fails the response with an internal server error.
+        
+        2.1.0 (2019-03-31)
+        ------------------
+        
+        * Change ``statusCode`` returned to API Gateway / ALB to an integer. It seems
+          API Gateway always supported both strings and integers, whilst API Gateway
+          only supports integers.
+        * Add ``statusDescription`` in return value. API Gateway doesn't seem to use
+          this whilst the `ALB documentation <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html>`_
+          mentions it as supported.
+        
+        2.0.2 (2019-02-07)
+        ------------------
+        
+        * Drop Python 2 support, only Python 3.4+ is supported now.
+        
+        2.0.1 (2019-02-07)
+        ------------------
+        
+        * Temporarily restore Python 2 support. This is in order to fix a packaging
+          metadata issue that 2.0.0 was marked as supporting Python 2, so a new release
+          is needed with a higher version number for ``pip install apig-wsgi`` to
+          resolve properly on Python 2. Version 2.0.2+ of ``apig-wsgi`` will not
+          support Python 2.
+        
+        2.0.0 (2019-01-28)
+        ------------------
+        
+        * Drop Python 2 support, only Python 3.4+ is supported now.
+        * If ``exc_info`` is passed in, re-raise the exception (previously it would be
+          ignored and crash in a different way). This isn't the nicest experience,
+          however the behaviour is copied from ``wsgiref``\'s simple server, and most
+          WSGI applications implement their own exception conversion to a "500 Internal
+          Server Error" page already.
+        * Noted that the EC2 ALB to Lambda integration is also supported as it uses the
+          same event format as API Gateway.
+        
+        1.2.0 (2018-05-14)
+        ------------------
+        
+        * Work with base64 encoded ``body`` values in requests from API Gateway.
+        
+        1.1.2 (2018-05-11)
+        ------------------
+        
+        * Fix crash using binary support for responses missing a ``Content-Type``
+          header.
+        
+        1.1.1 (2018-05-11)
+        ------------------
+        
+        * Remove debug ``print()``
+        
+        1.1.0 (2018-05-10)
+        ------------------
+        
+        * Add ``binary_support`` flag to enable sending binary responses, if enabled on
+          API Gateway.
+        
+        1.0.0 (2018-03-08)
+        ------------------
+        
+        * First release on PyPI, working basic integration for WSGI apps on API
+          Gateway.
+        
+Keywords: AWS,Lambda,API Gateway,APIG
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: ISC License (ISCL)
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=3.4
