@@ -1,0 +1,754 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.pandas_bridge &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../index.html"><span><img src="../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.pandas_bridge</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Bridge to the pandas library.</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+
+<span class="kn">from</span> <span class="nn">elephant.neo_tools</span> <span class="k">import</span> <span class="p">(</span><span class="n">extract_neo_attrs</span><span class="p">,</span> <span class="n">get_all_epochs</span><span class="p">,</span>
+                                <span class="n">get_all_events</span><span class="p">,</span> <span class="n">get_all_spiketrains</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multiindex_from_dict</span><span class="p">(</span><span class="n">inds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a dictionary, return a `pandas.MultiIndex`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inds : dict</span>
+<span class="sd">           A dictionary where the keys are annotations or attribute names and</span>
+<span class="sd">           the values are the corresponding annotation or attribute value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas MultiIndex</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">names</span><span class="p">,</span> <span class="n">indexes</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="n">inds</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">([</span><span class="n">indexes</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_sort_inds</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Put the indexes and index levels of a pandas object in sorted order.</span>
+
+<span class="sd">    Paramters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    obj : pandas Series, DataFrame, Panel, or Panel4D</span>
+<span class="sd">          The object whose indexes should be sorted.</span>
+<span class="sd">    axis : int, list, optional, &#39;all&#39;</span>
+<span class="sd">           The axis whose indexes should be sorted.  Default is 0.</span>
+<span class="sd">           Can also be a list of indexes, in which case all of those axes</span>
+<span class="sd">           are sorted.  If &#39;all&#39;, sort all indexes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas Series, DataFrame, Panel, or Panel4D</span>
+<span class="sd">        A copy of the object with indexes sorted.</span>
+<span class="sd">        Indexes are sorted in-place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">iax</span> <span class="ow">in</span> <span class="n">axis</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">iax</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="o">.</span><span class="n">names</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">sortlevel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">sort_remaining</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_neo_attrs_safe</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a neo object, return a dictionary of attributes and annotations.</span>
+
+<span class="sd">    This is done in a manner that is safe for `pandas` indexes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    obj : neo object</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary where the keys are annotations or attribute names and</span>
+<span class="sd">        the values are the corresponding annotation or attribute value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">extract_neo_attrs</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">skip_array</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_convert_value_safe</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">key2</span> <span class="o">=</span> <span class="n">_convert_value_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">key2</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_value_safe</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert `neo` values to a value compatible with `pandas`.</span>
+
+<span class="sd">    Some types and dtypes used with neo are not safe to use with pandas in some</span>
+<span class="sd">    or all situations.</span>
+
+<span class="sd">    `quantities.Quantity` don&#39;t follow the normal python rule that values</span>
+<span class="sd">    with that are equal should have the same hash, making it fundamentally</span>
+<span class="sd">    incompatible with `pandas`.</span>
+
+<span class="sd">    On python 3, `pandas` coerces `S` dtypes to bytes, which are not always</span>
+<span class="sd">    safe to use.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    value : any</span>
+<span class="sd">            Value to convert (if it has any known issues).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    any</span>
+<span class="sd">        `value` or a version of value with potential problems fixed.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;dimensionality&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;tolist&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;decode&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;encode&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;UTF8&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="spiketrain_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.spiketrain_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">spiketrain_to_dataframe</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a `neo.SpikeTrain` to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The `pandas.DataFrame` object has a single column, with each element</span>
+<span class="sd">    being the spike time converted to a `float` value in seconds.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations.  The `index`</span>
+<span class="sd">    is the spike number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    spiketrain : neo SpikeTrain</span>
+<span class="sd">                 The SpikeTrain to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the spike times from `spiketrain`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The index name is `spike_number`.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">_extract_neo_attrs_safe</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">_multiindex_from_dict</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;spike_number&#39;</span><span class="p">)</span>
+
+    <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="event_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.event_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">event_to_dataframe</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a `neo.core.Event` to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The `pandas.DataFrame` object has a single column, with each element</span>
+<span class="sd">    being the event label from the `event.label` attribute.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations.  The `index`</span>
+<span class="sd">    is the time stamp from the `event.times` attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    event : neo Event</span>
+<span class="sd">            The Event to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the labels from `event`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    If the length of event.times and event.labels are not the same,</span>
+<span class="sd">    the longer will be truncated to the length of the shorter.</span>
+
+<span class="sd">    The index name is `times`.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">_extract_neo_attrs_safe</span><span class="p">(</span><span class="n">event</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">_multiindex_from_dict</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">)</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)]</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;times&#39;</span><span class="p">)</span>
+
+    <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="epoch_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.epoch_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">epoch_to_dataframe</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a `neo.core.Epoch` to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The `pandas.DataFrame` object has a single column, with each element</span>
+<span class="sd">    being the epoch label from the `epoch.label` attribute.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations.  The `index`</span>
+<span class="sd">    is a `pandas.MultiIndex`, with the first index being the time stamp from</span>
+<span class="sd">    the `epoch.times` attribute and the second being the duration from</span>
+<span class="sd">    the `epoch.durations` attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    epoch : neo Epoch</span>
+<span class="sd">            The Epoch to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the labels from `epoch`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    If the length of `epoch.times`, `epoch.duration`, and `epoch.labels` are</span>
+<span class="sd">    not the same, the longer will be truncated to the length of the shortest.</span>
+
+<span class="sd">    The index names for `epoch.times` and `epoch.durations` are `times` and</span>
+<span class="sd">    `durations`, respectively.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">_extract_neo_attrs_safe</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">_multiindex_from_dict</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="n">times</span> <span class="o">=</span> <span class="n">epoch</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">durs</span> <span class="o">=</span> <span class="n">epoch</span><span class="o">.</span><span class="n">durations</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">epoch</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;U&#39;</span><span class="p">)</span>
+
+    <span class="n">minlen</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">durs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)])</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">([</span><span class="n">times</span><span class="p">[:</span><span class="n">minlen</span><span class="p">],</span> <span class="n">durs</span><span class="p">[:</span><span class="n">minlen</span><span class="p">]],</span>
+                                      <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;times&#39;</span><span class="p">,</span> <span class="s1">&#39;durations&#39;</span><span class="p">])</span>
+
+    <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">labels</span><span class="p">[:</span><span class="n">minlen</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                         <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_multi_objs_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">conv_func</span><span class="p">,</span> <span class="n">get_func</span><span class="p">,</span>
+                             <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert one or more of a given `neo` object to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The objects can be any list, dict, or other iterable or mapping containing</span>
+<span class="sd">    the object, as well as any neo object that can hold the object.</span>
+<span class="sd">    Objects are searched recursively, so the objects can be nested (such as a</span>
+<span class="sd">    list of blocks).</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations of the respective</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    container : list, tuple, iterable, dict, neo container object</span>
+<span class="sd">                The container for the objects to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the converted objects.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">conv_func</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">get_func</span><span class="p">(</span><span class="n">container</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="multi_spiketrains_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.multi_spiketrains_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">multi_spiketrains_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span>
+                                   <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert one or more `neo.SpikeTrain` objects to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The objects can be any list, dict, or other iterable or mapping containing</span>
+<span class="sd">    spiketrains, as well as any neo object that can hold spiketrains:</span>
+<span class="sd">    `neo.Block`, `neo.ChannelIndex`, `neo.Unit`, and `neo.Segment`.</span>
+<span class="sd">    Objects are searched recursively, so the objects can be nested (such as a</span>
+<span class="sd">    list of blocks).</span>
+
+<span class="sd">    The `pandas.DataFrame` object has one column for each spiketrain, with each</span>
+<span class="sd">    element being the spike time converted to a `float` value in seconds.</span>
+<span class="sd">    columns are padded to the same length with `NaN` values.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations of the respective</span>
+<span class="sd">    spiketrain.  The `index` is the spike number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    container : list, tuple, iterable, dict,</span>
+<span class="sd">                neo Block, neo Segment, neo Unit, neo ChannelIndex</span>
+<span class="sd">                The container for the spiketrains to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the spike times from `container`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The index name is `spike_number`.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_multi_objs_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span>
+                                    <span class="n">spiketrain_to_dataframe</span><span class="p">,</span>
+                                    <span class="n">get_all_spiketrains</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="multi_events_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.multi_events_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">multi_events_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert one or more `neo.Event` objects to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The objects can be any list, dict, or other iterable or mapping containing</span>
+<span class="sd">    events, as well as any neo object that can hold events:</span>
+<span class="sd">    `neo.Block` and `neo.Segment`.  Objects are searched recursively, so the</span>
+<span class="sd">    objects can be nested (such as a list of blocks).</span>
+
+<span class="sd">    The `pandas.DataFrame` object has one column for each event, with each</span>
+<span class="sd">    element being the event label. columns are padded to the same length with</span>
+<span class="sd">    `NaN` values.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations of the respective</span>
+<span class="sd">    event.  The `index` is the time stamp from the `event.times` attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    container : list, tuple, iterable, dict, neo Block, neo Segment</span>
+<span class="sd">                The container for the events to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the labels from `container`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    If the length of event.times and event.labels are not the same for any</span>
+<span class="sd">    individual event, the longer will be truncated to the length of the</span>
+<span class="sd">    shorter for that event.  Between events, lengths can differ.</span>
+
+<span class="sd">    The index name is `times`.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_multi_objs_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span>
+                                    <span class="n">event_to_dataframe</span><span class="p">,</span> <span class="n">get_all_events</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="multi_epochs_to_dataframe"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.multi_epochs_to_dataframe">[docs]</a><span class="k">def</span> <span class="nf">multi_epochs_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert one or more `neo.Epoch` objects to a `pandas.DataFrame`.</span>
+
+<span class="sd">    The objects can be any list, dict, or other iterable or mapping containing</span>
+<span class="sd">    epochs, as well as any neo object that can hold epochs:</span>
+<span class="sd">    `neo.Block` and `neo.Segment`.  Objects are searched recursively, so the</span>
+<span class="sd">    objects can be nested (such as a list of blocks).</span>
+
+<span class="sd">    The `pandas.DataFrame` object has one column for each epoch, with each</span>
+<span class="sd">    element being the epoch label. columns are padded to the same length with</span>
+<span class="sd">    `NaN` values.</span>
+
+<span class="sd">    The column heading is a `pandas.MultiIndex` with one index</span>
+<span class="sd">    for each of the scalar attributes and annotations of the respective</span>
+<span class="sd">    epoch.  The `index` is a `pandas.MultiIndex`, with the first index being</span>
+<span class="sd">    the time stamp from the `epoch.times` attribute and the second being the</span>
+<span class="sd">    duration from the `epoch.durations` attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    container : list, tuple, iterable, dict, neo Block, neo Segment</span>
+<span class="sd">                The container for the epochs to convert.</span>
+<span class="sd">    parents : bool, optional</span>
+<span class="sd">              Also include attributes and annotations from parent neo</span>
+<span class="sd">              objects (if any).</span>
+<span class="sd">    child_first : bool, optional</span>
+<span class="sd">                  If True (default True), values of child attributes are used</span>
+<span class="sd">                  over parent attributes in the event of a name conflict.</span>
+<span class="sd">                  If False, parent attributes are used.</span>
+<span class="sd">                  This parameter does nothing if `parents` is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pandas DataFrame</span>
+<span class="sd">        A DataFrame containing the labels from `container`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    If the length of `epoch.times`, `epoch.duration`, and `epoch.labels` are</span>
+<span class="sd">    not the same for any individual epoch, the longer will be truncated to the</span>
+<span class="sd">    length of the shorter for that epoch.  Between epochs, lengths can differ.</span>
+
+<span class="sd">    The index level names for `epoch.times` and `epoch.durations` are</span>
+<span class="sd">    `times` and `durations`, respectively.</span>
+
+<span class="sd">    Attributes that contain non-scalar values are skipped.  So are</span>
+<span class="sd">    annotations or attributes containing a value of `None`.</span>
+
+<span class="sd">    `quantity.Quantities` types are incompatible with `pandas`, so attributes</span>
+<span class="sd">    and annotations of that type are converted to a tuple where the first</span>
+<span class="sd">    element is the scalar value and the second is the string representation of</span>
+<span class="sd">    the units.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_multi_objs_to_dataframe</span><span class="p">(</span><span class="n">container</span><span class="p">,</span>
+                                    <span class="n">epoch_to_dataframe</span><span class="p">,</span> <span class="n">get_all_epochs</span><span class="p">,</span>
+                                    <span class="n">parents</span><span class="o">=</span><span class="n">parents</span><span class="p">,</span> <span class="n">child_first</span><span class="o">=</span><span class="n">child_first</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="slice_spiketrain"><a class="viewcode-back" href="../../source/elephant.pandas_bridge.html#elephant.pandas_bridge.slice_spiketrain">[docs]</a><span class="k">def</span> <span class="nf">slice_spiketrain</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Slice a `pandas.DataFrame`, changing indices appropriately.</span>
+
+<span class="sd">    Values outside the sliced range are converted to `NaN` values.</span>
+
+<span class="sd">    Slicing happens over columns.</span>
+
+<span class="sd">    This sets the `t_start` and `t_stop` column indexes to be the new values.</span>
+<span class="sd">    Otherwise it is the same as setting values outside the range to `NaN`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pdobj : pandas DataFrame</span>
+<span class="sd">            The DataFrame to slice.</span>
+<span class="sd">    t_start : float, optional.</span>
+<span class="sd">              If specified, the returned DataFrame values less than this set</span>
+<span class="sd">              to `NaN`.</span>
+<span class="sd">              Default is `None` (do not use this argument).</span>
+<span class="sd">    t_stop : float, optional.</span>
+<span class="sd">             If specified, the returned DataFrame values greater than this set</span>
+<span class="sd">             to `NaN`.</span>
+<span class="sd">             Default is `None` (do not use this argument).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    pdobj : scalar, pandas Series, DataFrame, or Panel</span>
+<span class="sd">            The returned data type is the same as the type of `pdobj`</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+
+<span class="sd">    The order of the index and/or column levels of the returned object may</span>
+<span class="sd">    differ  from the order of the original.</span>
+
+<span class="sd">    If `t_start` or `t_stop` is specified, all columns indexes will be changed</span>
+<span class="sd">    to  the respective values, including those already within the new range.</span>
+<span class="sd">    If `t_start` or `t_stop` is not specified, those column indexes will not</span>
+<span class="sd">    be changed.</span>
+
+<span class="sd">    Returns a copy, even if `t_start` and `t_stop` are both `None`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pdobj</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">t_stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pdobj</span><span class="p">[</span><span class="n">pdobj</span> <span class="o">&gt;</span> <span class="n">t_stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pdobj</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;t_stop&#39;</span><span class="p">)</span>
+        <span class="n">pdobj</span><span class="p">[</span><span class="s1">&#39;t_stop&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_stop</span>
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pdobj</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;t_stop&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">t_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pdobj</span><span class="p">[</span><span class="n">pdobj</span> <span class="o">&lt;</span> <span class="n">t_start</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pdobj</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;t_start&#39;</span><span class="p">)</span>
+        <span class="n">pdobj</span><span class="p">[</span><span class="s1">&#39;t_start&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_start</span>
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">pdobj</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;t_start&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">pdobj</span> <span class="o">=</span> <span class="n">_sort_inds</span><span class="p">(</span><span class="n">pdobj</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pdobj</span></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

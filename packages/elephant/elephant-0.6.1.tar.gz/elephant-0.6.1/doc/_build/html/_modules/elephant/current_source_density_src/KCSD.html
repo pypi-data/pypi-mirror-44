@@ -1,0 +1,1201 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.current_source_density_src.KCSD &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.current_source_density_src.KCSD</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;This script is used to generate Current Source Density Estimates, using the</span>
+<span class="sd">kCSD method Jan et.al (2012).</span>
+<span class="sd">This was written by :</span>
+<span class="sd">[1]Chaitanya Chintaluri,</span>
+<span class="sd">[2]Michal Czerwinski,</span>
+<span class="sd">Laboratory of Neuroinformatics,</span>
+<span class="sd">Nencki Institute of Exprimental Biology, Warsaw.</span>
+<span class="sd">KCSD1D[1][2], KCSD2D[1], KCSD3D[1], MoIKCSD[1]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">special</span><span class="p">,</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">interpolate</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">distance</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="k">import</span> <span class="n">LinAlgError</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utility_functions</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">basis_functions</span> <span class="k">as</span> <span class="n">basis</span>
+
+<span class="n">skmonaco_available</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="CSD"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.CSD">[docs]</a><span class="k">class</span> <span class="nc">CSD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;CSD - The base class for KCSD methods.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">=</span> <span class="n">ele_pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pots</span> <span class="o">=</span> <span class="n">pots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_ele</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CSD.validate"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.CSD.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Basic checks to see if inputs are okay</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ele_pos : numpy array</span>
+<span class="sd">            positions of electrodes</span>
+<span class="sd">        pots : numpy array</span>
+<span class="sd">            potentials measured by electrodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">pots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Number of measured potentials is not equal &quot;</span>
+                            <span class="s2">&quot;to electrode number!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="o">+</span><span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="c1">#Dim+1</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Number of electrodes must be at least :&quot;</span><span class="p">,</span>
+                            <span class="mi">1</span><span class="o">+</span><span class="n">ele_pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">utils</span><span class="o">.</span><span class="n">check_for_duplicated_electrodes</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error! Duplicated electrode!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CSD.sanity"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.CSD.sanity">[docs]</a>    <span class="k">def</span> <span class="nf">sanity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">true_csd</span><span class="p">,</span> <span class="n">pos_csd</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Useful for comparing TrueCSD with reconstructed CSD. Computes, the RMS error</span>
+<span class="sd">        between the true_csd and the reconstructed csd at pos_csd using the</span>
+<span class="sd">        method defined.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        true_csd : csd values used to generate potentials</span>
+<span class="sd">        pos_csd : csd estimatation from the method</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RMSE : root mean squared difference</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">csd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">pos_csd</span><span class="p">)</span>
+        <span class="n">RMSE</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">true_csd</span> <span class="o">-</span> <span class="n">csd</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">RMSE</span></div></div>
+
+<div class="viewcode-block" id="KCSD"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD">[docs]</a><span class="k">class</span> <span class="nc">KCSD</span><span class="p">(</span><span class="n">CSD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;KCSD - The base class for all the KCSD variants.</span>
+<span class="sd">    This estimates the Current Source Density, for a given configuration of</span>
+<span class="sd">    electrod positions and recorded potentials, electrodes.</span>
+<span class="sd">    The method implented here is based on the original paper</span>
+<span class="sd">    by Jan Potworowski et.al. 2012.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">KCSD</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimate_at</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">place_basis</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_src_dist_tables</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">()</span>
+
+<div class="viewcode-block" id="KCSD.parameters"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.parameters">[docs]</a>    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defining the default values of the method passed as kwargs</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Same as those passed to initialize the Class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;src_type&#39;</span><span class="p">,</span> <span class="s1">&#39;gauss&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_src_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;n_src_init&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambd</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;lambd&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R_init</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;R_init&#39;</span><span class="p">,</span> <span class="mf">0.23</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ext_x</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ext_x&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;xmin&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;xmax&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gdx</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gdx&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ext_y</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ext_y&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ymin&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ymax&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gdy</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gdy&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ext_z</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;ext_z&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zmin</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;zmin&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zmax</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;zmax&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gdz</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;gdz&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmin</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Invalid keyword arguments:&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="KCSD.method"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.method">[docs]</a>    <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Actual sequence of methods called for KCSD</span>
+<span class="sd">        Defines:</span>
+<span class="sd">        self.k_pot and self.k_interp_cross matrices</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_lookup</span><span class="p">()</span>                                <span class="c1">#Look up table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_b_pot</span><span class="p">()</span>                                 <span class="c1">#update kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_b_src</span><span class="p">()</span>                                 <span class="c1">#update crskernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_b_interp_pot</span><span class="p">()</span>                          <span class="c1">#update pot interp</span></div>
+
+<div class="viewcode-block" id="KCSD.create_lookup"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.create_lookup">[docs]</a>    <span class="k">def</span> <span class="nf">create_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_table_density</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a table for easy potential estimation from CSD.</span>
+<span class="sd">        Updates and Returns the potentials due to a</span>
+<span class="sd">        given basis source like a lookup</span>
+<span class="sd">        table whose shape=(dist_table_density,)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dist_table_density : int</span>
+<span class="sd">            number of distance values at which potentials are computed.</span>
+<span class="sd">            Default 100</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_max</span><span class="o">+</span><span class="mf">1.</span><span class="p">),</span> <span class="n">dist_table_density</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">xs</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="c1">#starting from 0</span>
+        <span class="n">dist_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">):</span>
+            <span class="n">dist_table</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_model</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_pot_at</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">dist_table</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;cubic&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD.update_b_pot"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.update_b_pot">[docs]</a>    <span class="k">def</span> <span class="nf">update_b_pot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the b_pot  - array is (#_basis_sources, #_electrodes)</span>
+<span class="sd">        Updates the  k_pot - array is (#_electrodes, #_electrodes) K(x,x&#39;)</span>
+<span class="sd">        Eq9,Jan2012</span>
+<span class="sd">        Calculates b_pot - matrix containing the values of all</span>
+<span class="sd">        the potential basis functions in all the electrode positions</span>
+<span class="sd">        (essential for calculating the cross_matrix).</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_pot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_pot_at</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_pot</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_pot</span><span class="p">)</span> <span class="c1">#K(x,x&#39;) Eq9,Jan2012</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span></div>
+
+<div class="viewcode-block" id="KCSD.update_b_src"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.update_b_src">[docs]</a>    <span class="k">def</span> <span class="nf">update_b_src</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the b_src in the shape of (#_est_pts, #_basis_sources)</span>
+<span class="sd">        Updates the k_interp_cross - K_t(x,y) Eq17</span>
+<span class="sd">        Calculate b_src - matrix containing containing the values of</span>
+<span class="sd">        all the source basis functions in all the points at which we want to</span>
+<span class="sd">        calculate the solution (essential for calculating the cross_matrix)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_cross</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_src</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_pot</span><span class="p">)</span> <span class="c1">#K_t(x,y) Eq17</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_cross</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span></div>
+
+<div class="viewcode-block" id="KCSD.update_b_interp_pot"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.update_b_interp_pot">[docs]</a>    <span class="k">def</span> <span class="nf">update_b_interp_pot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the matrix of potentials generated by every source</span>
+<span class="sd">        basis function at every position in the interpolated space.</span>
+<span class="sd">        Updates b_interp_pot</span>
+<span class="sd">        Updates k_interp_pot</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_interp_pot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolate_pot_at</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_pot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_interp_pot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_pot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_pot</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span></div>
+
+<div class="viewcode-block" id="KCSD.values"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimate</span><span class="o">=</span><span class="s1">&#39;CSD&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the values of the quantity of interest</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        estimate : &#39;CSD&#39; or &#39;POT&#39;</span>
+<span class="sd">            What quantity is to be estimated</span>
+<span class="sd">            Defaults to &#39;CSD&#39;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        estimation : np.array</span>
+<span class="sd">            estimated quantity of shape (ngx, ngy, ngz, nt)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">estimate</span> <span class="o">==</span> <span class="s1">&#39;CSD&#39;</span><span class="p">:</span> <span class="c1">#Maybe used for estimating the potentials also.</span>
+            <span class="n">estimation_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_cross</span>
+        <span class="k">elif</span> <span class="n">estimate</span> <span class="o">==</span> <span class="s1">&#39;POT&#39;</span><span class="p">:</span>
+            <span class="n">estimation_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interp_pot</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Invalid quantity to be measured, pass either CSD or POT&#39;</span><span class="p">)</span>
+        <span class="n">k_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambd</span> <span class="o">*</span>
+                              <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">estimation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_estm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_time</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_time</span><span class="p">):</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">k_inv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[:,</span> <span class="n">t</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ele</span><span class="p">):</span>
+                <span class="n">estimation</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">+=</span> <span class="n">estimation_table</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span><span class="n">beta</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1"># C*(x) Eq 18</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_estimate</span><span class="p">(</span><span class="n">estimation</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD.process_estimate"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.process_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">process_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Function used to rearrange estimation according to dimension, to be</span>
+<span class="sd">        used by the fuctions values</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        estimation : np.array</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        estimation : np.array</span>
+<span class="sd">            estimated quantity of shape (ngx, ngy, ngz, nt)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">estimation</span> <span class="o">=</span> <span class="n">estimation</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_time</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">estimation</span> <span class="o">=</span> <span class="n">estimation</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_time</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">estimation</span> <span class="o">=</span> <span class="n">estimation</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_time</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">estimation</span></div>
+
+<div class="viewcode-block" id="KCSD.update_R"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.update_R">[docs]</a>    <span class="k">def</span> <span class="nf">update_R</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the width of the basis fuction - Used in Cross validation</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        R : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span><span class="p">),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="KCSD.update_lambda"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.update_lambda">[docs]</a>    <span class="k">def</span> <span class="nf">update_lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lambd</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the lambda parameter of regularization, Used in Cross validation</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lambd : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambd</span> <span class="o">=</span> <span class="n">lambd</span></div>
+
+<div class="viewcode-block" id="KCSD.cross_validate"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.cross_validate">[docs]</a>    <span class="k">def</span> <span class="nf">cross_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lambdas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Rs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method defines the cross validation.</span>
+<span class="sd">        By default only cross_validates over lambda,</span>
+<span class="sd">        When no argument is passed, it takes</span>
+<span class="sd">        lambdas = np.logspace(-2,-25,25,base=10.)</span>
+<span class="sd">        and Rs = np.array(self.R).flatten()</span>
+<span class="sd">        otherwise pass necessary numpy arrays</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lambdas : numpy array</span>
+<span class="sd">        Rs : numpy array</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        R : post cross validation</span>
+<span class="sd">        Lambda : post cross validation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">lambdas</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>                           <span class="c1">#when None</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No lambda given, using defaults&#39;</span><span class="p">)</span>
+            <span class="n">lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="n">base</span><span class="o">=</span><span class="mf">10.</span><span class="p">)</span> <span class="c1">#Default multiple lambda</span>
+            <span class="n">lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">lambdas</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.0</span><span class="p">))))</span>
+        <span class="k">elif</span> <span class="n">lambdas</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>                       <span class="c1">#resize when one entry</span>
+            <span class="n">lambdas</span> <span class="o">=</span> <span class="n">lambdas</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">Rs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>                                <span class="c1">#when None</span>
+            <span class="n">Rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>         <span class="c1">#Default over one R value</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Rs</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">lambdas</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        <span class="n">index_generator</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ele</span><span class="p">):</span>
+            <span class="n">idx_test</span> <span class="o">=</span> <span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+            <span class="n">idx_train</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_ele</span><span class="p">))</span>
+            <span class="n">idx_train</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>                      <span class="c1">#Leave one out</span>
+            <span class="n">index_generator</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx_train</span><span class="p">,</span> <span class="n">idx_test</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">R_idx</span><span class="p">,</span><span class="n">R</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Rs</span><span class="p">):</span>                 <span class="c1">#Iterate over R</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_R</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Cross validating R (all lambda) :&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">lambd_idx</span><span class="p">,</span><span class="n">lambd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lambdas</span><span class="p">):</span> <span class="c1">#Iterate over lambdas</span>
+                <span class="n">errs</span><span class="p">[</span><span class="n">R_idx</span><span class="p">,</span> <span class="n">lambd_idx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_cverror</span><span class="p">(</span><span class="n">lambd</span><span class="p">,</span>
+                                                              <span class="n">index_generator</span><span class="p">)</span>
+        <span class="n">err_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">errs</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">errs</span><span class="p">))</span>         <span class="c1">#Index of the least error</span>
+        <span class="n">cv_R</span> <span class="o">=</span> <span class="n">Rs</span><span class="p">[</span><span class="n">err_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>      <span class="c1">#First occurance of the least error&#39;s</span>
+        <span class="n">cv_lambda</span> <span class="o">=</span> <span class="n">lambdas</span><span class="p">[</span><span class="n">err_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span>  <span class="c1">#otherwise is None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_R</span><span class="p">(</span><span class="n">cv_R</span><span class="p">)</span>           <span class="c1">#Update solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_lambda</span><span class="p">(</span><span class="n">cv_lambda</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R, lambda :&#39;</span><span class="p">,</span> <span class="n">cv_R</span><span class="p">,</span> <span class="n">cv_lambda</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cv_R</span><span class="p">,</span> <span class="n">cv_lambda</span></div>
+
+<div class="viewcode-block" id="KCSD.compute_cverror"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD.compute_cverror">[docs]</a>    <span class="k">def</span> <span class="nf">compute_cverror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lambd</span><span class="p">,</span> <span class="n">index_generator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Useful for Cross validation error calculations</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lambd : float</span>
+<span class="sd">        index_generator : list</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        err : float</span>
+<span class="sd">            the sum of the error computed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx_train</span><span class="p">,</span> <span class="n">idx_test</span> <span class="ow">in</span> <span class="n">index_generator</span><span class="p">:</span>
+            <span class="n">B_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">idx_train</span><span class="p">,</span> <span class="n">idx_train</span><span class="p">)]</span>
+            <span class="n">V_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[</span><span class="n">idx_train</span><span class="p">]</span>
+            <span class="n">V_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[</span><span class="n">idx_test</span><span class="p">]</span>
+            <span class="n">I_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_train</span><span class="p">))</span>
+            <span class="n">B_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">B_train</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">lambd</span><span class="o">*</span><span class="n">I_matrix</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">beta_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">B_new</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">V_train</span><span class="p">))</span>
+                <span class="n">B_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_pot</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">idx_test</span><span class="p">,</span> <span class="n">idx_train</span><span class="p">)]</span>
+                <span class="n">V_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_test</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_train</span><span class="p">)):</span>
+                    <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                        <span class="n">V_est</span><span class="p">[:,</span> <span class="n">tt</span><span class="p">]</span> <span class="o">+=</span> <span class="n">beta_new</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">tt</span><span class="p">]</span> <span class="o">*</span> <span class="n">B_test</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span>
+                <span class="n">err</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">V_est</span><span class="o">-</span><span class="n">V_test</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="s1">&#39;Encoutered Singular Matrix Error: try changing ele_pos slightly&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">err</span></div></div>
+
+<div class="viewcode-block" id="KCSD1D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D">[docs]</a><span class="k">class</span> <span class="nc">KCSD1D</span><span class="p">(</span><span class="n">KCSD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;KCSD1D - The 1D variant for the Kernel Current Source Density method.</span>
+<span class="sd">    This estimates the Current Source Density, for a given configuration of</span>
+<span class="sd">    electrod positions and recorded potentials, in the case of 1D recording</span>
+<span class="sd">    electrodes (laminar probes). The method implented here is based on the</span>
+<span class="sd">    original paper by Jan Potworowski et.al. 2012.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize KCSD1D Class.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ele_pos : numpy array</span>
+<span class="sd">            positions of electrodes</span>
+<span class="sd">        pots : numpy array</span>
+<span class="sd">            potentials measured by electrodes</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            configuration parameters, that may contain the following keys:</span>
+<span class="sd">            src_type : str</span>
+<span class="sd">                basis function type (&#39;gauss&#39;, &#39;step&#39;, &#39;gauss_lim&#39;)</span>
+<span class="sd">                Defaults to &#39;gauss&#39;</span>
+<span class="sd">            sigma : float</span>
+<span class="sd">                space conductance of the tissue in S/m</span>
+<span class="sd">                Defaults to 1 S/m</span>
+<span class="sd">            n_src_init : int</span>
+<span class="sd">                requested number of sources</span>
+<span class="sd">                Defaults to 300</span>
+<span class="sd">            R_init : float</span>
+<span class="sd">                demanded thickness of the basis element</span>
+<span class="sd">                Defaults to 0.23</span>
+<span class="sd">            h : float</span>
+<span class="sd">                thickness of analyzed cylindrical slice</span>
+<span class="sd">                Defaults to 1.</span>
+<span class="sd">            xmin, xmax : floats</span>
+<span class="sd">                boundaries for CSD estimation space</span>
+<span class="sd">                Defaults to min(ele_pos(x)), and max(ele_pos(x))</span>
+<span class="sd">            ext_x : float</span>
+<span class="sd">                length of space extension: x_min-ext_x ... x_max+ext_x</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">            gdx : float</span>
+<span class="sd">                space increments in the estimation space</span>
+<span class="sd">                Defaults to 0.01(xmax-xmin)</span>
+<span class="sd">            lambd : float</span>
+<span class="sd">                regularization parameter for ridge regression</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        LinAlgException</span>
+<span class="sd">            If the matrix is not numerically invertible.</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            Basis function (src_type) not implemented. See basis_functions.py for available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">KCSD1D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KCSD1D.estimate_at"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D.estimate_at">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_at</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defines locations where the estimation is wanted</span>
+<span class="sd">        Defines:</span>
+<span class="sd">        self.n_estm = self.estm_x.size</span>
+<span class="sd">        self.ngx = self.estm_x.shape</span>
+<span class="sd">        self.estm_x : Locations at which CSD is requested.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nx</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_estm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="KCSD1D.place_basis"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D.place_basis">[docs]</a>    <span class="k">def</span> <span class="nf">place_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Places basis sources of the defined type.</span>
+<span class="sd">        Checks if a given source_type is defined, if so then defines it</span>
+<span class="sd">        self.basis, This function gives locations of the basis sources,</span>
+<span class="sd">        Defines</span>
+<span class="sd">        source_type : basis_fuctions.basis_1D.keys()</span>
+<span class="sd">        self.R based on R_init</span>
+<span class="sd">        self.dist_max as maximum distance between electrode and basis</span>
+<span class="sd">        self.nsx = self.src_x.shape</span>
+<span class="sd">        self.src_x : Locations at which basis sources are placed.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_type</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">basis_1D</span><span class="p">[</span><span class="n">source_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Invalid source_type for basis! available are:&#39;</span><span class="p">,</span>
+                           <span class="n">basis</span><span class="o">.</span><span class="n">basis_1D</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">distribute_srcs_1D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">n_src_init</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">ext_x</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">R_init</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="KCSD1D.create_src_dist_tables"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D.create_src_dist_tables">[docs]</a>    <span class="k">def</span> <span class="nf">create_src_dist_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates distance tables between sources, electrode and estm points</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="n">src_loc</span> <span class="o">=</span> <span class="n">src_loc</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">src_loc</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">est_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="n">est_loc</span> <span class="o">=</span> <span class="n">est_loc</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">est_loc</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="p">,</span> <span class="n">est_loc</span><span class="p">,</span>  <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span></div>
+
+<div class="viewcode-block" id="KCSD1D.forward_model"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D.forward_model">[docs]</a>    <span class="k">def</span> <span class="nf">forward_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">src_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model functions</span>
+<span class="sd">        Evaluates potential at point (x,0) by a basis source located at (0,0)</span>
+<span class="sd">        Eq 26 kCSD by Jan,2012</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">        R : float</span>
+<span class="sd">        h : float</span>
+<span class="sd">        sigma : float</span>
+<span class="sd">        src_type : basis_1D.key</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">            value of potential at specified distance from the source</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pot</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_pot_1D</span><span class="p">,</span>
+                                  <span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span>
+                                  <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">src_type</span><span class="p">))</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pot</span></div>
+
+<div class="viewcode-block" id="KCSD1D.int_pot_1D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD1D.int_pot_1D">[docs]</a>    <span class="k">def</span> <span class="nf">int_pot_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model function.</span>
+<span class="sd">        Returns contribution of a point xp,yp, belonging to a basis source</span>
+<span class="sd">        support centered at (0,0) to the potential measured at (x,0),</span>
+<span class="sd">        integrated over xp,yp gives the potential generated by a</span>
+<span class="sd">        basis source element centered at (0,0) at point (x,0)</span>
+<span class="sd">        Eq 26 kCSD by Jan,2012</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xp : floats or np.arrays</span>
+<span class="sd">            point or set of points where function should be calculated</span>
+<span class="sd">        x :  float</span>
+<span class="sd">            position at which potential is being measured</span>
+<span class="sd">        R : float</span>
+<span class="sd">            The size of the basis function</span>
+<span class="sd">        h : float</span>
+<span class="sd">            thickness of slice</span>
+<span class="sd">        basis_func : method</span>
+<span class="sd">            Fuction of the basis source</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">xp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">h</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">xp</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">*=</span> <span class="n">basis_func</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xp</span><span class="p">),</span> <span class="n">R</span><span class="p">)</span>  <span class="c1">#xp is the distance</span>
+        <span class="k">return</span> <span class="n">m</span></div></div>
+
+<div class="viewcode-block" id="KCSD2D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D">[docs]</a><span class="k">class</span> <span class="nc">KCSD2D</span><span class="p">(</span><span class="n">KCSD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;KCSD2D - The 2D variant for the Kernel Current Source Density method.</span>
+<span class="sd">    This estimates the Current Source Density, for a given configuration of</span>
+<span class="sd">    electrod positions and recorded potentials, in the case of 2D recording</span>
+<span class="sd">    electrodes. The method implented here is based on the original paper</span>
+<span class="sd">    by Jan Potworowski et.al. 2012.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize KCSD2D Class.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ele_pos : numpy array</span>
+<span class="sd">            positions of electrodes</span>
+<span class="sd">        pots : numpy array</span>
+<span class="sd">            potentials measured by electrodes</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            configuration parameters, that may contain the following keys:</span>
+<span class="sd">            src_type : str</span>
+<span class="sd">                basis function type (&#39;gauss&#39;, &#39;step&#39;, &#39;gauss_lim&#39;)</span>
+<span class="sd">                Defaults to &#39;gauss&#39;</span>
+<span class="sd">            sigma : float</span>
+<span class="sd">                space conductance of the tissue in S/m</span>
+<span class="sd">                Defaults to 1 S/m</span>
+<span class="sd">            n_src_init : int</span>
+<span class="sd">                requested number of sources</span>
+<span class="sd">                Defaults to 1000</span>
+<span class="sd">            R_init : float</span>
+<span class="sd">                demanded thickness of the basis element</span>
+<span class="sd">                Defaults to 0.23</span>
+<span class="sd">            h : float</span>
+<span class="sd">                thickness of analyzed tissue slice</span>
+<span class="sd">                Defaults to 1.</span>
+<span class="sd">            xmin, xmax, ymin, ymax : floats</span>
+<span class="sd">                boundaries for CSD estimation space</span>
+<span class="sd">                Defaults to min(ele_pos(x)), and max(ele_pos(x))</span>
+<span class="sd">                Defaults to min(ele_pos(y)), and max(ele_pos(y))</span>
+<span class="sd">            ext_x, ext_y : float</span>
+<span class="sd">                length of space extension: x_min-ext_x ... x_max+ext_x</span>
+<span class="sd">                length of space extension: y_min-ext_y ... y_max+ext_y</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">            gdx, gdy : float</span>
+<span class="sd">                space increments in the estimation space</span>
+<span class="sd">                Defaults to 0.01(xmax-xmin)</span>
+<span class="sd">                Defaults to 0.01(ymax-ymin)</span>
+<span class="sd">            lambd : float</span>
+<span class="sd">                regularization parameter for ridge regression</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        LinAlgError</span>
+<span class="sd">            Could not invert the matrix, try changing the ele_pos slightly</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            Basis function (src_type) not implemented. See basis_functions.py for available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">KCSD2D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KCSD2D.estimate_at"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D.estimate_at">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_at</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defines locations where the estimation is wanted</span>
+<span class="sd">        Defines:</span>
+<span class="sd">        self.n_estm = self.estm_x.size</span>
+<span class="sd">        self.ngx, self.ngy = self.estm_x.shape</span>
+<span class="sd">        self.estm_x, self.estm_y : Locations at which CSD is requested.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdx</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nx</span><span class="p">),</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ny</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_estm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="KCSD2D.place_basis"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D.place_basis">[docs]</a>    <span class="k">def</span> <span class="nf">place_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Places basis sources of the defined type.</span>
+<span class="sd">        Checks if a given source_type is defined, if so then defines it</span>
+<span class="sd">        self.basis, This function gives locations of the basis sources,</span>
+<span class="sd">        Defines</span>
+<span class="sd">        source_type : basis_fuctions.basis_2D.keys()</span>
+<span class="sd">        self.R based on R_init</span>
+<span class="sd">        self.dist_max as maximum distance between electrode and basis</span>
+<span class="sd">        self.nsx, self.nsy = self.src_x.shape</span>
+<span class="sd">        self.src_x, self.src_y : Locations at which basis sources are placed.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_type</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">basis_2D</span><span class="p">[</span><span class="n">source_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Invalid source_type for basis! available are:&#39;</span><span class="p">,</span>
+                           <span class="n">basis</span><span class="o">.</span><span class="n">basis_2D</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">distribute_srcs_2D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">n_src_init</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">ext_x</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">ext_y</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">R_init</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="KCSD2D.create_src_dist_tables"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D.create_src_dist_tables">[docs]</a>    <span class="k">def</span> <span class="nf">create_src_dist_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates distance tables between sources, electrode and estm points</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="n">est_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">est_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>  <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span></div>
+
+<div class="viewcode-block" id="KCSD2D.forward_model"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D.forward_model">[docs]</a>    <span class="k">def</span> <span class="nf">forward_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">src_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model functions</span>
+<span class="sd">        Evaluates potential at point (x,0) by a basis source located at (0,0)</span>
+<span class="sd">        Eq 22 kCSD by Jan,2012</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">        R : float</span>
+<span class="sd">        h : float</span>
+<span class="sd">        sigma : float</span>
+<span class="sd">        src_type : basis_2D.key</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">            value of potential at specified distance from the source</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pot</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">dblquad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_pot_2D</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span>
+                                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span>
+                                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span>
+                                     <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">src_type</span><span class="p">))</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span>  <span class="c1">#Potential basis functions bi_x_y</span>
+        <span class="k">return</span> <span class="n">pot</span></div>
+
+<div class="viewcode-block" id="KCSD2D.int_pot_2D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD2D.int_pot_2D">[docs]</a>    <span class="k">def</span> <span class="nf">int_pot_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model function.</span>
+<span class="sd">        Returns contribution of a point xp,yp, belonging to a basis source</span>
+<span class="sd">        support centered at (0,0) to the potential measured at (x,0),</span>
+<span class="sd">        integrated over xp,yp gives the potential generated by a</span>
+<span class="sd">        basis source element centered at (0,0) at point (x,0)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xp, yp : floats or np.arrays</span>
+<span class="sd">            point or set of points where function should be calculated</span>
+<span class="sd">        x :  float</span>
+<span class="sd">            position at which potential is being measured</span>
+<span class="sd">        R : float</span>
+<span class="sd">            The size of the basis function</span>
+<span class="sd">        h : float</span>
+<span class="sd">            thickness of slice</span>
+<span class="sd">        basis_func : method</span>
+<span class="sd">            Fuction of the basis source</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">xp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mf">0.00001</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mf">0.00001</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">pot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsinh</span><span class="p">(</span><span class="n">h</span><span class="o">/</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="n">basis_func</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pot</span></div></div>
+
+<div class="viewcode-block" id="MoIKCSD"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.MoIKCSD">[docs]</a><span class="k">class</span> <span class="nc">MoIKCSD</span><span class="p">(</span><span class="n">KCSD2D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;MoIKCSD - CSD while including the forward modeling effects of saline.</span>
+
+<span class="sd">    This estimates the Current Source Density, for a given configuration of</span>
+<span class="sd">    electrod positions and recorded potentials, in the case of 2D recording</span>
+<span class="sd">    electrodes from an MEA electrode plane using the Method of Images.</span>
+<span class="sd">    The method implented here is based on kCSD method by Jan Potworowski</span>
+<span class="sd">    et.al. 2012, which was extended in Ness, Chintaluri 2015 for MEA.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize MoIKCSD Class.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ele_pos : numpy array</span>
+<span class="sd">            positions of electrodes</span>
+<span class="sd">        pots : numpy array</span>
+<span class="sd">            potentials measured by electrodes</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            configuration parameters, that may contain the following keys:</span>
+<span class="sd">            src_type : str</span>
+<span class="sd">                basis function type (&#39;gauss&#39;, &#39;step&#39;, &#39;gauss_lim&#39;)</span>
+<span class="sd">                Defaults to &#39;gauss&#39;</span>
+<span class="sd">            sigma : float</span>
+<span class="sd">                space conductance of the tissue in S/m</span>
+<span class="sd">                Defaults to 1 S/m</span>
+<span class="sd">            sigma_S : float</span>
+<span class="sd">                conductance of the saline (medium) in S/m</span>
+<span class="sd">                Default is 5 S/m (5 times more conductive)</span>
+<span class="sd">            n_src_init : int</span>
+<span class="sd">                requested number of sources</span>
+<span class="sd">                Defaults to 1000</span>
+<span class="sd">            R_init : float</span>
+<span class="sd">                demanded thickness of the basis element</span>
+<span class="sd">                Defaults to 0.23</span>
+<span class="sd">            h : float</span>
+<span class="sd">                thickness of analyzed tissue slice</span>
+<span class="sd">                Defaults to 1.</span>
+<span class="sd">            xmin, xmax, ymin, ymax : floats</span>
+<span class="sd">                boundaries for CSD estimation space</span>
+<span class="sd">                Defaults to min(ele_pos(x)), and max(ele_pos(x))</span>
+<span class="sd">                Defaults to min(ele_pos(y)), and max(ele_pos(y))</span>
+<span class="sd">            ext_x, ext_y : float</span>
+<span class="sd">                length of space extension: x_min-ext_x ... x_max+ext_x</span>
+<span class="sd">                length of space extension: y_min-ext_y ... y_max+ext_y</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">            gdx, gdy : float</span>
+<span class="sd">                space increments in the estimation space</span>
+<span class="sd">                Defaults to 0.01(xmax-xmin)</span>
+<span class="sd">                Defaults to 0.01(ymax-ymin)</span>
+<span class="sd">            lambd : float</span>
+<span class="sd">                regularization parameter for ridge regression</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">            MoI_iters : int</span>
+<span class="sd">                Number of interations in method of images.</span>
+<span class="sd">                Default is 20</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MoI_iters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;MoI_iters&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_S</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sigma_S&#39;</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">W_TS</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_S</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_S</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MoI_iters</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1">#Eq 6, Ness (2015)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_factor</span> <span class="o">=</span> <span class="n">W_TS</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">iters</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MoIKCSD</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MoIKCSD.forward_model"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.MoIKCSD.forward_model">[docs]</a>    <span class="k">def</span> <span class="nf">forward_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">src_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model functions</span>
+<span class="sd">        Evaluates potential at point (x,0) by a basis source located at (0,0)</span>
+<span class="sd">        Eq 22 kCSD by Jan,2012</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">        R : float</span>
+<span class="sd">        h : float</span>
+<span class="sd">        sigma : float</span>
+<span class="sd">        src_type : basis_2D.key</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">            value of potential at specified distance from the source</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pot</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">dblquad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_pot_2D_moi</span><span class="p">,</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span>
+                                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span>
+                                     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span>
+                                     <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">src_type</span><span class="p">))</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pot</span></div>
+
+<div class="viewcode-block" id="MoIKCSD.int_pot_2D_moi"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.MoIKCSD.int_pot_2D_moi">[docs]</a>    <span class="k">def</span> <span class="nf">int_pot_2D_moi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model function. Incorporates the Method of Images.</span>
+<span class="sd">        Returns contribution of a point xp,yp, belonging to a basis source</span>
+<span class="sd">        support centered at (0,0) to the potential measured at (x,0),</span>
+<span class="sd">        integrated over xp,yp gives the potential generated by a</span>
+<span class="sd">        basis source element centered at (0,0) at point (x,0)</span>
+<span class="sd">        #Eq 20, Ness(2015)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xp, yp : floats or np.arrays</span>
+<span class="sd">            point or set of points where function should be calculated</span>
+<span class="sd">        x :  float</span>
+<span class="sd">            position at which potential is being measured</span>
+<span class="sd">        R : float</span>
+<span class="sd">            The size of the basis function</span>
+<span class="sd">        h : float</span>
+<span class="sd">            thickness of slice</span>
+<span class="sd">        basis_func : method</span>
+<span class="sd">            Fuction of the basis source</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">xp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">L</span> <span class="o">&lt;</span> <span class="mf">0.00001</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="mf">0.00001</span>
+        <span class="n">correction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsinh</span><span class="p">((</span><span class="n">h</span><span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">h</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span><span class="o">/</span><span class="n">L</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsinh</span><span class="p">((</span><span class="n">h</span><span class="o">+</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">h</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">iters</span><span class="p">))</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+        <span class="n">pot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsinh</span><span class="p">(</span><span class="n">h</span><span class="o">/</span><span class="n">L</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_factor</span><span class="o">*</span><span class="n">correction</span><span class="p">)</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="n">basis_func</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span> <span class="c1">#Eq 20, Ness et.al.</span>
+        <span class="k">return</span> <span class="n">pot</span></div></div>
+
+<div class="viewcode-block" id="KCSD3D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D">[docs]</a><span class="k">class</span> <span class="nc">KCSD3D</span><span class="p">(</span><span class="n">KCSD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;KCSD3D - The 3D variant for the Kernel Current Source Density method.</span>
+<span class="sd">    This estimates the Current Source Density, for a given configuration of</span>
+<span class="sd">    electrod positions and recorded potentials, in the case of 2D recording</span>
+<span class="sd">    electrodes. The method implented here is based on the original paper</span>
+<span class="sd">    by Jan Potworowski et.al. 2012.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize KCSD3D Class.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ele_pos : numpy array</span>
+<span class="sd">            positions of electrodes</span>
+<span class="sd">        pots : numpy array</span>
+<span class="sd">            potentials measured by electrodes</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            configuration parameters, that may contain the following keys:</span>
+<span class="sd">            src_type : str</span>
+<span class="sd">                basis function type (&#39;gauss&#39;, &#39;step&#39;, &#39;gauss_lim&#39;)</span>
+<span class="sd">                Defaults to &#39;gauss&#39;</span>
+<span class="sd">            sigma : float</span>
+<span class="sd">                space conductance of the tissue in S/m</span>
+<span class="sd">                Defaults to 1 S/m</span>
+<span class="sd">            n_src_init : int</span>
+<span class="sd">                requested number of sources</span>
+<span class="sd">                Defaults to 1000</span>
+<span class="sd">            R_init : float</span>
+<span class="sd">                demanded thickness of the basis element</span>
+<span class="sd">                Defaults to 0.23</span>
+<span class="sd">            h : float</span>
+<span class="sd">                thickness of analyzed tissue slice</span>
+<span class="sd">                Defaults to 1.</span>
+<span class="sd">            xmin, xmax, ymin, ymax, zmin, zmax : floats</span>
+<span class="sd">                boundaries for CSD estimation space</span>
+<span class="sd">                Defaults to min(ele_pos(x)), and max(ele_pos(x))</span>
+<span class="sd">                Defaults to min(ele_pos(y)), and max(ele_pos(y))</span>
+<span class="sd">                Defaults to min(ele_pos(z)), and max(ele_pos(z))</span>
+<span class="sd">            ext_x, ext_y, ext_z : float</span>
+<span class="sd">                length of space extension: xmin-ext_x ... xmax+ext_x</span>
+<span class="sd">                length of space extension: ymin-ext_y ... ymax+ext_y</span>
+<span class="sd">                length of space extension: zmin-ext_z ... zmax+ext_z</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">            gdx, gdy, gdz : float</span>
+<span class="sd">                space increments in the estimation space</span>
+<span class="sd">                Defaults to 0.01(xmax-xmin)</span>
+<span class="sd">                Defaults to 0.01(ymax-ymin)</span>
+<span class="sd">                Defaults to 0.01(zmax-zmin)</span>
+<span class="sd">            lambd : float</span>
+<span class="sd">                regularization parameter for ridge regression</span>
+<span class="sd">                Defaults to 0.</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        LinAlgError</span>
+<span class="sd">            Could not invert the matrix, try changing the ele_pos slightly</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            Basis function (src_type) not implemented. See basis_functions.py for available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">KCSD3D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KCSD3D.estimate_at"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.estimate_at">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_at</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Defines locations where the estimation is wanted</span>
+<span class="sd">        Defines:</span>
+<span class="sd">        self.n_estm = self.estm_x.size</span>
+<span class="sd">        self.ngx, self.ngy, self.ngz = self.estm_x.shape</span>
+<span class="sd">        self.estm_x, self.estm_y, self.estm_z : Pts. at which CSD is requested</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdx</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdy</span>
+        <span class="n">nz</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmax</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">zmin</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gdz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nx</span><span class="p">),</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ny</span><span class="p">),</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">zmin</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">zmax</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nz</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_estm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="KCSD3D.place_basis"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.place_basis">[docs]</a>    <span class="k">def</span> <span class="nf">place_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Places basis sources of the defined type.</span>
+<span class="sd">        Checks if a given source_type is defined, if so then defines it</span>
+<span class="sd">        self.basis, This function gives locations of the basis sources,</span>
+<span class="sd">        Defines</span>
+<span class="sd">        source_type : basis_fuctions.basis_2D.keys()</span>
+<span class="sd">        self.R based on R_init</span>
+<span class="sd">        self.dist_max as maximum distance between electrode and basis</span>
+<span class="sd">        self.nsx, self.nsy, self.nsz = self.src_x.shape</span>
+<span class="sd">        self.src_x, self.src_y, self.src_z : Locations at which basis sources are placed.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_type</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">basis_3D</span><span class="p">[</span><span class="n">source_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Invalid source_type for basis! available are:&#39;</span><span class="p">,</span>
+                           <span class="n">basis</span><span class="o">.</span><span class="n">basis_3D</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">distribute_srcs_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">estm_z</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">n_src_init</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">ext_x</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">ext_y</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">ext_z</span><span class="p">,</span>
+                                                                                <span class="bp">self</span><span class="o">.</span><span class="n">R_init</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nsx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="KCSD3D.create_src_dist_tables"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.create_src_dist_tables">[docs]</a>    <span class="k">def</span> <span class="nf">create_src_dist_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates distance tables between sources, electrode and estm points</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">src_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">src_y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">src_z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="n">est_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">estm_x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">estm_y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">estm_z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">src_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">est_loc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>  <span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_ele_dists</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_estm_dists</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span></div>
+
+<div class="viewcode-block" id="KCSD3D.forward_model"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.forward_model">[docs]</a>    <span class="k">def</span> <span class="nf">forward_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">src_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model functions</span>
+<span class="sd">        Evaluates potential at point (x,0) by a basis source located at (0,0)</span>
+<span class="sd">        Utlizies sk monaco monte carlo method if available, otherwise defaults</span>
+<span class="sd">        to scipy integrate</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">        R : float</span>
+<span class="sd">        h : float</span>
+<span class="sd">        sigma : float</span>
+<span class="sd">        src_type : basis_3D.key</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">            value of potential at specified distance from the source</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">src_type</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;gauss_3D&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.0001</span>
+            <span class="n">pot</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">R</span><span class="o">/</span><span class="mf">3.0</span><span class="p">))</span> <span class="o">/</span> <span class="n">x</span>
+        <span class="k">elif</span> <span class="n">src_type</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;gauss_lim_3D&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.0001</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">R</span><span class="o">/</span><span class="mf">3.</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">R</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">d</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">erf</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">d</span><span class="p">))</span>
+                <span class="n">pot</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span> <span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">4.5</span><span class="p">))</span> <span class="o">+</span>
+                                   <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">erf</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pot</span> <span class="o">=</span> <span class="mf">15.28828</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="n">x</span>
+            <span class="n">pot</span> <span class="o">/=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">d</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+        <span class="k">elif</span> <span class="n">src_type</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;step_3D&quot;</span><span class="p">:</span>
+            <span class="n">Q</span> <span class="o">=</span> <span class="mf">4.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mf">3.</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">R</span><span class="p">:</span>
+                <span class="n">pot</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">R</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">R</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pot</span> <span class="o">=</span> <span class="n">Q</span> <span class="o">/</span> <span class="n">x</span>
+            <span class="n">pot</span> <span class="o">*=</span> <span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">R</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">skmonaco_available</span><span class="p">:</span>
+                <span class="n">pot</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">mcmiser</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_pot_3D_mc</span><span class="p">,</span>
+                                   <span class="n">npoints</span><span class="o">=</span><span class="mf">1e5</span><span class="p">,</span>
+                                   <span class="n">xl</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span> <span class="o">-</span><span class="n">R</span><span class="p">],</span>
+                                   <span class="n">xu</span><span class="o">=</span><span class="p">[</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">],</span>
+                                   <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+                                   <span class="n">nprocs</span><span class="o">=</span><span class="n">num_cores</span><span class="p">,</span>
+                                   <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">src_type</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pot</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">tplquad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_pot_3D</span><span class="p">,</span>
+                                             <span class="o">-</span><span class="n">R</span><span class="p">,</span>
+                                             <span class="n">R</span><span class="p">,</span>
+                                             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span>
+                                             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span>
+                                             <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="o">-</span><span class="n">R</span><span class="p">,</span>
+                                             <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span>
+                                             <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">src_type</span><span class="p">))</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">4.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pot</span></div>
+
+<div class="viewcode-block" id="KCSD3D.int_pot_3D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.int_pot_3D">[docs]</a>    <span class="k">def</span> <span class="nf">int_pot_3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">zp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;FWD model function.</span>
+<span class="sd">        Returns contribution of a point xp,yp, belonging to a basis source</span>
+<span class="sd">        support centered at (0,0) to the potential measured at (x,0),</span>
+<span class="sd">        integrated over xp,yp gives the potential generated by a</span>
+<span class="sd">        basis source element centered at (0,0) at point (x,0)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xp, yp, zp : floats or np.arrays</span>
+<span class="sd">            point or set of points where function should be calculated</span>
+<span class="sd">        x :  float</span>
+<span class="sd">            position at which potential is being measured</span>
+<span class="sd">        R : float</span>
+<span class="sd">            The size of the basis function</span>
+<span class="sd">        h : float</span>
+<span class="sd">            thickness of slice</span>
+<span class="sd">        basis_func : method</span>
+<span class="sd">            Fuction of the basis source</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">xp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">zp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mf">0.00001</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mf">0.00001</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">zp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">pot</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">y</span>
+        <span class="n">pot</span> <span class="o">*=</span> <span class="n">basis_func</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pot</span></div>
+
+<div class="viewcode-block" id="KCSD3D.int_pot_3D_mc"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.KCSD.html#elephant.current_source_density_src.KCSD.KCSD3D.int_pot_3D_mc">[docs]</a>    <span class="k">def</span> <span class="nf">int_pot_3D_mc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The same as int_pot_3D, just different input: x,y,z &lt;-- xyz (tuple)</span>
+<span class="sd">        FWD model function, using Monte Carlo Method of integration</span>
+<span class="sd">        Returns contribution of a point xp,yp, belonging to a basis source</span>
+<span class="sd">        support centered at (0,0) to the potential measured at (x,0),</span>
+<span class="sd">        integrated over xp,yp gives the potential generated by a</span>
+<span class="sd">        basis source element centered at (0,0) at point (x,0)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xp, yp, zp : floats or np.arrays</span>
+<span class="sd">            point or set of points where function should be calculated</span>
+<span class="sd">        x :  float</span>
+<span class="sd">            position at which potential is being measured</span>
+<span class="sd">        R : float</span>
+<span class="sd">            The size of the basis function</span>
+<span class="sd">        h : float</span>
+<span class="sd">            thickness of slice</span>
+<span class="sd">        basis_func : method</span>
+<span class="sd">            Fuction of the basis source</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pot : float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xp</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">zp</span> <span class="o">=</span> <span class="n">xyz</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">int_pot_3D</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">yp</span><span class="p">,</span> <span class="n">zp</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">basis_func</span><span class="p">)</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking 1D&#39;</span><span class="p">)</span>
+    <span class="n">ele_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="o">-</span><span class="mf">0.1</span><span class="p">],[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.3</span><span class="p">]))</span>
+    <span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.5</span><span class="p">]])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">KCSD1D</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span>
+               <span class="n">gdx</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_src_init</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+               <span class="n">ext_x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;gauss&#39;</span><span class="p">)</span>
+    <span class="n">k</span><span class="o">.</span><span class="n">cross_validate</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking 2D&#39;</span><span class="p">)</span>
+    <span class="n">ele_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">]])</span>
+    <span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.5</span><span class="p">]])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">KCSD2D</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span>
+               <span class="n">gdx</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">gdy</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+               <span class="n">xmin</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+               <span class="n">ymin</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+               <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;gauss&#39;</span><span class="p">)</span>
+    <span class="n">k</span><span class="o">.</span><span class="n">cross_validate</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking MoIKCSD&#39;</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">MoIKCSD</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span>
+                <span class="n">gdx</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">gdy</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                <span class="n">xmin</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+                <span class="n">ymin</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span> <span class="mf">2.0</span><span class="p">)</span>
+    <span class="n">k</span><span class="o">.</span><span class="n">cross_validate</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking KCSD3D&#39;</span><span class="p">)</span>
+    <span class="n">ele_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                        <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)])</span>
+    <span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">KCSD3D</span><span class="p">(</span><span class="n">ele_pos</span><span class="p">,</span> <span class="n">pots</span><span class="p">,</span>
+               <span class="n">gdx</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">gdy</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">gdz</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
+               <span class="n">n_src_init</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;gauss_lim&#39;</span><span class="p">)</span>
+    <span class="n">k</span><span class="o">.</span><span class="n">cross_validate</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

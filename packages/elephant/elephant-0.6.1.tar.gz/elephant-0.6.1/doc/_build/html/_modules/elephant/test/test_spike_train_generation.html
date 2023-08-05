@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_spike_train_generation &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_spike_train_generation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit tests for the spike_train_generation module.</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.testing.utils</span> <span class="k">import</span> <span class="n">assert_array_almost_equal</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">kstest</span><span class="p">,</span> <span class="n">expon</span><span class="p">,</span> <span class="n">poisson</span>
+<span class="kn">from</span> <span class="nn">quantities</span> <span class="k">import</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">Hz</span><span class="p">,</span> <span class="n">kHz</span><span class="p">,</span> <span class="n">mV</span><span class="p">,</span> <span class="n">dimensionless</span>
+<span class="kn">import</span> <span class="nn">elephant.spike_train_generation</span> <span class="k">as</span> <span class="nn">stgen</span>
+<span class="kn">from</span> <span class="nn">elephant.statistics</span> <span class="k">import</span> <span class="n">isi</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">expon</span>
+
+<div class="viewcode-block" id="pdiff"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.pdiff">[docs]</a><span class="k">def</span> <span class="nf">pdiff</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Difference between a and b as a fraction of a</span>
+
+<span class="sd">    i.e. abs((a - b)/a)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">((</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="n">a</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AnalogSignalThresholdDetectionTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalThresholdDetectionTestCase">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalThresholdDetectionTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AnalogSignalThresholdDetectionTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalThresholdDetectionTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="AnalogSignalThresholdDetectionTestCase.test_threshold_detection"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalThresholdDetectionTestCase.test_threshold_detection">[docs]</a>    <span class="k">def</span> <span class="nf">test_threshold_detection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Test whether spikes are extracted at the correct times from</span>
+        <span class="c1"># an analog signal.</span>
+
+        <span class="c1"># Load membrane potential simulated using Brian2</span>
+        <span class="c1"># according to make_spike_extraction_test_data.py.</span>
+        <span class="n">curr_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">npz_file_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">curr_dir</span><span class="p">,</span><span class="s1">&#39;spike_extraction_test_data.npz&#39;</span><span class="p">)</span>
+        <span class="n">iom2</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">PyNNNumpyIO</span><span class="p">(</span><span class="n">npz_file_loc</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">iom2</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">analogsignals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">spike_train</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">threshold_detection</span><span class="p">(</span><span class="n">vm</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">spike_train</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="c1"># Handles an error in Neo related to some zero length</span>
+                          <span class="c1"># spike trains being treated as unsized objects.</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">((</span><span class="s2">&quot;The spike train may be an unsized object. This may be related &quot;</span>
+                            <span class="s2">&quot;to an issue in Neo with some zero-length SpikeTrain objects. &quot;</span>
+                            <span class="s2">&quot;Bypassing this by creating an empty SpikeTrain object.&quot;</span><span class="p">))</span>
+            <span class="n">spike_train</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([],</span><span class="n">t_start</span><span class="o">=</span><span class="n">spike_train</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span>
+                                                 <span class="n">t_stop</span><span class="o">=</span><span class="n">spike_train</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span>
+                                                 <span class="n">units</span><span class="o">=</span><span class="n">spike_train</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+        <span class="c1"># Correct values determined previously.</span>
+        <span class="n">true_spike_train</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0123</span><span class="p">,</span> <span class="mf">0.0354</span><span class="p">,</span> <span class="mf">0.0712</span><span class="p">,</span> <span class="mf">0.1191</span><span class="p">,</span>
+                            <span class="mf">0.1694</span><span class="p">,</span> <span class="mf">0.22</span><span class="p">,</span> <span class="mf">0.2711</span><span class="p">]</span>
+
+        <span class="c1"># Does threshold_detection gives the correct number of spikes?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spike_train</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">true_spike_train</span><span class="p">))</span>
+        <span class="c1"># Does threshold_detection gives the correct times for the spikes?</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">spike_train</span><span class="p">,</span><span class="n">spike_train</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="c1"># If numpy version too old to have allclose</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">spike_train</span><span class="p">,</span><span class="n">spike_train</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="AnalogSignalPeakDetectionTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalPeakDetectionTestCase">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalPeakDetectionTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AnalogSignalPeakDetectionTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalPeakDetectionTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">curr_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">npz_file_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">curr_dir</span><span class="p">,</span> <span class="s1">&#39;spike_extraction_test_data.npz&#39;</span><span class="p">)</span>
+        <span class="n">iom2</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">PyNNNumpyIO</span><span class="p">(</span><span class="n">npz_file_loc</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">iom2</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">analogsignals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">true_time_stamps</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0124</span><span class="p">,</span>  <span class="mf">0.0354</span><span class="p">,</span>  <span class="mf">0.0713</span><span class="p">,</span>  <span class="mf">0.1192</span><span class="p">,</span>  <span class="mf">0.1695</span><span class="p">,</span>
+                                 <span class="mf">0.2201</span><span class="p">,</span>  <span class="mf">0.2711</span><span class="p">]</span> <span class="o">*</span> <span class="n">second</span></div>
+
+<div class="viewcode-block" id="AnalogSignalPeakDetectionTestCase.test_peak_detection_time_stamps"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalPeakDetectionTestCase.test_peak_detection_time_stamps">[docs]</a>    <span class="k">def</span> <span class="nf">test_peak_detection_time_stamps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Test with default arguments</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">peak_detection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">true_time_stamps</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_time_stamps</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_time_stamps</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AnalogSignalPeakDetectionTestCase.test_peak_detection_threshold"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalPeakDetectionTestCase.test_peak_detection_threshold">[docs]</a>    <span class="k">def</span> <span class="nf">test_peak_detection_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Test for empty SpikeTrain when threshold is too high</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">peak_detection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">30</span> <span class="o">*</span> <span class="n">mV</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="AnalogSignalSpikeExtractionTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalSpikeExtractionTestCase">[docs]</a><span class="k">class</span> <span class="nc">AnalogSignalSpikeExtractionTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="AnalogSignalSpikeExtractionTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalSpikeExtractionTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">curr_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">npz_file_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">curr_dir</span><span class="p">,</span> <span class="s1">&#39;spike_extraction_test_data.npz&#39;</span><span class="p">)</span>
+        <span class="n">iom2</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">PyNNNumpyIO</span><span class="p">(</span><span class="n">npz_file_loc</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">iom2</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vm</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">analogsignals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_spike</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.04084546</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03892033</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03664779</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.03392689</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.03061474</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.02650277</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.0212756</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01443531</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00515365</span><span class="p">,</span>
+                                     <span class="mf">0.00803962</span><span class="p">,</span> <span class="mf">0.02797951</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.07</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06974495</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06950466</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06927778</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06906314</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06885969</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06866651</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06848277</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06830773</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06814071</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06798113</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06782843</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06768213</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06754178</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06740699</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06727737</span><span class="p">,</span>
+                                     <span class="o">-</span><span class="mf">0.06715259</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06703235</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.06691635</span><span class="p">])</span></div>
+    
+<div class="viewcode-block" id="AnalogSignalSpikeExtractionTestCase.test_spike_extraction_waveform"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.AnalogSignalSpikeExtractionTestCase.test_spike_extraction_waveform">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_extraction_waveform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">spike_train</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">spike_extraction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vm</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                             <span class="n">extr_interval</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">ms</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">spike_train</span><span class="o">.</span><span class="n">waveforms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">first_spike</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">spike_train</span><span class="o">.</span><span class="n">waveforms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">first_spike</span><span class="p">))</span></div></div>
+
+        
+
+<div class="viewcode-block" id="HomogeneousPoissonProcessTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousPoissonProcessTestCase">[docs]</a><span class="k">class</span> <span class="nc">HomogeneousPoissonProcessTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="HomogeneousPoissonProcessTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousPoissonProcessTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="HomogeneousPoissonProcessTestCase.test_statistics"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousPoissonProcessTestCase.test_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">test_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is a statistical test that has a non-zero chance of failure</span>
+        <span class="c1"># during normal operation. Thus, we set the random seed to a value that</span>
+        <span class="c1"># creates a realization passing the test.</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">123.0</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="mf">0.123</span><span class="o">*</span><span class="n">kHz</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">t_stop</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2345</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">2.345</span><span class="o">*</span><span class="n">second</span><span class="p">]:</span>
+                <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">homogeneous_poisson_process</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">)</span>
+                <span class="n">intervals</span> <span class="o">=</span> <span class="n">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span>
+
+                <span class="n">expected_spike_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">rate</span> <span class="o">*</span> <span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">pdiff</span><span class="p">(</span><span class="n">expected_spike_count</span><span class="p">,</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># should fail about 1 time in 1000</span>
+
+                <span class="n">expected_mean_isi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rate</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">pdiff</span><span class="p">(</span><span class="n">expected_mean_isi</span><span class="p">,</span> <span class="n">intervals</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mf">0.2</span><span class="p">)</span>
+
+                <span class="n">expected_first_spike</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">ms</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">expected_first_spike</span><span class="p">,</span> <span class="mi">7</span><span class="o">*</span><span class="n">expected_mean_isi</span><span class="p">)</span>
+
+                <span class="n">expected_last_spike</span> <span class="o">=</span> <span class="n">t_stop</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">expected_last_spike</span> <span class="o">-</span> <span class="n">spiketrain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">7</span><span class="o">*</span><span class="n">expected_mean_isi</span><span class="p">)</span>
+
+                <span class="c1"># Kolmogorov-Smirnov test</span>
+                <span class="n">D</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">kstest</span><span class="p">(</span><span class="n">intervals</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">),</span>
+                              <span class="s2">&quot;expon&quot;</span><span class="p">,</span>
+                              <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">expected_mean_isi</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)),</span>  <span class="c1"># args are (loc, scale)</span>
+                              <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;two-sided&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertGreater</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HomogeneousPoissonProcessTestCase.test_low_rates"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousPoissonProcessTestCase.test_low_rates">[docs]</a>    <span class="k">def</span> <span class="nf">test_low_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">homogeneous_poisson_process</span><span class="p">(</span><span class="mi">0</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># not really a test, just making sure that all code paths are covered</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">homogeneous_poisson_process</span><span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HomogeneousPoissonProcessTestCase.test_buffer_overrun"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousPoissonProcessTestCase.test_buffer_overrun">[docs]</a>    <span class="k">def</span> <span class="nf">test_buffer_overrun</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">6085</span><span class="p">)</span>  <span class="c1"># this seed should produce a buffer overrun</span>
+        <span class="n">t_stop</span><span class="o">=</span><span class="mi">1000</span><span class="o">*</span><span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">Hz</span>
+        <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">homogeneous_poisson_process</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="n">expected_last_spike</span> <span class="o">=</span> <span class="n">t_stop</span>
+        <span class="n">expected_mean_isi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">rate</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">expected_last_spike</span> <span class="o">-</span> <span class="n">spiketrain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="o">*</span><span class="n">expected_mean_isi</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="InhomogeneousPoissonProcessTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.InhomogeneousPoissonProcessTestCase">[docs]</a><span class="k">class</span> <span class="nc">InhomogeneousPoissonProcessTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="InhomogeneousPoissonProcessTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.InhomogeneousPoissonProcessTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rate_list</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">20</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">200</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate_profile</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">rate_list</span> <span class="o">*</span> <span class="n">Hz</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">rate_0</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate_profile_0</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">rate_0</span> <span class="o">*</span> <span class="n">Hz</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">rate_negative</span> <span class="o">=</span> <span class="p">[[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate_profile_negative</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">rate_negative</span> <span class="o">*</span> <span class="n">Hz</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="InhomogeneousPoissonProcessTestCase.test_statistics"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.InhomogeneousPoissonProcessTestCase.test_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">test_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is a statistical test that has a non-zero chance of failure</span>
+        <span class="c1"># during normal operation. Thus, we set the random seed to a value that</span>
+        <span class="c1"># creates a realization passing the test.</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate_profile</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">kHz</span><span class="p">)]:</span>
+            <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">inhomogeneous_poisson_process</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="n">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span>
+
+            <span class="c1"># Computing expected statistics and percentiles</span>
+            <span class="n">expected_spike_count</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="n">rate</span><span class="p">)</span> <span class="o">*</span> <span class="n">rate</span><span class="o">.</span><span class="n">sampling_period</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span>
+            <span class="n">percentile_count</span> <span class="o">=</span> <span class="n">poisson</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="o">.</span><span class="mi">999</span><span class="p">,</span> <span class="n">expected_spike_count</span><span class="p">)</span>
+            <span class="n">expected_min_isi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span>
+            <span class="n">expected_max_isi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span>
+            <span class="n">percentile_min_isi</span> <span class="o">=</span> <span class="n">expon</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="o">.</span><span class="mi">999</span><span class="p">,</span> <span class="n">expected_min_isi</span><span class="p">)</span>
+            <span class="n">percentile_max_isi</span> <span class="o">=</span> <span class="n">expon</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="o">.</span><span class="mi">999</span><span class="p">,</span> <span class="n">expected_max_isi</span><span class="p">)</span>
+
+            <span class="c1"># Testing (each should fail 1 every 1000 times)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">percentile_count</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">intervals</span><span class="p">),</span> <span class="n">percentile_min_isi</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">intervals</span><span class="p">),</span> <span class="n">percentile_max_isi</span><span class="p">)</span>
+
+            <span class="c1"># Testing t_start t_stop</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="c1"># Testing type</span>
+        <span class="n">spiketrain_as_array</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">inhomogeneous_poisson_process</span><span class="p">(</span>
+            <span class="n">rate</span><span class="p">,</span> <span class="n">as_array</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain_as_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="InhomogeneousPoissonProcessTestCase.test_low_rates"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.InhomogeneousPoissonProcessTestCase.test_low_rates">[docs]</a>    <span class="k">def</span> <span class="nf">test_low_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">inhomogeneous_poisson_process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_profile_0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="InhomogeneousPoissonProcessTestCase.test_negative_rates"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.InhomogeneousPoissonProcessTestCase.test_negative_rates">[docs]</a>    <span class="k">def</span> <span class="nf">test_negative_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">inhomogeneous_poisson_process</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate_profile_negative</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="HomogeneousGammaProcessTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousGammaProcessTestCase">[docs]</a><span class="k">class</span> <span class="nc">HomogeneousGammaProcessTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="HomogeneousGammaProcessTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousGammaProcessTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="HomogeneousGammaProcessTestCase.test_statistics"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.HomogeneousGammaProcessTestCase.test_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">test_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is a statistical test that has a non-zero chance of failure</span>
+        <span class="c1"># during normal operation. Thus, we set the random seed to a value that</span>
+        <span class="c1"># creates a realization passing the test.</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">3.0</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">67.0</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="mf">0.067</span><span class="o">*</span><span class="n">kHz</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">t_stop</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2345</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="mf">2.345</span><span class="o">*</span><span class="n">second</span><span class="p">):</span>
+                <span class="n">spiketrain</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">homogeneous_gamma_process</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">t_stop</span><span class="p">)</span>
+                <span class="n">intervals</span> <span class="o">=</span> <span class="n">isi</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">)</span>
+
+                <span class="n">expected_spike_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">b</span><span class="o">/</span><span class="n">a</span> <span class="o">*</span> <span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">pdiff</span><span class="p">(</span><span class="n">expected_spike_count</span><span class="p">,</span> <span class="n">spiketrain</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">)</span>  <span class="c1"># should fail about 1 time in 1000</span>
+
+                <span class="n">expected_mean_isi</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">ms</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">pdiff</span><span class="p">(</span><span class="n">expected_mean_isi</span><span class="p">,</span> <span class="n">intervals</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mf">0.3</span><span class="p">)</span>
+
+                <span class="n">expected_first_spike</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">ms</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">spiketrain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">expected_first_spike</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">expected_mean_isi</span><span class="p">)</span>
+
+                <span class="n">expected_last_spike</span> <span class="o">=</span> <span class="n">t_stop</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">expected_last_spike</span> <span class="o">-</span> <span class="n">spiketrain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="o">*</span><span class="n">expected_mean_isi</span><span class="p">)</span>
+
+                <span class="c1"># Kolmogorov-Smirnov test</span>
+                <span class="n">D</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">kstest</span><span class="p">(</span><span class="n">intervals</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">),</span>
+                              <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+                              <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)),</span>  <span class="c1"># args are (a, loc, scale)</span>
+                              <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;two-sided&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertGreater</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_n_poisson_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rates</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10000</span><span class="o">*</span><span class="n">ms</span>
+
+    <span class="k">def</span> <span class="nf">test_poisson</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Check the output types for input rate + n number of neurons</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pp</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c1"># Check the output types for input list of rates</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rates</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pp</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">test_poisson_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Dimensionless rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">,</span> <span class="n">rate</span><span class="o">=-</span><span class="mi">5</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative value when rate is a list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># t_start&gt;t_stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">_n_poisson</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">t_stop</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">ms</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="singleinteractionprocess_TestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.singleinteractionprocess_TestCase">[docs]</a><span class="k">class</span> <span class="nc">singleinteractionprocess_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="singleinteractionprocess_TestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.singleinteractionprocess_TestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rates</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10000</span><span class="o">*</span><span class="n">ms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span> <span class="o">=</span> <span class="mi">1</span><span class="o">*</span><span class="n">Hz</span></div>
+
+<div class="viewcode-block" id="singleinteractionprocess_TestCase.test_sip"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.singleinteractionprocess_TestCase.test_sip">[docs]</a>    <span class="k">def</span> <span class="nf">test_sip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Generate an example SIP mode</span>
+        <span class="n">sip</span><span class="p">,</span> <span class="n">coinc</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span>
+            <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">return_coinc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Check the output types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>  <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>  <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="c1"># Check the output length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sip</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">dimensionless</span><span class="p">))</span>
+
+        <span class="c1"># Generate an example SIP mode giving a list of rates as imput</span>
+        <span class="n">sip</span><span class="p">,</span> <span class="n">coinc</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">(</span>
+            <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rates</span><span class="p">,</span>
+            <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">return_coinc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Check the output types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>  <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>  <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="c1"># Check the output length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sip</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">coinc</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">dimensionless</span><span class="p">))</span>
+
+        <span class="c1"># Generate an example SIP mode stochastic number of coincidences</span>
+        <span class="n">sip</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span>
+            <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">coincidences</span><span class="o">=</span><span class="s1">&#39;stochastic&#39;</span><span class="p">,</span> <span class="n">return_coinc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Check the output types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">spiketrain</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">sip</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>  <span class="mi">1000</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="singleinteractionprocess_TestCase.test_sip_error"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.singleinteractionprocess_TestCase.test_sip_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_sip_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Negative rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">rate</span><span class="o">=-</span><span class="mi">5</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span>
+            <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative coincidence rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate_c</span><span class="o">=-</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative value when rate is a list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Negative n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate_c</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="c1"># Rate_c &lt; rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">single_interaction_process</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate_c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">+</span> <span class="mi">1</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="cppTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase">[docs]</a><span class="k">class</span> <span class="nc">cppTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="cppTestCase.test_cpp_hom"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase.test_cpp_hom">[docs]</a>    <span class="k">def</span> <span class="nf">test_cpp_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># testing output with generic inputs</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_hom</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+        <span class="c1"># testing the ouput formats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_hom</span><span class="p">],</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_hom</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_hom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cpp_hom</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># testing quantities format of the output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_hom</span><span class="p">],</span> <span class="p">[</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span>
+                <span class="n">cpp_hom</span><span class="p">))</span>
+        <span class="c1"># testing output t_start t_stop</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">cpp_hom</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_hom</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># testing the units</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10000</span><span class="o">*</span><span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_unit</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+        <span class="c1"># testing output without copy of spikes</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_hom_empty</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_hom_empty</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_hom_empty</span><span class="p">))</span>
+
+        <span class="c1"># testing output with rate equal to 0</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_hom_empty_r</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_hom_empty_r</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span>
+                <span class="n">cpp_hom_empty_r</span><span class="p">))</span>
+
+        <span class="c1"># testing output with same spike trains in output</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_hom_eq</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">cpp_hom_eq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">cpp_hom_eq</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="cppTestCase.test_cpp_hom_errors"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase.test_cpp_hom_errors">[docs]</a>    <span class="k">def</span> <span class="nf">test_cpp_hom_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># testing raises of ValueError (wrong inputs)</span>
+        <span class="c1"># testing empty amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+
+        <span class="c1"># testing sum of amplitude&gt;1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing negative value in the amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># test negative rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">AssertionError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=-</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># test wrong unit for rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">)</span>
+
+        <span class="c1"># testing raises of AttributeError (missing input units)</span>
+        <span class="c1"># Testing missing unit to t_stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># Testing missing unit to t_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># testing rate missing unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="cppTestCase.test_cpp_het"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase.test_cpp_het">[docs]</a>    <span class="k">def</span> <span class="nf">test_cpp_het</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># testing output with generic inputs</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_het</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+        <span class="c1"># testing the ouput formats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_het</span><span class="p">],</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_het</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_het</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cpp_het</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># testing units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_het</span><span class="p">],</span> <span class="p">[</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span>
+                <span class="n">cpp_het</span><span class="p">))</span>
+        <span class="c1"># testing output t_start and t_stop</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">cpp_het</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_start</span><span class="p">)</span>
+        <span class="c1"># testing the number of output spiketrains</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_het</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_het</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span>
+
+        <span class="c1"># testing the units</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10000</span><span class="o">*</span><span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_unit</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_unit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">t_start</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        <span class="c1"># testing without copying any spikes</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_het_empty</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_het_empty</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># testing output with rate equal to 0</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_het_empty_r</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_het_empty_r</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span>
+                <span class="n">cpp_het_empty_r</span><span class="p">))</span>
+
+        <span class="c1"># testing completely sync spiketrains</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_het_eq</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
+            <span class="n">cpp_het_eq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">cpp_het_eq</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="cppTestCase.test_cpp_het_err"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase.test_cpp_het_err">[docs]</a>    <span class="k">def</span> <span class="nf">test_cpp_het_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># testing raises of ValueError (wrong inputs)</span>
+        <span class="c1"># testing empty amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing sum amplitude&gt;1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing amplitude negative value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing negative rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing empty rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing empty amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing different len(A)-1 and len(rate)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># testing rate with different unit from Hz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="c1"># Testing analytical constrain between amplitude and rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># testing raises of AttributeError (missing input units)</span>
+        <span class="c1"># Testing missing unit to t_stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="c1"># Testing missing unit to t_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span><span class="o">*</span><span class="n">Hz</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="c1"># Testing missing unit to rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="cppTestCase.test_cpp_jttered"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_generation.html#elephant.test.test_spike_train_generation.cppTestCase.test_cpp_jttered">[docs]</a>    <span class="k">def</span> <span class="nf">test_cpp_jttered</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># testing output with generic inputs</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">t_stop</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">t_start</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Hz</span>
+        <span class="n">cpp_shift</span> <span class="o">=</span> <span class="n">stgen</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span>
+            <span class="n">rate</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="n">t_start</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">ms</span><span class="p">)</span>
+        <span class="c1"># testing the ouput formats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">train</span><span class="p">)</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_shift</span><span class="p">],</span> <span class="p">[</span><span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span>
+                <span class="n">cpp_shift</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cpp_shift</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cpp_shift</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># testing quantities format of the output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">units</span> <span class="k">for</span> <span class="n">train</span> <span class="ow">in</span> <span class="n">cpp_shift</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">ms</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_shift</span><span class="p">))</span>
+        <span class="c1"># testing output t_start t_stop</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">cpp_shift</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpp_shift</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_kcsd &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_kcsd</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit tests for the kCSD methods</span>
+
+<span class="sd">This was written by :</span>
+<span class="sd">Chaitanya Chintaluri,</span>
+<span class="sd">Laboratory of Neuroinformatics,</span>
+<span class="sd">Nencki Institute of Exprimental Biology, Warsaw.</span>
+
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">from</span> <span class="nn">elephant</span> <span class="k">import</span> <span class="n">current_source_density</span> <span class="k">as</span> <span class="n">CSD</span>
+<span class="kn">import</span> <span class="nn">elephant.current_source_density_src.utility_functions</span> <span class="k">as</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="KCSD1D_TestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD1D_TestCase">[docs]</a><span class="k">class</span> <span class="nc">KCSD1D_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="KCSD1D_TestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD1D_TestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">generate_electrodes</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">gauss_1d_dipole</span>
+        <span class="n">pots</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">generate_lfp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pots</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD1D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;h&#39;</span><span class="p">:</span> <span class="mf">50.</span><span class="p">}</span>
+
+        <span class="n">temp_signals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)):</span>
+            <span class="n">temp_signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_signals</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span>
+                                       <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">chidx</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">ChannelIndex</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)))</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">analogsignals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">)</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mm</span>
+
+        <span class="n">chidx</span><span class="o">.</span><span class="n">create_relationship</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="KCSD1D_TestCase.test_kcsd1d_estimate"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD1D_TestCase.test_kcsd1d_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">test_kcsd1d_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cv_params</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cv_params</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">estimate_csd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_method</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">true_csd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;x_coords&#39;</span><span class="p">])</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span> <span class="o">-</span> <span class="n">true_csd</span><span class="p">)</span>
+        <span class="n">rms</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">true_csd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">rms</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;RMS between trueCSD and estimate &gt; 0.5&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD1D_TestCase.test_valid_inputs"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD1D_TestCase.test_valid_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;InvalidMethodName&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd1d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD1D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;src_type&#39;</span><span class="p">:</span> <span class="mi">22</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd1d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD1D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidKwarg&#39;</span><span class="p">:</span> <span class="mi">21</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd1d_estimate</span><span class="p">)</span>
+        <span class="n">cv_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidCVArg&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd1d_estimate</span><span class="p">,</span> <span class="n">cv_params</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="KCSD2D_TestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD2D_TestCase">[docs]</a><span class="k">class</span> <span class="nc">KCSD2D_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="KCSD2D_TestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD2D_TestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">generate_electrodes</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                                                   <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">],</span>
+                                                   <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">large_source_2D</span>
+        <span class="n">pots</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">generate_lfp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">,</span> <span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pots</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD2D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gdx&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gdy&#39;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;R_init&#39;</span><span class="p">:</span> <span class="mf">0.08</span><span class="p">,</span>
+                            <span class="s1">&#39;h&#39;</span><span class="p">:</span> <span class="mf">50.</span><span class="p">,</span> <span class="s1">&#39;xmin&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;xmax&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">,</span>
+                            <span class="s1">&#39;ymin&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;ymax&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">}</span>
+        <span class="n">temp_signals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)):</span>
+            <span class="n">temp_signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_signals</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span>
+                                       <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">chidx</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">ChannelIndex</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)))</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">analogsignals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">)</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mm</span>
+
+        <span class="n">chidx</span><span class="o">.</span><span class="n">create_relationship</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="KCSD2D_TestCase.test_kcsd2d_estimate"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD2D_TestCase.test_kcsd2d_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">test_kcsd2d_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cv_params</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cv_params</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">estimate_csd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_method</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">true_csd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;x_coords&#39;</span><span class="p">],</span>
+                                    <span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;y_coords&#39;</span><span class="p">])</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span> <span class="o">-</span> <span class="n">true_csd</span><span class="p">)</span>
+        <span class="n">rms</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">true_csd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">rms</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;RMS &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rms</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="s1">&#39;between trueCSD and estimate &gt; 0.5&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD2D_TestCase.test_moi_estimate"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD2D_TestCase.test_moi_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">test_moi_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">estimate_csd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;MoIKCSD&#39;</span><span class="p">,</span>
+                                  <span class="n">MoI_iters</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">lambd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                  <span class="n">gdx</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">gdy</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD2D_TestCase.test_valid_inputs"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD2D_TestCase.test_valid_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;InvalidMethodName&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd2d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD2D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;src_type&#39;</span><span class="p">:</span> <span class="mi">22</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd2d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidKwarg&#39;</span><span class="p">:</span> <span class="mi">21</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd2d_estimate</span><span class="p">)</span>
+        <span class="n">cv_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidCVArg&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd2d_estimate</span><span class="p">,</span> <span class="n">cv_params</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="KCSD3D_TestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD3D_TestCase">[docs]</a><span class="k">class</span> <span class="nc">KCSD3D_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="KCSD3D_TestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD3D_TestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span><span class="p">,</span> <span class="n">zz_ele</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">generate_electrodes</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                                                           <span class="n">xlims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">],</span>
+                                                           <span class="n">ylims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">],</span>
+                                                           <span class="n">zlims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span><span class="p">,</span> <span class="n">zz_ele</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">gauss_3d_dipole</span>
+        <span class="n">pots</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">generate_lfp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">,</span> <span class="n">xx_ele</span><span class="p">,</span> <span class="n">yy_ele</span><span class="p">,</span> <span class="n">zz_ele</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pots</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD3D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gdx&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s1">&#39;gdy&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s1">&#39;gdz&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+                            <span class="s1">&#39;lambd&#39;</span><span class="p">:</span> <span class="mf">5.10896977451e-19</span><span class="p">,</span> <span class="s1">&#39;src_type&#39;</span><span class="p">:</span> <span class="s1">&#39;step&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;R_init&#39;</span><span class="p">:</span> <span class="mf">0.31</span><span class="p">,</span> <span class="s1">&#39;xmin&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;xmax&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">,</span> <span class="s1">&#39;ymin&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                            <span class="s1">&#39;ymax&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">,</span> <span class="s1">&#39;zmin&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;zmax&#39;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">}</span>
+
+        <span class="n">temp_signals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)):</span>
+            <span class="n">temp_signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp_signals</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span>
+                                       <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">chidx</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">ChannelIndex</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pots</span><span class="p">)))</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">analogsignals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">)</span>
+        <span class="n">chidx</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ele_pos</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mm</span>
+
+        <span class="n">chidx</span><span class="o">.</span><span class="n">create_relationship</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="KCSD3D_TestCase.test_kcsd3d_estimate"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD3D_TestCase.test_kcsd3d_estimate">[docs]</a>    <span class="k">def</span> <span class="nf">test_kcsd3d_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cv_params</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cv_params</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CSD</span><span class="o">.</span><span class="n">estimate_csd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an_sigs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">test_method</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">test_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">true_csd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csd_profile</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;x_coords&#39;</span><span class="p">],</span>
+                                    <span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;y_coords&#39;</span><span class="p">],</span>
+                                    <span class="n">result</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;z_coords&#39;</span><span class="p">])</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span> <span class="o">-</span> <span class="n">true_csd</span><span class="p">)</span>
+        <span class="n">rms</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">true_csd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">rms</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;RMS &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rms</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="s1">&#39; between trueCSD and estimate &gt; 0.5&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KCSD3D_TestCase.test_valid_inputs"><a class="viewcode-back" href="../../../source/elephant.test.test_kcsd.html#elephant.test.test_kcsd.KCSD3D_TestCase.test_valid_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;InvalidMethodName&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd3d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_method</span> <span class="o">=</span> <span class="s1">&#39;KCSD3D&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;src_type&#39;</span><span class="p">:</span> <span class="mi">22</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd3d_estimate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidKwarg&#39;</span><span class="p">:</span> <span class="mi">21</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd3d_estimate</span><span class="p">)</span>
+        <span class="n">cv_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;InvalidCVArg&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_kcsd3d_estimate</span><span class="p">,</span> <span class="n">cv_params</span><span class="p">)</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import sys\n",
+    "sys.path.insert(0, '../../')\n",
+    "import quantities as pq\n",
+    "import neo\n",
+    "import neo.io.blackrockio\n",
+    "import elephant.spike_train_generation\n",
+    "import elephant.spade\n",
+    "import matplotlib.pyplot as plt\n",
+    "import random\n",
+    "random.seed(1224)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Generate correlated data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "sts = elephant.spike_train_generation.compound_poisson_process(\n",
+    "   rate=5*pq.Hz, A=[0]+[0.99]+[0]*9+[0.01], t_stop=10*pq.s)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Mining patterns with SPADE"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "print sts[0].times"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "patterns = elephant.spade.spade(\n",
+    "    data=sts, binsize=1*pq.ms, winlen=1, dither=5*pq.ms,\n",
+    "    min_spikes=3, n_surr=10, psr_param=[0,0,3],\n",
+    "    output_format='patterns')['patterns']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Plotting spikes forming a pattern"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "%matplotlib notebook\n",
+    "plot_pattern=patterns[0]\n",
+    "\n",
+    "plt.figure()\n",
+    "\n",
+    "\n",
+    "# Raster plot of the data\n",
+    "for st_idx, st in enumerate(sts):\n",
+    "    if st_idx == 0:\n",
+    "        plt.plot(st.rescale(pq.ms), [st_idx] * len(st), 'k.', label='spikes')\n",
+    "    else:\n",
+    "        plt.plot(st.rescale(pq.ms), [st_idx] * len(st), 'k.')\n",
+    "        \n",
+    "labeled=False\n",
+    "for neu in plot_pattern['neurons']:\n",
+    "    if labeled == False:\n",
+    "        plt.plot(\n",
+    "            plot_pattern['times'], [neu]*len(plot_pattern['times']), 'ro', label='pattern')\n",
+    "        labeled=True\n",
+    "    else:\n",
+    "        plt.plot(\n",
+    "            plot_pattern['times'], [neu] * len(plot_pattern['times']), 'ro')\n",
+    "plt.ylim([-1, len(sts)])\n",
+    "plt.xlabel('time (ms)')\n",
+    "plt.ylabel('neurons ids')\n",
+    "plt.yticks(range(0,10,1))\n",
+    "plt.legend()\n",
+    "plt.show()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [stdpy2]",
+   "language": "python",
+   "name": "Python [stdpy2]"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

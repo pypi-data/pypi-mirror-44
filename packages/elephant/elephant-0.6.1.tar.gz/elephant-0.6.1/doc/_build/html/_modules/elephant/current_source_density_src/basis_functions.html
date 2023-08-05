@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.current_source_density_src.basis_functions &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.current_source_density_src.basis_functions</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This script is used to generate basis sources for the</span>
+<span class="sd">kCSD method Jan et.al (2012) for 1D,2D and 3D cases.</span>
+<span class="sd">Two &#39;types&#39; are described here, gaussian and step source,</span>
+<span class="sd">These can be easily extended.</span>
+<span class="sd">These scripts are based on Grzegorz Parka&#39;s,</span>
+<span class="sd">Google Summer of Code 2014, INFC/pykCSD</span>
+<span class="sd">This was written by :</span>
+<span class="sd">Michal Czerwinski, Chaitanya Chintaluri</span>
+<span class="sd">Laboratory of Neuroinformatics,</span>
+<span class="sd">Nencki Institute of Experimental Biology, Warsaw.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="gauss"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss">[docs]</a><span class="k">def</span> <span class="nf">gauss</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gaussian function</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        Distance array to the point of evaluation</span>
+<span class="sd">    stdev : float</span>
+<span class="sd">        cutoff range</span>
+<span class="sd">    dim : int</span>
+<span class="sd">        dimension of the gaussian function</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : floats or np.arrays</span>
+<span class="sd">        function evaluated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span> <span class="n">stdev</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">stdev</span><span class="p">)</span><span class="o">**</span><span class="n">dim</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="step_1D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.step_1D">[docs]</a><span class="k">def</span> <span class="nf">step_1D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized 1D step function.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        Distance array to the point of evaluation</span>
+<span class="sd">    R : float</span>
+<span class="sd">        cutoff range</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s : Value of the function (d  &lt;= R) / R</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span>  <span class="o">&lt;=</span> <span class="n">R</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">/</span> <span class="n">R</span> <span class="c1">#normalize with width</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="gauss_1D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_1D">[docs]</a><span class="k">def</span> <span class="nf">gauss_1D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized gaussian 2D scale function</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        Distance array to the point of evaluation</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : (three_std/3)*(1/2*pi)*(exp(-0.5)*stddev**(-2) *(d**2))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stdev</span> <span class="o">=</span> <span class="n">three_stdev</span><span class="o">/</span><span class="mf">3.0</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">gauss</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="gauss_lim_1D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_lim_1D">[docs]</a><span class="k">def</span> <span class="nf">gauss_lim_1D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns gausian 2D function cut off after 3 standard deviations.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        Distance array to the point of evaluation</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : (three_std/3)*(1/2*pi)*(exp(-0.5)*stddev**(-2) *((x-mu)**2)),</span>
+<span class="sd">        cut off = three_stdev</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">gauss_1D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">*=</span> <span class="p">(</span><span class="n">d</span> <span class="o">&lt;</span> <span class="n">three_stdev</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="step_2D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.step_2D">[docs]</a><span class="k">def</span> <span class="nf">step_2D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized 2D step function.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : float or np.arrays</span>
+<span class="sd">        Distance array to the point of evaluation</span>
+<span class="sd">    R : float</span>
+<span class="sd">        cutoff range</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s : step function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="n">R</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="gauss_2D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_2D">[docs]</a><span class="k">def</span> <span class="nf">gauss_2D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized gaussian 2D scale function</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">         distance at which we need the function evaluated</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : function</span>
+<span class="sd">        Normalized gaussian 2D function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stdev</span> <span class="o">=</span> <span class="n">three_stdev</span><span class="o">/</span><span class="mf">3.0</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">gauss</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="gauss_lim_2D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_lim_2D">[docs]</a><span class="k">def</span> <span class="nf">gauss_lim_2D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns gausian 2D function cut off after 3 standard deviations.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">         distance at which we need the function evaluated</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : function</span>
+<span class="sd">        Normalized gaussian 2D function cut off after three_stdev</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="n">three_stdev</span><span class="p">)</span><span class="o">*</span><span class="n">gauss_2D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="gauss_3D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_3D">[docs]</a><span class="k">def</span> <span class="nf">gauss_3D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized gaussian 3D scale function</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        distance at which we need the function evaluated</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : funtion</span>
+<span class="sd">        Normalized gaussian 3D function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stdev</span> <span class="o">=</span> <span class="n">three_stdev</span><span class="o">/</span><span class="mf">3.0</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">gauss</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">stdev</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="gauss_lim_3D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.gauss_lim_3D">[docs]</a><span class="k">def</span> <span class="nf">gauss_lim_3D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized gaussian 3D scale function cut off after 3stdev</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        distance at which we need the function evaluated</span>
+<span class="sd">    three_stdev : float</span>
+<span class="sd">        3 * standard deviation of the distribution</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Z : funtion</span>
+<span class="sd">        Normalized gaussian 3D function cutoff three_Stdev</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">gauss_3D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">three_stdev</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">three_stdev</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Z</span></div>
+
+<div class="viewcode-block" id="step_3D"><a class="viewcode-back" href="../../../source/elephant.current_source_density_src.basis_functions.html#elephant.current_source_density_src.basis_functions.step_3D">[docs]</a><span class="k">def</span> <span class="nf">step_3D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns normalized 3D step function.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : floats or np.arrays</span>
+<span class="sd">        distance at which we need the function evaluated</span>
+<span class="sd">    R : float</span>
+<span class="sd">        cutoff range</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s : step function in 3D</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">R</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">d</span> <span class="o">&lt;=</span> <span class="n">R</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+
+<span class="n">basis_1D</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">step_1D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss&quot;</span><span class="p">:</span> <span class="n">gauss_1D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss_lim&quot;</span><span class="p">:</span> <span class="n">gauss_lim_1D</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="n">basis_2D</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">step_2D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss&quot;</span><span class="p">:</span> <span class="n">gauss_2D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss_lim&quot;</span><span class="p">:</span> <span class="n">gauss_lim_2D</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">basis_3D</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">step_3D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss&quot;</span><span class="p">:</span> <span class="n">gauss_3D</span><span class="p">,</span>
+    <span class="s2">&quot;gauss_lim&quot;</span><span class="p">:</span> <span class="n">gauss_lim_3D</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

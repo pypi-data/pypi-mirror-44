@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_spike_train_surrogates &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_spike_train_surrogates</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">unittests for spike_train_surrogates module.</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">elephant.spike_train_surrogates</span> <span class="k">as</span> <span class="nn">surr</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SurrogatesTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase">[docs]</a><span class="k">class</span> <span class="nc">SurrogatesTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spikes_output_format"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spikes_output_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spikes_output_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">dither</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dither</span><span class="o">=</span><span class="n">dither</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">),</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spikes_empty_train"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spikes_empty_train">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spikes_empty_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">dither</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dither</span><span class="o">=</span><span class="n">dither</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spikes_output_decimals"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spikes_output_decimals">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spikes_output_decimals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">dither</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dither</span><span class="o">=</span><span class="n">dither</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">dither_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="n">nr_surr</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)))</span>
+        <span class="n">expected_non_dithered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dither_values</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">observed_non_dithered</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span> <span class="o">==</span> <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">observed_non_dithered</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">observed_non_dithered</span><span class="p">,</span> <span class="n">expected_non_dithered</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spikes_false_edges"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spikes_false_edges">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spikes_false_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">dither</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dither</span><span class="o">=</span><span class="n">dither</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLessEqual</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_randomise_spikes_output_format"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_randomise_spikes_output_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_randomise_spikes_output_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">randomise_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">),</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_randomise_spikes_empty_train"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_randomise_spikes_empty_train">[docs]</a>    <span class="k">def</span> <span class="nf">test_randomise_spikes_empty_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">randomise_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_randomise_spikes_output_decimals"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_randomise_spikes_output_decimals">[docs]</a>    <span class="k">def</span> <span class="nf">test_randomise_spikes_output_decimals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">randomise_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertNotEqual</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+                                    <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_shuffle_isis_output_format"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_shuffle_isis_output_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_shuffle_isis_output_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">shuffle_isis</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">),</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_shuffle_isis_empty_train"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_shuffle_isis_empty_train">[docs]</a>    <span class="k">def</span> <span class="nf">test_shuffle_isis_empty_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">shuffle_isis</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_shuffle_isis_same_isis"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_shuffle_isis_same_isis">[docs]</a>    <span class="k">def</span> <span class="nf">test_shuffle_isis_same_isis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">shuffle_isis</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">st_pq</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+        <span class="n">surr_pq</span> <span class="o">=</span> <span class="n">surrog</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+
+        <span class="n">isi0_orig</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span>
+        <span class="n">ISIs_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">isi0_orig</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">isi</span> <span class="k">for</span> <span class="n">isi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">st_pq</span><span class="p">)])</span>
+
+        <span class="n">isi0_surr</span> <span class="o">=</span> <span class="n">surrog</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span>
+        <span class="n">ISIs_surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">isi0_surr</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">isi</span> <span class="k">for</span> <span class="n">isi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">surr_pq</span><span class="p">)])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">ISIs_orig</span> <span class="o">==</span> <span class="n">ISIs_surr</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_shuffle_isis_output_decimals"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_shuffle_isis_output_decimals">[docs]</a>    <span class="k">def</span> <span class="nf">test_shuffle_isis_output_decimals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">shuffle_isis</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">95</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">st_pq</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+        <span class="n">surr_pq</span> <span class="o">=</span> <span class="n">surrog</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span>
+
+        <span class="n">isi0_orig</span> <span class="o">=</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span>
+        <span class="n">ISIs_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">isi0_orig</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">isi</span> <span class="k">for</span> <span class="n">isi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">st_pq</span><span class="p">)])</span>
+
+        <span class="n">isi0_surr</span> <span class="o">=</span> <span class="n">surrog</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span>
+        <span class="n">ISIs_surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="n">isi0_surr</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">isi</span> <span class="k">for</span> <span class="n">isi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">surr_pq</span><span class="p">)])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">ISIs_orig</span> <span class="o">==</span> <span class="n">ISIs_surr</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spike_train_output_format"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spike_train_output_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spike_train_output_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spike_train</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">),</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spike_train_empty_train"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spike_train_empty_train">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spike_train_empty_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">shift</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spike_train</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spike_train_output_decimals"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spike_train_output_decimals">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spike_train_output_decimals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spike_train</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertNotEqual</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+                                    <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_dither_spike_train_false_edges"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_dither_spike_train_false_edges">[docs]</a>    <span class="k">def</span> <span class="nf">test_dither_spike_train_false_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">dither_spike_train</span><span class="p">(</span>
+            <span class="n">st</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertLessEqual</span><span class="p">(</span><span class="n">surrog</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_jitter_spikes_output_format"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_jitter_spikes_output_format">[docs]</a>    <span class="k">def</span> <span class="nf">test_jitter_spikes_output_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">binsize</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">jitter_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">),</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_jitter_spikes_empty_train"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_jitter_spikes_empty_train">[docs]</a>    <span class="k">def</span> <span class="nf">test_jitter_spikes_empty_train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">binsize</span> <span class="o">=</span> <span class="mi">75</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">jitter_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_jitter_spikes_same_bins"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_jitter_spikes_same_bins">[docs]</a>    <span class="k">def</span> <span class="nf">test_jitter_spikes_same_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">binsize</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">jitter_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">bin_ids_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">bin_ids_surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">surrog</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">bin_ids_orig</span> <span class="o">==</span> <span class="n">bin_ids_surr</span><span class="p">))</span>
+
+        <span class="c1"># Bug encountered when the original and surrogate trains have</span>
+        <span class="c1"># different number of spikes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_jitter_spikes_unequal_binsize"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_jitter_spikes_unequal_binsize">[docs]</a>    <span class="k">def</span> <span class="nf">test_jitter_spikes_unequal_binsize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">480</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+
+        <span class="n">binsize</span> <span class="o">=</span> <span class="mi">75</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">surrog</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">jitter_spikes</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">bin_ids_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">st</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">bin_ids_surr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">surrog</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span><span class="p">)</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span>
+            <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">bin_ids_orig</span> <span class="o">==</span> <span class="n">bin_ids_surr</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SurrogatesTestCase.test_surr_method"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.SurrogatesTestCase.test_surr_method">[docs]</a>    <span class="k">def</span> <span class="nf">test_surr_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">st</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">90</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">350</span><span class="p">]</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">500</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span>
+        <span class="n">nr_surr</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">surrs</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">surrogates</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mi">3</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr</span><span class="p">,</span>
+                                <span class="n">surr_method</span><span class="o">=</span><span class="s1">&#39;shuffle_isis&#39;</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">surr</span><span class="o">.</span><span class="n">surrogates</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                          <span class="n">surr_method</span><span class="o">=</span><span class="s1">&#39;spike_shifting&#39;</span><span class="p">,</span>
+                          <span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">)</span> <span class="o">==</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="n">nr_surr2</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">surrs2</span> <span class="o">=</span> <span class="n">surr</span><span class="o">.</span><span class="n">surrogates</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">nr_surr2</span><span class="p">,</span>
+                                 <span class="n">surr_method</span><span class="o">=</span><span class="s1">&#39;dither_spike_train&#39;</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">surrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs</span><span class="p">)</span> <span class="o">==</span> <span class="n">nr_surr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">surrog</span> <span class="ow">in</span> <span class="n">surrs2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">surrs2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">neo</span><span class="o">.</span><span class="n">SpikeTrain</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">surrog</span><span class="o">.</span><span class="n">t_stop</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrog</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">surrs2</span><span class="p">)</span> <span class="o">==</span> <span class="n">nr_surr2</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../source/elephant.test.test_spike_train_surrogates.html#elephant.test.test_spike_train_surrogates.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">SurrogatesTestCase</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TextTestRunner</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">suite</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

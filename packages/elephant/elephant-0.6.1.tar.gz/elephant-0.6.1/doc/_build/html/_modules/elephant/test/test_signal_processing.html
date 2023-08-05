@@ -1,0 +1,714 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_signal_processing &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_signal_processing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit tests for the signal_processing module.</span>
+
+<span class="sd">:copyright: Copyright 2014-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">spsig</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">from</span> <span class="nn">numpy.testing.utils</span> <span class="k">import</span> <span class="n">assert_array_almost_equal</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+
+<span class="kn">import</span> <span class="nn">elephant.signal_processing</span>
+
+<span class="kn">from</span> <span class="nn">numpy.ma.testutils</span> <span class="k">import</span> <span class="n">assert_array_equal</span><span class="p">,</span> <span class="n">assert_allclose</span>
+
+
+<div class="viewcode-block" id="ZscoreTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase">[docs]</a><span class="k">class</span> <span class="nc">ZscoreTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ZscoreTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span>
+                          <span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span>
+                          <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span>
+                          <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span>
+                          <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span>
+                          <span class="mi">11</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span>
+                          <span class="mi">1</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">52</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span>
+                          <span class="mi">6</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+                          <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span>
+                          <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">98</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span>
+                          <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span>
+                          <span class="mi">24</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span>
+                          <span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span>
+                          <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span>
+                          <span class="mi">22</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span>
+                          <span class="mi">24</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span>
+                          <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span>
+                          <span class="mi">19</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span>
+                          <span class="mi">20</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_dup"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_dup">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test z-score on a single AnalogSignal, asking to return a</span>
+<span class="sd">        duplicate.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">))</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">))</span>
+
+        <span class="c1"># Assert original signal is untouched</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_inplace"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_inplace">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_inplace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test z-score on a single AnalogSignal, asking for an inplace</span>
+<span class="sd">        operation.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">))</span>
+
+        <span class="c1"># Assert original signal is overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_multidim_dup"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_multidim_dup">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_multidim_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test z-score on a single AnalogSignal with multiple dimensions, asking</span>
+<span class="sd">        to return a duplicate.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">])),</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span>
+                <span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is untouched</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_multidim_inplace"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_multidim_inplace">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_multidim_inplace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test z-score on a single AnalogSignal with multiple dimensions, asking</span>
+<span class="sd">        for an inplace operation.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">]),</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span>
+                <span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_dup_int"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_dup_int">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_dup_int</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test if the z-score is correctly calculated even if the input is an</span>
+<span class="sd">        AnalogSignal of type int, asking for a duplicate (duplicate should</span>
+<span class="sd">        be of type float).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is untouched</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_single_inplace_int"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_single_inplace_int">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_single_inplace_int</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test if the z-score is correctly calculated even if the input is an</span>
+<span class="sd">        AnalogSignal of type int, asking for an inplace operation.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_list_dup"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_list_dup">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_list_dup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test zscore on a list of AnalogSignal objects, asking to return a</span>
+<span class="sd">        duplicate.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal1</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">])),</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">signal2</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">])),</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">signal_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">signal1</span><span class="p">,</span> <span class="n">signal2</span><span class="p">]</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">]))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">]))</span>
+        <span class="n">target11</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">target21</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">]))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">]))</span>
+        <span class="n">target12</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">target22</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="c1"># Call elephant function</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal_list</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">target11</span><span class="p">,</span> <span class="n">target12</span><span class="p">])),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">target21</span><span class="p">,</span> <span class="n">target22</span><span class="p">])),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is untouched</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal1</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal2</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ZscoreTestCase.test_zscore_list_inplace"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ZscoreTestCase.test_zscore_list_inplace">[docs]</a>    <span class="k">def</span> <span class="nf">test_zscore_list_inplace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Test zscore on a list of AnalogSignal objects, asking for an</span>
+<span class="sd">        inplace operation.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">signal1</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">])),</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">signal2</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">])),</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">signal_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">signal1</span><span class="p">,</span> <span class="n">signal2</span><span class="p">]</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">]))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">]))</span>
+        <span class="n">target11</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">target21</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">]))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span><span class="p">]))</span>
+        <span class="n">target12</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+        <span class="n">target22</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_seq2</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span>
+
+        <span class="c1"># Call elephant function</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">zscore</span><span class="p">(</span><span class="n">signal_list</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">target11</span><span class="p">,</span> <span class="n">target12</span><span class="p">])),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">target21</span><span class="p">,</span> <span class="n">target22</span><span class="p">])),</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+
+        <span class="c1"># Assert original signal is overwritten</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target11</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">signal2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">target21</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div></div>
+
+
+<div class="viewcode-block" id="ButterTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase">[docs]</a><span class="k">class</span> <span class="nc">ButterTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_filter_type"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_filter_type">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_filter_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test if correct type of filtering is performed according to how cut-off</span>
+<span class="sd">        frequencies are given</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># generate white noise AnalogSignal</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">),</span>
+            <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># test high-pass filtering: power at the lowest frequency</span>
+        <span class="c1"># should be almost zero</span>
+        <span class="c1"># Note: the default detrend function of scipy.signal.welch() seems to</span>
+        <span class="c1"># cause artificial finite power at the lowest frequencies. Here I avoid</span>
+        <span class="c1"># this by using an identity function for detrending</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="p">,</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span>
+                             <span class="n">detrend</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># test low-pass filtering: power at the highest frequency</span>
+        <span class="c1"># should be almost zero</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># test band-pass filtering: power at the lowest and highest frequencies</span>
+        <span class="c1"># should be almost zero</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="p">,</span> <span class="mf">200.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="mf">300.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span>
+                             <span class="n">detrend</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># test band-stop filtering: power at the intermediate frequency</span>
+        <span class="c1"># should be almost zero</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="p">,</span> <span class="mf">400.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_filter_function"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_filter_function">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_filter_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate white noise AnalogSignal</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">),</span>
+            <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># test if the filter performance is as well with filftunc=lfilter as</span>
+        <span class="c1"># with filtfunc=filtfilt (i.e. default option)</span>
+        <span class="n">kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">noise</span><span class="p">,</span> <span class="s1">&#39;highpass_freq&#39;</span><span class="p">:</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+                <span class="s1">&#39;lowpass_freq&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;filter_function&#39;</span><span class="p">:</span> <span class="s1">&#39;filtfilt&#39;</span><span class="p">}</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd_filtfilt</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span>
+            <span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="n">kwds</span><span class="p">[</span><span class="s1">&#39;filter_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;lfilter&#39;</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">psd_lfilter</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span>
+            <span class="n">filtered_noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">psd_filtfilt</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">psd_lfilter</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_invalid_filter_function"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_invalid_filter_function">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_invalid_filter_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a dummy AnalogSignal</span>
+        <span class="n">anasig_dummy</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+        <span class="c1"># test exception upon invalid filtfunc string</span>
+        <span class="n">kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">anasig_dummy</span><span class="p">,</span> <span class="s1">&#39;highpass_freq&#39;</span><span class="p">:</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+                <span class="s1">&#39;filter_function&#39;</span><span class="p">:</span> <span class="s1">&#39;invalid_filter&#39;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_missing_cutoff_freqs"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_missing_cutoff_freqs">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_missing_cutoff_freqs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a dummy AnalogSignal</span>
+        <span class="n">anasig_dummy</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+        <span class="c1"># test a case where no cut-off frequencies are given</span>
+        <span class="n">kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;signal&#39;</span><span class="p">:</span> <span class="n">anasig_dummy</span><span class="p">,</span> <span class="s1">&#39;highpass_freq&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;lowpass_freq&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_input_types"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_input_types">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_input_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate white noise data of different types</span>
+        <span class="n">noise_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+        <span class="n">noise_pq</span> <span class="o">=</span> <span class="n">noise_np</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mV</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">noise_pq</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+
+        <span class="c1"># check input as NumPy ndarray</span>
+        <span class="n">filtered_noise_np</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise_np</span><span class="p">,</span> <span class="mf">400.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise_np</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise_np</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise_np</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">filtered_noise_np</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">noise_np</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># check input as Quantity array</span>
+        <span class="n">filtered_noise_pq</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise_pq</span><span class="p">,</span> <span class="mf">400.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise_pq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise_pq</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">filtered_noise_pq</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">noise_pq</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># check input as neo AnalogSignal</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span>
+                                                           <span class="mf">400.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span>
+                                                           <span class="mf">100.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">filtered_noise</span><span class="p">,</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">filtered_noise</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">noise</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># check if the results from different input types are identical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+            <span class="n">filtered_noise_pq</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">==</span> <span class="n">filtered_noise_np</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+            <span class="n">filtered_noise</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">filtered_noise_np</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_axis"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_axis">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5000</span><span class="p">))</span>
+        <span class="n">filtered_noise</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="n">filtered_noise_transposed</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">filtered_noise</span> <span class="o">==</span> <span class="n">filtered_noise_transposed</span><span class="o">.</span><span class="n">T</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ButterTestCase.test_butter_multidim_input"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.ButterTestCase.test_butter_multidim_input">[docs]</a>    <span class="k">def</span> <span class="nf">test_butter_multidim_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">noise_pq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5000</span><span class="p">))</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">mV</span>
+        <span class="n">noise_neo</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">noise_pq</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">noise_neo1d</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">noise_pq</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">1000.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span>
+        <span class="n">filtered_noise_pq</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise_pq</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">)</span>
+        <span class="n">filtered_noise_neo</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise_neo</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">)</span>
+        <span class="n">filtered_noise_neo1d</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span>
+            <span class="n">noise_neo1d</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+            <span class="n">filtered_noise_pq</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">==</span> <span class="n">filtered_noise_neo</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">magnitude</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+            <span class="n">filtered_noise_neo1d</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span>
+            <span class="n">filtered_noise_neo</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="HilbertTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase">[docs]</a><span class="k">class</span> <span class="nc">HilbertTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="HilbertTestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Generate test data of a harmonic function over a long time</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">))),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)))</span> <span class="o">*</span> <span class="mf">10.</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="c1"># rising amplitude cosine, random ampl. sine, flat inverse cosine,</span>
+        <span class="c1"># flat cosine at double frequency</span>
+        <span class="n">sigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">sigs</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mf">0.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">sampling_rate</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># Generate test data covering a single oscillation cycle in 1s only</span>
+        <span class="n">phases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="n">sigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phases</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phases</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">phases</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">phases</span><span class="p">)])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">one_period</span> <span class="o">=</span> <span class="n">neo</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">sigs</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span>
+            <span class="n">sampling_rate</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HilbertTestCase.test_hilbert_pad_type_error"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase.test_hilbert_pad_type_error">[docs]</a>    <span class="k">def</span> <span class="nf">test_hilbert_pad_type_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests if incorrect pad_type raises ValueError.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="s1">&#39;wrong_type&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span>
+            <span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">hilbert</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HilbertTestCase.test_hilbert_output_shape"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase.test_hilbert_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">test_hilbert_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests if the length of the output is identical to the original signal,</span>
+<span class="sd">        and the dimension is dimensionless.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">true_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="s1">&#39;nextpow&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="n">true_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">16384</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="n">true_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HilbertTestCase.test_hilbert_theoretical_long_signals"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase.test_hilbert_theoretical_long_signals">[docs]</a>    <span class="k">def</span> <span class="nf">test_hilbert_theoretical_long_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests the output of the hilbert function with regard to amplitude and</span>
+<span class="sd">        phase of long test signals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Performing test using all pad types</span>
+        <span class="k">for</span> <span class="n">padding</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nextpow&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="mi">16384</span><span class="p">]:</span>
+
+            <span class="n">h</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span>
+
+            <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+            <span class="n">amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+            <span class="n">real_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+            <span class="c1"># The real part should be equal to the original long_signals</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">real_value</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">long_signals</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+            <span class="c1"># Test only in the middle half of the array (border effects)</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">times</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">times</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+
+            <span class="c1"># Calculate difference in phase between signal and original phase</span>
+            <span class="c1"># and use smaller of any two phase differences</span>
+            <span class="n">phasediff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phase</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="n">phasediff</span><span class="p">[</span><span class="n">phasediff</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">phasediff</span><span class="p">[</span><span class="n">phasediff</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+
+            <span class="c1"># Calculate difference in amplitude between signal and original</span>
+            <span class="c1"># amplitude</span>
+            <span class="n">amplitudediff</span> <span class="o">=</span> \
+                <span class="n">amplitude</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span><span class="p">,</span> <span class="p">:]</span>
+<span class="c1">#</span>
+            <span class="n">assert_allclose</span><span class="p">(</span><span class="n">phasediff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="n">assert_allclose</span><span class="p">(</span><span class="n">amplitudediff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HilbertTestCase.test_hilbert_theoretical_one_period"><a class="viewcode-back" href="../../../source/elephant.test.test_signal_processing.html#elephant.test.test_signal_processing.HilbertTestCase.test_hilbert_theoretical_one_period">[docs]</a>    <span class="k">def</span> <span class="nf">test_hilbert_theoretical_one_period</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests the output of the hilbert function with regard to amplitude and</span>
+<span class="sd">        phase of a short signal covering one cycle (more accurate estimate).</span>
+
+<span class="sd">        This unit test is adapted from the scipy library of the hilbert()</span>
+<span class="sd">        function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Precision of testing</span>
+        <span class="n">decimal</span> <span class="o">=</span> <span class="mi">14</span>
+
+        <span class="c1"># Performing test using both pad types</span>
+        <span class="k">for</span> <span class="n">padding</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nextpow&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="mi">512</span><span class="p">]:</span>
+
+            <span class="n">h</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">signal_processing</span><span class="o">.</span><span class="n">hilbert</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">one_period</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="n">padding</span><span class="p">)</span>
+
+            <span class="n">amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+            <span class="n">real_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+
+            <span class="c1"># The real part should be equal to the original long_signals:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">real_value</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">one_period</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span>
+
+            <span class="c1"># The absolute value should be 1 everywhere, for this input:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">amplitude</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">one_period</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span>
+
+            <span class="c1"># For the &#39;slow&#39; sine - the phase should go from -pi/2 to pi/2 in</span>
+            <span class="c1"># the first 256 bins:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">phase</span><span class="p">[:</span><span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">256</span><span class="p">),</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span>
+            <span class="c1"># For the &#39;slow&#39; cosine - the phase should go from 0 to pi in the</span>
+            <span class="c1"># same interval:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">phase</span><span class="p">[:</span><span class="mi">256</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">256</span><span class="p">),</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span>
+            <span class="c1"># The &#39;fast&#39; sine should make this phase transition in half the</span>
+            <span class="c1"># time:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">phase</span><span class="p">[:</span><span class="mi">128</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">128</span><span class="p">),</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span>
+            <span class="c1"># The &#39;fast&#39; cosine should make this phase transition in half the</span>
+            <span class="c1"># time:</span>
+            <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+                <span class="n">phase</span><span class="p">[:</span><span class="mi">128</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">128</span><span class="p">),</span>
+                <span class="n">decimal</span><span class="o">=</span><span class="n">decimal</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

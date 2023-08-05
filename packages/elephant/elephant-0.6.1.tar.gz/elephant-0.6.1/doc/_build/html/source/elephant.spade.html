@@ -1,0 +1,861 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.spade module &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html"><span><img src="../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">elephant.spade module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-elephant.spade">
+<span id="elephant-spade-module"></span><h1>elephant.spade module<a class="headerlink" href="#module-elephant.spade" title="Permalink to this headline">¶</a></h1>
+<p>SPADE is the combination of a mining technique and multiple statistical tests
+to detect and asses the statistical significance of repeated occurrences of
+spike sequences (spatio-temporal patterns, STP).</p>
+<p>Given a list of Neo Spiketrain objects, assumed to be recorded in parallel, the
+SPADE analysis can be applied as demonstrated in this short toy example of 10
+artificial spike trains of exhibiting fully synchronous events of order 10.</p>
+<p>This modules relies on the implementation of the fp-growth algorithm contained
+in the file fim.so which can be found here (<a class="reference external" href="http://www.borgelt.net/pyfim.html">http://www.borgelt.net/pyfim.html</a>)
+and should be available in the spade_src folder (elephant/spade_src/).
+If the fim.so module is not present in the correct location or cannot be 
+imported (only available for linux OS) SPADE will make use of a python 
+implementation of the fast fca algorithm contained in 
+elephant/spade_src/fast_fca.py, which is about 10 times slower.</p>
+<p>import elephant.spade
+import elephant.spike_train_generation
+import quantities as pq</p>
+<p># Generate correlated data
+sts = elephant.spike_train_generation.cpp(</p>
+<blockquote>
+<div>rate=5*pq.Hz, A=[0]+[0.99]+[0]*9+[0.01], t_stop=10*pq.s)</div></blockquote>
+<p># Mining patterns with SPADE using a binsize of 1 ms and a window length of 1
+# bin (i.e., detecting only synchronous patterns).
+patterns = spade.spade(</p>
+<blockquote>
+<div>data=sts, binsize=1*pq.ms, winlen=1, dither=5*pq.ms,
+min_spikes=10, n_surr=10, psr_param=[0,0,3],
+output_format=&#8217;patterns&#8217;)[&#8216;patterns&#8217;][0]</div></blockquote>
+<p># Plotting
+plt.figure()
+for neu in patterns[&#8216;neurons&#8217;]:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>if neu == 0:</dt>
+<dd><dl class="first last docutils">
+<dt>plt.plot(</dt>
+<dd>patterns[&#8216;times&#8217;], [neu]*len(patterns[&#8216;times&#8217;]), &#8216;ro&#8217;,
+label=&#8217;pattern&#8217;)</dd>
+</dl>
+</dd>
+<dt>else:</dt>
+<dd><dl class="first last docutils">
+<dt>plt.plot(</dt>
+<dd>patterns[&#8216;times&#8217;], [neu] * len(patterns[&#8216;times&#8217;]), &#8216;ro&#8217;)</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p># Raster plot of the data
+for st_idx, st in enumerate(sts):</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>if st_idx == 0:</dt>
+<dd>plt.plot(st.rescale(pq.ms), [st_idx] * len(st), &#8216;k.&#8217;, label=&#8217;spikes&#8217;)</dd>
+<dt>else:</dt>
+<dd>plt.plot(st.rescale(pq.ms), [st_idx] * len(st), &#8216;k.&#8217;)</dd>
+</dl>
+</div></blockquote>
+<p>plt.ylim([-1, len(sts)])
+plt.xlabel(&#8216;time (ms)&#8217;)
+plt.ylabel(&#8216;neurons ids&#8217;)
+plt.legend()
+plt.show()</p>
+<dl class="function">
+<dt id="elephant.spade.approximate_stability">
+<code class="descclassname">elephant.spade.</code><code class="descname">approximate_stability</code><span class="sig-paren">(</span><em>concepts</em>, <em>rel_matrix</em>, <em>n_subsets</em>, <em>delta=0</em>, <em>epsilon=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#approximate_stability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.approximate_stability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximate the stability of concepts. Uses the algorithm described
+in Babin, Kuznetsov (2012): Approximating Concept Stability</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>concepts: list</strong></p>
+<blockquote>
+<div><p>All the pattern candidates (concepts) found in the data. Each
+pattern is represented as a tuple containing (spike IDs, 
+discrete times (window position)
+of the  occurrences of the pattern). The spike IDs are defined as:
+spike_id=neuron_id*bin_id; with neuron_id in [0, len(data)] and
+bin_id in [0, winlen].</p>
+</div></blockquote>
+<p><strong>rel_matrix: numpy.array</strong></p>
+<blockquote>
+<div><p>A binary matrix with shape (number of windows, winlen*len(data)). Each
+row corresponds to a window (order according to their position in
+time). Each column correspond to one bin and one neuron and it is 0 if
+no spikes or 1 if one or more spikes occurred in that bin for that
+particular neuron. For example, the entry [0,0] of this matrix
+corresponds to the first bin of the first window position for the first
+neuron, the entry [0,winlen] to the first bin of the first window
+position for the second neuron.</p>
+</div></blockquote>
+<p><strong>n_subsets: int</strong></p>
+<blockquote>
+<div><p>Number of subsets of a concept used to approximate its stability. If
+n_subset is set to 0 the stability is not computed. If, however,
+for parameters delta and epsilon (see below) delta + epsilon == 0,
+then an optimal n_subsets is calculated according to the formula given
+in Babin, Kuznetsov (2012), proposition 6:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>..math::</dt>
+<dd><p class="first last">n_subset = frac{1}{2eps^2} ln(frac{2}{delta}) +1</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Default:0</p>
+</div></blockquote>
+<p><strong>delta: float</strong></p>
+<blockquote>
+<div><p>delta: probability with at least ..math:$1-delta$
+Default: 0</p>
+</div></blockquote>
+<p><strong>epsilon: float</strong></p>
+<blockquote class="last">
+<div><p>epsilon: absolute error
+Default: 0</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>If n_subset is larger than the extent all subsets are directly
+calculated, otherwise for small extent size an infinite
+loop can be created while doing the recursion,
+since the random generation will always contain the same
+numbers and the algorithm will be stuck searching for
+other (random) numbers</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.concept_output_to_patterns">
+<code class="descclassname">elephant.spade.</code><code class="descname">concept_output_to_patterns</code><span class="sig-paren">(</span><em>concepts</em>, <em>winlen</em>, <em>binsize</em>, <em>pvalue_spectrum=None</em>, <em>t_start=array(0.) * ms</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#concept_output_to_patterns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.concept_output_to_patterns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construction of dictionaries containing all the information about a pattern
+starting from a list of concepts and its associated pvalue_spectrum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>concepts: tuple</strong></p>
+<blockquote>
+<div><p>Each element of the tuple correspond to a pattern and it is itself a
+tuple consisting of:</p>
+<blockquote>
+<div><p>((spikes in the pattern), (occurrences of the patterns))</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>winlen: int</strong></p>
+<blockquote>
+<div><p>Length (in bins) of the sliding window used for the analysis</p>
+</div></blockquote>
+<p><strong>pvalue_spectrum: None or tuple</strong></p>
+<blockquote>
+<div><p>Contains a tuple of signatures and the corresponding p-value. If equal
+to None all the pvalues are set to -1</p>
+</div></blockquote>
+<p><strong>t_start: Quantity</strong></p>
+<blockquote>
+<div><p>t_start of the analyzed spike trains</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">output: list</p>
+<blockquote class="last">
+<div><p>List of dictionaries. Each dictionary correspond to a patterns and
+has the following entries:</p>
+<blockquote>
+<div><p>[&#8216;neurons&#8217;] array containing the idx of the neurons of the pattern
+[&#8216;lags&#8217;] array containing the lags (integers corresponding to the</p>
+<blockquote>
+<div><p>number of bins) between the spikes of the patterns. The first
+lag is always assumed to be 0 and correspond to the first
+spike.</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>[&#8216;times&#8217;] array contianing the times (integers corresponding to the</dt>
+<dd><p class="first last">bin idx) of the occurrences of the patterns.</p>
+</dd>
+<dt>[&#8216;signature&#8217;] tuple containing two integers</dt>
+<dd><p class="first last">(number of spikes of the patterns,
+number of occurrences of the pattern)</p>
+</dd>
+<dt>[&#8216;pvalue&#8217;] the pvalue corresponding to the pattern. If n_surr==0</dt>
+<dd><p class="first last">the pvalues are set to -1.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.concepts_mining">
+<code class="descclassname">elephant.spade.</code><code class="descname">concepts_mining</code><span class="sig-paren">(</span><em>data</em>, <em>binsize</em>, <em>winlen</em>, <em>min_spikes=2</em>, <em>min_occ=2</em>, <em>max_spikes=None</em>, <em>max_occ=None</em>, <em>min_neu=1</em>, <em>report='a'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#concepts_mining"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.concepts_mining" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find pattern candidates extracting all the concepts of the context formed
+by the objects defined as all windows of length winlen*binsize slided
+along the data and the attributes as the spikes occurring in each of the
+window discretized at a time resolution equal to binsize. Hence, the output
+are all the repeated sequences of spikes with maximal length winlen, which
+are not trivially explained by the same number of occurrences of a superset
+of spikes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: list of neo.SpikeTrains</strong></p>
+<blockquote>
+<div><p>List containing the parallel spike trains to analyze</p>
+</div></blockquote>
+<p><strong>binsize: Quantity</strong></p>
+<blockquote>
+<div><p>The time precision used to discretize the data (binning).</p>
+</div></blockquote>
+<p><strong>winlen: int (positive)</strong></p>
+<blockquote>
+<div><p>The size (number of bins) of the sliding window used for the analysis.
+The maximal length of a pattern (delay between first and last spike) is
+then given by winlen*binsize</p>
+</div></blockquote>
+<p><strong>min_spikes: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of spikes of a sequence to be considered a pattern.
+Default: 2</p>
+</div></blockquote>
+<p><strong>min_occ: int (positive)</strong></p>
+<blockquote>
+<div><blockquote>
+<div><p>Minimum number of occurrences of a sequence to be considered as a
+pattern.</p>
+</div></blockquote>
+<p>Default: 2</p>
+</div></blockquote>
+<p><strong>max_spikes: int (positive)</strong></p>
+<blockquote>
+<div><p>Maximum number of spikes of a sequence to be considered a pattern. If
+None no maximal number of spikes is considered.
+Default: None</p>
+</div></blockquote>
+<p><strong>max_occ: int (positive)</strong></p>
+<blockquote>
+<div><p>Maximum number of occurrences of a sequence to be considered as a
+pattern. If None, no maximal number of occurrences is considered.
+Default: None</p>
+</div></blockquote>
+<p><strong>min_neu: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of neurons in a sequence to considered a pattern.
+Default: 1</p>
+</div></blockquote>
+<p><strong>report: str</strong></p>
+<blockquote>
+<div><p>Indicates the output of the function.
+&#8216;a&#8217;: all the mined patterns
+&#8216;#&#8217;: pattern spectrum
+Default: &#8216;a&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">mining_results: list</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>If report == &#8216;a&#8217;:</dt>
+<dd><p class="first">All the pattern candidates (concepts) found in the data. Each
+pattern is represented as a tuple containing</p>
+<blockquote>
+<div><p>(spike IDs, discrete times (window position)</p>
+</div></blockquote>
+<p class="last">of the  occurrences of the pattern). The spike IDs are defined as:
+spike_id=neuron_id*bin_id; with neuron_id in [0, len(data)] and
+bin_id in [0, winlen].</p>
+</dd>
+<dt>If report == &#8216;#&#8217;:</dt>
+<dd><p class="first">The pattern spectrum is represented as a list of triplets each
+formed by:</p>
+<blockquote class="last">
+<div><p>(pattern size, number of occurrences, number of patterns)</p>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>rel_matrix</strong> : numpy.array</p>
+<blockquote class="last">
+<div><p>A binary matrix with shape (number of windows, winlen*len(data)). Each
+row corresponds to a window (order according to their position in
+time). Each column correspond to one bin and one neuron and it is 0 if
+no spikes or 1 if one or more spikes occurred in that bin for that
+particular neuron. For example, the entry [0,0] of this matrix
+corresponds to the first bin of the first window position for the first
+neuron, the entry [0,winlen] to the first bin of the first window
+position for the second neuron.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.pattern_set_reduction">
+<code class="descclassname">elephant.spade.</code><code class="descname">pattern_set_reduction</code><span class="sig-paren">(</span><em>concepts</em>, <em>excluded</em>, <em>winlen</em>, <em>h=0</em>, <em>k=0</em>, <em>l=0</em>, <em>min_spikes=2</em>, <em>min_occ=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#pattern_set_reduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.pattern_set_reduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a list concepts and performs  pattern set reduction (PSR).
+Same as psr(), but compares each concept A in concepts_psf to each other
+one which overlaps with A.</p>
+<p>PSR determines which patterns in concepts_psf are statistically significant
+given any other pattern, on the basis of the pattern size and
+occurrence count (&#8220;support&#8221;). Only significant patterns are retained.
+The significance of a pattern A is evaluated through its signature
+(<a href="#id1"><span class="problematic" id="id2">|A|</span></a>,c_A), where <a href="#id3"><span class="problematic" id="id4">|A|</span></a> is the size and c_A the support of A, by either of:
+* subset filtering: any pattern B is discarded if <em>cfis</em> contains a</p>
+<blockquote>
+<div>superset A of B such that (z_B, c_B-c_A+*h*) in <em>excluded</em></div></blockquote>
+<ul class="simple">
+<li>superset filtering: any pattern A is discarded if <em>cfis</em> contains a
+subset B of A such that (z_A-z_B+*k*, c_A) in  <em>excluded</em></li>
+<li>covered-spikes criterion: for any two patterns A, B with A subset B, B
+is discarded if (z_B-l)*c_B &lt;= c_A*(z_A-<em>l</em>), A is discarded otherwise.</li>
+<li>combined filtering: combines the three procedures above</li>
+</ul>
+<p>takes a list concepts (see output psf function) and performs
+combined filtering based on the signature (z, c) of each pattern, where
+z is the pattern size and c the pattern support.</p>
+<p>For any two patterns A and B in concepts_psf such that B subset A, check:
+1) (z_B, c_B-c_A+*h*) in <em>excluded</em>, and
+2) (z_A-z_B+*k*, c_A) in <em>excluded</em>.
+Then:
+* if 1) and not 2): discard B
+* if 2) and not 1): discard A
+* if 1) and 2): discard B if c_B*(z_B-<em>l</em>) &lt;= c_A*(z_A-<em>l</em>), A otherwise;
+* if neither 1) nor 2): keep both patterns.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.pvalue_spectrum">
+<code class="descclassname">elephant.spade.</code><code class="descname">pvalue_spectrum</code><span class="sig-paren">(</span><em>data</em>, <em>binsize</em>, <em>winlen</em>, <em>dither</em>, <em>n_surr</em>, <em>min_spikes=2</em>, <em>min_occ=2</em>, <em>min_neu=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#pvalue_spectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.pvalue_spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the p-value spectrum of pattern signatures extracted from
+surrogates of parallel spike trains, under the null hypothesis of
+independent spiking.</p>
+<ul class="simple">
+<li>n_surr surrogates are obtained from each spike train by spike dithering</li>
+<li>pattern candidates (concepts) are collected from each surrogate data</li>
+<li>the signatures (number of spikes, number of occurrences) of all patterns
+are computed, and their  occurrence probability estimated by their
+occurrence frequency (p-value spectrum)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: list of neo.SpikeTrains</strong></p>
+<blockquote>
+<div><p>List containing the parallel spike trains to analyze</p>
+</div></blockquote>
+<p><strong>binsize: Quantity</strong></p>
+<blockquote>
+<div><p>The time precision used to discretize the data (binning).</p>
+</div></blockquote>
+<p><strong>winlen: int (positive)</strong></p>
+<blockquote>
+<div><p>The size (number of bins) of the sliding window used for the analysis.
+The maximal length of a pattern (delay between first and last spike) is
+then given by winlen*binsize</p>
+</div></blockquote>
+<p><strong>dither: Quantity</strong></p>
+<blockquote>
+<div><p>Amount of spike time dithering for creating the surrogates for
+filtering the pattern spectrum. A spike at time t is placed randomly
+within ]t-dither, t+dither[ (see also
+elephant.spike_train_surrogates.dither_spikes).
+Default: 15*pq.s</p>
+</div></blockquote>
+<p><strong>n_surr: int</strong></p>
+<blockquote>
+<div><p>Number of surrogates to generate to compute the p-value spectrum.
+This number should be large (n_surr&gt;=1000 is recommended for 100
+spike trains in <em>sts</em>). If n_surr is 0, then the p-value spectrum is
+not computed.
+Default: 0</p>
+</div></blockquote>
+<p><strong>min_spikes: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of spikes of a sequence to be considered a pattern.
+Default: 2</p>
+</div></blockquote>
+<p><strong>min_occ: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of occurrences of a sequence to be considered as a
+pattern.
+Default: 2</p>
+</div></blockquote>
+<p><strong>min_neu: int (positive)</strong></p>
+<blockquote class="last">
+<div><p>Minimum number of neurons in a sequence to considered a pattern.
+Default: 1</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.spade">
+<code class="descclassname">elephant.spade.</code><code class="descname">spade</code><span class="sig-paren">(</span><em>data</em>, <em>binsize</em>, <em>winlen</em>, <em>min_spikes=2</em>, <em>min_occ=2</em>, <em>min_neu=1</em>, <em>n_subsets=0</em>, <em>delta=0</em>, <em>epsilon=0</em>, <em>stability_thresh=None</em>, <em>n_surr=0</em>, <em>dither=array(15.) * ms</em>, <em>alpha=1</em>, <em>stat_corr='fdr'</em>, <em>psr_param=None</em>, <em>output_format='concepts'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#spade"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.spade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the SPADE [1,2] analysis for the parallel spike trains given in the
+input. The data are discretized with a temporal resolution equal binsize
+in a sliding window of winlen*binsize milliseconds.</p>
+<p>First, spike patterns are mined from the data using a technique termed
+frequent itemset mining (FIM) or formal concept analysis (FCA). In this
+framework, a particular spatio-temporal spike pattern is termed a
+&#8220;concept&#8221;. It is then possible to compute the stability and the signature
+significance of all pattern candidates. In a final step, it is possible to
+select a stability threshold and the significance level to select only
+stable/significant concepts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: list of neo.SpikeTrains</strong></p>
+<blockquote>
+<div><p>List containing the parallel spike trains to analyze</p>
+</div></blockquote>
+<p><strong>binsize: Quantity</strong></p>
+<blockquote>
+<div><p>The time precision used to discretize the data (binning).</p>
+</div></blockquote>
+<p><strong>winlen: int (positive)</strong></p>
+<blockquote>
+<div><p>The size (number of bins) of the sliding window used for the analysis.
+The maximal length of a pattern (delay between first and last spike) is
+then given by winlen*binsize</p>
+</div></blockquote>
+<p><strong>min_spikes: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of spikes of a sequence to be considered a pattern.
+Default: 2</p>
+</div></blockquote>
+<p><strong>min_occ: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of occurrences of a sequence to be considered as a
+pattern.
+Default: 2</p>
+</div></blockquote>
+<p><strong>min_neu: int (positive)</strong></p>
+<blockquote>
+<div><p>Minimum number of neurons in a sequence to considered a pattern.
+Default: 1</p>
+</div></blockquote>
+<p><strong>n_subsets: int</strong></p>
+<blockquote>
+<div><p>Number of subsets of a concept used to approximate its stability. If
+n_subset is set to 0 the stability is not computed. If, however,
+for parameters delta and epsilon (see below) delta + epsilon == 0,
+then an optimal n_subsets is calculated according to the formula given
+in Babin, Kuznetsov (2012), proposition 6:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>..math::</dt>
+<dd><p class="first last">n_subset = frac{1}{2eps^2} ln(frac{2}{delta}) +1</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Default:0</p>
+</div></blockquote>
+<p><strong>delta: float</strong></p>
+<blockquote>
+<div><p>delta: probability with at least ..math:$1-delta$
+Default: 0</p>
+</div></blockquote>
+<p><strong>epsilon: float</strong></p>
+<blockquote>
+<div><p>epsilon: absolute error
+Default: 0</p>
+</div></blockquote>
+<p><strong>stability_thresh: None or list of float</strong></p>
+<blockquote>
+<div><p>List containing the stability thresholds used to filter the concepts.
+If stab_thr is None, then the concepts are not filtered. Otherwise,
+only concepts with intensional stability &gt; stab_thr[0] or extensional
+stability &gt; stab_thr[1] are returned and used for further analysis
+within SPADE.
+Default: None</p>
+</div></blockquote>
+<p><strong>n_surr: int</strong></p>
+<blockquote>
+<div><p>Number of surrogates to generate to compute the p-value spectrum.
+This number should be large (n_surr&gt;=1000 is recommended for 100
+spike trains in <em>sts</em>). If n_surr is 0, then the p-value spectrum is
+not computed.
+Default: 0</p>
+</div></blockquote>
+<p><strong>dither: Quantity</strong></p>
+<blockquote>
+<div><p>Amount of spike time dithering for creating the surrogates for
+filtering the pattern spectrum. A spike at time t is placed randomly
+within ]t-dither, t+dither[ (see also
+elephant.spike_train_surrogates.dither_spikes).
+Default: 15*pq.s</p>
+</div></blockquote>
+<p><strong>alpha: float</strong></p>
+<blockquote>
+<div><p>The significance level of the hypothesis tests performed. If alpha=1
+all the concepts are returned. If 0&lt;alpha&lt;1 the concepts
+are filtered according to their signature in the p-value spectrum.
+Default: 1</p>
+</div></blockquote>
+<p><strong>stat_corr: str</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Statistical correction to be applied:</dt>
+<dd><blockquote class="first">
+<div><p>&#8216;&#8217; : no statistical correction
+&#8216;f&#8217;, &#8216;fdr&#8217; : false discovery rate
+&#8216;b&#8217;, &#8216;bonf&#8217;: Bonferroni correction</p>
+</div></blockquote>
+<p class="last">Default: &#8216;fdr&#8217;</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>psr_param: None or list of int</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>This list contains parameters used in the pattern spectrum filtering:</dt>
+<dd><dl class="first last docutils">
+<dt>psr_param[0]: correction parameter for subset filtering</dt>
+<dd><p class="first last">(see parameter h of psr()).</p>
+</dd>
+<dt>psr_param[1]: correction parameter for superset filtering</dt>
+<dd><p class="first last">(see parameter k of psr()).</p>
+</dd>
+<dt>psr_param[2]: correction parameter for covered-spikes criterion</dt>
+<dd><p class="first last">(see parameter l for psr()).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>output_format: str</strong></p>
+<blockquote>
+<div><p>distinguish the format of the output (see Returns). Can assume values
+&#8216;concepts&#8217; and &#8216;patterns&#8217;.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The output depends on the value of the parameter output_format.</p>
+<p>If output_format is &#8216;concepts&#8217;:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>output: dict</dt>
+<dd><p class="first">Dictionary containing the following keys:
+patterns: tuple</p>
+<blockquote>
+<div><p>Each element of the tuple corresponds to a pattern and is
+itself a tuple consisting of:</p>
+<blockquote>
+<div><p>(spikes in the pattern, occurrences of the patterns)</p>
+</div></blockquote>
+<p>For details see function concepts_mining().</p>
+<dl class="docutils">
+<dt>If n_subsets&gt;0:</dt>
+<dd><p class="first last">(spikes in the pattern, occurrences of the patterns,
+(intensional stability, extensional stability))
+corresponding pvalue</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>The patterns are filtered depending on the parameters in input:
+If stability_thresh==None and alpha==None:</p>
+<blockquote>
+<div><p>output[&#8216;patterns&#8217;] contains all the candidates patterns
+(all concepts mined with the fca algorithm)</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>If stability_thresh!=None and alpha==None:</dt>
+<dd><dl class="first last docutils">
+<dt>output contains only patterns candidates with:</dt>
+<dd><p class="first last">intensional stability&gt;stability_thresh[0] or
+extensional stability&gt;stability_thresh[1]</p>
+</dd>
+</dl>
+</dd>
+<dt>If stability_thresh==None and alpha!=1:</dt>
+<dd><p class="first last">output contains only pattern candidates with a signature
+significant in respect the significance level alpha corrected</p>
+</dd>
+<dt>If stability_thresh!=None and alpha!=1:</dt>
+<dd><p class="first">output[&#8216;patterns&#8217;] contains only pattern candidates with a
+signature significant in respect the significance level alpha
+corrected and such that:</p>
+<blockquote>
+<div><p>intensional stability&gt;stability_thresh[0] or
+extensional stability&gt;stability_thresh[1]</p>
+</div></blockquote>
+<p class="last">In addition, output[&#8216;non_sgnf_sgnt&#8217;] contains the list of
+non-significant signature for the significance level alpha.</p>
+</dd>
+<dt>If n_surr&gt;0:</dt>
+<dd><p class="first last">output[&#8216;pvalue_spectrum&#8217;] contains a tuple of signatures and
+the corresponding p-value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>If output_format is &#8216;patterns&#8217;:</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>output: list</dt>
+<dd><p class="first">List of dictionaries. Each dictionary corresponds to a patterns and
+has the following keys:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>neurons: array containing the indices of the neurons of the</dt>
+<dd><p class="first last">pattern.</p>
+</dd>
+<dt>lags: array containing the lags (integers corresponding to the</dt>
+<dd><p class="first last">number of bins) between the spikes of the patterns. The
+first lag is always assumed to be 0 and correspond to the
+first spike [&#8216;times&#8217;] array containing the times.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>(integers corresponding to the bin idx) of the occurrences of the
+patterns</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>signature: tuple containing two integers:</dt>
+<dd><p class="first last">(number of spikes of the patterns,
+number of occurrences of the pattern)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="last docutils">
+<dt>pvalue: the p-value corresponding to the pattern. If n_surr==0 the</dt>
+<dd><p class="first last">p-values are set to 0.0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>If detected, this function will utilize MPI to parallelize the analysis.</p>
+<p class="rubric">References</p>
+<dl class="docutils">
+<dt>[1] Torre, E., Picado-Muino, D., Denker, M., Borgelt, C., &amp; Gruen, S.(2013)</dt>
+<dd>Statistical evaluation of synchronous spike patterns extracted by
+frequent item set mining. Frontiers in Computational Neuroscience, 7.</dd>
+<dt>[2] Quaglio, P., Yegenoglu, A., Torre, E., Endres, D. M., &amp; Gruen, S.(2017)</dt>
+<dd>Detection and Evaluation of Spatio-Temporal Spike Patterns in Massively
+Parallel Spike Train Data with SPADE.</dd>
+</dl>
+<p>Frontiers in Computational Neuroscience, 11.
+&#8216;&#8217;&#8216;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="elephant.spade.test_signature_significance">
+<code class="descclassname">elephant.spade.</code><code class="descname">test_signature_significance</code><span class="sig-paren">(</span><em>pvalue_spectrum</em>, <em>alpha</em>, <em>corr=''</em>, <em>report='#'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/spade.html#test_signature_significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.spade.test_signature_significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the significance spectrum of a pattern spectrum.</p>
+<p>Given pvalue_spectrum as a list of triplets (z,c,p), where z is pattern
+size, c is pattern support and p is the p-value of the signature (z,c),
+this routine assesses the significance of (z,c) using the confidence level
+alpha.</p>
+<p>Bonferroni or FDR statistical corrections can be applied.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pvalue_spectrum: list</strong></p>
+<blockquote>
+<div><p>A list of triplets (z,c,p), where z is pattern size, c is pattern
+support and p is the p-value of signature (z,c)</p>
+</div></blockquote>
+<p><strong>alpha: float</strong></p>
+<blockquote>
+<div><p>Significance level of the statistical test</p>
+</div></blockquote>
+<p><strong>corr: str</strong></p>
+<blockquote>
+<div><p>Statistical correction to be applied:
+&#8216;&#8217; : no statistical correction
+&#8216;f&#8217;|&#8217;fdr&#8217; : false discovery rate
+&#8216;b&#8217;|&#8217;bonf&#8217;: Bonferroni correction</p>
+<blockquote>
+<div><p>Default: &#8216;&#8217;</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>report: str</strong></p>
+<blockquote class="last">
+<div><p>Format to be returned for the significance spectrum:
+&#8216;#&#8217;: list of triplets (z,c,b), where b is a boolean specifying</p>
+<blockquote>
+<div><p>whether signature (z,c) is significant (True) or not (False)</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>&#8216;s&#8217;: list containing only the significant signatures (z,c) of</dt>
+<dd><p class="first last">pvalue_spectrum</p>
+</dd>
+</dl>
+<p>&#8216;e&#8217;: list containing only the non-significant signatures
+Defualt: &#8216;#&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

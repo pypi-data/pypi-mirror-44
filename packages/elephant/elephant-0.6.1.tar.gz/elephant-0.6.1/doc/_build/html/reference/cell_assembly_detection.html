@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cell Assembly Detection &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html"><span><img src="../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Cell Assembly Detection</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-elephant.cell_assembly_detection">
+<span id="cell-assembly-detection"></span><h1>Cell Assembly Detection<a class="headerlink" href="#module-elephant.cell_assembly_detection" title="Permalink to this headline">¶</a></h1>
+<p>CAD [1] is a method aimed to capture structures of higher-order correlation in
+massively parallel spike trains. In particular, it is able to extract
+patterns of spikes with arbitrary configuration of time lags (time interval
+between spikes in a pattern), and at multiple time scales,
+e.g. from synchronous patterns to firing rate co-modulations.</p>
+<p>CAD consists of a statistical parametric testing done on the level of pairs
+of neurons, followed by an agglomerative recursive algorithm, in order to 
+detect and test statistically precise repetitions of spikes in the data.
+In particular, pairs of neurons are tested for significance under the null
+hypothesis of independence, and then the significant pairs are agglomerated
+into higher order patterns.</p>
+<p>The method was published in Russo et al. 2017 [1]. The original
+code is in Matlab language.</p>
+<p>Given a list of discretized (binned) spike trains by a given temporal
+scale (binsize), assumed to be recorded in parallel, the CAD analysis can be
+applied as demonstrated in this short toy example of 5 parallel spike trains
+that exhibit fully synchronous events of order 5.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.conversion</span> <span class="k">as</span> <span class="nn">conv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.spike_train_generation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">elephant.cell_assembly_detection</span> <span class="k">as</span> <span class="nn">cad</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generate correlated data and bin it with a binsize of 10ms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sts</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spike_train_generation</span><span class="o">.</span><span class="n">cpp</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">rate</span><span class="o">=</span><span class="mi">15</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.95</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="o">+</span><span class="p">[</span><span class="mf">0.05</span><span class="p">],</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binsize</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spM</span> <span class="o">=</span> <span class="n">conv</span><span class="o">.</span><span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Call of the method</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span> <span class="o">=</span> <span class="n">cad</span><span class="o">.</span><span class="n">cell_assembly_detection</span><span class="p">(</span><span class="n">spM</span><span class="o">=</span><span class="n">spM</span><span class="p">,</span> <span class="n">maxlag</span><span class="o">=</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Plotting</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">neu</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">[</span><span class="s1">&#39;neurons&#39;</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">neu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">patterns</span><span class="p">[</span><span class="s1">&#39;times&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">binsize</span><span class="p">,</span> <span class="p">[</span><span class="n">neu</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">patterns</span><span class="p">[</span><span class="s1">&#39;times&#39;</span><span class="p">]),</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;pattern&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">patterns</span><span class="p">[</span><span class="s1">&#39;times&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">binsize</span><span class="p">,</span> <span class="p">[</span><span class="n">neu</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">patterns</span><span class="p">[</span><span class="s1">&#39;times&#39;</span><span class="p">]),</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s1">&#39;ro&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Raster plot of the data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">st_idx</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sts</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">st_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">),</span> <span class="p">[</span><span class="n">st_idx</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">),</span> <span class="s1">&#39;k.&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>                 <span class="n">label</span><span class="o">=</span><span class="s1">&#39;spikes&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">),</span> <span class="p">[</span><span class="n">st_idx</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">),</span> <span class="s1">&#39;k.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sts</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ms)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;neurons ids&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>[1] Russo, E., &amp; Durstewitz, D. (2017).
+Cell assemblies at multiple time scales with arbitrary lag constellations.
+Elife, 6.</p>
+<dl class="function">
+<dt id="elephant.cell_assembly_detection.cell_assembly_detection">
+<code class="descclassname">elephant.cell_assembly_detection.</code><code class="descname">cell_assembly_detection</code><span class="sig-paren">(</span><em>data</em>, <em>maxlag</em>, <em>reference_lag=2</em>, <em>alpha=0.05</em>, <em>min_occ=1</em>, <em>size_chunks=100</em>, <em>max_spikes=inf</em>, <em>significance_pruning=True</em>, <em>subgroup_pruning=True</em>, <em>same_config_cut=False</em>, <em>bool_times_format=False</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/elephant/cell_assembly_detection.html#cell_assembly_detection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#elephant.cell_assembly_detection.cell_assembly_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function performs the CAD analysis for the binned (discretized) spike
+trains given in input. The method looks for candidate
+significant patterns with lags (number of bins between successive spikes
+in the pattern) going from <cite>-maxlag</cite> and <cite>maxlag</cite> (second parameter of the
+function). Thus, between two successive spikes in the pattern there can
+be at most <cite>maxlag`*`binsize</cite> units of time.</p>
+<p>The method agglomerates pairs of units (or a unit and a preexisting
+assembly), tests their significance by a statistical test
+and stops when the detected assemblies reach their maximal dimension
+(parameter <cite>max_spikes</cite>).</p>
+<p>At every agglomeration size step (ex. from triplets to quadruplets), the
+method filters patterns having the same neurons involved, and keeps only
+the most significant one. This pruning is optional and the choice is
+identified by the parameter &#8216;significance_pruning&#8217;.
+Assemblies already included in a bigger assembly are eliminated in a final
+pruning step. Also this pruning is optional, and the choice is identified
+by the parameter <cite>subgroup_pruning</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : BinnedSpikeTrain object</p>
+<blockquote>
+<div><p>binned spike trains containing data to be analysed</p>
+</div></blockquote>
+<p><strong>maxlag: int</strong></p>
+<blockquote>
+<div><p>maximal lag to be tested. For a binning dimension of binsize the
+method will test all pairs configurations with a time
+shift between &#8216;-maxlag&#8217; and &#8216;maxlag&#8217;</p>
+</div></blockquote>
+<p><strong>reference_lag</strong> : int</p>
+<blockquote>
+<div><p>reference lag (in bins) for the non-stationarity correction in the
+statistical test
+Default value : 2</p>
+</div></blockquote>
+<p><strong>alpha</strong> : float</p>
+<blockquote>
+<div><p>significance level for the statistical test
+Default : 0.05</p>
+</div></blockquote>
+<p><strong>min_occ</strong> : int</p>
+<blockquote>
+<div><p>minimal number of occurrences required for an assembly
+(all assemblies, even if significant, with fewer occurrences
+than min_occurrences are discarded).
+Default : 0.</p>
+</div></blockquote>
+<p><strong>size_chunks</strong> : int</p>
+<blockquote>
+<div><p>size (in bins) of chunks in which the spike trains is divided
+to compute the variance (to reduce non stationarity effects
+on variance estimation)
+Default : 100.</p>
+</div></blockquote>
+<p><strong>max_spikes</strong> : int</p>
+<blockquote>
+<div><p>maximal assembly order (the algorithm will return assemblies of
+composed by maximum max_spikes elements).
+Default : numpy.inf</p>
+</div></blockquote>
+<p><strong>significance_pruning</strong> : bool</p>
+<blockquote>
+<div><p>if True the method performs significance pruning among
+the detected assemblies
+Default: True</p>
+</div></blockquote>
+<p><strong>subgroup_pruning</strong> : bool</p>
+<blockquote>
+<div><p>if True the method performs subgroup pruning among
+the detected assemblies
+Default: True</p>
+</div></blockquote>
+<p><strong>same_config_cut: bool</strong></p>
+<blockquote>
+<div><p>if True performs pruning (not present in the original code and more
+efficient), not testing assemblies already formed
+if they appear in the very same configuration
+Default: False</p>
+</div></blockquote>
+<p><strong>bool_times_format: bool</strong></p>
+<blockquote>
+<div><p>if True the activation time series is a list of 0/1 elements, where
+1 indicates the first spike of the pattern
+Otherwise, the activation times of the assemblies are indicated by the
+indices of the bins in which the first spike of the pattern
+is happening
+Default: False</p>
+</div></blockquote>
+<p><strong>verbose: bool</strong></p>
+<blockquote>
+<div><p>Regulates the number of prints given by the method. If true all prints
+are given, otherwise the method does give any prints.
+Default: False</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>assembly_bin</strong> : list</p>
+<blockquote>
+<div><p>contains the assemblies detected for the binsize chosen
+each assembly is a dictionary with attributes:
+&#8216;neurons&#8217; : vector of units taking part to the assembly</p>
+<blockquote>
+<div><p>(unit order correspond to the agglomeration order)</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>&#8216;lag&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">vector of time lags <cite>lag[z]</cite> is the activation delay between</span></dt>
+<dd><p class="first last"><cite>neurons[1]</cite> and <cite>neurons[z+1]</cite></p>
+</dd>
+<dt>&#8216;pvalue&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">vector of pvalues. <cite>pvalue[z]</cite> is the p-value of the</span></dt>
+<dd><p class="first last">statistical test between performed adding
+<cite>neurons[z+1]</cite> to the <cite>neurons[1:z]</cite></p>
+</dd>
+<dt>&#8216;times&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">assembly activation time. It reports how many times the</span></dt>
+<dd><p class="first last">complete assembly activates in that bin.
+time always refers to the activation of the first listed
+assembly element (<cite>neurons[1]</cite>), that doesn&#8217;t necessarily
+corresponds to the first unit firing.
+The format is  identified by the variable bool_times_format.</p>
+</dd>
+<dt>&#8216;signature&#8217; <span class="classifier-delimiter">:</span> <span class="classifier">array of two entries <cite>(z,c)</cite>. The first is the number of</span></dt>
+<dd><p class="first last">neurons participating in the assembly (size),
+the second is number of assembly occurrences.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>TypeError</strong></p>
+<blockquote>
+<div><p>if the data is not an elephant.conv.BinnedSpikeTrain object</p>
+</div></blockquote>
+<p><strong>ValueError</strong></p>
+<blockquote>
+<div><p>if the parameters are out of bounds</p>
+</div></blockquote>
+<p><strong>Examples</strong></p>
+<p><strong>&#8212;&#8212;-</strong></p>
+<p><strong>&gt;&gt;&gt; import elephant.conversion as conv</strong></p>
+<p><strong>&gt;&gt;&gt; import elephant.spike_train_generation</strong></p>
+<p><strong>&gt;&gt;&gt; import quantities as pq</strong></p>
+<p><strong>&gt;&gt;&gt; import numpy as np</strong></p>
+<p><strong>&gt;&gt;&gt; import elephant.cell_assembly_detection as cad</strong></p>
+<p><strong>&gt;&gt;&gt; np.random.seed(30)</strong></p>
+<p><strong>&gt;&gt;&gt; # Generate correlated data and bin it with a binsize of 10ms</strong></p>
+<p><strong>&gt;&gt;&gt; sts = elephant.spike_train_generation.cpp(</strong></p>
+<p><strong>&gt;&gt;&gt;     rate=15*pq.Hz, A=[0]+[0.95]+[0]*4+[0.05], t_stop=10*pq.s)</strong></p>
+<p><strong>&gt;&gt;&gt; binsize = 10*pq.ms</strong></p>
+<p><strong>&gt;&gt;&gt; spM = conv.BinnedSpikeTrain(sts, binsize=binsize)</strong></p>
+<p><strong>&gt;&gt;&gt; # Call of the method</strong></p>
+<p class="last"><strong>&gt;&gt;&gt; patterns = cad.cell_assembly_detection(spM=spM, maxlag=2)[0]</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>[1] Russo, E., &amp; Durstewitz, D. (2017).
+Cell assemblies at multiple time scales with arbitrary lag constellations.
+Elife, 6.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

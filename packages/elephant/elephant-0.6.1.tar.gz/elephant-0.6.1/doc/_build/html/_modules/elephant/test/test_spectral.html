@@ -1,0 +1,451 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_spectral &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_spectral</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit tests for the spectral module.</span>
+
+<span class="sd">:copyright: Copyright 2015 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">spsig</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">import</span> <span class="nn">neo.core</span> <span class="k">as</span> <span class="nn">n</span>
+
+<span class="kn">import</span> <span class="nn">elephant.spectral</span>
+
+
+<div class="viewcode-block" id="WelchPSDTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchPSDTestCase">[docs]</a><span class="k">class</span> <span class="nc">WelchPSDTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="WelchPSDTestCase.test_welch_psd_errors"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchPSDTestCase.test_welch_psd_errors">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_psd_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a dummy data</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+                              <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check for invalid parameter values</span>
+        <span class="c1"># - length of segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">len_seg</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">len_seg</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># - number of segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">num_seg</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">num_seg</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># - frequency resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">freq_res</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">freq_res</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">/</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># - overlap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">overlap</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                          <span class="n">overlap</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WelchPSDTestCase.test_welch_psd_behavior"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchPSDTestCase.test_welch_psd_behavior">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_psd_behavior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate data by adding white noise and a sinusoid</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">signal_freq</span> <span class="o">=</span> <span class="mf">100.0</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">data_length</span><span class="p">)</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">signal_freq</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_length</span><span class="o">*</span><span class="n">sampling_period</span><span class="p">,</span>
+                                     <span class="n">sampling_period</span><span class="p">)]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="o">+</span><span class="n">noise</span><span class="p">),</span>
+                                      <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+                                      <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># consistency between different ways of specifying segment length</span>
+        <span class="n">freqs1</span><span class="p">,</span> <span class="n">psd1</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">len_seg</span><span class="o">=</span><span class="n">data_length</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">freqs2</span><span class="p">,</span> <span class="n">psd2</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_seg</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">psd1</span><span class="o">==</span><span class="n">psd2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">freqs1</span><span class="o">==</span><span class="n">freqs2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+        <span class="c1"># frequency resolution and consistency with data</span>
+        <span class="n">freq_res</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">freq_res</span><span class="o">=</span><span class="n">freq_res</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">freq_res</span><span class="p">,</span> <span class="n">freqs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">psd</span><span class="o">.</span><span class="n">argmax</span><span class="p">()],</span> <span class="n">signal_freq</span><span class="p">)</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">psd_np</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">,</span> <span class="n">freq_res</span><span class="o">=</span><span class="n">freq_res</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs</span><span class="o">==</span><span class="n">freqs_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">psd</span><span class="o">==</span><span class="n">psd_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+        <span class="c1"># check of scipy.signal.welch() parameters</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;window&#39;</span><span class="p">:</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;nfft&#39;</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span> <span class="s1">&#39;detrend&#39;</span><span class="p">:</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;return_onesided&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;scaling&#39;</span><span class="p">:</span> <span class="s1">&#39;spectrum&#39;</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">len_seg</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span>
+            <span class="n">freqs_spsig</span><span class="p">,</span> <span class="n">psd_spsig</span> <span class="o">=</span> <span class="n">spsig</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">rollaxis</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)),</span>
+                                                 <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">,</span> <span class="n">nperseg</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">noverlap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs</span><span class="o">==</span><span class="n">freqs_spsig</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">psd</span><span class="o">==</span><span class="n">psd_spsig</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+        <span class="c1"># - generate multidimensional data for check of parameter `axis`</span>
+        <span class="n">num_channel</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">data_multidim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">))</span>
+        <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data_multidim</span><span class="p">)</span>
+        <span class="n">freqs_T</span><span class="p">,</span> <span class="n">psd_T</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data_multidim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">freqs</span><span class="o">==</span><span class="n">freqs_T</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">psd</span><span class="o">==</span><span class="n">psd_T</span><span class="o">.</span><span class="n">T</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="WelchPSDTestCase.test_welch_psd_input_types"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchPSDTestCase.test_welch_psd_input_types">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_psd_input_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a test data</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)),</span>
+                                   <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+                                   <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># outputs from AnalogSignal input are of Quantity type (standard usage)</span>
+        <span class="n">freqs_neo</span><span class="p">,</span> <span class="n">psd_neo</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_neo</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">psd_neo</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># outputs from Quantity array input are of Quantity type</span>
+        <span class="n">freqs_pq</span><span class="p">,</span> <span class="n">psd_pq</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_pq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">psd_pq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># outputs from Numpy ndarray input are NOT of Quantity type</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">psd_np</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_np</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">psd_np</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># check if the results from different input types are identical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs_neo</span><span class="o">==</span><span class="n">freqs_pq</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">psd_neo</span><span class="o">==</span><span class="n">psd_pq</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs_neo</span><span class="o">==</span><span class="n">freqs_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">psd_neo</span><span class="o">==</span><span class="n">psd_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="WelchPSDTestCase.test_welch_psd_multidim_input"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchPSDTestCase.test_welch_psd_multidim_input">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_psd_multidim_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate multidimensional data</span>
+        <span class="n">num_channel</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">))</span>
+        <span class="n">data_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span>
+        <span class="c1"># Since row-column order in AnalogSignal is different from the</span>
+        <span class="c1"># conventional one, `data_np` needs to be transposed when its used to</span>
+        <span class="c1"># define an AnalogSignal</span>
+        <span class="n">data_neo</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">data_np</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                       <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+                                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+        <span class="n">data_neo_1dim</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">data_np</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                       <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+                                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check if the results from different input types are identical</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">psd_np</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data_np</span><span class="p">,</span>
+                                                     <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="n">freqs_neo</span><span class="p">,</span> <span class="n">psd_neo</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data_neo</span><span class="p">)</span>
+        <span class="n">freqs_neo_1dim</span><span class="p">,</span> <span class="n">psd_neo_1dim</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_psd</span><span class="p">(</span><span class="n">data_neo_1dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">freqs_np</span><span class="o">==</span><span class="n">freqs_neo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">psd_np</span><span class="o">==</span><span class="n">psd_neo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">psd_neo_1dim</span><span class="o">==</span><span class="n">psd_neo</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="WelchCohereTestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchCohereTestCase">[docs]</a><span class="k">class</span> <span class="nc">WelchCohereTestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="WelchCohereTestCase.test_welch_cohere_errors"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchCohereTestCase.test_welch_cohere_errors">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_cohere_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a dummy data</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span> <span class="n">sampling_period</span><span class="o">=</span><span class="mf">0.001</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check for invalid parameter values</span>
+        <span class="c1"># - length of segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">len_seg</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">len_seg</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># - number of segments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">num_seg</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">num_seg</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># - frequency resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">freq_res</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">freq_res</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># - overlap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">overlap</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">overlap</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WelchCohereTestCase.test_welch_cohere_behavior"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchCohereTestCase.test_welch_cohere_behavior">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_cohere_behavior</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate data by adding white noise and a sinusoid</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">signal_freq</span> <span class="o">=</span> <span class="mf">100.0</span>
+        <span class="n">noise1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span>
+        <span class="n">noise2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">data_length</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span>
+        <span class="n">signal1</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">signal_freq</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_length</span><span class="o">*</span><span class="n">sampling_period</span><span class="p">,</span>
+                <span class="n">sampling_period</span><span class="p">)]</span>
+        <span class="n">signal2</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">signal_freq</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">data_length</span><span class="o">*</span><span class="n">sampling_period</span><span class="p">,</span>
+                <span class="n">sampling_period</span><span class="p">)]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal1</span><span class="o">+</span><span class="n">noise1</span><span class="p">),</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal2</span><span class="o">+</span><span class="n">noise2</span><span class="p">),</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># consistency between different ways of specifying segment length</span>
+        <span class="n">freqs1</span><span class="p">,</span> <span class="n">coherency1</span><span class="p">,</span> <span class="n">phase_lag1</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">len_seg</span><span class="o">=</span><span class="n">data_length</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">freqs2</span><span class="p">,</span> <span class="n">coherency2</span><span class="p">,</span> <span class="n">phase_lag2</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">num_seg</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">coherency1</span><span class="o">==</span><span class="n">coherency2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">phase_lag1</span><span class="o">==</span><span class="n">phase_lag2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">freqs1</span><span class="o">==</span><span class="n">freqs2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+        <span class="c1"># frequency resolution and consistency with data</span>
+        <span class="n">freq_res</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">freqs</span><span class="p">,</span> <span class="n">coherency</span><span class="p">,</span> <span class="n">phase_lag</span> <span class="o">=</span> <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">freq_res</span><span class="o">=</span><span class="n">freq_res</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">freq_res</span><span class="p">,</span> <span class="n">freqs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">coherency</span><span class="o">.</span><span class="n">argmax</span><span class="p">()],</span> <span class="n">signal_freq</span><span class="p">,</span>
+            <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">phase_lag</span><span class="p">[</span><span class="n">coherency</span><span class="o">.</span><span class="n">argmax</span><span class="p">()],</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">coherency_np</span><span class="p">,</span> <span class="n">phase_lag_np</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">,</span> <span class="n">freq_res</span><span class="o">=</span><span class="n">freq_res</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs</span> <span class="o">==</span> <span class="n">freqs_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">coherency</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">coherency_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">phase_lag</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">phase_lag_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+        <span class="c1"># - check the behavior of parameter `axis` using multidimensional data</span>
+        <span class="n">num_channel</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">x_multidim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">))</span>
+        <span class="n">y_multidim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">))</span>
+        <span class="n">freqs</span><span class="p">,</span> <span class="n">coherency</span><span class="p">,</span> <span class="n">phase_lag</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x_multidim</span><span class="p">,</span> <span class="n">y_multidim</span><span class="p">)</span>
+        <span class="n">freqs_T</span><span class="p">,</span> <span class="n">coherency_T</span><span class="p">,</span> <span class="n">phase_lag_T</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x_multidim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">y_multidim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">freqs</span><span class="o">==</span><span class="n">freqs_T</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coherency</span><span class="o">==</span><span class="n">coherency_T</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">phase_lag</span><span class="o">==</span><span class="n">phase_lag_T</span><span class="o">.</span><span class="n">T</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="WelchCohereTestCase.test_welch_cohere_input_types"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchCohereTestCase.test_welch_cohere_input_types">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_cohere_input_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate a test data</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)),</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)),</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">)</span>
+
+        <span class="c1"># outputs from AnalogSignal input are of Quantity type</span>
+        <span class="c1"># (standard usage)</span>
+        <span class="n">freqs_neo</span><span class="p">,</span> <span class="n">coherency_neo</span><span class="p">,</span> <span class="n">phase_lag_neo</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_neo</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">phase_lag_neo</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># outputs from Quantity array input are of Quantity type</span>
+        <span class="n">freqs_pq</span><span class="p">,</span> <span class="n">coherency_pq</span><span class="p">,</span> <span class="n">phase_lag_pq</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">*</span><span class="n">y</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_pq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">phase_lag_pq</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># outputs from Numpy ndarray input are NOT of Quantity type</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">coherency_np</span><span class="p">,</span> <span class="n">phase_lag_np</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs_np</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">phase_lag_np</span><span class="p">,</span> <span class="n">pq</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">Quantity</span><span class="p">))</span>
+
+        <span class="c1"># check if the results from different input types are identical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs_neo</span><span class="o">==</span><span class="n">freqs_pq</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">coherency_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">coherency_pq</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">phase_lag_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">phase_lag_pq</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">((</span><span class="n">freqs_neo</span><span class="o">==</span><span class="n">freqs_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">coherency_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">coherency_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span>
+                        <span class="p">(</span><span class="n">phase_lag_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">phase_lag_np</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="WelchCohereTestCase.test_welch_cohere_multidim_input"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.WelchCohereTestCase.test_welch_cohere_multidim_input">[docs]</a>    <span class="k">def</span> <span class="nf">test_welch_cohere_multidim_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># generate multidimensional data</span>
+        <span class="n">num_channel</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">data_length</span> <span class="o">=</span> <span class="mi">5000</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mf">0.001</span>
+        <span class="n">x_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">)))</span>
+        <span class="n">y_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_channel</span><span class="p">,</span> <span class="n">data_length</span><span class="p">)))</span>
+        <span class="c1"># Since row-column order in AnalogSignal is different from the</span>
+        <span class="c1"># convention in NumPy/SciPy, `data_np` needs to be transposed when its</span>
+        <span class="c1"># used to define an AnalogSignal</span>
+        <span class="n">x_neo</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">x_np</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">y_neo</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">y_np</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">x_neo_1dim</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">x_np</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">y_neo_1dim</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">AnalogSignal</span><span class="p">(</span><span class="n">y_np</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span>
+            <span class="n">sampling_period</span><span class="o">=</span><span class="n">sampling_period</span><span class="o">*</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># check if the results from different input types are identical</span>
+        <span class="n">freqs_np</span><span class="p">,</span> <span class="n">coherency_np</span><span class="p">,</span> <span class="n">phase_lag_np</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x_np</span><span class="p">,</span> <span class="n">y_np</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sampling_period</span><span class="p">)</span>
+        <span class="n">freqs_neo</span><span class="p">,</span> <span class="n">coherency_neo</span><span class="p">,</span> <span class="n">phase_lag_neo</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x_neo</span><span class="p">,</span> <span class="n">y_neo</span><span class="p">)</span>
+        <span class="n">freqs_neo_1dim</span><span class="p">,</span> <span class="n">coherency_neo_1dim</span><span class="p">,</span> <span class="n">phase_lag_neo_1dim</span> <span class="o">=</span>\
+            <span class="n">elephant</span><span class="o">.</span><span class="n">spectral</span><span class="o">.</span><span class="n">welch_cohere</span><span class="p">(</span><span class="n">x_neo_1dim</span><span class="p">,</span> <span class="n">y_neo_1dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">freqs_np</span><span class="o">==</span><span class="n">freqs_neo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coherency_np</span><span class="o">.</span><span class="n">T</span><span class="o">==</span><span class="n">coherency_neo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">phase_lag_np</span><span class="o">.</span><span class="n">T</span><span class="o">==</span><span class="n">phase_lag_neo</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coherency_neo_1dim</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">coherency_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">phase_lag_neo_1dim</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">phase_lag_neo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="suite"><a class="viewcode-back" href="../../../source/elephant.test.test_spectral.html#elephant.test.test_spectral.suite">[docs]</a><span class="k">def</span> <span class="nf">suite</span><span class="p">():</span>
+    <span class="n">suite</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">makeSuite</span><span class="p">(</span><span class="n">WelchPSDTestCase</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">suite</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TextTestRunner</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">suite</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,556 @@
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>elephant.test.test_sta &#8212; Elephant 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/my-styles.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../../../_static/elephant_favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default ">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html"><span><img src="../../../_static/elephant_logo_sidebar.png"></span>
+          Elephant</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.5</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Pages <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Prerequisites / Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Function Reference by Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developers_guide.html">Developers&#8217; guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc_style_guidelines.html">Documentation and style guideline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors and contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">This Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <h1>Source code for elephant.test.test_sta</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tests for the function sta module</span>
+
+<span class="sd">:copyright: Copyright 2015-2016 by the Elephant team, see AUTHORS.txt.</span>
+<span class="sd">:license: Modified BSD, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">numpy.testing</span> <span class="k">import</span> <span class="n">assert_array_equal</span>
+<span class="kn">from</span> <span class="nn">numpy.testing.utils</span> <span class="k">import</span> <span class="n">assert_array_almost_equal</span>
+<span class="kn">import</span> <span class="nn">neo</span>
+<span class="kn">from</span> <span class="nn">neo</span> <span class="k">import</span> <span class="n">AnalogSignal</span><span class="p">,</span> <span class="n">SpikeTrain</span>
+<span class="kn">from</span> <span class="nn">elephant.conversion</span> <span class="k">import</span> <span class="n">BinnedSpikeTrain</span>
+<span class="kn">import</span> <span class="nn">quantities</span> <span class="k">as</span> <span class="nn">pq</span>
+<span class="kn">from</span> <span class="nn">quantities</span> <span class="k">import</span> <span class="n">ms</span><span class="p">,</span> <span class="n">mV</span><span class="p">,</span> <span class="n">Hz</span>
+<span class="kn">import</span> <span class="nn">elephant.sta</span> <span class="k">as</span> <span class="nn">sta</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<div class="viewcode-block" id="sta_TestCase"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase">[docs]</a><span class="k">class</span> <span class="nc">sta_TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="sta_TestCase.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)),</span> 
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asiga2</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)),</span> 
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)),</span> 
+            <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st0</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">9</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">11</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">9</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">11</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="o">.</span><span class="n">t_stop</span><span class="p">),</span> 
+            <span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)]</span></div>
+
+    <span class="c1">#***********************************************************************</span>
+    <span class="c1">#************************ Test for typical values **********************</span>
+
+<div class="viewcode-block" id="sta_TestCase.test_spike_triggered_average_with_n_spikes_on_constant_function"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spike_triggered_average_with_n_spikes_on_constant_function">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_triggered_average_with_n_spikes_on_constant_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Signal should average to the input&#39;&#39;&#39;</span>
+        <span class="n">const</span> <span class="o">=</span> <span class="mf">13.8</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">const</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">201</span><span class="p">)</span>
+        <span class="n">asiga</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mf">5.6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">7.1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mf">16.3</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+        <span class="n">window_starttime</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">window_endtime</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span>
+            <span class="n">asiga</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="n">window_starttime</span><span class="p">,</span> <span class="n">window_endtime</span><span class="p">))</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(((</span><span class="n">window_endtime</span> <span class="o">-</span> <span class="n">window_starttime</span><span class="p">)</span> <span class="o">*</span>
+                <span class="n">asiga</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">)</span>
+        <span class="n">cutout</span> <span class="o">=</span> <span class="n">asiga</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span> <span class="n">a</span><span class="p">]</span>
+        <span class="n">cutout</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">window_starttime</span>
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">STA</span><span class="p">,</span> <span class="n">cutout</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_spike_triggered_average_with_shifted_sin_wave"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spike_triggered_average_with_shifted_sin_wave">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_triggered_average_with_shifted_sin_wave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Signal should average to zero&#39;&#39;&#39;</span>
+        <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="mf">5e-2</span> <span class="o">*</span> <span class="n">mV</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">STA</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span><span class="p">,</span> 
+                         <span class="n">pq</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;V&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dimensionality</span><span class="o">.</span><span class="n">simplified</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertLess</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">STA</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">target</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_only_one_spike"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_only_one_spike">[docs]</a>    <span class="k">def</span> <span class="nf">test_only_one_spike</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The output should be the same as the input&#39;&#39;&#39;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">sr</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="n">sr</span><span class="p">)</span>
+        <span class="n">spiketime</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">spiketime_in_ms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">spiketime</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([</span><span class="n">spiketime_in_ms</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+        <span class="n">window_starttime</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">window_endtime</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="n">window_starttime</span><span class="p">,</span> <span class="n">window_endtime</span><span class="p">))</span>
+        <span class="n">cutout</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="nb">int</span><span class="p">(((</span><span class="n">spiketime</span> <span class="o">+</span> <span class="n">window_starttime</span><span class="p">)</span> <span class="o">*</span> <span class="n">sr</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">):</span> 
+            <span class="nb">int</span><span class="p">(((</span><span class="n">spiketime</span> <span class="o">+</span> <span class="n">window_endtime</span><span class="p">)</span> <span class="o">*</span> <span class="n">sr</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="p">)]</span>
+        <span class="n">cutout</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="n">window_starttime</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">STA</span><span class="p">,</span> <span class="n">cutout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_usage_of_spikes"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_usage_of_spikes">[docs]</a>    <span class="k">def</span> <span class="nf">test_usage_of_spikes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([</span><span class="mf">16.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">17.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> 
+            <span class="mf">18.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mf">19.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">STA</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;used_spikes&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">STA</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="s1">&#39;unused_spikes&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+    <span class="c1">#***********************************************************************</span>
+    <span class="c1">#**** Test for an invalid value, to check that the function raises *****</span>
+    <span class="c1">#********* an exception or returns an error code ***********************</span>
+
+<div class="viewcode-block" id="sta_TestCase.test_analog_signal_of_wrong_type"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_analog_signal_of_wrong_type">[docs]</a>    <span class="k">def</span> <span class="nf">test_analog_signal_of_wrong_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Analog signal given as list, but must be AnalogSignal&#39;&#39;&#39;</span>
+        <span class="n">asiga</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="n">asiga</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_spiketrain_of_list_type_in_wrong_sense"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spiketrain_of_list_type_in_wrong_sense">[docs]</a>    <span class="k">def</span> <span class="nf">test_spiketrain_of_list_type_in_wrong_sense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_spiketrain_of_nonlist_and_nonspiketrain_type"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spiketrain_of_nonlist_and_nonspiketrain_type">[docs]</a>    <span class="k">def</span> <span class="nf">test_spiketrain_of_nonlist_and_nonspiketrain_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_forgotten_AnalogSignal_argument"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_forgotten_AnalogSignal_argument">[docs]</a>    <span class="k">def</span> <span class="nf">test_forgotten_AnalogSignal_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_one_smaller_nrspiketrains_smaller_nranalogsignals"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_one_smaller_nrspiketrains_smaller_nranalogsignals">[docs]</a>    <span class="k">def</span> <span class="nf">test_one_smaller_nrspiketrains_smaller_nranalogsignals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Number of spiketrains between 1 and number of analogsignals&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lst</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_more_spiketrains_than_analogsignals_forbidden"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_more_spiketrains_than_analogsignals_forbidden">[docs]</a>    <span class="k">def</span> <span class="nf">test_more_spiketrains_than_analogsignals_forbidden</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lst</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_spike_earlier_than_analogsignal"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spike_earlier_than_analogsignal">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_earlier_than_analogsignal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_spike_later_than_analogsignal"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_spike_later_than_analogsignal">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_later_than_analogsignal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">21</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">25</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_impossible_window"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_impossible_window">[docs]</a>    <span class="k">def</span> <span class="nf">test_impossible_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_window_larger_than_signal"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_window_larger_than_signal">[docs]</a>    <span class="k">def</span> <span class="nf">test_window_larger_than_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">15</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_wrong_window_starttime_unit"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_wrong_window_starttime_unit">[docs]</a>    <span class="k">def</span> <span class="nf">test_wrong_window_starttime_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mV</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_wrong_window_endtime_unit"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_wrong_window_endtime_unit">[docs]</a>    <span class="k">def</span> <span class="nf">test_wrong_window_endtime_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Hz</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_window_borders_as_complex_numbers"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_window_borders_as_complex_numbers">[docs]</a>    <span class="k">def</span> <span class="nf">test_window_borders_as_complex_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">asiga0</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="p">((</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">3</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">3</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+    <span class="c1">#***********************************************************************</span>
+    <span class="c1">#**** Test for an empty value (where the argument is a list, array, ****</span>
+    <span class="c1">#********* vector or other container datatype). ************************</span>
+
+<div class="viewcode-block" id="sta_TestCase.test_empty_analogsignal"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_empty_analogsignal">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_analogsignal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">asiga</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">([],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([</span><span class="mi">5</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">,</span> 
+            <span class="n">asiga</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_one_spiketrain_empty"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_one_spiketrain_empty">[docs]</a>    <span class="k">def</span> <span class="nf">test_one_spiketrain_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Test for one empty SpikeTrain, but existing spikes in other&#39;&#39;&#39;</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="p">[</span><span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">9</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">11</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> 
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="o">.</span><span class="n">t_stop</span><span class="p">),</span> 
+            <span class="n">SpikeTrain</span><span class="p">([],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)]</span>
+        <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span>
+        <span class="n">cmp_array</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+        <span class="n">cmp_array</span> <span class="o">=</span> <span class="n">cmp_array</span> <span class="o">/</span> <span class="mf">0.</span>
+        <span class="n">cmp_array</span><span class="o">.</span><span class="n">t_start</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">STA</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">cmp_array</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="sta_TestCase.test_all_spiketrains_empty"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sta_TestCase.test_all_spiketrains_empty">[docs]</a>    <span class="k">def</span> <span class="nf">test_all_spiketrains_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">([],</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="o">.</span><span class="n">t_stop</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+            <span class="c1"># Cause all warnings to always be triggered.</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;always&quot;</span><span class="p">)</span>
+            <span class="c1"># Trigger warnings.</span>
+            <span class="n">STA</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_triggered_average</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">asiga1</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">ms</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="s2">&quot;No spike at all was either found or used &quot;</span>
+                             <span class="s2">&quot;for averaging&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+            <span class="n">nan_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+            <span class="n">nan_array</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">cmp_array</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nan_array</span><span class="p">,</span> <span class="n">nan_array</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">10</span> <span class="o">/</span> <span class="n">ms</span><span class="p">)</span>
+            <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">STA</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">cmp_array</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># =========================================================================</span>
+<span class="c1"># Tests for new scipy verison (with scipy.signal.coherence)</span>
+<span class="c1"># =========================================================================</span>
+
+<span class="nd">@unittest</span><span class="o">.</span><span class="n">skipIf</span><span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="p">,</span> <span class="s1">&#39;coherence&#39;</span><span class="p">),</span> <span class="s2">&quot;Please update scipy &quot;</span>
+                                                        <span class="s2">&quot;to a version &gt;= 0.16&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="sfc_TestCase_new_scipy"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy">[docs]</a><span class="k">class</span> <span class="nc">sfc_TestCase_new_scipy</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># standard testsignals</span>
+        <span class="n">tlen0</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="mf">20.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">fs0</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span> <span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">fs0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">t0</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span><span class="p">),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st0</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">tlen0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+
+        <span class="c1"># shortened analogsignals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">99</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># increased sampling frequency</span>
+        <span class="n">fs1</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig3</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">t0</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span><span class="p">),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="n">fs1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst1</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="o">.</span><span class="n">time_slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anasig3</span><span class="o">.</span><span class="n">t_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">anasig3</span><span class="o">.</span><span class="n">t_stop</span><span class="p">),</span>
+            <span class="n">binsize</span><span class="o">=</span><span class="n">fs1</span><span class="p">)</span>
+
+        <span class="c1"># analogsignal containing multiple traces</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig4</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">t0</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">t0</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)])</span><span class="o">.</span>
+            <span class="n">transpose</span><span class="p">(),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+
+        <span class="c1"># shortened spike train</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st3</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="o">.</span><span class="mi">25</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="o">.</span><span class="mi">75</span><span class="p">),</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">tlen0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst3</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st3</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">st4</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="o">.</span><span class="mi">25</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">*</span> <span class="o">.</span><span class="mi">75</span><span class="p">),</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mi">5</span> <span class="o">*</span> <span class="n">fs0</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">tlen0</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">fs0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst4</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st4</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+
+        <span class="c1"># spike train with incompatible binsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst5</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st3</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span> <span class="o">*</span> <span class="mf">2.</span><span class="p">)</span>
+
+        <span class="c1"># spike train with same binsize as the analog signal, but with</span>
+        <span class="c1"># bin edges not aligned to the time axis of the analog signal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst6</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">st3</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mf">4.5</span> <span class="o">*</span> <span class="n">fs0</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">tlen0</span> <span class="o">-</span> <span class="mf">4.5</span> <span class="o">*</span> <span class="n">fs0</span><span class="p">)</span></div>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># Tests for correct input handling</span>
+    <span class="c1"># =========================================================================</span>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_wrong_input_type"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_wrong_input_type">[docs]</a>    <span class="k">def</span> <span class="nf">test_wrong_input_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="o">.</span><span class="n">duplicate_with_new_array</span><span class="p">([]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_start_stop_times_out_of_range"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_start_stop_times_out_of_range">[docs]</a>    <span class="k">def</span> <span class="nf">test_start_stop_times_out_of_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_non_matching_input_binning"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_non_matching_input_binning">[docs]</a>    <span class="k">def</span> <span class="nf">test_non_matching_input_binning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_incompatible_spiketrain_analogsignal"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_incompatible_spiketrain_analogsignal">[docs]</a>    <span class="k">def</span> <span class="nf">test_incompatible_spiketrain_analogsignal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># These spike trains have incompatible binning (binsize or alignment to</span>
+        <span class="c1"># time axis of analog signal)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span>
+                          <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst6</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_signal_dimensions"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_signal_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">test_signal_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># single analogsignal trace and single spike train</span>
+        <span class="n">s_single</span><span class="p">,</span> <span class="n">f_single</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f_single</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s_single</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># multiple analogsignal traces and single spike train</span>
+        <span class="n">s_multi</span><span class="p">,</span> <span class="n">f_multi</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anasig4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f_multi</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s_multi</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># frequencies are identical since same sampling frequency was used</span>
+        <span class="c1"># in both cases and data length is the same</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">f_single</span><span class="p">,</span> <span class="n">f_multi</span><span class="p">)</span>
+        <span class="c1"># coherences of s_single and first signal in s_multi are identical,</span>
+        <span class="c1"># since first analogsignal trace in anasig4 is same as in anasig0</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">s_single</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">s_multi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_non_binned_spiketrain_input"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_non_binned_spiketrain_input">[docs]</a>    <span class="k">def</span> <span class="nf">test_non_binned_spiketrain_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">)</span>
+
+        <span class="n">f_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">f</span> <span class="o">&gt;=</span> <span class="mf">19.</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">f_ind</span><span class="p">,</span> <span class="n">max_ind</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">f_ind</span><span class="p">],</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span></div>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># Tests for correct return values</span>
+    <span class="c1"># =========================================================================</span>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_spike_field_coherence_perfect_coherence"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_spike_field_coherence_perfect_coherence">[docs]</a>    <span class="k">def</span> <span class="nf">test_spike_field_coherence_perfect_coherence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># check for detection of 20Hz peak in anasig0/bst0</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;boxcar&#39;</span><span class="p">)</span>
+
+        <span class="n">f_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">f</span> <span class="o">&gt;=</span> <span class="mf">19.</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">f_ind</span><span class="p">,</span> <span class="n">max_ind</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertAlmostEqual</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">f_ind</span><span class="p">],</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_output_frequencies"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_output_frequencies">[docs]</a>    <span class="k">def</span> <span class="nf">test_output_frequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nfft</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anasig3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst1</span><span class="p">,</span> <span class="n">nfft</span><span class="o">=</span><span class="n">nfft</span><span class="p">)</span>
+
+        <span class="c1"># check number of frequency samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">nfft</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># check values of frequency samples</span>
+        <span class="n">assert_array_almost_equal</span><span class="p">(</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">anasig3</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="s1">&#39;Hz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">nfft</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sfc_TestCase_new_scipy.test_short_spiketrain"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_new_scipy.test_short_spiketrain">[docs]</a>    <span class="k">def</span> <span class="nf">test_short_spiketrain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># this spike train has the same length as anasig0</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">f1</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst3</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;boxcar&#39;</span><span class="p">)</span>
+
+        <span class="c1"># this spike train has the same spikes as above, but is shorter than</span>
+        <span class="c1"># anasig0</span>
+        <span class="n">s2</span><span class="p">,</span> <span class="n">f2</span> <span class="o">=</span> <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst4</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s1">&#39;boxcar&#39;</span><span class="p">)</span>
+
+        <span class="c1"># the results above should be the same, nevertheless</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        <span class="n">assert_array_equal</span><span class="p">(</span><span class="n">f1</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">f2</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># =========================================================================</span>
+<span class="c1"># Tests for old scipy verison (without scipy.signal.coherence)</span>
+<span class="c1"># =========================================================================</span>
+
+<span class="nd">@unittest</span><span class="o">.</span><span class="n">skipIf</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="p">,</span> <span class="s1">&#39;coherence&#39;</span><span class="p">),</span> <span class="s1">&#39;Applies only for old &#39;</span>
+                                                     <span class="s1">&#39;scipy versions (&lt;0.16)&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="sfc_TestCase_old_scipy"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_old_scipy">[docs]</a><span class="k">class</span> <span class="nc">sfc_TestCase_old_scipy</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="sfc_TestCase_old_scipy.setUp"><a class="viewcode-back" href="../../../source/elephant.test.test_sta.html#elephant.test.test_sta.sfc_TestCase_old_scipy.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># standard testsignals</span>
+        <span class="n">tlen0</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="mf">20.</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">Hz</span>
+        <span class="n">fs0</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span> <span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span>
+            <span class="n">fs0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span> <span class="o">=</span> <span class="n">AnalogSignal</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">t0</span><span class="p">)</span><span class="o">.</span><span class="n">simplified</span><span class="o">.</span><span class="n">magnitude</span><span class="p">),</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">pq</span><span class="o">.</span><span class="n">mV</span><span class="p">,</span> <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">sampling_period</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">st0</span> <span class="o">=</span> <span class="n">SpikeTrain</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlen0</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span>
+            <span class="n">t_start</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">pq</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">t_stop</span><span class="o">=</span><span class="n">tlen0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span> <span class="o">=</span> <span class="n">BinnedSpikeTrain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">st0</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="n">fs0</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">test_old_scipy_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span>  <span class="n">sta</span><span class="o">.</span><span class="n">spike_field_coherence</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">anasig0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bst0</span><span class="p">)</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2014-2018, Elephant authors and contributors.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
