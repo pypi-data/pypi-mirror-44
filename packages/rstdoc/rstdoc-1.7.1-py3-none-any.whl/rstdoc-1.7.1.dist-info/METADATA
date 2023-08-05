@@ -1,0 +1,464 @@
+Metadata-Version: 2.1
+Name: rstdoc
+Version: 1.7.1
+Summary: rstdoc - support documentation in restructedText (rst)
+Home-page: https://github.com/rpuntaie/rstdoc
+Author: Roland Puntaier
+Author-email: roland.puntaier@gmail.com
+License: MIT
+Keywords: Documentation
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Intended Audience :: Information Technology
+Classifier: Topic :: Utilities
+Provides-Extra: build
+Provides-Extra: develop
+Requires-Dist: cffi
+Requires-Dist: cairocffi
+Requires-Dist: cairosvg
+Requires-Dist: pillow
+Requires-Dist: pyx
+Requires-Dist: pyfca
+Requires-Dist: pygal
+Requires-Dist: numpy
+Requires-Dist: matplotlib
+Requires-Dist: sympy
+Requires-Dist: pint
+Requires-Dist: drawsvg
+Requires-Dist: svgwrite
+Requires-Dist: stpl
+Requires-Dist: pypandoc
+Requires-Dist: docutils
+Requires-Dist: sphinx
+Requires-Dist: sphinx-bootstrap-theme
+Provides-Extra: build
+Requires-Dist: waf; extra == 'build'
+Provides-Extra: develop
+Requires-Dist: mock; extra == 'develop'
+Requires-Dist: virtualenv; extra == 'develop'
+Requires-Dist: pytest-coverage; extra == 'develop'
+
+
+Many companies use `DOCX <http://www.ecma-international.org/publications/standards/Ecma-376.htm>`_
+and thus produce an information barrier.
+Working with text is more integrated in the (software) development process.
+A final format can be `DOCX`_, but, at least during development, text is better.
+
+`Sphinx <http://www.sphinx-doc.org/en/stable/>`__
+is an extension of `Docutils <http://docutils.sourceforge.net/>`__
+used for many (software) projects,
+but it does not support creation of `DOCX`_ files, which certain companies demand.
+`Pandoc <https://pandoc.org/>`__
+does support `DOCX`_, but does not support the Sphinx extensions,
+hence ``:ref:`` and the like cannot be used.
+
+This python package supports working with 
+`RST <http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>`_
+as documentation format without depending on Sphinx.
+
+- link RST documents (``.rest``) using 
+  `substitutions <http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#substitution-definitions>`__
+  (generated in ``_links_xxx.rst``)
+- create a ``.tags`` file to jump around in an editor that support 
+  `ctags <http://ctags.sourceforge.net/FORMAT>`__
+- `RST`_ handling with python: reformat/create `RST`_ tables
+- postprocess Pandoc's conversion from `DOCX`_ to `RST`_
+- preprocess Pandoc's conversion from `RST`_ to `DOCX`_
+- Support in building with `WAF <https://github.com/waf-project/waf>`_ (or ``Makefile``)
+
+  - expand 
+    `SimpleTemplate <https://bottlepy.org/docs/dev/stpl.html#simpletemplate-syntax>`_ 
+    template files ``.stpl``
+  - graphics files (``.tikz``, ``.svg``, ``.dot``,  ``.uml``, ``.eps`` or ``.stpl`` thereof, and ``.pyg``)
+    are converted to ``.png``
+    and placed into ``./_images`` or ``../_images``
+  - a ``gen`` file specifies how `RST`_ should be generated from source code files (see ``dcx.py``)
+
+The conventions used are shown 
+
+- by the example produced via ``rstdcx --rest samplerstdoc`` or ``rstdcx --stpl sampletemplated``
+- by the documentation sources that can be found at 
+  https://github.com/rpuntaie/rstdoc/tree/master/doc 
+
+``pip install rstdoc`` installs:
+
++-----------+------------------+--------------------------------------------+
+| Module    | CLI Script       | Description                                |
++===========+==================+============================================+
+| dcx       | `rstdcx`_, rstoc | create ``.tags``, labels and links         |
++-----------+------------------+--------------------------------------------+
+| fromdocx  | `rstfromdocx`_   | Convert DOCX to RST using Pandoc           |
++-----------+------------------+--------------------------------------------+
+| listtable | `rstlisttable`_  | Convert RST grid tables to list-tables     |
++-----------+------------------+--------------------------------------------+
+| untable   | `rstuntable`_    | Converts certain list-tables to paragraphs |
++-----------+------------------+--------------------------------------------+
+| reflow    | `rstreflow`_     | Reflow paragraphs and tables               |
++-----------+------------------+--------------------------------------------+
+| reimg     | `rstreimg`_      | Rename images referenced in the RST file   |
++-----------+------------------+--------------------------------------------+
+| retable   | `rstretable`_    | Transforms list tables to grid tables      |
++-----------+------------------+--------------------------------------------+
+
+
+
+
+rstdcx
+======
+
+Support script to create documentation (PDF, HTML, DOCX)
+from restructuredText (RST, reST) using either
+
+- `Pandoc <https://pandoc.org>`__
+- `Sphinx <http://www.sphinx-doc.org>`__
+- Docutils
+  `configurable <http://docutils.sourceforge.net/docs/user/config.html>`__
+
+``rstdoc`` installs the ``rstdcx`` command line tool that calls ``dcx.py``.
+It
+
+- processes ``gen`` files (see examples produced by --rest)
+
+- handles `.stpl <https://bottlepy.org/docs/dev/stpl.html>`__ files
+
+- creates ``.tags`` to jump around with the editor
+
+- creates links files like
+  ``_links_pdf.rst``, ``_links_docx.rst``, ``_links_sphinx.rst``
+
+- forwards known files to either Pandoc, Sphinx or Docutils
+
+  Sphinx ``conf.py`` is augmented by configuration for Pandoc and Docutils.
+  It should be where the input file is or above. If used with
+  `waf <https://github.com/waf-project/waf>`__,
+  it can also be where the main wscript is.
+
+See example at the end of ``dcx.py``.
+It is supposed to be used with a build tool.
+``make`` and ``waf`` examples are included.
+
+- Initialize example tree.
+  This copies ``dcx.py`` into the example tree
+  to be independent from possible future changes::
+
+  $ ./dcx.py --rest tmp #.rest files OR
+  $ ./dcx.py --stpl tmp #.rest.stpl files
+
+- Only create .tags and ``_links_xxx.rst``::
+
+  $ cd tmp/doc
+  $ ./dcx.py
+
+- Create the docs (and .tags and ``_links_xxx.rst``) with **make**::
+
+  $ make html #OR
+  $ make epub #OR
+  $ make latex #OR
+  $ make docx #OR
+  $ make pdf
+
+  The latter two are done by Pandoc, the others by Sphinx.
+
+- Create the docs (and .tags and ``_links_xxx.rst``) with
+  `waf <https://github.com/waf-project/waf>`__:
+
+  Instead of using ``make`` one can load ``dcx.py`` in
+  `waf <https://github.com/waf-project/waf>`__.
+  ``waf`` also considers all recursively included files,
+  such that a change in any of them results in a rebuild of the documentation.
+  All files can have an additional ``.stpl`` extension to use
+  `SimpleTemplate <https://bottlepy.org/docs/dev/stpl.html>`__.
+
+  $ waf configure #also copies the latest version of waf in here
+  $ waf --docs docx,sphinx_html,rst_odt
+  $ #or you provide --docs during configure to always compile the docs
+
+  - ``rst_xxx`` via
+    `rst2xxx.py <http://docutils.sourceforge.net/docs/user/tools.html>`__
+  - ``sphinx_xxx`` via `Sphinx <http://www.sphinx-doc.org>`__ and
+  - just ``xxx`` via `Pandoc <https://pandoc.org>`__.
+
+
+The following image language files should be parallel to the ``.rest`` files.
+They are automatically converted to ``.png``
+and placed into ``./_images`` or ``../_images``.
+
+- ``.tikz`` or ``.tikz.stpl``.
+  This needs LaTex.
+
+- `.svg <http://svgpocketguide.com/book/>`__ or ``.svg.stpl``
+
+- ``.dot`` or ``.dot.stpl``
+
+  This needs `graphviz <https://graphviz.gitlab.io/gallery/>`__.
+
+- `.uml <http://plantuml.com/command-line>`__ or ``.uml.stpl``
+
+  This needs `plantuml <http://plantuml.com/command-line>`__ .
+  Provide either
+
+  - ``plantuml.bat`` with e.g. ``java -jar "%~dp0plantuml.jar" %*``  or
+  - ``plantuml`` sh script with
+    ``java -jar `dirname $BASH_SOURCE`/plantuml.jar "$@"``
+
+- ``.eps`` or ``.eps.stpl`` embedded postscript files.
+
+  This needs `inkscape <https://inkscape.org/en/>`__.
+
+- ``.pyg`` contains python code that produces a graphic.
+  If the python code defines a ``to_svg`` or a ``save_to_png`` function,
+  then that is used, to create a png.
+  Else the following is tried
+
+  - ``pyx.canvas.canvas`` from the
+    `pyx <http://pyx.sourceforge.net/manual/graphics.html>`__ library or
+  - ``cairocffi.Surface`` from
+    `cairocffi <https://cairocffi.readthedocs.io/en/stable/overview.html>`__
+  - `matplotlib <https://matplotlib.org>`__.
+    If ``matplotlib.pyplot.get_fignums()>1``
+    the figures result in ``<name><fignum>.png``
+
+  The same code or the file names can be used in a ``.rest.stpl`` file
+  with ``pngembed()`` or ``dcx.svgembed()`` to embed in html output.
+
+  ::
+
+     {{!svgembed("egpyx.pyg",outinfo)}}
+     <%
+     ansvg=svgembed('''
+     from svgwrite import cm, mm, drawing
+     d=drawing.Drawing(viewBox=('0 0 300 300'))
+     d.add(d.circle(center=(2*cm, 2*cm), r='1cm', stroke='blue', stroke_width=9))
+     '''.splitlines(),outinfo)
+     %>
+     {{!ansvg}}
+
+
+Conventions
+-----------
+
+- Files
+
+  - main docs end in ``.rest``
+  - ``.rst`` are included and ignored by Sphinx (see ``conf.py``).
+  - ``.txt`` are literally included (use :literal: option).
+  - templates ``x.rest.stpl`` and ``y.rst.stpl`` are rendered separately.
+  - ``some.rst.tpl`` are template included
+    Template lookup is done in
+    ``.`` and ``..`` with respect to the current file.
+
+    - with ``%include('some.rst.tpl', param="test")`` with optional parameters
+    - with ``%globals().update(include('utility.rst.tpl'))``
+      if it contains only definitions
+
+- ``.. _`id`:`` are *reST targets*.
+  reST targets should not be template-generated.
+  The template files should have a higher or equal number of targets
+  than the generated file,
+  in order for tags to jump to the template original.
+  If one wants to generate reST targets,
+  then this should better happen in a previous step,
+  e.g. with ``gen`` files mentioned above.
+
+- References use replacement `substitutions \
+  <http://docutils.sourceforge.net/docs/ref/rst/directives.html#replacement-text>`__:
+  ``|id|``.
+
+- If you want an overview of the linking (traceability),
+  add ``.. include:: _traceability_file.rst``
+  to ``index.rest`` or another ``.rest`` file.
+  It is there in the generated samples to include it in tests.
+  You might want to remove that line, if you start with the samples.
+
+See the example created with ``--rest`` or ``--stpl``
+at the end of this file and the sources of the documentation of
+`rstdoc <https://github.com/rpuntaie/rstdoc>`__.
+
+
+
+Integrates Sphinx, Pandoc and Docutils to produce output supported by any of them.
+To use all three, restructuredText must not use Sphinx extensions.
+Input file, dir or - for stdin.
+
+
+rstfromdocx
+===========
+
+| rstfromdocx: shell command
+| fromdocx: rstdoc module
+
+Convert DOCX to RST in a subfolder of current dir, named after the DOCX file.
+It also creates ``conf.py``, ``index.py`` and ``Makefile``
+and copies ``dcx.py`` into the folder.
+
+See |rstdcx| for format conventions for the RST.
+
+There are options to post-process through::
+
+    --listtable (--join can be provided)
+    --untable
+    --reflow (--sentence True,  --join 0)
+    --reimg
+
+``rstfromdocx -lurg`` combines all of these.
+
+To convert more DOCX documents into the same
+RST documentation folder, proceed like this:
+
+- rename/copy the original DOCX to the name you want for the ``.rest`` file
+- run ``rstfromdocx -lurg doc1.docx``; instead of -lurg use your own options
+- check the output in the ``doc1`` subfolder
+- repeat the previous 2 steps with the next DOCX files
+- create a new folder, e.g. ``doc``
+- merge all other folders into that new folder
+
+``fromdocx.docx_rst_5`` creates 5 different rst files with different postprocessing.
+
+See |rstreflow| for an alternative proceeding.
+
+
+
+rstlisttable
+============
+
+| rstlisttable: shell command
+| listable: rstdoc module
+
+Convert RST grid tables to list-tables.
+
+#. Convert grid tables in a file to list-tables. The result is output to stdout::
+
+    $ listtable.py input.rst
+
+#. Convert several files::
+
+    $ listtable.py input1.rst input2.rst
+    $ listtable.py *.rst
+
+#. Use pipe (but ``cat`` might not keep the encoding)::
+
+    $ cat in.rst | listtable.py -  | untable.py - > out.rst
+
+Options
+-------
+-j, --join       e.g.002. Join method per column: 0="".join; 1=" ".join; 2="\\n".join
+
+
+
+
+rstuntable
+==========
+
+| rstuntable: shell command
+| untable: rstdoc module
+
+Convert tables of following format to paragraphs with an ID.
+The '-' in ID is removed and the ID is made lower case.
+**Bold** is removed.
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 0
+
+   * - **ID-XY-00**
+     - text goes here
+
+   * - **ID-XY-01**
+     - text again goes here
+
+
+If the first entry does contain no word chars or spaces between words,
+then the table stays. For a different behavior replace paragraph23.
+
+A file produced from a docx using pandoc or ``fromdocx.py`` will
+need a pre-processing via ``rstlisttable`` to convert grid tables to ``list-table`` tables.
+This is done in one step with ``rstfromdocx -lu doc.rst``.
+
+
+
+rstreflow
+=========
+
+| rstreflow: shell command
+| reflow: rstdoc module
+
+Reflow tables and paragraphs in a rst document produced from a docx.
+
+Post-process a docx in this order::
+
+    rstfromdocx doc.docx
+    rstlisttable doc/doc.rst > doc/tmp.rst
+    rstuntable doc/tmp.rst > doc/tmp1.rst
+    rstreflow doc/tmp1.rst > doc/tmp2.rst
+    rstreimg doc/tmp2.rst > doc/tmp3.rst
+    rm doc/doc.rst
+    mv doc/tmp3.rst doc/doc.rst
+    rm doc/tmp*
+
+Check the intermediate results.
+
+Else one can also do inplace::
+
+    rstfromdocx doc.docx
+    rstlisttable -i doc/doc.rst
+    rstuntable -i doc/doc.rst
+    rstreflow -i doc/doc.rst
+    rstreimg -i doc/doc.rst
+
+.. note:: DOCX to RST using Pandoc
+
+   ``rstfromdocx -lurg doc.rst`` converts a docx to RST and
+   does all the post-processing in one step.
+
+   It is adviced, though, to compare the output with the original and do some manual
+   corrections here and there.
+
+
+
+rstreimg
+========
+
+| rstreimg: shell command
+| reimg: rstdoc module
+
+Reimg renames the images in the rst file and the files themselves.
+It uses part of the document name and a number as new names.
+
+This is useful, if more RST documents converted from DOCX
+should be combined in one directory and
+the names of the images have no meaning (image13,...).
+
+
+
+rstretable
+==========
+
+| rstretable: shell command
+| retable: rstdoc module
+
+Transforms list tables to grid tables.
+
+This file also contains the code from
+the Vim plugin 
+`vim-rst-tables-py3 <https://github.com/ossobv/vim-rst-tables-py3>`__,
+plus some little fixes.
+``rstdoc`` is used by the Vim plugin
+`vim_py3_rst <https://github.com/rpuntaie/vim_py3_rst>`__
+, which replaces
+`vim-rst-tables-py3 <https://github.com/ossobv/vim-rst-tables-py3>`__.
+
+.. |rstdcx| replace:: `rstdcx <#rstdcx>`__
+.. |rstfromdocx| replace:: `rstfromdocx <#rstfromdocx>`__
+.. |rstlisttable| replace:: `rstlisttable <#rstlisttable>`__
+.. |rstuntable| replace:: `rstuntable <#rstuntable>`__
+.. |rstreflow| replace:: `rstreflow <#rstreflow>`__
+.. |rstreimg| replace:: `rstreimg <#rstreimg>`__
+.. |rstretable| replace:: `rstretable <#rstretable>`__
+
+
