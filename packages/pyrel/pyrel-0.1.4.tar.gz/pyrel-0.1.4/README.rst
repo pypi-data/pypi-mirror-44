@@ -1,0 +1,236 @@
+*****
+pyrel
+*****
+
+Pyrel is an efficient python library for working with and manipulating `binary relations`_. Pyrel exposes the C library `Kure`_ which provides a very fast implementation of binary relations based on `Binary Decision Diagrams`_.
+
+The following operations of relation algebra are provided:
+
+* empty
+* universal
+* identity
+* meet (intersection)
+* join (union)
+* transpose (converse)
+* complement (negation)
+* compose (multiplication)
+* equals
+* isSuperset
+* isSubset
+* isStrictSuperset
+* isStrictSubset
+
+Installation
+============
+using pip:
+
+.. code-block:: bash
+
+    pip install pyrel
+
+or downloading with git:
+
+.. code-block:: bash
+
+    git clone https://github.com/Peter-Roger/pyrel.git
+    cd pyrel
+    python3 setup.py build install
+
+Requirements
+------------
+
+Pyrel works on Ubuntu and macOS. It has not been tested on other systems,
+but it is possible it could work with some modification.
+
+C Library Dependencies:
+
+* glib-2.0
+* gmp
+* m
+
+If you are missing these libraries just install them with your package manager.
+
+Pyrel includes a modified version of Kure (and its dependency Cudd-2.5.1) as
+source. As long as the aforementioned dependencies are installed in standard
+locations on your system, Kure will be built automatically during installation.
+
+
+Quick Start
+===========
+
+The following provides some examples as a tutorial on how to use pyrel.
+For a complete description you should consult the documented module `source code`_.
+
+Relations are represented as matrices and can be visualised by printing them. An 'X' at *col x* and *row y* denotes that *x* is related to *y* in the relation. Contrariwise a '.' denotes that *x* is not related to *y*.
+
+
+Creating relations
+------------------
+.. code-block:: python
+
+    import pyrel
+
+    # create a pyrel context
+    context = pyrel.PyrelContext()
+
+    # create a new 3x3 empty relation
+    rel = context.new(3,3)
+    print(rel)
+
+.. code-block:: bash
+
+    ...
+    ...
+    ...
+
+Setting bits
+------------
+.. code-block:: python
+
+    # a list of ordered pairs
+    bits = [(0,0),(0,1),(0,2)]
+    rel = context.new(3,3)
+    rel.set_bits(bits)
+    print(rel)
+
+    # set bits at random
+    rel.random()
+    print(rel)
+
+    # unsets all bits
+    rel.clear()
+    print(rel)
+
+.. code-block:: bash
+
+    XXX
+    ...
+    ...
+
+    .X.
+    ..X
+    X.X
+
+    ...
+    ...
+    ...
+
+.. code-block:: python
+
+    # set bits at creation
+    bits = [(0,0),(0,1),(0,2)]
+    rel = context.new(3,3,bits)
+    print(rel)
+
+    # set single bit
+    rel.set_bit(2,2)
+    print(rel)
+
+    # unset bit
+    rel.set_bit(0,1,yesno=False)
+    print(rel)
+
+    # unset bits
+    rel.set_bits([(0,0),(2,2)],yesno=False)
+    print(rel)
+
+.. code-block:: bash
+
+    XXX
+    ...
+    ...
+
+    XXX
+    ...
+    ..X
+
+    X.X
+    ...
+    ..X
+
+    ..X
+    ...
+    ...
+
+Operations
+----------
+.. code-block:: python
+
+    rel = context.new(3,3).identity()
+    print(rel)
+
+    r = context.new(3,3, [(0,0),(0,1),(0,2)])
+    print(r)
+
+    s = r.transpose()
+    print(s)
+
+    m = r1.meet(r2)
+    print(m)
+
+    m = r1.join(r2)
+    print(m)
+
+.. code-block:: bash
+
+    X..
+    .X.
+    ..X
+
+    XXX
+    ...
+    ...
+
+    X..
+    X..
+    X..
+
+    X..
+    ...
+    ...
+
+    XXX
+    X..
+    X..
+
+.. code-block:: python
+
+    r = context.new(3,3, [(0,1),(0,2),(2,1)])
+    print(r)
+
+    s = context.new(3,3, [(1,1),(2,2)])
+    print(s)
+
+    g = r.composition(s)
+    print(g)
+
+    g.isSubset(g.universal())
+
+.. code-block:: bash
+
+    .XX
+    ...
+    .X.
+
+    ...
+    .X.
+    ..X
+
+    .XX
+    ...
+    .X.
+
+    >>> True
+
+Possible Future Work
+--------------------
+
+* the ability to import relations from a file
+* the ability to export relations to a file
+* extend support for more relation operations
+
+
+.. _binary relations: https://en.wikipedia.org/wiki/Binary_relation
+.. _Kure: https://www.informatik.uni-kiel.de/~progsys/kure2/
+.. _Binary Decision Diagrams: https://en.wikipedia.org/wiki/Binary_decision_diagram
+.. _source code: https://github.com/Peter-Roger/pyrel/blob/master/pyrel/pyrel.py
