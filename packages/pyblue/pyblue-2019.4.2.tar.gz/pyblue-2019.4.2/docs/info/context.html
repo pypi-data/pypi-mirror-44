@@ -1,0 +1,70 @@
+{# title = More About Contexts #}
+{# foo = 1234.5 #}
+{# bar = [ 100, 200, "Hello World" ] #}
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ page.title }}</title>
+    {%  assets %}
+</head>
+
+
+<body class="language-bash">
+
+{% markdown %}
+
+# {{ page.title }}
+
+The word "context" refers to data that can be used during the rendering of a page.
+
+### Default Context
+
+There are two ways to get context into each page. The first is via template comments.
+
+Writing
+{% verbatim %} <code>{# title = More About Context #}</code> {% endverbatim %}
+
+at the top of the HTML page will create the variable <code>title</code> that
+can be used in the page as {% verbatim %}<code>{{ page.title }}</code>{% endverbatim %}
+to produce: {{page.title}}
+
+To add more variables list them one on each line. To add data beyond a simple string use the JSON format:
+
+{% code "django-comments" %}
+
+Note that in the last example for <code>bar</code> gets turned into python list accessible as
+{% verbatim %}<code>{{ page.bar }}</code> {% endverbatim %}
+to produce {{page.bar}}.
+
+The {% verbatim %}<code>{{ page.bar }}</code> {% endverbatim %} object can also be looped over with Django
+to produce:
+
+{% for elem in page.bar %}
+* {{ elem }}
+{% endfor %}
+
+### Advanced Context
+
+The second method of getting context into a page is a python module named <code>context.py</code>
+placed in the directory root. This may contain
+any python construct. Make sure that this python module can be executed without errors.
+
+The content of this module will be visible under the parameter data
+{% verbatim %}<code>{{ context }}</code>{% endverbatim %} variable name.
+
+Example supposed that the `context.py` file contains the following:
+
+{% code "context.py" lang='python' %}
+
+This file has to be in the root location of the site. We can now access the contents of this module
+via `context` variable like
+so {% verbatim %}<code>{{ context.greeting }}</code>{% endverbatim %} will produce: {{ context.greeting }}
+
+Go back to: {% link "index.html" "Home Page" %}.
+
+{% endmarkdown %}
+
+</body>
+</html>
