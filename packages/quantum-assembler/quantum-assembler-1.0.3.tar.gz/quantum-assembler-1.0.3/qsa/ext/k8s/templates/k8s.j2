@@ -1,0 +1,24 @@
+{%- macro when(filepath ) -%}
+when {
+  allOf {
+    expression {
+      return !!fileExists('ci/ansible/{{ filepath }}')
+    }
+    anyOf {
+      changeset '**/{{ filepath }}'
+      triggeredBy 'TimerTrigger'
+      triggeredBy cause: 'UserIdCause'
+    }
+  }
+}
+{%- endmacro %}
+
+
+{%- macro ansiblePlaybook(playbook, vault='null') -%}
+ansiblePlaybook(
+  playbook: 'ci/ansible/{{ playbook }}',
+  colorized: true,
+  tags: "env:$K8S_DEPLOYMENT_ENV",
+  extraVars: [K8S_NAMESPACE_PREFIX: "${K8S_NAMESPACE_PREFIX}"]
+)
+{%- endmacro %}

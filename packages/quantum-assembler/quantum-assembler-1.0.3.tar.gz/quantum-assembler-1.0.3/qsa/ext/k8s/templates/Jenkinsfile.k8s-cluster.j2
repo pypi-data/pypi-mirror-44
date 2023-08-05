@@ -1,0 +1,181 @@
+{%- import "k8s.j2" as pipeline %}
+{% extends "Jenkinsfile.base.j2" %}
+{%- block default_agent %}
+  agent {
+    kubernetes {
+      label 'ansible-k8s'
+      defaultContainer 'ansible'
+    }
+  }
+{%- endblock %}
+{% block stages %}
+    {{ super() }}
+
+    stage('Meta') {
+      parallel {
+
+        stage('Namespaces') {
+          {{ pipeline.when('k8s/namespaces.yml')|indent(10) }}
+          steps {
+            {{ pipeline.ansiblePlaybook('k8s/namespaces.yml')|indent(12) }}
+          }
+        }
+
+        stage('CRD') {
+          {{ pipeline.when('k8s/crd.yml')|indent(10) }}
+          steps {
+            {{ pipeline.ansiblePlaybook('k8s/crd.yml')|indent(12) }}
+          }
+        }
+
+        stage('System') {
+          {{ pipeline.when('k8s/cluster.yml')|indent(10) }}
+          steps {
+            {{ pipeline.ansiblePlaybook('k8s/cluster.yml')|indent(12) }}
+          }
+        }
+      }
+    }
+
+    stage('Cluster') {
+      parallel {
+
+        stage('Persistence') {
+          {{ pipeline.when('k8s/volumes.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('DNS') {
+          {{ pipeline.when('k8s/dns.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Endpoints') {
+          {{ pipeline.when('k8s/endpoints.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Config') {
+          {{ pipeline.when('k8s/config.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('IAM') {
+          {{ pipeline.when('k8s/iam.yml')|indent(10) }}
+          steps {
+            {{ pipeline.ansiblePlaybook('k8s/iam.yml')|indent(12) }}
+          }
+        }
+
+        stage('Secrets') {
+          {{ pipeline.when('k8s/secrets.yml')|indent(10) }}
+          steps {
+            // Wrap the deployment of secrets in a retry block -- the command
+            // may fail multiple times when using encryption with certain
+            // platforms. This was observed on Google Kubernetes Engine (GKE)
+            // with app-level encryption of secrets enabled.
+            retry(10) {
+              echo("Not implemented")
+            }
+          }
+        }
+      }
+    } // End Cluster stage
+
+    stage('Security') {
+      parallel {
+        stage('Network Security') {
+          {{ pipeline.when('k8s/network.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Pod Security') {
+          {{ pipeline.when('k8s/pod-security-policies.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('RBAC') {
+          {{ pipeline.when('k8s/rbac.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Certificate Authority') {
+          {{ pipeline.when('k8s/ca.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+      }
+    } // End Security & RBAC stage
+
+    stage('Health') {
+      parallel  {
+
+        stage('Monitoring') {
+          {{ pipeline.when('k8s/monitoring.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Maintenance') {
+          {{ pipeline.when('k8s/maintenance.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Quota') {
+          {{ pipeline.when('k8s/resource-quota.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+      }
+    } // End Health stage
+
+    stage('Issue certificates') {
+      parallel  {
+
+        stage('Ingress Controllers') {
+          {{ pipeline.when('k8s/pki.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+      }
+    } // End Ingress Controllers stage
+
+    stage('Connectivity') {
+      parallel  {
+
+        stage('Ingress Controllers') {
+          {{ pipeline.when('k8s/ingress.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+
+        stage('Load Balancers') {
+          {{ pipeline.when('k8s/loadbalancers.yml')|indent(10) }}
+          steps {
+            echo("Not implemented")
+          }
+        }
+      }
+    } // End Connectivity stage
+{%- endblock %}

@@ -1,0 +1,169 @@
+///////////////////////////////////////////////////////////////////////
+//
+//  {{ quantum.project.name|upper }} IMAGE BUILD PIPELINE
+//
+///////////////////////////////////////////////////////////////////////
+@Library('quantum') _
+import org.quantum.ext.jenkins.Deployment
+
+String displayName = '{{ DISPLAY_NAME }}'
+Map cfg = [:]
+Deployment deployment = new Deployment(cfg)
+
+
+pipeline {
+  {%- block default_agent %}agent none{% endblock %}
+  {%- block pipeline %}
+
+  stages {
+    {%- block stages %}stage('Setup') {
+      agent {
+        kubernetes {
+          label 'default'
+          defaultContainer 'generic'
+        }
+      }
+      steps {
+        {%- if USE_GITLAB %}
+        updateGitlabCommitStatus(state: 'running',
+          name: '{{ DISPLAY_NAME }}')
+        {%- endif %}
+        script {
+          def opts = [
+            commit_tags: sh(
+              returnStdout: true,
+              script: "git tag -l --points-at HEAD"
+            ).trim().tokenize(),
+            commit_hash: sh(
+              returnStdout: true,
+              script: "git rev-parse --short HEAD | tr -d '\n'"
+            ).trim(),
+            environment: env
+          ]
+          deployment.setup(opts)
+          echo("Commit hash is: ${deployment.commit_hash}")
+          echo("Commit tags are: ${deployment.commit_tags.join(', ')}")
+        }
+      }
+    } // End Setup stage
+    {%- if MUST_LINT %}
+
+    stage('Lint') {
+      parallel {
+        {%- if LINT_DOCKER %}
+
+        stage('Docker') {
+          agent {
+            kubernetes {
+              label 'lint'
+              defaultContainer 'docker'
+            }
+          }
+          steps {
+            sh("hadolint Dockerfile")
+          }
+        }
+        {%- endif%}
+        {%- if LINT_YAML %}
+
+        stage('YAML') {
+          agent {
+            kubernetes {
+              label 'lint'
+              defaultContainer 'yaml'
+            }
+          }
+          steps {
+            sh("run-lint")
+          }
+        }
+        {%- endif %}
+      }
+    } // End Lint stage
+    {%- endif%}{% endblock %}
+  }
+  {%- endblock %}
+
+  post {
+    success {
+      script {
+        String m = "Job ${displayName} successfully finished on commit ${deployment.commit_hash}"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'good',
+          {%- if s.channels.success or s.channels.default %}
+          channel: '{{ s.channels.default or s.channels.success }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus name: "{{ DISPLAY_NAME }}", state: 'success'
+      updateGitlabCommitStatus(state: 'success',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+
+    failure {
+      script {
+        String m = "Job ${displayName} failed on commit ${deployment.commit_hash}"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'danger',
+          {%- if s.channels.failed %}
+          channel: '{{ s.channels.failed }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(state: 'failed',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+    aborted {
+      script {
+        String m = "Job ${displayName} (build #${env.BUILD_NUMBER}) on "\
+          + "commit ${deployment.commit_hash} aborted"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'warning',
+          {%- if s.channels.aborted %}
+          channel: '{{ s.channels.aborted }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(state: 'canceled',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+
+    unsuccessful {
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(
+        state: (currentBuild.currentResult != 'ABORTED') ? 'failed' : 'canceled',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+  }
+}
+
+
+def reportStatus(opts, message, status) {}

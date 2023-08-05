@@ -1,0 +1,23 @@
+- name: {{ spec.name }}
+  tags:
+  {%- for tag in spec.tags %}
+  - "{{ tag }}"
+  {%- endfor %}
+  {%- if spec.loop %}
+  loop: '{% raw %}{{ query("template", {% endraw %}"{{ spec.loop }}"{% raw %}) | from_yaml_all }}{% endraw %}'
+  loop_control:
+    label: {{ spec.loop }}
+  {%- endif %}
+  k8s:
+    state: {{ spec.k8s.state }}
+    {%- if spec.k8s.kind %}
+    kind: {{ spec.k8s.kind }}
+    {%- endif %}
+    {%- if spec.k8s.namespace %}
+    namespace: "{{ spec.k8s.namespace }}"
+    {%- endif %}
+    {%- if not spec.loop %}
+    definition: "{% raw %}{{ lookup('template', '{% endraw %}{{ spec.k8s.definition }}{% raw %}') }}{% endraw %}"
+    {%- else %}
+    definition: "{% raw %}{{ item }}{% endraw %}"
+    {%- endif %}

@@ -1,0 +1,357 @@
+///////////////////////////////////////////////////////////////////////
+//
+//  {{ quantum.project.name|upper }} IMAGE BUILD PIPELINE
+//
+///////////////////////////////////////////////////////////////////////
+{%- set USE_GITLAB=quantum.ci.origin.webhook == 'gitlab' %}
+{%- set USE_SLACK='slack' in quantum.ci.notifications %}
+{%- set DISPLAY_NAME=quantum.project.display_name or quantum.project.name %}
+{%- if quantum.ci.branches %}
+def branches = [
+  {%- for branch in quantum.ci.branches %}
+  '{{ branch.name }}': [
+    {%- if branch.environment %}
+    environment: '{{ branch.environment }}',
+    {%- else %}
+    environment: null,
+    {%- endif %}
+    {%- if branch.deployment %}
+    deployment: '{{ branch.deployment }}',
+    {%- else %}
+    deployment: null,
+    {%- endif %}
+    {%- if branch.always_deploy %}
+    always_deploy: true,
+    {%- else %}
+    always_deploy: false,
+    {%- endif %}
+    {%- if branch.always_publish %}
+    always_publish: true
+    {%- else %}
+    always_publish: false
+    {%- endif %}
+  ]{% if not loop.last %},{% endif %}
+  {%- endfor %}
+]
+{%- else %}
+def branches = [:]
+{%- endif %}
+def build_credentials = []
+def changed_files
+def commit_tags
+def commit_hash
+def config
+String display_name = '{{ quantum.project.display_name or quantum.project.name }}'
+def image
+{%- if DOCKER_IMAGE_QUALNAME is defined %}
+def image_name = '{{ DOCKER_IMAGE_QUALNAME }}'
+{%- else %}
+def image_name = '{{ quantum.docker.repository }}'
+{%- endif %}
+def image_tag
+def isInitialBuild = false
+def published = false
+def registries = [
+  default: [
+    {%- if quantum.ci.container_registries.default.url not in ('docker.io', None) %}
+    url: '{{ quantum.ci.container_registries.default.url }}',
+    {%- else %}
+    url: null,
+    {%- endif %}
+    {%- if quantum.ci.container_registries.default.secret %}
+    credentialsId: '{{ quantum.ci.container_registries.default.secret }}'
+    {%- else %}
+    credentialsId: null
+    {%- endif %}
+  ],
+  base: [
+    {%- if quantum.ci.container_registries.base.url not in ('docker.io', None) %}
+    url: '{{ quantum.ci.container_registries.base.url }}',
+    {%- else %}
+    url: null,
+    {%- endif %}
+    {%- if quantum.ci.container_registries.base.secret %}
+    credentialsId: '{{ quantum.ci.container_registries.base.secret }}'
+    {%- else %}
+    credentialsId: null
+    {%- endif %}
+  ],
+  build: [
+    {%- if quantum.ci.container_registries.build.url not in ('docker.io', 'https://docker.io', None) %}
+    url: '{{ quantum.ci.container_registries.build.url }}',
+    {%- else %}
+    url: null,
+    {%- endif %}
+    {%- if quantum.ci.container_registries.build.secret %}
+    credentialsId: '{{ quantum.ci.container_registries.build.secret }}'
+    {%- else %}
+    credentialsId: null
+    {%- endif %}
+  ],
+  publish: [
+    {%- if quantum.ci.container_registries.publish.url not in ('docker.io', 'https://docker.io', None) %}
+    url: '{{ quantum.ci.container_registries.publish.url }}',
+    {%- else %}
+    url: null,
+    {%- endif %}
+    {%- if quantum.ci.container_registries.publish.secret %}
+    credentialsId: '{{ quantum.ci.container_registries.publish.secret }}'
+    {%- else %}
+    credentialsId: null
+    {%- endif %}
+  ]
+]
+def tags = []
+
+
+pipeline {
+  agent none
+
+  stages {
+    stage('Setup') {
+      agent {
+        kubernetes {
+          label 'default'
+          defaultContainer 'generic'
+        }
+      }
+      steps {
+        script {
+          isInitialBuild = (env.BUILD_NUMBER == '1')
+          if (isInitialBuild) {
+            echo("This is the initial build.")
+          }
+          config = branches[env.GIT_BRANCH]
+          changed_files = sh(
+            script: 'git diff --name-only HEAD^1',
+            returnStdout: true
+          ).trim().tokenize('\n')
+          for (i in changed_files) {
+            echo("Detected change in ${i}")
+          }
+
+          // Ensure that all tags are fetched and assign it to a variable. Note
+          // that if the branch contains multiple tags, the last one (as returned
+          // by git tag -l) will be used.
+          commit_tags = sh(
+            returnStdout: true,
+            script: "git tag -l --points-at HEAD"
+          ).trim().tokenize()
+          if (commit_tags) {
+            echo("Commit tag are: ${commit_tags.join(', ')}")
+          }
+          commit_hash = sh(
+            returnStdout: true,
+            script: "git rev-parse --short HEAD | tr -d '\n'"
+          ).trim()
+          echo("Commit hash is: ${commit_hash}")
+          {%- if quantum.ci.notifications %}
+
+          String m = "Started pipeline ${display_name} on commit ${commit_hash}"
+          {%- if 'slack' in quantum.ci.notifications %}
+          {%- set s=quantum.ci.notifications.slack %}
+          slackSend(
+            color: 'good',
+            {%- if s.channels.default %}
+            channel: '{{ s.channels.default }}',
+            {%- endif %}
+            {%- if s.secret %}
+            tokenCredentialId: '{{ s.secret }}',
+            {%- endif %}
+            message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+          )
+          {%- endif %}
+          {%- endif %}
+        }
+      }
+    } // End Setup stage
+
+    stage('Lint') {
+      parallel {
+        stage('Docker') {
+          agent {
+            kubernetes {
+              label 'lint'
+              defaultContainer 'docker'
+            }
+          }
+          steps {
+            sh("hadolint Dockerfile")
+          }
+        }
+        {%- if LINT_YAML %}
+
+        stage('YAML') {
+          agent {
+            kubernetes {
+              label 'lint'
+              defaultContainer 'yaml'
+            }
+          }
+          steps {
+            sh("run-lint")
+          }
+        }
+        {%- endif %}
+      }
+    } // End Lint stage
+
+    stage('Build') {
+      parallel {
+        stage('Image') {
+          agent { label 'docker' }
+          steps {
+            script {
+              {%- if quantum.project.type != 'container-image' %}
+              // Ensure that the base image is up-to-date.
+              withDockerRegistry(registries.base) {
+                image_base = docker.image('{{ quantum.docker.base_image }}')
+                image_base.pull()
+              }
+              {%- endif %}
+              {%- for secret in quantum.ci.mounted_secrets %}
+              {%- if secret.kind == 'ssh' %}
+              build_credentials += sshUserPrivateKey(
+                credentialsId: '{{ secret.name }}',
+                keyFileVariable: '{{ secret.name|safe_variable }}'
+              )
+              {%- else %}
+              // WARNING: Secret '{{ secret.name }}' can not be injected
+              // because its type ({{ secret.kind }}) is not supported
+              {%- endif %}
+              {%- endfor %}
+              withCredentials(build_credentials) {
+                {%- for secret in quantum.ci.mounted_secrets %}
+                {%- if secret.kind == 'ssh' %}
+                sh('cat ${{ secret.name|safe_variable }} > {{ secret.path }}')
+                {%- endif %}
+                {%- endfor %}
+
+                // Put the Jenkins build identifier in the image
+                // tag so that we can run concurrent builds.
+                image = docker.build("${image_name}:${commit_hash}")
+              }
+
+              if ((!isInitialBuild) && ((!!commit_tags) || (!!config && !!config.always_publish))) {
+                tags << ((!!commit_tags) ? commit_tags : [commit_hash])
+                tags.add('latest')
+                withDockerRegistry(registries.publish) {
+                  tags.flatten().each() {
+                    image.push(it)
+                    {%- if USE_SLACK %}
+                    {%- set s=quantum.ci.notifications.slack %}
+                    slackSend(
+                      color: 'good',
+                      {%- if s.channels.default %}
+                      channel: '{{ s.channels.default }}',
+                      {%- endif %}
+                      {%- if s.secret %}
+                      tokenCredentialId: '{{ s.secret }}',
+                      {%- endif %}
+                      message: "Published ${image_name}:${it}"
+                    )
+                    {%- endif %}
+                  }
+                }
+                published = true
+              }
+            }
+          }
+        }
+      }
+    } // End Build stage
+
+    stage('Publish') {
+      when {
+        expression {
+          return published
+        }
+      }
+      steps {
+        script {
+          // Notify the CI/CD infrastructure that a build has successfully
+          // completed.
+          echo("Nothing to do.")
+        }
+      }
+    } // End Publish stage
+  }
+
+  post {
+    success {
+      script {
+        String m = "Job ${display_name} successfully finished on commit ${commit_hash}"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'good',
+          {%- if s.channels.success or s.channels.default %}
+          channel: '{{ s.channels.default or s.channels.success }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus name: "{{ DISPLAY_NAME }}", state: 'success'
+      updateGitlabCommitStatus(state: 'success',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+    failure {
+      script {
+        String m = "Job ${display_name} failed on commit ${commit_hash}"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'danger',
+          {%- if s.channels.failed %}
+          channel: '{{ s.channels.failed }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(state: 'failed',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+    aborted {
+      script {
+        String m = "Job ${display_name} (build #${env.BUILD_NUMBER}) on "\
+          + "commit ${commit_hash} aborted"
+        {%- if 'slack' in quantum.ci.notifications %}
+        {%- set s=quantum.ci.notifications.slack %}
+        slackSend(
+          color: 'warning',
+          {%- if s.channels.aborted %}
+          channel: '{{ s.channels.aborted }}',
+          {%- endif %}
+          {%- if s.secret %}
+          tokenCredentialId: '{{ s.secret }}',
+          {%- endif %}
+          message: "${m} (<${env.RUN_DISPLAY_URL}|view>)"
+        )
+        {%- endif %}
+      }
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(state: 'canceled',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+
+    unsuccessful {
+      {%- if USE_GITLAB %}
+      updateGitlabCommitStatus(state: 'failed',
+        name: '{{ DISPLAY_NAME }}')
+      {%- endif %}
+    }
+  }
+}
