@@ -1,0 +1,40 @@
+#! /usr/bin/env python
+
+"""
+This program is only useful for double-checking CMS sites.
+
+This program checks a site's orphan files against PhEDEx.
+If any of the datasets are supposed to be at the site,
+this gives a non-zero exit code.
+"""
+
+__usage__ = '%prog [options] SITE'
+
+import os
+
+from dynamo_consistency import args
+from dynamo_consistency.config import config_dict
+from dynamo_consistency.cms.checkphedex import check_datasets
+from dynamo_consistency.parser import pretty_exe
+
+pretty_exe('check-phedex')
+
+if __name__ == '__main__':
+    if len(args) != 2:
+        print __doc__
+        exit(1)
+
+    _, site = args
+
+    orphan_list = os.path.join(
+        config_dict()['WebDir'],
+        '%s_compare_orphan.txt' % site
+    )
+
+    output = check_datasets(site, orphan_list)
+
+    for num, dataset in output:
+        print num, dataset
+
+    if output:
+        exit(2)
