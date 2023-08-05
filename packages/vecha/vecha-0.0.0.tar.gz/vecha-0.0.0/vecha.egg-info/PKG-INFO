@@ -1,0 +1,124 @@
+Metadata-Version: 1.2
+Name: vecha
+Version: 0.0.0
+Summary: Python library to aid DApp-Server development on VeChain Thor.
+Home-page: https://github.com/uldaman/vecha.py
+Author: Han Xiao
+Author-email: smallcpp@foxmail.com
+License: MIT
+Description: - [Contract](#contract)
+          - [get_events](#get_eventsstart_block_num-to_block_num-event_id)
+        - [FunctionCoder](#functioncoder)
+          - [encode_function](#encode_functionfunction_name-args)
+          - [decode_result](#decode_resultself-function_name-data)
+        - [EventDecoder](#eventdecoder)
+          - [decode_event](#decode_eventlog)
+        
+        # Contract
+        
+        ```py
+        from vecha import Contract
+        
+        contract = Contract(endpoint, address, abi_list)
+        ```
+        
+        **Parameters**:
+        
+        - **endpoint**: `str`, thor restful server
+        - **address**:  `str`, contract address
+        - **abi_list**: `List[Dict]`, contract abi
+        
+        Then you can call the function directly on the contract instance via the function name in abi.
+        
+        The following function names are built in, so the same name function in the smart contract will not be called.
+        
+        ```
+        get_events
+        decode_event
+        encode_function
+        decode_result
+        call
+        send
+        _request_events
+        ```
+        
+        In a smart contract, the function can be a call or a transaction. A transaction must provide private key.
+        
+        ```py
+        contract.you_name(*args, caller=None, value=0)  # a call
+        
+        contract.you_name(*args, pk, value)  # a transaction
+        ```
+        
+        You can display the transaction as a call, this may help you debug smart contract.
+        
+        ```py
+        contract.you_name.call(*args, caller=None, value=0)
+        ```
+        
+        ## `get_events(start_block_num, to_block_num, event_id)`
+        
+        **Parameters**:
+        
+        - **start_block_num** (optional): `int`, default is from genesis block
+        - **to_block_num** (optional): `int`, default is to best block
+        - **event_id** (optional): `str`, the signature of the event you want to filter out, default is all events of this contract
+        
+        **Returns**:
+        
+        - `List[Event]`, A list of Events. Event is a `namedtuple`, and it has three fields:
+          - event.name: `str`
+          - event.args: `Dict`, actual parameters when the event is emited
+          - event.block: `int`, the block number when the event is emited
+        
+        > If you want to parse a log directly, please use [`EventDecoder.decode_event`](#decode_eventlog).<br>
+        > If you want to get an unsigned transaction data, you can use [`FunctionCoder.encode_function`](#encode_functionfunction_name-args).
+        
+        # FunctionCoder
+        
+        ```py
+        from vecha import FunctionCoder
+        
+        fn_coder = FunctionCoder(*fn_abi_list)
+        ```
+        
+        ## `encode_function(function_name, *args)`
+        
+        **Parameters**:
+        
+        - **function_name**: `str`
+        - **args**: variable-length argument list of actual parameters
+        
+        **Returns**:
+        
+        - `str`, the data of a transaction that has not been signed
+        
+        ## `decode_result(self, function_name, data)`
+        
+        
+        # EventDecoder
+        
+        ```py
+        from vecha import EventDecoder
+        
+        ev_decoder = EventDecoder(*event_abi_list)
+        ```
+        
+        ## `decode_event(log)`
+        
+        **Parameters**:
+        
+        - **log**: `Dict`, the result of thor restful api `/logs/event`
+        
+        **Returns**:
+        
+        - `Event`, Event is a `namedtuple`, and it has three fields:
+          - event.name: `str`
+          - event.args: `Dict`, actual parameters when the event is emited
+          - event.block: `int`, the block number when the event is emited
+        
+Keywords: thor blockchain ethereum
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >=3.6
