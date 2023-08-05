@@ -1,0 +1,54 @@
+# You may import any python packages that will be available in the environment you will run this algorithm in
+# Environments can change based on the experiment's settings
+{% for ref, lib in contents.uses.items() %}# Library "{{ lib }}" is available under "{{ ref }}"
+{% endfor %}
+class Algorithm:
+    # initialise fields to store cross-input data (e.g. machines, aggregations, etc.)
+    def __init__(self):
+        pass
+{% if contents.parameters %}
+
+    # do initial setup work with the given parameters for the algorithm
+    def setup(self, parameters):
+        # Parameters available:
+        {% for p_name, param in contents.parameters.items() %}# Parameter "{{ p_name }}" with type "{{ param.type }}"
+        {% endfor %}
+        # get a parameter like:
+        #       param1_value = parameters.get('param_1', self.param1_default)
+        return True
+
+{% endif %}
+    # this will be called each time the sync'd input has more data available to be processed
+    def process(self, inputs, outputs):
+        # Groups available:
+{% for group in contents.groups %}        # Group {{ loop.index - 1 }}:
+        {% for iName, input in group.inputs.items() %}#   Input "{{ iName }}" with type  "{{ input.type }}"
+        {% endfor %}{% if 'outputs' in group %}{% for oName, output in group.outputs.items() %}#   Output "{{ oName }}" with type  "{{ output.type }}"
+        {% endfor %}{% endif %}{% endfor %}{% if 'splittable' not in contents %}
+        # Results available:
+        {% for rName, result in contents.results.items() %}#   Result "{{ rName }}" with type "{{ result.type }}"
+        {% endfor %}{% endif %}
+        # to check if there is more data waiting in the inputs
+        # (if it is False, you have processed all the inputs and this "process" function won't be called again):
+        #       if inputs.hasMoreData():
+
+        # to check if a specific input is done:
+        #       if inputs["input1"].isDataUnitDone():
+
+        # to manually fetch the next input of a specific input
+        # (e.g. the block is not sync'd to the input but you want the input immediately)
+        #       inputs['input1'].next()
+        # you can then access that input value as normal:
+        #       self.val1 = inputs['input1'].data
+
+        # to get the data for an input (note that the value will be of the type specified in the metadata!):
+        #       data_value = inputs['input1'].data
+
+        # to write to an output:
+        #       outputs['output1'].write({
+        #           'output_field_1': 1,
+        #           'output_field_2': 'output'
+        #       })
+
+        # always return True, it signals BEAT to continue processing
+        return True
