@@ -1,0 +1,80 @@
+Metadata-Version: 2.1
+Name: pyfbx
+Version: 0.0.2
+Summary: Freebox thin client
+Home-page: https://framagit.org/sun/pyfbx
+Author-email: teebeenator@gmail.com
+License: MIT
+Description: # Freebox client library
+        
+        ## Features
+        
+        * Full API coverage
+        * Https and Mdns discovery
+        * Thin client wrapper (~150 lines)
+        
+        ## Usage
+        
+        The REST API is generated at runtime with the creation of class attributes for all Freebox subsystems.
+        
+        ```python
+        >>> from pyfbx import Fbx
+        >>> f=Fbx()
+        >>> f.<TAB>
+        f.Airmedia         f.Download_Config  f.Lan              f.Rrd              f.Upnpav
+        f.Call             f.Download_Feeds   f.Lcd              f.Share            f.Vpn
+        f.Connection       f.Freeplug         f.Nat              f.Storage          f.Vpn_Client
+        f.Contacts         f.Fs               f.Network_Share    f.Switch           f.Wifi
+        f.Dhcp             f.Ftp              f.Parental         f.System           f.mksession(
+        f.Download         f.Igd              f.Pvr              f.Upload           f.register(
+        >>> f.Freeplug.<TAB>
+        f.Freeplug.Get_a_particular_Freeplug_information(
+        f.Freeplug.Reset_a_Freeplug(
+        f.Freeplug.Get_the_current_Freeplugs_networks(
+        
+        # Register application to get app token. Physical access is required.
+        >>> token = f.register("Id_SuperAppli", "Une superbe appli", "python")
+        # Generate session token
+        >>> f.mksession(app_id="Id_SupperAppli", token=token)
+        
+        >>> help(f.Lan.Update_the_current_Lan_configuration)
+        Help on method Update_the_current_Lan_configuration:
+        
+        Update_the_current_Lan_configuration(post_data) method of pyfbx.client.Lan instance
+            Update the current Lan configuration
+        
+            Url parameters:
+            Post data:PostData
+        
+        >>> help(f.Contacts.Access_a_given_contact_entry)
+        Help on method Access_a_given_contact_entry:
+        
+        Access_a_given_contact_entry(id) method of pyfbx.client.Contacts instance
+            Access a given contact entry
+        
+            Url parameters: id
+            Post data:
+        
+        >>> f.Lan.Get_the_current_Lan_configuration()
+        {'name_dns': 'freebox-server', 'name': 'Freebox Server', 'name_mdns': 'Freebox-Server', 
+        'mode': 'router', 'name_netbios': 'Freebox_Server', 'ip': '192.168.1.254'}
+        
+        # Any subsequent call to mksession will refresh the session token
+        >>> f.mksession()
+        ```
+        
+        ## Testing
+        
+        You can run tests with
+        
+        ```shell
+        pip3 install -r requirements-dev.txt
+        pytest tests
+        ```
+        Currently to get 100% coverage, a Freebox sitting on its default IP (192.168.1.254) is required.
+        
+        
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown
