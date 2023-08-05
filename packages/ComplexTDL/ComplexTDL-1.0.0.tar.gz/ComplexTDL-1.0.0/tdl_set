@@ -1,0 +1,46 @@
+#! /Users/xiaotian/anaconda3/bin/python3.6
+#coding:utf-8
+
+from ComplexTDL import sysXXt, Settings
+import sys
+
+helpInfo = '''-h: for help
+
+-m: Show the info of modules
+-n number: Reset the task number'''
+
+
+def main(args):
+
+    # the parameters
+    shortParaList = 'hmn'
+    longParaList = []
+    args, opts = sysXXt.argument(args, shortParaList, longParaList)
+
+    # start parse the parameters
+    if opts == {'': ''} and args == '':
+        print(helpInfo)
+        sys.exit()
+    
+    for opt in opts:
+        arg = opts[opt]
+
+        # help info
+        if opt == '-h':
+
+            print(helpInfo)
+            sys.exit()
+
+        # show the info of modules
+        if opt == '-m':
+            Settings.ShowJobModules()
+            sys.exit()
+        
+        # reset the task number
+        if opt == '-n':
+            Settings.SetTaskNumber(arg if arg != '' else '0')
+            sys.exit()
+
+    
+if __name__ == '__main__':
+    main(sys.argv[1:])

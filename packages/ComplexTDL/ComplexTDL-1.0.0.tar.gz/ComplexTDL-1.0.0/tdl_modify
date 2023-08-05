@@ -1,0 +1,144 @@
+#! /Users/xiaotian/anaconda3/bin/python3.6
+#coding:utf-8
+
+from ComplexTDL import sysXXt, Task
+import sys
+import re
+from datetime import datetime, timedelta
+
+
+helpInfo = '''-h for help
+
+-u number: update the task, support the batch operation, numbers should be seperated by ", "
+-m module_name: insert to the module named "module_name"
+-t title_name: set the title
+-d description: set the description and detail, you can use "/" to present a new line
+    * cover the former description without "+" as the first char
+    * append to the former description with "+" as the first char
+-a person_name: assign the task to person_name, don't assign to anybody if the arg is empty
+
+-s time: start time
+-e time: end time
+-c time: complete time, set the start time and planned time at the same time
+NOTE: time can be:
+
+* yy.mm.dd
+* xxxx-xx-xx
+* n, where n= ..., -2, -1, 0, 1, 2,... 0 means today, -1 means yesterday and 1 means tomorrow
+
+-r number: completion ratio, -1 for pause, 0 for not start, 100 or empty for completed
+-p number: parent task number
+-P number: priority
+-D: delete the task defined by -u
+
+the structure of task
+
+no Number
+mo Module / Group / List
+ti Title
+de Description and Update
+pe person assigned
+st Start time
+en End time or check time or planned time
+ra Completion rate, -1 for pause
+pa Parent task number
+pr priority'''
+
+def NewTask(args):
+
+    # Default parameters
+    method = 'new'
+    today = datetime.strftime(datetime.today(), '%Y-%m-%d')
+    numberList = [] # the list of task number
+
+
+    # the parameters
+    shortParaList = 'humtdasecrpPD'
+    longParaList = []
+    args, opts = sysXXt.argument(args, shortParaList, longParaList)
+
+    if opts == {'': ''} and args == '':
+        print(helpInfo)
+        sys.exit()
+
+    # update?
+    data = None
+    for opt in opts: 
+        arg = opts[opt]
+        if opt == '-u':
+
+            method = 'update'
+            numberList = arg.split(', ')
+            data = dict(no='', mo=None, ti=None,  de=None, pe=None, st=None, en=None, ra=None, pa=None, pr=None)
+            break
+    
+    if data == None: data = dict(no='', mo='Default', ti='', de='', pe='me', st=today, en=today, ra=0, pa='', pr='3')
+
+    # all other parameters
+    for opt in opts:
+        arg = opts[opt]
+
+        if opt == '-h':
+            print(helpInfo)
+            sys.exit()
+
+        if opt == '-D': method = 'delete' # delete
+
+        if opt == '-m': data['mo'] = arg # module
+        if opt == '-t': data['ti'] = arg # title
+        if opt == '-d': data['de'] = arg # description
+        if opt == '-a': data['pe'] = arg # person assigned
+
+        # start time and planned time
+        if opt == '-c':
+            if re.search(r'\.', arg):
+                data['en'] = '20' + re.sub(r'\.', '-', arg)
+                data['st'] ='20' + re.sub(r'\.', '-', arg)
+            elif re.findall('[0-9].*', arg) != []:
+                delta = int(re.findall('[0-9].*', arg)[0])
+                data['st'] = datetime.strftime(datetime.today() + timedelta(days = delta), '%Y-%m-%d')
+                data['en'] = data['st']
+            else:
+                data['st'] = data['en'] = arg
+
+        # start time
+        if opt == '-s':
+            if re.search(r'\.', arg): data['st'] = '20' + re.sub(r'\.', '-', arg)
+            elif re.findall('^[-]*[0-9]+$', arg) != []: 
+                delta = int(re.findall('[0-9].*', arg)[0])
+                data['st'] = datetime.strftime(datetime.today() + timedelta(days = delta), '%Y-%m-%d')
+            else:
+                data['st'] = arg
+
+        # planned time, check time or end time
+        if opt == '-e':
+            if re.search(r'\.', arg): data['en'] = '20' + re.sub(r'\.', '-', arg)
+            elif re.findall('^[-]*[0-9]+$', arg) != []:
+                delta = int(re.findall('[0-9].*', arg)[0])
+                data['en'] = datetime.strftime(datetime.today() + timedelta(days = delta), '%Y-%m-%d')
+            else: 
+                data['en'] = arg
+
+        if opt == '-r': data['ra']= int(arg) if arg != '' else 100 # completion ratio
+        if opt == '-p': data['pa'] = arg # parent task
+        if opt == '-P': data['pr'] = arg # priority
+
+    
+    # start operation
+    if method == 'delete':
+        for no in numberList:
+            data['no'] = no
+            number = Task.DeleteRecord(data)
+        print('Task %s deleted'%','.join(numberList))
+    elif numberList == []:
+        number = Task.UpdateData(data)
+        print('Task %s added'%number)
+    else:
+        for no in numberList:
+            data['no'] = no
+            number = Task.UpdateData(data)
+        print('Task %s modified'%', '.join(numberList))
+
+
+if __name__ == '__main__':
+    NewTask(sys.argv[1:])
