@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Security-Policy" content="sandbox; default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self'; style-src 'self';">
+<title>Test Results &mdash; {{report_name}}</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script type="text/javascript" src="jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="treeview.js"></script>
+</head>
+</style>
+</head>
+
+<body>
+	<div id="container">
+		<div id="header">
+		<div class="time">Date : {{report_date_time}}</div>
+			<h1>{{report_name}} :<strong><span class="total"> {{total_number_of_tests}} total, </span>
+				{%if total_no_of_fail_tests %}<span class="failed">{{total_no_of_fail_tests}} failed</span>
+				 {% endif %}
+				 <span class="passed">{{number_of_passed_tests}} passed</span></strong>
+				 {% if total_exceptions %}
+                 	    <span class="ignored">{{total_exceptions}} error</span>
+                 {% endif %}
+                 {% if total_no_of_skip_tests %}
+                         <span class="skipped">{{total_no_of_skip_tests}} skip</span>
+                  {% endif %}
+				 </h1>
+
+			<div id="treecontrol">
+            	<ul>
+            	<li>
+            		<a title="Collapse the entire tree below" href="#">Collapse</a>
+                              |
+                            </li>
+            		<li>
+            			<a title="Expand the entire tree below" href="#">Expand</a>
+            		</li>
+            	</ul>
+            </div>
+          </div>
+            <div id="content">
+				<ul id="tree">
+					<li xmlns="" class="level top open">
+						<span><em class="time">
+							<div class="time">{{time_summary}} s</div>
+					        </em>{{report_name}}:</span>
+			{% for result in results %}
+			<ul>
+            {% if result.status == "error" %}
+        		      <li class="level suite ignored closed" title="click to expand">
+            			 <span><em class="time">
+                          <div class="time">{{result.feature_time}} s</div>
+                        </em>{{result.name}}
+                        </span>
+           {% elif result.status == "failed" %}
+           			            <li class="level suite failed closed" title="click to expand">
+           			 <span><em class="time">
+                         <div class="time">{{result.feature_time}} s</div>
+                       </em>{{result.name}}
+                       </span>
+
+           {% elif result.status == "skipped" %}
+                 <li class="level suite skipped closed" title="click to expand">
+                    <span><em class="time">
+                     <div class="time">{{result.feature_time}} s</div>
+                    </em>{{result.name}}
+                </span>
+           {% elif result.status == "failed and skipped" %}
+                  <li class="level suite mixed_skip_fail closed" title="click to expand">
+                    <span><em class="time">
+                        <div class="time">{{result.feature_time}} s</div>
+                        </em>
+                         <div id="bars">
+                            <span class="firstOverlayLine"></span>
+
+                         </div>
+                        {{result.name}}
+                    </span>
+
+           {% elif result.status == "failed and error" %}
+                   <li class="level suite mixed_fail_error closed" title="click to expand">
+                       <span><em class="time">
+                            <div class="time">{{result.feature_time}} s</div>
+                                </em>
+                                 <div id="bars">
+                                 <span class="firstOverlayLine"></span>
+                                 </div>
+                                {{result.name}}
+                        </span>
+           {% elif result.status == "skipped and error" %}
+                   <li class="level suite mixed_skipped_error closed" title="click to expand">
+                        <span><em class="time">
+                            <div class="time">{{result.feature_time}} s</div>
+                            </em>
+                            <div id="bars">
+                              <span class="skipOverlayLine" ></span>
+                              </div>
+                             {{result.name}}
+                           </span>
+
+           {% elif result.status == "failed, error and skipped" %}
+                    <li class="level suite mixed_fail_skip_error closed" title="click to expand">
+                        <span><em class="time">
+                            <div class="time">{{result.feature_time}} s</div>
+                            </em>
+                             <div id="bars">
+                              <span class="firstOverlayLine"></span>
+                              <span class="secondOverlayLine"></span>
+                              </div>
+                            {{result.name}}
+                        </span>
+            {% else %}
+            	     <li class="level suite close" title="click to expand">
+                        <span><em class="time">
+                            <div class="time">{{result.feature_time}} s</div>
+                            </em>{{result.name}}
+                        </span>
+            {% endif %}
+			<ul>
+			{% if result.description %}
+            				<p>{{result.description}}</p>
+            				</br>
+            {% endif %}
+                {% for test in result.tests %}
+                        {% if test.result == "test failed" %}
+                               <li class="level test failed open">
+                                    <span><em class="time">
+                                        <div class="time">{{test.test_time}} ms</div>
+                                            </em>
+                                        <em class="status">{{test.result}}</em>{{test.message}}
+                                     </span>
+                                 <ul>
+                                    <li class="text">
+                                            <span class="stdout">
+                                                    {{test.name}}
+                                             </span>
+                                     </li>
+                                     <li class="text">
+                                        <span class="stderr">
+                                            <div id ='err_id'>
+                                                {{test.err_msg}}
+                                            </div>
+                                        </span>
+                                     </li>
+                                 </ul>
+                               </li>
+            {% elif test.result == "test error" %}
+                <li class="level test ignored open">
+                    <span><em class="time">
+                        <div class="time">{{test.test_time}} ms</div>
+                            </em><em class="status">{{test.result}}</em>{{test.message}}</span>
+                            <ul>
+                                <li class="text">
+                                    <span class="stdout">
+                                    {{test.name}}
+                                </span>
+                                </li>
+                            <li class="text">
+                                <span class="std">
+                                    <div id ='exception_id'>
+                                                {{test.err_msg}}
+                                       </div>
+                                          </span>
+                                          </li>
+                                      </ul>
+                                      </li>
+                {% elif test.result == "test skipped" %}
+
+                    <li class="level test skipped open">
+                        <span><em class="time">
+                            <div class="time">{{test.test_time}} ms</div>
+                                </em><em class="status">{{test.result}}</em>{{test.message}}</span>
+                                <ul>
+                                    <li class="text">
+                                        <span class="stdout">
+                                            {{test.name}}
+                                        </span>
+                                      </li>
+                                      <li class="text">
+                                        <span class="std">
+                                            <div id ='skip_id'>
+                                                {{test.err_msg}}
+                                                </div>
+                                         </span>
+                                         </li>
+                                </ul>
+                    </li>
+                {% else %}
+                    <li class="level test">
+                        <span><em class="time">
+                            <div class="time">{{test.test_time}} ms</div>
+                                </em><em class="status">{{test.result}}</em>{{test.message}}</span>
+                                <ul>
+                                 <li class="text">
+                                    <span class="stdout">
+                                        {{test.name}}
+                                    </span>
+                                  </li>
+                                  </ul>
+                                  </li>
+                {% endif %}
+				{% endfor %}
+				        </li>
+            	    </ul>
+                 </li>
+                 </ul>
+                {% endfor %}
+                </li>
+             </ul>
+            </li>
+           </ul>
+          </li>
+        </div>
+    </div>
+</body>
+</html>
