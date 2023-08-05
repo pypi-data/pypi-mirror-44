@@ -1,0 +1,14 @@
+.. _CTAN: http://www.ctan.org/tex-archive/help/Catalogue/entries/dot2tex.html
+.. _easy_install: https://pypi.python.org/pypi/setuptools
+.. _Graphviz: http://www.graphviz.org/
+.. _PSTricks: http://tug.org/PSTricks/main.cgi/
+.. _PGF/TikZ: http://www.ctan.org/pkg/pgf
+.. _MIT: http://opensource.org/licenses/mit-license.php
+.. _Python: https://www.python.org
+.. _pyparsing: http://pyparsing.wikispaces.com/
+.. _pydot: https://pypi.python.org/pypi/pydot
+.. _preview: http://www.ctan.org/pkg/preview
+.. _preview-latex: http://www.gnu.org/software/auctex/preview-latex.html
+.. _AUCTeX: http://www.gnu.org/software/auctex/
+.. _dot2texi: http://www.ctan.org/pkg/dot2texi
+.. _pip: https://pypi.python.org/pypi/pip
