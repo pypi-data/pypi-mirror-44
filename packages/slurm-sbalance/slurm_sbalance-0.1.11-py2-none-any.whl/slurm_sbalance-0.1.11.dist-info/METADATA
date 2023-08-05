@@ -1,0 +1,78 @@
+Metadata-Version: 2.1
+Name: slurm-sbalance
+Version: 0.1.11
+Summary: Slurm utility for checking account balance
+Home-page: https://github.com/puttsk/slurm-sbalance
+Author: Putt Sakdhnagool
+Author-email: putt.sakdhnagool@nectec.or.th
+License: UNKNOWN
+Project-URL: Source, https://github.com/puttsk/slurm-sbalance/
+Project-URL: Bug Reports, https://github.com/puttsk/slurm-sbalance/issues
+Keywords: slurm
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: System Administrators
+Classifier: Topic :: System :: Systems Administration
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4
+Description-Content-Type: text/markdown
+
+# slurm-sbalance
+`sbalance` is a Slurm utility for checking account balance. The utility calculates the remaining *service units* or *SU* left in the account. 
+
+# Prerequisites
+*  Slurm with Accounting enabled 
+
+Currently `sbalance` has been tested with: 
+* Python 2.7.5 and Python 3.6.6
+* Slurm 18.08.5
+
+# Usage
+```
+usage: sbalance [-h] [-V] [-k] [-m] [-v]
+
+Query slurm account balance.
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -V, --version  show program's version number and exit
+  -k             show output in kSU (1,000 SU)
+  -m             show output in MSU (1,000,000 SU)
+  -v, --verbose  verbose mode (multiple -v's increase verbosity)
+
+```
+
+# Setting up Slurm
+`sbalance` currently support following setup. 
+* Balance is limited per account
+* Account limit is set through QoS with `GrpTRESMins` and `NoDecay` flag.
+
+Following is an example setup
+
+Creating account `tutorial` and QoS `test` with billing balance of 1000000
+```
+sacctmgr add qos test set GrpTRESMins=billing=1000000 Flags=NoDecay 
+sacctmgr add account tutorial set QoS=test DefaultQoS=test
+```
+
+Add `test` user to account `tutorial`
+```
+sacctmgr add user test set Account=tutorial
+```
+
+Checking balance for `test` user
+```
+[test@localhost ~]$ sbalance 
+Account balances for user: test
+tutorial:
+	Allocation:               1000000.00 SU
+	Remaining Balance:         991896.00 SU ( 99.19%)
+	Used:                        8104.00 SU
+```
+
+
+
