@@ -1,0 +1,83 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+test:
+  suites:
+  - name: "Declarative test, meant to fail"
+    setup:
+    - uuid: product_id
+    - log:
+        - "UUID is {}"
+        - product_id
+    - code: | # Note that we can intersperse code if we wish. It's just another YAML directive.
+        log("Product ID for this test suite is {}", product_id)
+    teardown:
+    - call_may_fail:
+        sample: "examples/testdata/samples/vision/product-search/delete_product.py  "
+        args:
+        - variable: product_id
+    - code: |
+    cases:
+    - name: Product Life
+      spec:
+      - call:
+          sample: "examples/testdata/samples/vision/product-search/list_products.py"
+      - assert_not_contains:
+          - variable: product_id
+      - call:
+          sample: "examples/testdata/samples/vision/product-search/create_product.py"
+          args:
+          - variable: product_id
+          - literal: Fancier towel
+          - literal: homegoods
+      - call:
+          sample: "examples/testdata/samples/vision/product-search/list_products.py"
+      - assert_contains:
+          - variable: product_id
+          - literal: "towel"
+      - call:
+          sample: "examples/testdata/samples/vision/product-search/delete_product.py"
+          args:
+          - variable: product_id
+      - call:
+          sample: "examples/testdata/samples/vision/product-search/list_products.py"
+      - assert_not_contains:
+          - variable: product_id
+
+
+  - name:  "Procedural test, meant to fail"
+    setup:
+    - code: |
+        product_id=uuid()
+        log("Product ID for this test suite is {}", product_id)
+    teardown:
+    - code: |
+        call_may_fail("examples/testdata/samples/vision/product-search/delete_product.py", product_id)
+
+    cases:
+    - name: Product Life
+      spec:
+      - code: |
+          out = call("examples/testdata/samples/vision/product-search/list_products.py")
+          assert_that(product_id not in out, "the product {} should initially be absent", product_id)
+  
+          call("examples/testdata/samples/vision/product-search/create_product.py", product_id, "Fancier towel", "homegoods")
+  
+          out = call("examples/testdata/samples/vision/product-search/list_products.py")
+          assert_that(product_id in out, "the product {} should be {} quite present after creation", product_id, "really")
+  
+          call("examples/testdata/samples/vision/product-search/delete_product.py", product_id)
+  
+          out = call("examples/testdata/samples/vision/product-search/list_products.py")
+          assert_that(product_id not in out, "the product {} should be absent after deletion", product_id)

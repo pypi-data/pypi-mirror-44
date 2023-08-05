@@ -1,0 +1,63 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+test:
+  suites:
+  - name:  "Language samples test"
+    setup:
+      - log:
+        - 'In setup {}'
+        - hi
+    teardown:
+      - code:
+          log('In teardown {}', 'bye')
+    cases:
+    - name: Sentiment from text, direct call
+      spec:
+      - code: |
+          out = call("python3 examples/mock-samples/googleapis/artman-genfiles/python/language-v1/samples/google/cloud/language_v1/gapic/analyze_sentiment/analyze_sentiment_request_language_sentiment_text.py", content="happy happy smile hope")
+          assert_success()
+
+          import re
+
+          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
+
+          score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
+          assert_that(score_found is not None, 'score matches regexp')
+          score = float(score_found.group(1))
+          assert_that(score > 0.7, 'score is high')
+
+          magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
+          assert_that(magnitude_found is not None, 'magnitude matches regexp')
+          magnitude = float(magnitude_found.group(1))
+          assert_that(magnitude > 0.7, 'magnitude is high')
+
+    - name: Sentiment from text, API call convention
+      spec:
+      - code: |
+          out = call("Google.Cloud.Language.v1.AnalyzeSentiment:analyze_sentiment_request_language_sentiment_text", content="happy happy smile hope")
+
+          import re
+
+          # TODO: still need a way to do text matching in a declarative test like we do below, inside `code`.
+
+          score_found = re.search('score: ([0123456789.]+)', out)  # TODO: Can this be negative?
+          assert_that(score_found is not None, 'score matches regexp')
+          score = float(score_found.group(1))
+          assert_that(score > 0.7, 'score is high')
+
+          magnitude_found = re.search('magnitude: ([0123456789.]+)', out)
+          assert_that(magnitude_found is not None, 'magnitude matches regexp')
+          magnitude = float(magnitude_found.group(1))
+          assert_that(magnitude > 0.7, 'magnitude is high')
