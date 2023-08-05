@@ -1,0 +1,196 @@
+Metadata-Version: 2.1
+Name: yarbs
+Version: 0.4.0.post0
+Summary: Create incremental backups using Rsync.
+Home-page: https://gitlab.com/maranov/yarbs
+Author: maranov
+Author-email: maranov@outlook.com
+License: WTFPL
+Keywords: rsync backup
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: System Administrators
+Classifier: Topic :: System :: Archiving :: Backup
+Classifier: Programming Language :: Python :: 3.7
+
+# *Y*et *A*nother *R*sync *B*ackup *S*cript
+Create incremental backups using Rsync. The script takes advantage of Rsync's `--link-dest` functionality to create full snapshots that save space by linking to the previously backed-up files instead of creating new copies. This has the advantage that only new or changed files are copied, but at the same time all backups appear as complete full backups on the disk.
+
+Read more here on Admin Magazine: [Incremental Backups on Linux](http://www.admin-magazine.com/Articles/Using-rsync-for-Backups).
+
+## Download and installation
+Package can be installed or upgraded [using pip](https://docs.python.org/3/installing/index.html):
+```
+python3 -m pip install --upgrade yarbs
+```
+
+Use the appropriate `python3` executable or `py -3` launcher (Windows) based on your platform.
+
+## Dependencies
+[Rsync](https://rsync.samba.org) must be installed and in path. On Debian based Linux distros (e.g. Ubuntu) can be done by:
+``` bash
+sudo apt install rsync
+```
+
+## Usage
+Display help:
+```
+python3 -m yarbs --help
+python3 -m yarbs backup --help
+python3 -m yarbs prepare --help
+python3 -m yarbs sync --help
+```
+
+Making a snapshot of `src` directory to `dst`:
+```
+sudo python3 -m yarbs backup src dst
+```
+
+This will create a timestamped backup like `dst/src_2018-12-31T17-00`. This backup is used the next time a backup is executed as a source of links to avoid unnecessary file duplication. One a maximum a kept backups is reached, the oldest backup is removed.
+
+While still syncing, the backup directory has `.tmp` name suffix that is removed once finished. If an error is encountered, the directory is removed. Temporary directories are also removed every time old backups are removed, in case the directory couldn't be removed immediately. Only successfully finished backups are used for `--link-dest`.
+
+The `-a` [Rsync parameter](https://download.samba.org/pub/rsync/rsync.html) is used. This among other things preserves the original file permissions (owner and group), but requires YARBS to be executed as root (i.e. with `sudo`). Without it, YARBS still works, but permissions are not kept.
+
+### Example
+Create dummy test directories:
+```
+mkdir src
+touch src/test1
+touch src/test2
+mkdir src/subdir
+touch src/subdir/test3
+mkdir dst
+```
+
+Run the first backup of `src` to `dst`:
+```
+sudo python3 -m yarbs backup src dst
+```
+Output:
+```
+INFO : Preparing "src" backup.
+INFO : Backup dir: dst/src_2019-03-03T17-12-26
+INFO : Syncing "src" backup.
+cd+++++++++ ./
+>f+++++++++ test1
+>f+++++++++ test2
+cd+++++++++ subdir/
+>f+++++++++ subdir/test3
+INFO : Finished "src" backup.
+```
+
+Check the backup:
+```
+ls dst/src_2019-03-03T17-12-26/
+```
+
+Output:
+```
+subdir  test1  test2
+```
+
+Run the 2nd, incremental backup:
+```
+sudo python3 -m yarbs backup src dst
+```
+
+Output:
+```
+INFO : Preparing "src" backup.
+INFO : Backup dir: dst/src_2019-03-03T17-15-07
+INFO : Syncing "src" backup.
+INFO : Finished "src" backup.
+```
+
+Check the backup and see that unchanged files have in fact the same Inode:
+```
+stat dst/src_2019-03-03T17-12-26/test1 dst/src_2019-03-03T17-15-07/test1
+```
+
+Output:
+```
+  File: 'dst/src_2019-03-03T17-12-26/test1'
+...
+Device: b302h/45826d    Inode: 398303      Links: 2
+...
+  File: 'dst/src_2019-03-03T17-15-07/test1'
+...
+Device: b302h/45826d    Inode: 398303      Links: 2
+...
+```
+
+Changing a file results in a new copy being made on the next backup:
+```
+echo 'change' >> src/test1
+sudo python3 -m yarbs backup src dst
+```
+
+Output:
+```
+INFO : Preparing "src" backup.
+INFO : Backup dir: dst/src_2019-03-03T17-20-02
+INFO : Syncing "src" backup.
+>f.st...... test1
+INFO : Finished "src" backup.
+```
+
+Check that then newest backup contains the changed file, with a different Inode:
+```
+stat dst/src_2019-03-03T17-12-26/test1 dst/src_2019-03-03T17-15-07/test1 dst/src_2019-03-03T17-20-02/test1
+```
+
+Output:
+```
+  File: 'dst/src_2019-03-03T17-12-26/test1'
+...
+Device: b302h/45826d    Inode: 398303      Links: 2
+...
+  File: 'dst/src_2019-03-03T17-15-07/test1'
+...
+Device: b302h/45826d    Inode: 398303      Links: 2
+...
+  File: 'dst/src_2019-03-03T17-20-02/test1'
+...
+Device: b302h/45826d    Inode: 398758      Links: 1
+...
+```
+
+Three backups now exist. Setting limit of kept backups to 3 removes the oldest backup on the next run:
+```
+sudo python3 -m yarbs backup src dst --backups_kept 3
+```
+
+Output:
+```
+INFO : Preparing "src" backup.
+INFO : Removing old backup: dst/src_2019-03-03T17-12-26
+INFO : Backup dir: dst/src_2019-03-03T17-22-24
+INFO : Syncing "src" backup.
+INFO : Finished "src" backup.
+```
+
+Preparation and synchronization can be split into individual actions. The following command:
+```
+sudo python3 -m yarbs backup src dst
+```
+
+Can be split into two steps:
+```
+python3 -m yarbs prepare src dst --backups_kept 3 | sudo python3 -m yarbs sync src
+```
+
+This can be useful for execution via SSH. The destination server is specified as `--ssh_server` parameter:
+```
+ssh myserver python3 -m yarbs -v prepare backup dst --backups_kept 3 | python3 -m yarbs -v sync src --ssh_server="myserver"
+```
+
+Configure `myserver` in your `~/.ssh/config` to specify user name, hostname and key/password.
+
+YARBS is also importable:
+```python
+from yarbs import backup
+backup('src', 'dst')
+```
+
+
