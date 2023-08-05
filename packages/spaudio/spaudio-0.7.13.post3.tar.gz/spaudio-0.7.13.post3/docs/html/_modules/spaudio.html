@@ -1,0 +1,912 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>spaudio &mdash; spAudio  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> spAudio
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../main.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../main.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../main.html#build">Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../main.html#official-site">Official Site</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../apidoc.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../spaudio.html">spaudio module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#fullduplex-i-o">Fullduplex I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#read-and-plot-python-array-version">Read and plot (Python array version)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#read-and-plot-raw-data-version">Read and plot (raw data version)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#read-and-plot-numpy-ndarray-version">Read and plot (Numpy ndarray version)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#read-and-plot-numpy-raw-ndarray-version">Read and plot (Numpy raw ndarray version)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#play-a-wav-file">Play a Wav file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#play-a-wav-file-with-callback">Play a Wav file with callback</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">spAudio</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>spaudio</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for spaudio</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A python package for audio I/O based on `spAudio</span>
+<span class="sd">&lt;http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/index.html&gt;`_.</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    The following is the example to realize fullduplex audio I/O.</span>
+<span class="sd">    ::</span>
+
+<span class="sd">        import spaudio</span>
+
+<span class="sd">        a = spaudio.SpAudio()</span>
+
+<span class="sd">        a.setnchannels(2)</span>
+<span class="sd">        a.setsamprate(44100)</span>
+<span class="sd">        a.setbuffersize(2048)</span>
+
+<span class="sd">        nloop = 500</span>
+<span class="sd">        b = bytearray(4096)</span>
+
+<span class="sd">        a.open(&#39;r&#39;)</span>
+<span class="sd">        a.open(&#39;w&#39;)</span>
+
+<span class="sd">        for i in range(nloop):</span>
+<span class="sd">            a.readraw(b)</span>
+<span class="sd">            a.writeraw(b)</span>
+
+<span class="sd">        a.close()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">array</span>
+<span class="kn">from</span> <span class="nn">_spaudio</span> <span class="k">import</span> <span class="n">spaudio_c</span> <span class="k">as</span> <span class="n">_spaudio_c</span>
+
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.7.13&#39;</span>
+
+<span class="n">OUTPUT_POSITION_CALLBACK</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">OUTPUT_BUFFER_CALLBACK</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">_audio_global</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_encoding</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">()</span>
+<span class="n">_defaultdrivername</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">xspGetAudioDriverName</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_defaultdrivername</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+    <span class="n">_ischarbinary</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">_ischarbinary</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../spaudio.html#spaudio.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base exception class for spaudio.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="DriverError"><a class="viewcode-back" href="../spaudio.html#spaudio.DriverError">[docs]</a><span class="k">class</span> <span class="nc">DriverError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised by audio driver problems.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="DeviceError"><a class="viewcode-back" href="../spaudio.html#spaudio.DeviceError">[docs]</a><span class="k">class</span> <span class="nc">DeviceError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised by audio device problems.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="callbacksignature"><a class="viewcode-back" href="../spaudio.html#spaudio.callbacksignature">[docs]</a><span class="k">def</span> <span class="nf">callbacksignature</span><span class="p">(</span><span class="n">audio</span><span class="p">,</span> <span class="n">calltype</span><span class="p">,</span> <span class="n">cbdata</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Signature of the callback function for :func:`~spaudio.SpAudio.setcallback` method.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        audio (SpAudio): An instance of SpAudio class.</span>
+<span class="sd">        calltype (int): The callback type.</span>
+<span class="sd">            OUTPUT_POSITION_CALLBACK or OUTPUT_BUFFER_CALLBACK.</span>
+<span class="sd">        cbdata: callback-depend data.</span>
+<span class="sd">            a position (int) on OUTPUT_POSITION_CALLBACK</span>
+<span class="sd">            or a buffer (bytes) on OUTPUT_BUFFER_CALLBACK.</span>
+<span class="sd">        args: Variable length argument list specified at :func:`~spaudio.SpAudio.setcallback`.</span>
+<span class="sd">            Note that this &#39;args&#39; variable does not require the prefix &#39;*&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: False if you don&#39;t want to fire callbacks anymore.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="SpAudio"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio">[docs]</a><span class="k">class</span> <span class="nc">SpAudio</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A class for audio I/O.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        driver_name (str): the driver name to initialize.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drivername</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initdriver</span><span class="p">(</span><span class="n">drivername</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SpAudio.reload"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.reload">[docs]</a>    <span class="k">def</span> <span class="nf">reload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drivername</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reloads a new audio driver.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initdriver</span><span class="p">(</span><span class="n">drivername</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.terminate"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.terminate">[docs]</a>    <span class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Terminates the current audio driver.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">_spFreeAudioDriver</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+            <span class="k">global</span> <span class="n">_audio_global</span>
+            <span class="n">_audio_global</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">_initdriver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drivername</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes the audio driver.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">drivername</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">global</span> <span class="n">_ischarbinary</span>
+            <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+                <span class="k">global</span> <span class="n">_encoding</span>
+                <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">_encoding</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">encodedname</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">global</span> <span class="n">_audio_global</span>
+        <span class="k">if</span> <span class="n">_audio_global</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="o">=</span> <span class="n">_audio_global</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spInitAudioDriver</span><span class="p">(</span><span class="n">encodedname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;cannot load audio driver&#39;</span><span class="p">)</span>
+            <span class="n">_audio_global</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span>
+
+<div class="viewcode-block" id="SpAudio.getndevices"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getndevices">[docs]</a>    <span class="k">def</span> <span class="nf">getndevices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the number of audio devices.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">numdevice</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetNumAudioDevice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">numdevice</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getdevicename"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getdevicename">[docs]</a>    <span class="k">def</span> <span class="nf">getdevicename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deviceindex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the name of the audio device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">deviceindex</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">deviceindex</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getndevices</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;0 &lt;= index &lt; </span><span class="si">%d</span><span class="s1"> is required&#39;</span>
+                             <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">getndevices</span><span class="p">())</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">xspGetAudioDeviceName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">deviceindex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">global</span> <span class="n">_ischarbinary</span>
+            <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+                <span class="k">global</span> <span class="n">_encoding</span>
+                <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">_encoding</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getdevicelist"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getdevicelist">[docs]</a>    <span class="k">def</span> <span class="nf">getdevicelist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the list of audio devices.&quot;&quot;&quot;</span>
+        <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getndevices</span><span class="p">()):</span>
+            <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getdevicename</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span></div>
+
+<div class="viewcode-block" id="SpAudio.selectdevice"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.selectdevice">[docs]</a>    <span class="k">def</span> <span class="nf">selectdevice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deviceindex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects an audio device which has the index specified.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">deviceindex</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">deviceindex</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getndevices</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;0 &lt;= index &lt; </span><span class="si">%d</span><span class="s1"> is required&#39;</span>
+                             <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">getndevices</span><span class="p">())</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSelectAudioDevice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">deviceindex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;cannot select the audio device&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setcallback"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setcallback">[docs]</a>    <span class="k">def</span> <span class="nf">setcallback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calltype</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets a callback function.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            calltype (int): A combination of callback types.</span>
+<span class="sd">                OUTPUT_POSITION_CALLBACK and OUTPUT_BUFFER_CALLBACK</span>
+<span class="sd">                are supported currently.</span>
+<span class="sd">            func (callable): Callback function. The callback must have</span>
+<span class="sd">                a signature in the :func:`~spaudio.callbacksignature` document.</span>
+<span class="sd">            *args: Variable length argument list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioCallbackFunc_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">calltype</span><span class="p">,</span> <span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;cannot set a callback function&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setsamprate"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setsamprate">[docs]</a>    <span class="k">def</span> <span class="nf">setsamprate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samprate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets sample rate of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioSampleRate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">samprate</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getsamprate"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getsamprate">[docs]</a>    <span class="k">def</span> <span class="nf">getsamprate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets sample rate of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">samprate</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioSampleRate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">samprate</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setsampbit"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setsampbit">[docs]</a>    <span class="k">def</span> <span class="nf">setsampbit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sampbit</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets bits/sample of the current device. sampbit = 33 means</span>
+<span class="sd">        32bit float.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sampbit</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sampbit &gt;= 8 is required&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioSampleBit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">sampbit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setsampwidth"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setsampwidth">[docs]</a>    <span class="k">def</span> <span class="nf">setsampwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sampwidth</span><span class="p">,</span> <span class="n">floatflag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets bytes/sample of the current device.&quot;&quot;&quot;</span>
+        <span class="n">sampbit</span> <span class="o">=</span> <span class="n">sampwidth</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">floatflag</span><span class="p">:</span>
+            <span class="n">sampbit</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">setsampbit</span><span class="p">(</span><span class="n">sampbit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getsampbit"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getsampbit">[docs]</a>    <span class="k">def</span> <span class="nf">getsampbit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets bits/sample of the current device. sampbit = 33 means</span>
+<span class="sd">        32bit float.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">sampbit</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioSampleBit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sampbit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getsampwidth"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getsampwidth">[docs]</a>    <span class="k">def</span> <span class="nf">getsampwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets bytes/sample of the current device.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getsampbit</span><span class="p">()</span> <span class="o">/</span> <span class="mi">8</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getrawsampbit"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getrawsampbit">[docs]</a>    <span class="k">def</span> <span class="nf">getrawsampbit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the bits/sample specified.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">sampbit</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioSpecifiedSampleBit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sampbit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getrawsampwidth"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getrawsampwidth">[docs]</a>    <span class="k">def</span> <span class="nf">getrawsampwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the bytes/sample specified.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getrawsampbit</span><span class="p">()</span> <span class="o">/</span> <span class="mi">8</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setnchannels"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setnchannels">[docs]</a>    <span class="k">def</span> <span class="nf">setnchannels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nchannels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the number of channels of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nchannels</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nchannels &gt;= 1 is required&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioChannel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">nchannels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getnchannels"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getnchannels">[docs]</a>    <span class="k">def</span> <span class="nf">getnchannels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the number of channels of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">nchannels</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioChannel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nchannels</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setbuffersize"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setbuffersize">[docs]</a>    <span class="k">def</span> <span class="nf">setbuffersize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffersize</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the buffer size of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioBufferSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">buffersize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getbuffersize"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getbuffersize">[docs]</a>    <span class="k">def</span> <span class="nf">getbuffersize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the buffer size of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">buffersize</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioBufferSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">buffersize</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setnbuffers"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setnbuffers">[docs]</a>    <span class="k">def</span> <span class="nf">setnbuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbuffers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the number of buffers of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nbuffers</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nbuffers &gt;= 1 is required&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioNumBuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">nbuffers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getnbuffers"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getnbuffers">[docs]</a>    <span class="k">def</span> <span class="nf">getnbuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the number of buffers of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">nbuffers</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioNumBuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nbuffers</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.setblockingmode"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.setblockingmode">[docs]</a>    <span class="k">def</span> <span class="nf">setblockingmode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the blocking mode of the current device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mode (int): 0 = blocking mode (default), 1 = nonblocking mode.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSetAudioBlockingMode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getblockingmode"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getblockingmode">[docs]</a>    <span class="k">def</span> <span class="nf">getblockingmode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the blocking mode of the current device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetAudioBlockingMode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mode</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.open"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Opens the current audio device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mode (str): Device opening mode. &#39;r&#39; means read mode, &#39;w&#39; means</span>
+<span class="sd">                        write mode. &#39;ro&#39; and &#39;wo&#39; which mean read only and</span>
+<span class="sd">                        write only modes are also supported. Although these modes</span>
+<span class="sd">                        validate only the specified mode, some environments recieve</span>
+<span class="sd">                        a benefit that the processing becomes faster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;o&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device has been opened with write only mode&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device has already been opened&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">elif</span> <span class="n">mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;o&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device has been opened with read only mode&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device has already been opened&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unknown open mode: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="k">global</span> <span class="n">_ischarbinary</span>
+        <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+            <span class="n">mode2</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode2</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spOpenAudioDevice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">mode2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DeviceError</span><span class="p">(</span><span class="s1">&#39;cannot open audio device&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.close"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Closes the current audio device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spCloseAudioDevice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DeviceError</span><span class="p">(</span><span class="s1">&#39;cannot close audio device&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.stop"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stops audio I/O.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spStopAudio</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DeviceError</span><span class="p">(</span><span class="s1">&#39;cannot stop audio I/O&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.sync"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.sync">[docs]</a>    <span class="k">def</span> <span class="nf">sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Synchronizes audio I/O.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spSyncAudio</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DeviceError</span><span class="p">(</span><span class="s1">&#39;cannot synchronize audio I/O&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getrawarraytypecode"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getrawarraytypecode">[docs]</a>    <span class="k">def</span> <span class="nf">getrawarraytypecode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the type code for python array.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            char: A type code for the current settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sampbit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampbit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">64</span><span class="p">:</span>
+            <span class="n">typecode</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span>
+        <span class="k">elif</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">33</span><span class="p">:</span>
+            <span class="n">typecode</span> <span class="o">=</span> <span class="s1">&#39;f&#39;</span>
+        <span class="k">elif</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">32</span><span class="p">:</span>
+            <span class="n">typecode</span> <span class="o">=</span> <span class="s1">&#39;l&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">typecode</span> <span class="o">=</span> <span class="s1">&#39;h&#39;</span>
+        <span class="k">return</span> <span class="n">typecode</span></div>
+
+<div class="viewcode-block" id="SpAudio.createrawarray"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.createrawarray">[docs]</a>    <span class="k">def</span> <span class="nf">createrawarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a raw array for the current device settings.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length: A length of the array. Note that this length is</span>
+<span class="sd">                    not identical to the number of frames</span>
+<span class="sd">                    (length = nframes * nchannels).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            array.array: An array class object for the current device settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampwidth</span><span class="p">()</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getrawarraytypecode</span><span class="p">(),</span> <span class="n">buffer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getarraytypecode"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getarraytypecode">[docs]</a>    <span class="k">def</span> <span class="nf">getarraytypecode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the type code for python array to store double array.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            char: A type code of double array for the current settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;d&#39;</span></div>
+
+<div class="viewcode-block" id="SpAudio.createarray"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.createarray">[docs]</a>    <span class="k">def</span> <span class="nf">createarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a double array for the current device settings.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length: A length of the array. Note that this length is</span>
+<span class="sd">                    not identical to the number of frames</span>
+<span class="sd">                    (length = nframes * nchannels).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            array.array: An array class object for the current device settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getarraytypecode</span><span class="p">(),</span> <span class="n">buffer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.getrawndarraydtype"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getrawndarraydtype">[docs]</a>    <span class="k">def</span> <span class="nf">getrawndarraydtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the dtype string for numpy ndarray.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            string: a dtype string for the current settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sampbit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampbit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">64</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s1">&#39;f8&#39;</span>
+        <span class="k">elif</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">33</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s1">&#39;f4&#39;</span>
+        <span class="k">elif</span> <span class="n">sampbit</span> <span class="o">&gt;=</span> <span class="mi">32</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s1">&#39;i4&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dtypestr</span> <span class="o">=</span> <span class="s1">&#39;i2&#39;</span>
+        <span class="k">return</span> <span class="n">dtypestr</span></div>
+
+<div class="viewcode-block" id="SpAudio.createrawndarray"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.createrawndarray">[docs]</a>    <span class="k">def</span> <span class="nf">createrawndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a raw numpy ndarray for the current device settings.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length: A length of the array. Note that this length is</span>
+<span class="sd">                    not identical to the number of frames</span>
+<span class="sd">                    (length = nframes * nchannels).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray: An ndarray class object for the current device settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampwidth</span><span class="p">()</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getrawndarraydtype</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SpAudio.getndarraydtype"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.getndarraydtype">[docs]</a>    <span class="k">def</span> <span class="nf">getndarraydtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the dtype string for numpy ndarray to store double array.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            string: a dtype string for the current settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;f8&#39;</span></div>
+
+<div class="viewcode-block" id="SpAudio.createndarray"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.createndarray">[docs]</a>    <span class="k">def</span> <span class="nf">createndarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a numpy double array for the current device settings.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length: A length of the array. Note that this length is</span>
+<span class="sd">                    not identical to the number of frames</span>
+<span class="sd">                    (length = nframes * nchannels).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray: An ndarray class object for the current device settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getndarraydtype</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SpAudio.readraw"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.readraw">[docs]</a>    <span class="k">def</span> <span class="nf">readraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reads raw data from the audio device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (bytearray, array.array or numpy.ndarray):</span>
+<span class="sd">                A buffer to receive raw data from the audio device.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The read size if successful, -1 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a valid buffer must be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device must be opened with read mode&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unsupported data type&#39;</span><span class="p">)</span>
+        <span class="n">nread</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spReadAudioBuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nread</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampwidth</span><span class="p">()</span> <span class="k">if</span> <span class="n">nread</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">nread</span></div>
+
+<div class="viewcode-block" id="SpAudio.writeraw"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.writeraw">[docs]</a>    <span class="k">def</span> <span class="nf">writeraw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Writes raw data to the audio device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (bytearray, array.array or numpy.ndarray):</span>
+<span class="sd">                A buffer to send raw data to the audio device.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The written size if successful, -1 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a valid buffer must be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device must be opened with write mode&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unsupported data type&#39;</span><span class="p">)</span>
+        <span class="n">nwrite</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spWriteAudioBuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nwrite</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">getrawsampwidth</span><span class="p">()</span> <span class="k">if</span> <span class="n">nwrite</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">nwrite</span></div>
+
+<div class="viewcode-block" id="SpAudio.read"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reads data to double array from the audio device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (bytearray, array.array or numpy.ndarray):</span>
+<span class="sd">                A buffer of double array to receive data from the audio device.</span>
+<span class="sd">            weight (double): a weighting factor multiplied to data after reading.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The read size if successful, -1 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a valid buffer must be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device must be opened with read mode&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">typecode</span> <span class="o">!=</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;the typecode must be </span><span class="se">\&#39;</span><span class="s1">d</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;the dtype must be </span><span class="se">\&#39;</span><span class="s1">f8</span><span class="se">\&#39;</span><span class="s1"> (</span><span class="se">\&#39;</span><span class="s1">float64</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unsupported data type&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spReadAudioDoubleBufferWeighted_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpAudio.write"><a class="viewcode-back" href="../spaudio.html#spaudio.SpAudio.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Writes data of double array to the audio device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (bytearray, array.array or numpy.ndarray):</span>
+<span class="sd">                A buffer of double array to send data to the audio device.</span>
+<span class="sd">            weight (double): A weighting factor multiplied to data before writing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The written size if successful, -1 otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_audio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;driver must be loaded&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;a valid buffer must be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_mode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;device must be opened with write mode&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">typecode</span> <span class="o">!=</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;the typecode must be </span><span class="se">\&#39;</span><span class="s1">d</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;ndarray&#39;</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;the dtype must be </span><span class="se">\&#39;</span><span class="s1">f8</span><span class="se">\&#39;</span><span class="s1"> (</span><span class="se">\&#39;</span><span class="s1">float64</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;unsupported data type&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spWriteAudioDoubleBufferWeighted_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_audio</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="getndrivers"><a class="viewcode-back" href="../spaudio.html#spaudio.getndrivers">[docs]</a><span class="k">def</span> <span class="nf">getndrivers</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Gets the number of drivers.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetNumAudioDriver</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="getdrivername"><a class="viewcode-back" href="../spaudio.html#spaudio.getdrivername">[docs]</a><span class="k">def</span> <span class="nf">getdrivername</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the name of the driver which has the index specified.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">getndrivers</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;0 &lt;= index &lt; </span><span class="si">%d</span><span class="s1"> is required&#39;</span>
+                         <span class="o">%</span> <span class="n">getndrivers</span><span class="p">())</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">xspGetAudioDriverName</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">global</span> <span class="n">_ischarbinary</span>
+        <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DriverError</span><span class="p">(</span><span class="s1">&#39;audio driver error&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="getdriverlist"><a class="viewcode-back" href="../spaudio.html#spaudio.getdriverlist">[docs]</a><span class="k">def</span> <span class="nf">getdriverlist</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Gets a list of driver names.&quot;&quot;&quot;</span>
+    <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">getndrivers</span><span class="p">()):</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">getdrivername</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span></div>
+
+
+<div class="viewcode-block" id="getndriverdevices"><a class="viewcode-back" href="../spaudio.html#spaudio.getndriverdevices">[docs]</a><span class="k">def</span> <span class="nf">getndriverdevices</span><span class="p">(</span><span class="n">drivername</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the number of devices in the driver.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">drivername</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">global</span> <span class="n">_ischarbinary</span>
+        <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+            <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">encodedname</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">spGetNumAudioDriverDevice</span><span class="p">(</span><span class="n">encodedname</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="getdriverdevicename"><a class="viewcode-back" href="../spaudio.html#spaudio.getdriverdevicename">[docs]</a><span class="k">def</span> <span class="nf">getdriverdevicename</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">drivername</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the name of the device in the driver.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_ischarbinary</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">getndriverdevices</span><span class="p">(</span><span class="n">drivername</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;0 &lt;= index &lt; </span><span class="si">%d</span><span class="s1"> is required&#39;</span>
+                         <span class="o">%</span> <span class="n">getndriverdevices</span><span class="p">(</span><span class="n">drivername</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">drivername</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+            <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">encodedname</span> <span class="o">=</span> <span class="n">drivername</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">encodedname</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">devicename</span> <span class="o">=</span> <span class="n">_spaudio_c</span><span class="o">.</span><span class="n">xspGetAudioDriverDeviceName</span><span class="p">(</span><span class="n">encodedname</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">devicename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_ischarbinary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">devicename</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">devicename</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">driverlist</span> <span class="o">=</span> <span class="n">getdriverlist</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">getndrivers</span><span class="p">()):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Driver </span><span class="si">%d</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">driverlist</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">getndriverdevices</span><span class="p">(</span><span class="n">driverlist</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Device </span><span class="si">%d</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span>
+                  <span class="o">%</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">getdriverdevicename</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">driverlist</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-2019  Hideki Banno
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

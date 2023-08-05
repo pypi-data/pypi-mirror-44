@@ -1,0 +1,62 @@
+Introduction
+============
+This package is an audio I/O library based on
+`spAudio library <http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/index.html>`_ written in C.
+
+
+Installation
+============
+
+You can use ``pip`` to install binary package::
+  
+  pip install spaudio
+
+Note that this package doesn't support Python 2.
+
+The linux version also requires `spPlugin <http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/index.html>`_
+installation (currently, only the pulsesimple plugin which provides audio I/O
+based on `PulseAudio <https://www.freedesktop.org/wiki/Software/PulseAudio/>`_ is required).
+You can install it by using ``dpkg`` (Ubuntu) or ``rpm`` (CentOS) command with one of the following
+packages.
+
+* Ubuntu 18
+  
+  * amd64: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu18/spplugin_0.8.5-4_amd64.deb
+  * i386: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu18/spplugin_0.8.5-4_i386.deb
+    
+* Ubuntu 16
+
+  * amd64: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu16/spplugin_0.8.5-4_amd64.deb
+  * i386: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu16/spplugin_0.8.5-4_i386.deb
+  
+* Ubuntu 14
+
+  * amd64: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu14/spplugin_0.8.5-4_amd64.deb
+  * i386: http://www-ie.meijo-u.ac.jp/labs/rj001/archive/deb/ubuntu14/spplugin_0.8.5-4_i386.deb
+
+* CentOS 7
+
+  * http://www-ie.meijo-u.ac.jp/labs/rj001/archive/rpm/el7/x86_64/spPlugin-0.8.5-4.x86_64.rpm
+
+* CentOS 6
+
+  * http://www-ie.meijo-u.ac.jp/labs/rj001/archive/rpm/el6/x86_64/spPlugin-0.8.5-4.x86_64.rpm
+
+If you want to use ``apt`` (Ubuntu) or ``yum`` (CentOS),
+see `this page (for Ubuntu) <http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/linux_download-j.html#apt_dpkg>`_
+or `this page (for CentOS) <http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/linux_download.html#yum>`_ .
+
+
+Build
+=====
+To build this package, the following are required.
+
+* `SWIG <http://www.swig.org/>`_
+* `spBase and spAudio <http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/index.html>`_
+
+
+Official Site
+=============
+The official web site is: http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/python/spAudio/en/index.html
+
+Japanese web site is also available: http://www-ie.meijo-u.ac.jp/labs/rj001/spLibs/python/spAudio/ja/index.html
