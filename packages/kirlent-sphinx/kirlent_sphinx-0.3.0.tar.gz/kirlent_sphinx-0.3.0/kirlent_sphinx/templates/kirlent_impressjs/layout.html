@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="{{ theme_lang }}">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+    {%- set page_title = "" if embedded or not docstitle else docstitle|e %}
+    <title>{{ page_title }}</title>
+
+    <link rel="stylesheet" href="{{ pathto('_static/css/tailwind.min.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/css/classic-slides.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/css/kirlent.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}"/>
+    {%- for cssfile in css_files %}
+    <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}"/>
+    {%- endfor %}
+
+    {%- if not embedded %}
+      {%- if favicon %}
+      <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
+      {%- endif %}
+    {%- endif %}
+
+    {%- for scriptfile in script_files %}
+    {%- if scriptfile not in ('_static/underscore.js', '_static/doctools.js') %}
+    <script src="{{ pathto(scriptfile, 1) }}"></script>
+    {%- endif %}
+    {%- endfor %}
+  </head>
+  <body>
+    <div id="impress"
+         data-width="{{ theme_width }}"
+         data-height="{{ theme_height }}"
+         data-min-scale="{{ theme_min_scale }}"
+         data-max-scale="{{ theme_max_scale }}"
+         data-perspective="{{ theme_perspective }}"
+         data-transition-duration="{{ theme_transition_duration }}">
+      {% block body %}{% endblock %}
+    </div>
+
+    <script src="{{ pathto('_static/js/impress.js', 1) }}"></script>
+    <script>
+      impress().init();
+    </script>
+  </body>
+</html>

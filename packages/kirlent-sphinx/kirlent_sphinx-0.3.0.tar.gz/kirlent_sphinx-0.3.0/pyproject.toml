@@ -1,0 +1,66 @@
+[tool.poetry]
+name = "kirlent_sphinx"
+version = "0.3.0"
+description = "Sphinx extension for slides and extended tables."
+readme = "README.rst"
+
+authors = ["H. Turgut Uyar <uyar@tekir.org>"]
+license = "BSD-3-Clause"
+
+homepage = "https://gitlab.com/tekir/kirlent_sphinx"
+documentation = "https://gitlab.com/tekir/kirlent_sphinx"
+repository = "https://gitlab.com/tekir/kirlent_sphinx"
+
+keywords = ["sphinx", "table", "slide", "presentation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Framework :: Sphinx :: Extension",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Text Processing :: Markup :: HTML"
+]
+
+[tool.poetry.dependencies]
+python = "^3.5"
+sphinx = "^1.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^4.2"
+flake8 = "^3.7"
+flake8-isort = "^2.6"
+
+[tool.black]
+line-length = 96
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py{37,36,35}, pypy3, style
+skipsdist = True
+
+[testenv]
+whitelist_externals = poetry
+skip_install = true
+commands =
+    poetry install -v
+    poetry run {posargs:pytest}
+
+[testenv:style]
+whitelist_externals = poetry
+skip_install = true
+commands =
+    poetry install -v
+    poetry run {posargs:flake8} kirlent_sphinx
+"""
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

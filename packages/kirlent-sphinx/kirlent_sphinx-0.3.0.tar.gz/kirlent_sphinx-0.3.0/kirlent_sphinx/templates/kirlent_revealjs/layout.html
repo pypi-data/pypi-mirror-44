@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="{{ theme_lang }}">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+    {%- set page_title = "" if embedded or not docstitle else docstitle|e %}
+    <title>{{ page_title }}</title>
+
+    <link rel="stylesheet" href="{{ pathto('_static/css/tailwind.min.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/css/reveal.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/css/kirlent.css', 1) }}"/>
+    <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}"/>
+    {%- for cssfile in css_files %}
+    <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}"/>
+    {%- endfor %}
+
+    {%- if not embedded %}
+      {%- if favicon %}
+      <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
+      {%- endif %}
+    {%- endif %}
+
+    {%- for scriptfile in script_files %}
+    {%- if scriptfile not in ('_static/underscore.js', '_static/doctools.js') %}
+    <script src="{{ pathto(scriptfile, 1) }}"></script>
+    {%- endif %}
+    {%- endfor %}
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        {% block body %}{% endblock %}
+      </div>
+    </div>
+
+    <script src="{{ pathto('_static/lib/js/head.min.js', 1) }}"></script>
+    <script src="{{ pathto('_static/js/reveal.js', 1) }}"></script>
+
+    <script>
+      Reveal.initialize({
+        width: {{ theme_width }},
+        height: {{ theme_height }},
+
+        margin: {{ theme_margin }},
+
+        minScale: {{ theme_min_scale }},
+        maxScale: {{ theme_max_scale }},
+
+        controls: {{ theme_controls|lower }},
+        progress: {{ theme_progress|lower }},
+        history: {{ theme_history|lower }},
+        center: {{ theme_center|lower }},
+
+        keyboard : {{ theme_keyboard|lower }},
+        overview: {{ theme_overview|lower }},
+        touch: {{ theme_touch|lower }},
+        loop: {{ theme_loop|lower }},
+        rtl: {{ theme_rtl|lower }},
+        fragments: {{ theme_fragments|lower }},
+
+        autoSlide: {{ theme_auto_slide|lower }},
+        mouseWheel: {{ theme_mouse_wheel|lower }},
+        rollingLinks: {{ theme_rolling_links|lower }},
+        previewLinks: {{ theme_preview_links|lower }},
+
+        transitionSpeed: "{{ theme_transition_speed }}",
+        backgroundTransition: "{{ theme_background_transition }}",
+
+        slideNumber: {{ theme_slide_number|lower }},
+        embedded: {{ theme_embedded|lower }},
+        autoSlideStoppable: {{ theme_auto_slide_stoppable|lower }},
+        hideAddressBar: {{ theme_hide_address_bar|lower }},
+
+        parallaxBackgroundImage: "{{ theme_parallax_background_image }}",
+        parallaxBackgroundSize: "{{ theme_parallax_background_size }}",
+
+        focusBodyOnPageVisiblityChange: {{ theme_focus_body_on_page_visibility_change|lower }},
+
+        viewDistance: {{ theme_view_distance }},
+
+        transition: Reveal.getQueryHash().transition || "{{ theme_transition }}",
+
+        {% if theme_multiplex %}
+        multiplex: {
+            {%- for k, v in theme_multiplex.items() -%}
+            {%- if v %}
+                {{ k }}: "{{ v }}"{%- if not loop.last %},{% endif -%}
+            {% endif -%}
+            {% endfor %}
+        },
+        {% endif -%}
+
+        dependencies: [
+           { src: '{{ pathto('_static/lib/js/classList.js', 1) }}', condition: function() { return !document.body.classList; } },
+           { src: '{{ pathto('_static/plugin/zoom-js/zoom.js', 1) }}', async: true, condition: function() { return !!document.body.classList; } },
+           {%- for plugin in theme_plugin_list %}
+           { src: '{{ plugin }}', async: true, condition: function() { return !!document.body.classList; } },
+           {% endfor %}
+           { src: '{{ pathto('_static/plugin/notes/notes.js', 1) }}', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+    </script>
+  </body>
+</html>
