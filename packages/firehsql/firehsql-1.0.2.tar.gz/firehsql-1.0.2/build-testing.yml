@@ -1,0 +1,82 @@
+lib:
+    options:
+        pylint_config_file: etc/pylint.rc
+
+    fireh_runner:
+        pylint:
+            raw_file_in: "{_1}/{_2}/**/*.py"
+
+
+firehsql:
+    options:
+        pylint_config_file: etc/pylint.rc
+        unittest_work_dir: ./
+
+    expressions:
+        pylint:
+            raw_file_in: "{_1}/{_2}/*.py"
+
+    statements:
+        pylint:
+            raw_file_in: "{_1}/{_2}/*.py"
+
+
+    filter_by:
+        pylint:
+            rule_in:
+                - "{_1}/expressions/pylint"
+            raw_file_in:
+                - "{_1}/{_2}.py"
+
+
+    order_by:
+        pylint:
+            raw_file_in:
+                - "{_1}/{_2}.py"
+
+
+    field:
+        pylint:
+            raw_file_in:
+                - "{_1}/{_2}.py"
+
+
+    schema:
+        pylint:
+            raw_file_in:
+                - "{_1}/schema.py"
+
+
+    sql:
+        pylint:
+            rule_in:
+                - "{_1}/expressions/pylint"
+                - "{_1}/filter_by/pylint"
+                - "{_1}/order_by/pylint"
+                - "{_1}/field/pylint"
+                - "{_1}/schema/pylint"
+            raw_file_in:
+                - "{_1}/{_2}.py"
+
+
+    select_sql:
+        pylint:
+            rule_in:
+                - "{_1}/sql/pylint"
+            raw_file_in:
+                - "{_1}/{_2}.py"
+
+
+    join_sql:
+        pylint:
+            rule_in:
+                - "{_1}/select_sql/pylint"
+            raw_file_in:
+                - "{_1}/{_2}.py"
+                - "{_1}/tests/test_select_sql_join.py"
+
+        unittest:
+            options:
+                targets:
+                    - "{_1}.tests.test_select_sql_join"
+            rule_in: "{_1}/{_2}/pylint"
