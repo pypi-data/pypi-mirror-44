@@ -1,0 +1,48 @@
+# language: en
+
+Feature: Montrac
+     Montrac je dopravníkový systém s několika samostatnými vozíčky. Tyto vozíčky přepravují částečně zkompletované výrobky mezi několika stanicemi.
+Background:
+  Given linebeProgramNumber == on
+
+Scenario: As soon as station XZX is free, then shuttle XY goes to station XZX.
+  When stationxzxfree
+  Then shuttlexyDestination == xzx
+Scenario: As soon as robot R1 picks up cube 1, then robot R1 puts cube 1 on shuttle XY on position 1.
+  When robotr1ProgramNumber == 3
+  Then robotr1ProgramNumber == 4
+Scenario: When station XXX is free, then shuttle X goes to station XXX.
+  When stationxxxfree
+  Then shuttlexDestination == xxx
+Scenario: When station XZZ is free, then shuttle Y goes to station XZZ.
+  When stationxzzfree
+  Then shuttleyDestination == xzz
+Scenario: Given station XXX is empty, then shuttle Y goes to station XXX.
+  Given stationxxxCount == 1
+  Then shuttleyDestination == xxx
+Scenario: As soon as station XZY is free, then shuttle Y goes to station XZY.
+  When stationxzyfree
+  Then shuttleyDestination == xzy
+Scenario: when station ZZZ is free, then shuttle X goes to station ZZZ.
+  When stationzzzfree
+  Then shuttlexDestination == zzz
+Scenario: Given robot R replenish a storage and shuttle X is in the station ZZZ, when shuttle X is full, then shuttle goes to station RRR by robot R.
+  Given None
+  When shuttlexfull
+  Then None
+Scenario: Given robot R needs to replenish a storage, when station ZZZ is free, then shuttle Y goes to station ZZZ.
+  Given robotrProgramNumber == 3
+  When stationzzzfree
+  Then shuttleyDestination == zzz
+Scenario: Given shuttle Y is in the station ZZZ, when shuttle Y is full, then shuttle goes to station RRR.
+  Given shuttleyAtStationzzz
+  When shuttleyfull
+  Then shuttleDestination == rrr
+Scenario: Given robot R replenish a storage, when station ZZZ is free, then shuttle Z goes to station ZZZ.
+  Given robotrProgramNumber == 2
+  When stationzzzfree
+  Then shuttlezDestination == zzz
+Scenario: Given shuttle Z is in the station ZZZ, when shuttle Z is full, then shuttle Z goes to station RRR.
+  Given shuttlezAtStationzzz
+  When shuttlezfull
+  Then shuttlezDestination == rrr
