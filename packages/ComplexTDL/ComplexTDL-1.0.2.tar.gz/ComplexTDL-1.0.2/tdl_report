@@ -1,0 +1,172 @@
+#! /Users/xiaotian/anaconda3/bin/python3.6
+#coding:utf-8
+
+from ComplexTDL import sysXXt, Report
+import sys
+import re
+import os.path
+from datetime import datetime, timedelta
+
+helpInfo = '''-h: for help
+
+-l period: shows the logs, that is what is done during the period
+-t period: show the tasks to be completed during the period
+-a period: show all the tasks during the period
+NOTE: the period can be like:
+
+* last week / this week / next week
+* last month/ this month / next month
+* all
+* xxxx-xx-xx or xxxx-xx-xx|xxxx-xx-xx
+* n, where n= ..., -2, -1, 0, 1, 2,... 0 means today, -1 means yesterday and 1 means tomorrow
+
+-f format: output format, the format include:
+    * md list: markdown list
+    * md list no: markdown list with task number appended
+    * md table: markdown list
+    * excel filepath--filename: excel, you can add the file path and the file name, or it will produce the "report.xlsx" in current path
+
+-p person: who's in charge, support one person, if you want more than one person, use the -q 
+-s sort: how to sort the tasks, support: module, date
+-d only shows the tasks which will expire before the end date
+-q complex search, type -h -q for details
+
+-o output the result in the command line
+'''
+
+queryHelp = '''You can add any other conditions if you want to filt the result.
+the expression includs three parts, e.g. "ti==test"
+
+    * keys: keys defined in the task DB, "ti" in the example
+    * operator:  includes =(value equal), <=, >=, >, <, !=, ~=(include), ==(string equal), "==" in the example
+    * value: "test" in the example
+
+There can be more than one value in one expression with "or" logic, which can be seperate using ', ', e.g. "ti==test1, test2"
+NOTE: spacebar is allowed between the parts, that is "ti == test1, test2" is not illegal, but "ti==test of one, test of two" is legal
+
+And it support more than one exprssions in one sentence, these expressions should be seperated by one spacebar, and using "and" logic
+e.g. "ti==test mo=private jobs st<=2018-09-13"
+'''
+
+
+def main(args):
+
+    # Default parameters
+    detail = 'all'
+    range = 'tdl'
+    format = ''
+    period = 'last week'
+    end = False
+    sort = ''
+    taskList = []
+    specialFormat = False # is it a general query
+    generalQ = None # the explict query words
+    showParent = False
+    person = 'me'
+    deadline = False
+    filePath = '.'
+    fileName = 'report'
+    output = False
+
+    # the parameters
+    shortParaList = 'hltafsdqo'
+    longParaList = []
+    args, opts = sysXXt.argument(args, shortParaList, longParaList)
+
+    # start parse the parameters
+    if opts == {'': ''} and args == '':
+        print(helpInfo)
+        sys.exit()
+    
+    for opt in opts:
+        arg = opts[opt]
+
+        # help info
+        if opt == '-h':
+
+            if arg == '':  print(helpInfo)
+            if arg == '-q': print(queryHelp)
+            sys.exit()
+
+        # what've been done
+        if opt == '-l':
+            period = arg if arg != '' else 'last week'
+            range = 'history'
+            detail = 'some'
+            if format == '': format = 'md list'
+            specialFormat = True
+            showParent = True
+
+        # taks to do
+        if opt == '-t': 
+            period = arg if arg != '' else '0'
+            range = 'todo'
+            detail = 'all'
+            # if sort == '': sort = 'date'
+            if format == '': format = 'md table'
+            specialFormat = True
+            showParent = True
+
+        # all tasks
+        if opt == '-a':
+            period = arg if arg != '' else 'all'
+            range = 'all'
+            detail = 'all'
+            if format == '': format = 'excel'
+            specialFormat = True
+        
+        # format
+        if opt == '-f':
+            if 'excel' in arg:
+                para = ''.join(arg.split(' ')[1:])
+                pnn = para.split('--')
+                if len(pnn) == 1 and pnn[0] != '': 
+                    fileName = pnn[0]
+                elif len(pnn) == 2:
+                    if pnn[0] != '': filePath = os.path.expanduser(pnn[0])
+                    if pnn[1] != '': fileName = pnn[1]
+
+                format = 'excel'
+            else:
+                format = arg
+
+        # person
+        if opt == '-p': 
+            person = arg
+
+        # sort
+        if opt == '-s': 
+            sort = arg
+
+        # deadline
+        if opt == '-d': 
+            deadline = True
+
+        # general query
+        if opt == '-q':
+            generalQ = arg
+
+        # output the result
+        if opt == '-o':
+            output = True
+
+    if format == '': format = 'md list'
+    if sort == '':  sort = 'module'
+
+
+    ## get the data
+    if specialFormat == False:
+        taskList = Report.Search(generalQ)
+    else:
+        taskList = Report.Report(period=period, range=range, person=person, deadline=deadline, conditions = generalQ, detail=detail, sort=sort)
+
+    ## generate the report
+    if format == 'md list' or format == 'md list no': callback = Report.GenerateMD(taskList, format=format)
+    elif format == 'md table': callback = Report.GenerateMD(taskList, format='md table')
+    elif format == 'excel': callback = Report.GenerateExcel(taskList, filePath=filePath, fileName=fileName, showParent=showParent)
+
+    ## output
+    if output == True： print(callback)
+    
+if __name__ == '__main__':
+    main(sys.argv[1:])
