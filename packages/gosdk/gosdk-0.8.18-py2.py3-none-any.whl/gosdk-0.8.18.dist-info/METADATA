@@ -1,0 +1,111 @@
+Metadata-Version: 2.1
+Name: gosdk
+Version: 0.8.18
+Summary: gosdk
+Home-page: UNKNOWN
+Author: Ian Maurer
+Author-email: ian@genomoncology.com
+License: Proprietary
+Keywords: Bioinformatics HGVS VCF Clinical Trials Genomics
+Platform: UNKNOWN
+Classifier: License :: Other/Proprietary License
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Requires-Dist: specd (>=0.8.1)
+Requires-Dist: backoff (>=1.5.0)
+Requires-Dist: structlog (>=18.1.0)
+Requires-Dist: flask (==1.0.2)
+
+gosdk - GenomOncology Software Development Kit
+==============================================
+
+This is a proprietary package that is available from [GenomOncology] and works
+with our [Knowledge Management System].
+
+For more information about licensing please contact us at:
+
+info@genomoncology.com
+
+
+Additional proprietary projects available for download via pypi include:
+
+* [GO VCF] - GenomOncology Variant Call File "call" generator
+* [GO CLI] - GenomOncology Command Line Interface
+
+Our open source projects include:
+
+* [Related] - Nested Object Models in Python with dictionary, YAML, and JSON transformation support
+* [Specd] - Swagger v2 Specification Directories
+* [Rigor] - HTTP-based DSL for for validating RESTful APIs
+
+
+Overview
+--------
+
+The GenomOncology Software Development Kit (SDK) is to be used with a running instance
+of the GenomOncology Knowledge Management System. It is built on top of the [Specd] project
+and currently provides access to the following functionality:
+
+* Variant HGVS Calculation (g., p., c.)
+* Variant Annotation (e.g. gnomAD, dbSNP, etc.)
+* Variant Classification (e.g. ACGM or AMP Tiers)
+* Gene and Protein Information
+* Clinical Trial Matching
+* Therapeutic Matching
+* Variant Warehouse Loading and Querying
+
+
+
+sync mode
+----------
+
+When `async_enabled` is not passed in (default is False) then operation is in
+"normal" synchronous mode.
+
+```python
+
+TOKEN = "..."
+HGVS_G = "NC_000007.13:g.140453136A>T"
+
+from gosdk import construct_sdk
+sdk = construct_sdk(token=TOKEN)
+a_list = sdk.annotations.get_annotations(batch=[HGVS_G]).result()
+annotation = a_list.get_annotation(HGVS_G)
+assert annotation.canonical_c_dot == "NM_004333.4:c.1799T>A"
+```
+
+
+async mode
+----------
+
+When `async_enabled` is True you must then interact with the library using
+the async/await paradigm.
+
+```python
+
+TOKEN = "..."
+HGVS_G = "NC_000007.13:g.140453136A>T"
+
+from gosdk import construct_sdk
+sdk = construct_sdk(async_enabled=True, token=TOKEN, loop=loop)
+a_list = await sdk.annotations.get_annotations(batch=[HGVS_G]).result()
+annotation = a_list.get_annotation(HGVS_G)
+assert annotation.canonical_c_dot == "NM_004333.4:c.1799T>A"
+```
+
+
+[GenomOncology]: https://genomoncology.com/
+[Knowledge Management System]: https://genomoncology.com/solutions/clinical-oncology/
+[Related]: https://github.com/genomoncology/related
+[Specd]: https://github.com/genomoncology/specd 
+[Rigor]: https://github.com/genomoncology/rigor 
+[GO VCF]: https://pypi.org/project/govcf/
+[GO CLI]: https://pypi.org/project/gocli/
+
+
+
+
