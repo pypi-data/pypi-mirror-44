@@ -1,0 +1,118 @@
+Metadata-Version: 2.1
+Name: f2-probe-detector
+Version: 0.2.0
+Summary: Flamingos 2 - Probe Detector
+Home-page: https://gitlab.gemini.edu/DRSoftware/gemaux_python/
+Author: Bruno Quint
+Author-email: bquint@gemini.edu
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Description-Content-Type: text/markdown
+
+# Flamingos 2 Probe Detector
+
+This package contains a single script used to detect the position of the 
+Flamingos 2 Guide Probe with sub-pixel accuracy. For that, it uses several 
+morphological operations available inside the `scipy.ndimage` package.
+
+The probe position, for now, is obtained using Center of Mass. That means that 
+the whole probe image should be displayed. If the Probe Image touches the 
+edge of the field of view, the results are unpredictable. 
+
+## Requirements
+
+Before you install this package, make sure your Python environment has all 
+the required dependencies:
+
+- Python 3
+- astropy
+- matplotlib
+- numpy
+- scipy
+- opencv2
+
+The best way of having all of them at once is installing Anaconda and 
+AstroConda.
+
+## Install
+
+Once you are inside a `conda` environment, you can install this package by 
+simply typing: 
+
+```bash
+   # Make sure you activate your virtual environment
+   $ source activate $MYENV  
+
+   # Install using pip
+   $ pip install f2_probe_detector
+```
+
+It is highly recommended that you install this package inside a Anaconda 
+virtual environment. If possible, install is inside your "astroconda" venv.
+
+## Running
+
+To get information about how to run this script, you can type:
+
+```bash
+   $ get_f2_probe_position --help 
+```
+
+```bash
+   $ get_f2_probe_position file_1.fits file_2.fits ... file_n.fits
+
+   filename                                 x          y         
+--------------------------------------------------------------
+...est_get_f2_probe_position/file_1.fits 1091.43815  583.93075
+...est_get_f2_probe_position/file_2.fits 1091.43815  583.93075
+...est_get_f2_probe_position/file_3.fits 1091.43815  583.93075
+..._get_f2_probe_position/test_data.fits 1091.43815  583.93075
+```
+
+or
+
+```bash
+   $ get_f2_probe_position file_*.fits
+
+   filename                                 x          y         
+--------------------------------------------------------------
+...est_get_f2_probe_position/file_1.fits 1091.43815  583.93075
+...est_get_f2_probe_position/file_2.fits 1091.43815  583.93075
+...est_get_f2_probe_position/file_3.fits 1091.43815  583.93075
+..._get_f2_probe_position/test_data.fits 1091.43815  583.93075 
+```
+
+## Data Acquisition
+
+The code may be sensitive to strong changes in exposure time, readout mode, etc.
+So the user may want to keep the data as uniform as possible. For that, here 
+is the configuration used in most of the tests:
+
+### Flamingos2 component
+
+- Filter: K-short
+- Read Mode: Bright
+- Exposure Time: 12 s
+- Disperser: None
+- Lyot Wheel: f/16 (open)
+
+### Sequence component: Manual Flat Daytime Calibration
+
+- Lamp: IR grey body - high
+- Shutter: closed
+- Filter: ND4-5
+- Diffuser: IR
+- Coadds: 1. (Default/Only mode for F2)
+
+## Known Issues
+
+1. `get_f2_probe_position` will not fail if cannot find a probe. If you get a 
+  very weird value, check the image.
+2. `get_f2_probe_position` will not work if the probe shadow touches the edge. 
+
+
+
