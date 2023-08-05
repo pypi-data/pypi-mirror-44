@@ -1,0 +1,121 @@
+Metadata-Version: 2.1
+Name: bigsudo
+Version: 0.2.0.post2
+Summary: Obscene ansible runner
+Home-page: https://yourlabs.io/oss/bigsudo
+License: UNKNOWN
+Description: bigsudo: Obscene ansible runner
+        ===============================
+        
+        Bigsudo is an opinionated command line wrapper to ansible-playbook.
+        
+        Features
+        --------
+        
+        It accepts as first argument: role name, path or url, or playbook path
+        or url::
+        
+            bigsudo role.name # download role and run tasks/main.yml on localhost
+        
+            bigsudo role.name update # do tasks/update.yml
+            bigsudo role.name user@host update # do tasks/update.yml on host
+            bigsudo role.name @host update # with current user
+            bigsudo role.name @host update foo=bar # custom variable
+            bigsudo role.name {"foo":"bar"} # also accepts json without space
+            bigsudo role.name --become # forwards any ansible-playbook argument
+        
+        Note that bigsudo will automatically call ansible-galaxy install on
+        requirements.yml it finds in any role, recursively on each role that it got
+        galaxy to install. This means that yourlabs.docker/requirements.yml will also
+        be installed by bigsudo if your repo has this requirements.yml::
+        
+            - src: git+https://yourlabs.io/oss/yourlabs.docker
+        
+        The gotcha is that you cannot pass values to a short-written argument (because
+        it's my opinion that ansible commands are more readable as such), ie::
+        
+            # works:
+            $ ./example/playbook.yml --tags=foo
+            ansible-playbook --tags=foo -c local -i localhost, -e apply_tasks='["main"]' ./example/playbook.yml
+        
+            # does NOT work: parser doesn't detect that foo is the value of -t:
+            $ ./example/playbook.yml -t foo
+            ansible-playbook -t -c local -i localhost, -e apply_tasks='["foo"]' ./example/playbook.yml
+        
+            # does NOT work: parser doesn't detect that foo is the value of --tags:
+            $ ./example/playbook.yml --tags foo
+            ansible-playbook --tags -c local -i localhost, -e apply_tasks='["foo"]' ./example/playbook.yml
+        
+        Using gitlab-ci you can define multiline env vars, ie a with
+        $STAGING_HOST=deploy@yourstaging and json string for $STAGING_VARS::
+        
+            {
+              "security_salt": "yoursecretsalf",
+              "mysql_password": "...",
+              // ....
+            }
+        
+        Then you can define a staging deploy job as such in .gitlab-ci.yml::
+        
+            image: yourlabs/python
+        
+            # example running tasks/update.yml, using the repo as role
+            script: bigsudo . update $staging_host $staging_vars
+        
+            # example running playbook update.yml
+            script: bigsudo ./update.yml $staging_host $staging_vars
+        
+        Continuous Deployment with Gitlab-CI
+        ------------------------------------
+        
+        This chapter describes the steps to setup the following deploy job in your
+        .gitlab-ci.yml::
+        
+          deploy-staging:
+            image: yourlabs/python
+            stage: deploy
+        
+            script:
+            - mkdir -p ~/.ssh; echo $staging_key > ~/.ssh/id_ed25519; echo $staging_fingerprint > ~/.ssh/known_hosts; chmod 700 ~/.ssh; chmod 600 ~/.ssh/*
+            - bigsudo . $staging_host --extra-vars=$staging_vars
+        
+            only:
+              refs: [master]
+        
+            environment:
+              name: staging
+              url: https://staging.example.com
+        
+        Create an ed25519 deploy key with the following command::
+        
+            ssh-keygen -t ed25519 -a 100 -f deploy.key
+        
+        Upload the deployment key to your target::
+        
+            ssh-copy-id -i deploy.key user@staging.host
+        
+        Add it to the enviromnent variable ``$staging_key`` ::
+        
+            cat deploy.key
+        
+        Also add your host fingerprint in ``$staging_fingerprint``::
+        
+            ssh-keyscan staging.host
+        
+        Add all the variables you need for your tasks in the ``$staging_vars`` env var
+        as a JSON dict, as described in the previous chapter.
+Keywords: automation cli ansible
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Environment :: Plugins
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Database
+Classifier: Topic :: Software Development
+Classifier: Topic :: System
+Classifier: Topic :: Terminals
+Requires-Python: >=3
+Description-Content-Type: text/x-rst
