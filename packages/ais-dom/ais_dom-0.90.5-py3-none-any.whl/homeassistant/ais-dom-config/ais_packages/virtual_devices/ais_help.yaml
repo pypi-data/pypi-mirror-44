@@ -1,0 +1,120 @@
+sensor:
+  - platform: template
+    sensors:
+      ais_connect_iot_device_info:
+        value_template: "Podłącz urządzenie do prądu i uruchom 'Skanuj w poszukiwaniu nowych urządzeń'.
+                        Następnie wybierz sieć wifi do której dołączasz urządzenie oraz nazwę nowego urządzenia.
+                        Żeby zatwierdzić wybierz 'Dołącz nowe urządzenie'"
+
+
+      ais_android_wifi_current_network_info:
+        value_template: "Brak informacji o połączeniu WiFi"
+
+  - platform: ais_android_cmd
+    command: getprop net.hostname
+    name: local_host_name
+    scan_interval: 3600
+  - platform: command_line
+    command: python3 -c "import socket; print((([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+              if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
+              s.getsockname()[0], s.close()) for s in
+              [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
+              + ['no IP found'])[0])"
+    name: internal_ip_address
+    scan_interval: 360
+  - platform: ais_long_text
+    name: ais_rss_help_text
+    package: homeassistant.components.ais_cloud
+    method: get_rss_help_text
+weblink:
+  entities:
+    - name: cloud
+      url: https://powiedz.co/ords/f?p=1000:101
+      icon: mdi:open-in-new
+
+input_text:
+  ais_android_wifi_password:
+    name: "Podaj hasło do Wifi (jeśli pierwszy raz łączysz się z tego urządzenia z wybraną siecią):"
+    mode: password
+    initial: ""
+    icon: mdi:textbox-password
+  ais_iot_device_wifi_password:
+    name: "Podaj hasło do Wifi:"
+    mode: password
+    initial: ""
+    icon: mdi:textbox-password
+  ais_iot_device_name:
+    name: "Podaj nazwę dla nowego urządzenia:"
+    initial: ""
+input_select:
+  ais_rss_help_topic:
+    name: 'Strona:'
+    options:
+      - "-"
+      - "1. Pierwsze kroki"
+      - "2. Co nowego"
+      - "3. Komendy głosowe"
+      - "4. Sterowanie pilotem"
+      - "5. Serwisy audio"
+      - "6. Automatyka domowa"
+      - "7. Dostęp do bramki w sieci lokalnej"
+      - "8. Dostęp do bramki z Internetu"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  ais_android_wifi_network:
+    name: 'Wybierz sieć Wifi:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:wifi
+  ais_iot_devices_in_network:
+    name: 'Wykryte nowe urządzenia:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:home-plus
+input_boolean:
+  ais_android_wifi_changes_notify:
+    name: Powiadamiaj o zmianach Wifi
+    initial: off
+    icon: mdi:voice
+
+group:
+  Internet Status:
+    name: Ustawienia sieci
+    control: hidden
+    entities:
+      - sensor.local_host_name
+      - sensor.internal_ip_address
+      - sensor.ais_android_wifi_current_network_info
+      - script.ais_scan_android_wifi_network
+      - input_select.ais_android_wifi_network
+      - input_text.ais_android_wifi_password
+      - script.ais_connect_android_wifi_network
+      - input_boolean.ais_android_wifi_changes_notify
+  AIS add IOT device:
+    name: Dodawanie nowych urządzeń
+    control: hidden
+    entities:
+      - sensor.ais_connect_iot_device_info
+      - script.ais_scan_iot_devices_in_network
+      - input_select.ais_iot_devices_in_network
+      - input_select.ais_android_wifi_network
+      - input_text.ais_iot_device_wifi_password
+      - input_text.ais_iot_device_name
+      - script.ais_connect_iot_device_to_network
+  AIS Configurator:
+    name: Konfiguracja
+    entities:
+      - configurator.ais_dom_host
+  ais_rss_help:
+    control: hidden
+    name: Strony pomocy
+    entities:
+      - input_select.ais_rss_help_topic
+      - sensor.ais_rss_help_text
+  ais_rss_help_remote:
+    control: hidden
+    name: Strony pomocy
+    entities:
+      - input_select.ais_rss_help_topic
