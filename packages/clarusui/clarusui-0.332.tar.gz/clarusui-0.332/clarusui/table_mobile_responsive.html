@@ -1,0 +1,45 @@
+<div {{table._get_filtered_custom_css('overflow-y,max-height')|safe}} class="desktop-only">
+<table class="table {{table.cssClass}}" {{table._get_custom_css()|safe}} {{table._get_data_attributes()|safe}}>
+	<thead>
+		<tr>
+			{% for i in table.headers %}
+			<th class="{{i.cssClass}}" {{i._get_custom_css()|safe}}>{{i.get_cell_value()|safe}}</th> {% endfor %}
+		</tr>
+	</thead>
+	<tbody>
+		{% for row in table.rows %}
+		<tr>
+			{% for i in row %}
+			<td class="{{i.cssClass}}" {{i._get_custom_css()|safe}}>{{i.get_cell_value()|safe}}</td> {% endfor %} 
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+
+<div class="mobile-only" style="display:none">
+{% for i in table.headers %}
+{% set outer_loop = loop %}
+	{% if loop.index != 1 %}
+	
+		{% if loop.index != 2 %}
+  			{%set cellClass = "mobile-only" %}
+  		{% else %}
+  			{%set colClass = "" %}
+  		{% endif %}
+	<table class="table {{table.cssClass}}" {{table._get_custom_css()|safe}}>
+	<tr>
+				<th class="{{i.cssClass}} {{cellClass}}" {{table.headers[0]._get_custom_css()|safe}}>{{table.headers[0].get_cell_value()|safe}}</th>
+				<th class="{{i.cssClass}}" {{i._get_custom_css()|safe}}>{{i.get_cell_value()|safe}}</th>
+			</tr>
+			{% for row in table.rows %}
+				<tr>
+					<td class="{{row[0].cssClass}} {{cellClass}}" {{row[0]._get_custom_css()|safe}}>{{row[0].get_cell_value()|safe}}</th>
+					<td class="{{row[outer_loop.index0].cssClass}}" {{row[outer_loop.index0]._get_custom_css()|safe}}>{{row[outer_loop.index0].get_cell_value()|safe}}</td>
+				</tr>
+			{% endfor %}
+	</table>
+	{% endif %}
+{% endfor %}
+</div>
+
