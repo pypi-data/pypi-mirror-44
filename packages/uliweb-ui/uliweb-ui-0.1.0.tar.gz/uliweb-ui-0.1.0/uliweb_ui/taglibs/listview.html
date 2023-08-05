@@ -1,0 +1,112 @@
+{%##
+<t:listview id="table_id" tree="true|false" url="'xxx'">
+  <pagination limit="10" limitList="[10, 20, 30]">
+    <button title="Download" icon="download" id="btnDownload" label="Download" action="download"></button>
+  </pagination>
+</t:listview>
+
+==>
+
+##%}
+
+{{use "ui.mmgrid"}}
+
+{%table_id = _attrs.get('id') or 'table_id'
+tree = _attrs.get('tree') == 'true'
+if tree:
+  deps = "mmtreegrid"
+else:
+  deps = "mmgrid"
+pass
+pagination = defined('pagination');
+url = _attrs.pop('url', '{{<<request.url}}');
+%}
+{{if query_form:}}
+<div class="query">
+  <form class="form form-query" method="GET" action="{%<<url%}">
+  {{build = query_form.build}}
+  {{<< build.body}}
+  {{<< build.buttons_line}}
+  </form>
+</div>
+{{pass}}
+
+<table id="{%=table_id%}"></table>
+
+<script type="text/javascript">
+
+    var query = new QueryString('{%<<url%}');
+    var query_string = query.set('data', '').toString();
+
+    var settings = {
+        multiSelect: false,
+        nowrap: true,
+        indexCol: true,
+        method:'get',
+        nameField:'field',
+        root: 'rows',
+        width:'auto',
+        height:'auto',
+        checkCol:false,
+        url:query.url + query_string,
+        remoteSort:true,
+        cols:{{if defined('view'):}}
+            {{=json_dumps(view.get_columns(False))}}
+        {{else:}}
+            {{=json_dumps(table.get_columns(False))}}
+        {{pass}},
+        idField:'id',
+        filename: 'download.xls',
+        filename_alt: 'download.xls'
+    }
+    {% singleSelect = _attrs.get('singleSelect', 'true') %}
+    {% for name, value in _attrs.items(): %}
+        settings.{%=name%} = {%=value%};
+    {% pass %}
+
+    {%if pagination:%}
+      var pageopts = {
+          totalCountName: 'total',
+          limitParamName: 'limit'
+      }
+
+      {%
+      limit = pagination['_attrs'].get('limit')
+      limitList = pagination['_attrs'].get('limitList')
+      %}
+      {%if limit:%}
+        pageopts.limit = {%=limit%}
+      {%pass%}
+      {%if limitList:%}
+        pageopts.limitList = {%=limitList%}
+      {%pass%}
+      var pg;
+      pg = $('<div class="mm-pagination" style="text-align: left;"></div>');
+      $('#{%=table_id%}').after(pg);
+      settings.plugins = [pg.mmPaginator(pageopts)];
+
+      var b;
+      //get default btnClass
+      {%options = get_options(pagination.get('option'))%}
+      {%default_class=options.get('btnClass', 'pull-right btn btn-flat btn-xs btn-default')%}
+      //process buttons
+      {%button = pagination.get('button', [])%}
+      {%for btn in reversed(get_list(button)):%}
+        b = $('<button {%=to_attrs(get_attr(btn), {'class':btn['_attrs'].get('class', default_class)})%}>' +
+        {%if has_attr(btn, 'icon'):%}
+          '<i class="fa fa-{%=get_attr(btn, 'icon')%}"></i>' +
+        {%pass%}
+        '{%=get_text(btn)%}' +
+        '</button>');
+        pg.append(b);
+      {%pass%}
+    {%pass%}
+
+    var mmg = $('#{%=table_id%}').mmGrid(settings);
+
+    $('button[action="download"]').click(function(e){
+      query_string = $.query.remove('data').set('download', '').toString();
+      $.download(query.url + query_string);
+    });
+
+</script>
