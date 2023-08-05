@@ -1,0 +1,128 @@
+
+ ------------
+|INSTALLATION |
+ ------------
+
+```
+pip install treep
+```
+
+
+ -----------
+| HOW TO USE |
+ -----------
+
+BASICS
+------
+
+in a terminal:
+
+```
+treep
+```
+
+The treep executable is expected to be called from a directory
+containing at least one folder called "treep_XXX" (XXX can be anything).
+
+The folder called "treep_XXX" is expected to contain at least two files:
+
+
+1) repositories.yaml
+
+example of content:
+
+repo1:
+    path: src/drivers
+    origin: https://github.com/repo1
+repo2:
+    path: src/main
+    branch: dev
+    origin: https://github.com/repo2
+repo3:
+    path: src/main
+    branch: dev
+    origin: https://github.com/repo3
+
+
+2) projects.yaml
+
+example of content:
+
+DRIVERS:
+    repos: ['repo1']
+MAIN:
+    parent_projects: ['DRIVERS']
+    repos: ['repo2','repo3']
+
+    
+These configuration files defines the projects DRIVERS: (which consists of repo1)
+and MAIN (which consist of repo1, repo2, and repo3)
+
+Calling:
+
+```
+treep --clone MAIN
+```
+
+would result in the cloning of the three repositories, in a new "workspace" folder
+
+The "treep_XXX" folder may contain a third file:
+
+3) configuration.yaml
+
+example of content:
+
+origin_prefixes:
+    default : 'https://github.com/'
+
+
+This files allows you to remove the 'origin' entries from repositories.yaml.
+
+
+OTHER FUNCTIONALITIES
+---------------------
+
+Call without arguments:
+
+```
+treep
+```
+
+to see the list of commands. We hope they are self explanatory
+
+
+SEVERAL CONFIG FOLDERS
+----------------------
+
+You may have more than one configuration folders
+(e.g. treep_XXX and treep_YYY). treep will merge the repositories
+and projects defined in both folders.
+
+
+CREATE YAML FILES AUTOMATICALLY
+-------------------------------
+
+If you have some git repositories all under a directory called "workspace"
+(they do not need to be directly under workspace, and folder tree structure is ok),
+call :
+
+```
+treep_to_yaml
+```
+
+You can then use the generated files to create a new treep configuration directory (treep_XXX)
+
+
+AUTOCOMPLETION
+--------------
+
+treep uses argcomplete to provide autocompletion.
+More info here:
+
+https://github.com/kislyuk/argcomplete
+
+In short, to activate autocompletion, run in a terminal (may need sudo rights):
+
+```
+activate-global-python-argcomplete
+```
