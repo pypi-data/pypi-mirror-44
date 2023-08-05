@@ -1,0 +1,28 @@
+#!python
+import click
+
+from kubetemp import (read_params, render_path, write_output)
+
+
+@click.command()
+@click.argument('TEMPLATE', type=click.Path(exists=True))
+@click.option('param_path', '--file', '-f', type=click.Path(exists=True))
+@click.option('param_list', '--param', '-p', nargs=2, multiple=True, type=str)
+@click.option('output_path', '--output', '-o', type=click.Path(writable=True))
+def _render_template(template, param_path, param_list, output_path):
+    # Get template parameters
+    params = {}
+    file_params = read_params(param_path)
+    params.update(file_params)
+    params.update(dict(param_list))
+
+    # Render template and create output
+    rendered_output = render_path(template, **params)
+    if output_path is None:
+        click.echo(rendered_output)
+    else:
+        write_output(rendered_output, output_path)
+
+
+if __name__ == '__main__':
+    _render_template()
