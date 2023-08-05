@@ -1,0 +1,62 @@
+========
+patelier
+========
+
+A text display package
+
+
+Function
+-----------------------------
+
+| This project is to show text lines.
+| The text lines are read from input text file.
+| The text file needs to be encoded in **UTF-8** or **Shift-JIS**.
+| Each control code (0x00 - 0x1f) in the text lines is changed into '▲'.
+
+
+Development Status
+-----------------------------
+
+Pre-Alpha (experiment)
+
+
+Necessary environment
+-----------------------------
+
+* **Microsoft Windows 10**
+* **Python 3.7** (Tested with Ver. 3.7.3)
+* **pip** (Installed with Python) (Tested with ver. 19.0.3)
+
+Dependency
+-----------------------------
+
+* **regex** (Tested with Ver. 2019.3.12)
+
+
+Setup
+-----------------------------
+
+command::
+
+    py -m pip install patelier
+
+
+Usage
+-----------------------------
+
+command::
+
+    patelier
+
+
+Auther
+-----------------------------
+
+K2UNIT
+
+
+License
+-----------------------------
+
+This software is released under the MIT License, see LICENSE.txt.
+
