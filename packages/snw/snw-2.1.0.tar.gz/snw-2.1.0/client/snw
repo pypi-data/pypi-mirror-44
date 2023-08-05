@@ -1,0 +1,1504 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+from __future__ import print_function
+from __future__ import unicode_literals
+import logging
+import requests
+import json
+import sys
+import os
+import time
+import stat
+import math
+import tarfile
+import six
+import re
+import random
+from collections import Counter
+from datetime import date
+from getpass import getpass
+from prettytable import PrettyTable, PLAIN_COLUMNS
+from requests.auth import HTTPBasicAuth
+from six.moves import input
+import pkg_resources
+from jsonschema import validate, Draft4Validator
+from jsonschema.exceptions import ValidationError
+from packaging import version
+from datetime import datetime
+
+import client.launcher as launcher
+
+import lib.utils as utils
+import lib.opts as opts
+import lib.credentials as credentials
+
+if os.environ.get("SNW_URL") is None:
+    os.environ["SNW_URL"] = "https://api-snw.systran.net"
+
+if os.environ.get("LAUNCHER_URL") is None:
+    os.environ["LAUNCHER_URL"] = "https://api-snw.systran.net"
+
+launcher.append_version(pkg_resources.require("snw")[0].version)
+
+opts.define_option()
+
+launcher.argparse_preprocess()
+args = launcher.parser.parse_args()
+
+logging.basicConfig(stream=sys.stderr, level=args.log_level)
+launcher.logger = logging.getLogger()
+
+requests_log = logging.getLogger("requests.packages.urllib3")
+if args.log_level == "DEBUG":
+    requests_log.setLevel(logging.DEBUG)
+    launcher.HTTPConnection.debuglevel = 1
+else:
+    requests_log.setLevel(logging.WARNING)
+requests_log.propagate = True
+
+if args.url is None:
+    args.url = os.getenv('SNW_URL')
+    if args.url is None:
+        launcher.logger.error('missing launcher_url')
+        sys.exit(1)
+
+token, current_account = credentials.get_credential(args.url, args.subcmd == 'login' and args.user)
+
+if args.cmd == 'auth' and args.subcmd == 'login':
+    if args.user:
+        current_account = args.user
+    if current_account:
+        launcher.logger.info("login as %s", current_account)
+        login = current_account
+    else:
+        login = input('Trainer ID: ')
+    if token:
+        r_servicelist = requests.get(os.path.join(args.url, "service/list"),
+                                     auth=HTTPBasicAuth(token, 'x'),
+                                     params={"minimal": True, "all": True})
+        if r_servicelist.status_code != 200:
+            token = None
+        else:
+            credentials.activate_credential(args.url, login)
+            launcher.logger.info("logged in as %s", login)
+            sys.exit(0)
+    if not token:
+        password = getpass()
+        r = requests.get(os.path.join(args.url, "auth/token"),
+                         auth=HTTPBasicAuth(login, password))
+        if r.status_code != 200:
+            launcher.logger.error('invalid credentials')
+            sys.exit(1)
+        token = str(r.json()['token'])
+        duration = r.json()['duration']
+        credentials.set_credential(args.url, login, token, duration, time.time())
+        launcher.logger.info("logged in as %s", login)
+        sys.exit(0)
+
+elif args.cmd == 'auth' and (args.subcmd == 'logout' or args.subcmd == 'revoke'):
+    if not token:
+        launcher.logger.error('No connection token')
+        sys.exit(1)
+    credentials.remove_credential(args.url, current_account)
+    r = requests.get(os.path.join(args.url, "auth/revoke"),
+                     auth=HTTPBasicAuth(token, 'x'),
+                     params={'token': token})
+    if r.status_code != 200:
+        launcher.logger.error('error: %s', r.text)
+        sys.exit(1)
+    launcher.logger.info("Removed connection token")
+    sys.exit(0)
+
+if token is not None:
+    auth = HTTPBasicAuth(token, 'x')
+else:
+    launcher.logger.error('missing authentication token - do login')
+    sys.exit(1)
+
+if args.cmd == 'auth' and args.subcmd == 'token':
+    status, user_id = utils.get_user(args.url, auth, args.user)
+    if not status:
+        raise RuntimeError(user_id)
+    params = {
+        'user_id': user_id,
+        'duration': args.duration,
+        'persistent': args.persistent
+    }
+    r = requests.get(os.path.join(args.url, "auth/token"), auth=auth, params=params)
+    if r.status_code != 200:
+        launcher.logger.error('error: %s', r.text)
+        sys.exit(1)
+    token = str(r.json()['token'])
+    duration = r.json()['duration']
+    launcher.logger.info('Got token (%s) for %ss', token, duration)
+    sys.exit(0)
+
+r_servicelist = requests.get(os.path.join(args.url, "service/list"),
+                             auth=auth, params={"minimal": True, "all": True})
+if r_servicelist.status_code != 200:
+    launcher.logger.error('incorrect result from \'service/list\' service: %s', r_servicelist.text)
+    sys.exit(1)
+
+serviceList = r_servicelist.json()
+
+if hasattr(args, 'trainer_id') and not args.trainer_id:
+    args.trainer_id = ''
+
+is_json = args.display == "JSON"
+
+lookup_cache = {}
+test_storages = None
+
+
+def _get_test_storages(url, auth, service):
+    global test_storages
+    if test_storages is None:
+        r = requests.get(os.path.join(url, "resource/list"),
+                         auth=auth, data={'service': service})
+        result = r.json()
+        if r.status_code != 200:
+            return False, (r.status_code, result['message'])
+        test_storages = [v['name'] for v in result if v['type'] == "test"]
+    return test_storages
+
+
+def _lookup_repository(url, auth, service, remote_path):
+    if remote_path in lookup_cache:
+        return True, lookup_cache[remote_path]
+    r = requests.get(os.path.join(url, "resource/list"),
+                     auth=auth, data={'path': remote_path, 'service': service})
+    result = r.json()
+    if r.status_code != 200:
+        return False, (r.status_code, result['message'])
+    lookup_cache[remote_path] = result
+    return True, result
+
+
+def _get_testfiles(url, auth, service, path, model, src_lang, tgt_lang):
+    assert src_lang is not None and tgt_lang is not None, "src/tgt_lang not determined"
+    test_storages = _get_test_storages(url, auth, service)
+    res = []
+    for t in test_storages:
+        status, result = _lookup_repository(url, auth, service, "%s:%s" % (t, path))
+        if not status:
+            if result[0] == 404:
+                launcher.logger.info("no test corpus found in %s:%s" % (t, path))
+            else:
+                launcher.logger.error("cannot connect to test repository %s: %s" % (t, result[1]))
+                sys.exit(1)
+        else:
+            count = 0
+            for f in result:
+                if f.endswith("."+src_lang):
+                    res.append(("%s:%s" % (t, f), "pn9_testtrans:"+model+"/"+f+"."+tgt_lang))
+                    count += 1
+            launcher.logger.info('found %d test files in %s' % (count, t+":"+path))
+    return res
+
+
+def _get_outfiles(url, auth, service, path, model, src_lang, tgt_lang):
+    assert src_lang is not None and tgt_lang is not None, "src/tgt_lang not determined"
+    status, result = _lookup_repository(url, auth, service, "pn9_testtrans:"+model+"/"+path)
+    if not status:
+        if result[0] == 404:
+            return []
+        else:
+            launcher.logger.error("cannot connect to testtrans repository: %s" % result[1])
+            sys.exit(1)
+    res = []
+    for f in result:
+        if f.endswith("."+src_lang+"."+tgt_lang):
+            res.append("pn9_testing:"+f[len(model+"/"):-len(tgt_lang)-1])
+    return res
+
+
+def _get_reffiles(url, auth, service, src_lang, tgt_lang, list_testfiles):
+    res = []
+    for (testfile, outfile) in list_testfiles:
+        if not testfile.endswith("."+src_lang):
+            continue
+        split = testfile.split(':')
+        if len(split) >= 2:
+            storage = split[0]+':'
+            testfile = ':'.join(split[1:])
+            dirname = os.path.dirname(testfile)
+            status, result = _lookup_repository(url, auth, service, storage+dirname)
+            if status:
+                reffile_str = ''
+                reffile = testfile[:-len(src_lang)]+tgt_lang
+                if reffile in result:
+                    reffile_str = storage+reffile
+                else:
+                    continue
+                idx = 1
+                while True:
+                    reffile_temp = reffile + '.' + str(idx)
+                    if reffile_temp in result:
+                        reffile_str += ',' + storage+reffile_temp
+                    else:
+                        break
+                    idx += 1
+                res.append((outfile, reffile_str))
+        else:
+            # TODO: for local files, we need to find a way to upload them and then evaluate
+            # localfile
+            reffile = testfile[:-len(src_lang)]+tgt_lang
+            if os.path.exists(reffile):
+                res.append((outfile, reffile))
+    return res
+
+
+def tree_display(res, lvl, l, idx_result, model_maxsize, scorenames, bestscores,
+                 skip_noscores, has_noscores, quiet=False):
+    sorted_l = sorted(l, key=lambda k: float(idx_result[k]["date"]))
+    pref = ' ' * lvl
+    for k in sorted_l:
+        item = idx_result[k]
+        if not skip_noscores or len(item["scores"]) != 0:
+            if item["date"] is not None and item["date"] != 0:
+                d = date.fromtimestamp(math.ceil(float(item["date"]))).isoformat()
+            else:
+                d = ""
+            model = pref + item["model"]
+            if "count" in item:
+                model = model + " (%d)" % item["count"]
+            imageTag = item["imageTag"]
+            p = imageTag.find(':')
+            if p != -1:
+                imageTag = imageTag[:p]
+            p = imageTag.rfind('/')
+            if p != -1:
+                imageTag = imageTag[p+1:]
+            scorecols = []
+            noscores = 0
+            for s in scorenames:
+                score = ""
+                if s in item["scores"]:
+                    score = "%.02f" % float(item["scores"][s])
+                    if item["scores"][s] == bestscores[s]:
+                        score = '*' + score
+                    elif item["scores"][s]/bestscores[s] > 0.995:
+                        score = '~' + score
+                else:
+                    noscores += 1
+                scorecols.append(score)
+            if has_noscores and noscores == 0:
+                continue
+            sentenceCount = ''
+            if 'cumSentenceCount' in item and item['cumSentenceCount'] != 0:
+                sentenceCount = "%.2fM" % (item['cumSentenceCount']/1000000.)
+            if quiet:
+                res.append(item["model"])
+            else:
+                res.add_row([d, item["lp"], imageTag, model, sentenceCount] + scorecols)
+        tree_display(res, lvl+1, item['children_models'], idx_result, model_maxsize, scorenames,
+                     bestscores, skip_noscores, has_noscores, quiet)
+
+
+# Calculate max depth of the trees
+def tree_depth(lvl, l, idx_result):
+    max_level = lvl
+    for k in l:
+        item = idx_result[k]
+        sub_level = tree_depth(lvl+1, item['children_models'], idx_result)
+        if sub_level > max_level:
+            max_level = sub_level
+    return max_level
+
+
+# Calculate cumulated sentenceCount
+def cum_sentenceCount(l, idx_result, sentenceCount):
+    for k in l:
+        item = idx_result[k]
+        if 'cumSentenceCount' not in item or item['cumSentenceCount'] is None:
+            item['cumSentenceCount'] = item['sentenceCount'] + sentenceCount
+        sub_level = cum_sentenceCount(item['children_models'], idx_result, item['cumSentenceCount'])
+
+
+# Merge two configs (redundant code with method in nmt-wizard/server/nmtwizard/config.py and
+# nmt-wizard-docker/nmtwizard/utils.py)
+def merge_config(a, b):
+    """Merges config b in a."""
+    if isinstance(a, dict):
+        for k, v in six.iteritems(b):
+            if k in a and isinstance(v, dict) and type(a[k]) == type(v):
+                merge_config(a[k], v)
+            else:
+                a[k] = v
+    return a
+
+
+def _get_params(lparam, listcmd):
+    res = []
+    idx = 0
+    while idx < len(listcmd):
+        if listcmd[idx] in lparam:
+            idx = idx+1
+            while idx < len(listcmd) and not listcmd[idx].startswith('-'):
+                res.append(listcmd[idx])
+                idx += 1
+            continue
+        idx += 1
+    return res
+
+
+# Parse docker image name to get version pattern (e.g. "systran/pn9_tf:v1") and number (1)
+def parse_version_number(image):
+    p = image.find(".")
+    if p == -1:
+        # version incompletely qualified
+        current_version_pattern = image
+    else:
+        # version completely qualified
+        current_version_pattern = image[:p]
+    q = current_version_pattern.find("v")
+    if q == -1:
+        version_main_number = 0
+    else:
+        version_main_number = int(current_version_pattern[q+1:])
+    return (current_version_pattern, version_main_number)
+
+
+# Check upgrades for docker image and return upgraded version if available and accepted by user
+# input image and tag
+# output image:tag
+def check_upgrades(image, tag):
+    image_dec = image.split("/")
+    image = '/'.join(image_dec[-2:])
+    tag_prefix = ""
+    if tag[0] == 'v':
+        tag_prefix = "v"
+        tag = tag[1:]
+    try:
+        version_parts = version.parse(tag).release
+    except ValueError as err:
+        raise RuntimeError('cannot parse version %s - %s' % (tag, str(err)))
+
+    if version_parts[0] >= 1 and (len(version_parts) < 3 or args.upgrade != "none"):
+        tag_req = tag
+        if len(version_parts) == 3:
+            tag_req = "%d.%d" % (version_parts[0], version_parts[1])
+        r = requests.get(os.path.join(args.url, "docker/versions"),
+                         auth=auth, params={'version_pattern': image+':'+tag_prefix+tag_req})
+        result = r.json()
+        if r.status_code != 200:
+            raise RuntimeError('cannot retrieve docker images for current version %s -- %s' %
+                               (image+':'+tag_prefix+tag, r.text))
+        if len(result) == 0:
+            raise RuntimeError('unknown version %s' % (image+':'+tag_prefix+tag))
+        versions = [version.parse(r['image']) for r in result]
+        latest_version_parse = max(versions)
+        latest_version = latest_version_parse.base_version
+        # selectively upgrade if later version available
+        if version.parse(image+':'+tag_prefix+tag) < latest_version_parse:
+            if len(version_parts) < 3 or args.upgrade == "force":
+                # version incompletely qualified
+                launcher.logger.info('automatically upgrading docker_image=%s to %s' %
+                                     (image, latest_version))
+                return latest_version, True
+            else:
+                # version completely qualified
+                launcher.logger.info('upgrading docker_image=%s to %s is available, '
+                                     'do you want to upgrade? (y/n)' %
+                                     (image+':'+tag_prefix+tag, latest_version))
+                while True:
+                    response = input('Upgrade? ')
+                    if response in {'y', 'yes'}:
+                        launcher.logger.info('upgrading docker_image=%s to %s' %
+                                             (image+':'+tag_prefix+tag, latest_version))
+                        return latest_version, True
+                    elif response in {'n', 'no'}:
+                        break
+                    else:
+                        launcher.logger.info('Please enter `y` or `n`.')
+        elif version.parse(image+':'+tag_prefix+tag) == latest_version_parse:
+            if len(version_parts) < 3:
+                # version incompletely qualified
+                launcher.logger.info('automatically upgrading docker_image=%s to %s' %
+                                     (image, latest_version))
+                return latest_version, True
+    return image+':'+tag_prefix+tag, False
+
+
+# Announce the usage of a docker image
+def announce_usage(image):
+    split = image.split("/")
+    if len(split) > 2:
+        image = "/".join(split[-2:])
+    launcher.logger.info('** will be using -docker_image=%s' % image)
+
+
+# Return a string with the list of all schema validation warnings
+def get_schema_errors(schema, config):
+    v = Draft4Validator(schema)
+    all_errors = "\n\n**Your config has the following issues, please refer to the documentation:"
+    for error in sorted(v.iter_errors(config), key=str):
+        # format error message
+        error_parts = error.message.split()
+        error_message = ""
+        for error_part in error_parts:
+            if error_part.startswith("u'"):
+                error_message += error_part[1:].replace("'", '"')
+            elif error_part[1:].startswith("u'"):
+                error_message += error_part[0]+error_part[2:].replace("'", '"')
+            else:
+                error_message += error_part
+            error_message += ' '
+        # format error path
+        error_path = ""
+        for path_part in list(error.path):
+            if isinstance(path_part, int):
+                error_path += "array["+str(path_part)+"]"
+            else:
+                error_path += '"'+path_part+'"'
+            error_path += '/'
+        # write error message and path
+        if error_path == "":
+            all_errors += '\n - In the config, '+error_message
+        else:
+            all_errors += '\n - In the option '+error_path+', '+error_message
+    return all_errors
+
+try:
+    res = None
+    if args.cmd == 'service' and args.subcmd == "config":
+        if not (args.action == 'list' or
+                args.action == 'set' or args.action == 'get' or
+                args.action == 'del' or args.action == 'select'):
+            raise ValueError('action should be list, get, set, del, select')
+        params = None
+        if args.service not in serviceList:
+            raise ValueError('unknown service: %s' % args.service)
+        if args.action == 'list' or args.action == 'get':
+            r = requests.get(os.path.join(args.url, "service/listconfig", args.service),
+                             auth=auth, params=params)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'service/listconfig\' '
+                                   'service: %s' % r.text)
+            result = r.json()
+            if args.action == 'list' and not is_json:
+                res = PrettyTable(["Name", "Last Modified", "Current"])
+                for r in result["configurations"]:
+                    mtime = result["configurations"][r][0]
+                    mdate = datetime.fromtimestamp(math.ceil(float(mtime))).isoformat()
+                    res.add_row([r, mdate, r == result["current"] and "yes" or "no"])
+            elif args.action == 'get':
+                if args.configname is None:
+                    args.configname = result["current"]
+                if args.configname not in result["configurations"]:
+                    raise ValueError('unknown configuration: %s' % args.configname)
+                res = result["configurations"][args.configname][1]
+            else:
+                res = result
+        else:
+            if args.configname is None:
+                raise ValueError('argument -cn/--configname is required')
+            if args.action == "set" and args.config is None:
+                raise ValueError('argument -c/--config is required for `setconfig`')
+            if args.action == "set":
+                config = args.config
+                try:
+                    if config.startswith("@"):
+                        with open(config[1:], "rt") as f:
+                            config = f.read()
+                    jconfig = json.loads(config)
+                    if jconfig.get("name") != args.service:
+                        raise ValueError('config name should be corresponding to service')
+                except Exception as err:
+                    raise ValueError(str(err))
+                r = requests.post(os.path.join(args.url, "service", args.action+"config",
+                                               args.service, args.configname),
+                                  data={'config': config}, auth=auth)
+            else:
+                r = requests.get(os.path.join(args.url, "service", args.action+"config",
+                                              args.service, args.configname),
+                                 auth=auth)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'service/%s\' '
+                                   'service: %s' % (args.service, r.text))
+            res = r.json()
+    elif args.cmd == 'service' and (args.subcmd == "stop" or args.subcmd == "restart"):
+        if args.service not in serviceList:
+            raise ValueError('unknown service: %s' % args.service)
+        r = requests.get(os.path.join(args.url, "service", args.subcmd, args.service),
+                         auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/%s\' '
+                               'service: %s' % (args.subcmd, r.text))
+        res = r.json()
+    elif args.cmd == 'service' and (args.subcmd == "enable" or args.subcmd == "disable"):
+        if args.service not in serviceList:
+            raise ValueError('unknown service: %s' % args.service)
+        params = {}
+        service = serviceList[args.service]
+        if args.subcmd == "disable" and args.message:
+            params = {'message': args.message}
+        r = requests.get(os.path.join(args.url, "service", args.subcmd,
+                                      args.service, args.resource),
+                         auth=auth, params=params)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/%s\' '
+                               'service: %s' % (args.action, r.text))
+        res = r.json()
+    elif args.cmd == 'user':
+        if args.subcmd == 'list':
+            r = requests.get(os.path.join(args.url, "user/list"), auth=auth, params={'detail': True})
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'user/list\' service: %s' % r.text)
+            result = r.json()
+            if not is_json:
+                res = PrettyTable(["ID", "TID", "Name", "Email", "Roles", "Groups"])
+                res.align["Name"] = "l"
+                for r in result:
+                    roles = []
+                    for role in r["roles"]:
+                        if "entity_code" in role:
+                            roles.append("%s:%s" % (role["entity_code"], role["name"]))
+                        else:
+                            roles.append(role["name"])
+                    groups = []
+                    for group in r["groups"]:
+                        name = r["entity_code"] + ":" + group["name"]
+                        groups.append(name)
+                    res.add_row([r["id"], r["tid"], r["name"], r["email"], " ".join(roles), " ".join(groups)])
+            else:
+                res = result
+        elif args.subcmd == 'add':
+            if not re.match(r"^[A-Z]{3}$", args.user_code):
+                raise ValueError('user_code should be [A-Z]{3}')
+            status, entity_id = utils.get_entity(args.url, auth, args.entity)
+            if not status:
+                raise RuntimeError(entity_id)
+            roles_id = []
+            if args.roles is not None:
+                for role in args.roles:
+                    status, role_id = utils.get_role(args.url, auth, role)
+                    if not status:
+                        raise RuntimeError(role_id)
+                    roles_id.append(role_id)
+            groups_id = []
+            if args.groups is not None:
+                for group in args.groups:
+                    status, group_id = utils.get_group(args.url, auth, group)
+                    if not status:
+                        raise RuntimeError(group_id)
+                    groups_id.append(group_id)
+            data = {
+                'first_name': args.first_name,
+                'last_name': args.last_name,
+                'email': args.email,
+                'password': args.password,
+                'user_code': args.user_code,
+                'entity_id': entity_id
+            }
+            r = requests.post(os.path.join(args.url, "user/add"), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'user/add\' service: %s' % r.text)
+            user_id = r.json()
+            if args.roles is not None or args.groups is not None:
+                data = {
+                    'user_id': user_id
+                }
+
+                if args.roles is not None:
+                    data['roles'] = roles_id
+                if args.groups is not None:
+                    data['groups'] = groups_id
+
+                r = requests.post(os.path.join(args.url, "user/modify"), auth=auth, json=data)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'user/modify\' service: %s' % r.text)
+            res = "ok new user: email=%s -> id=%d" % (args.email, r.json())
+        elif args.subcmd == 'modify':
+            status, user_id = utils.get_user(args.url, auth, args.user)
+            if not status:
+                raise RuntimeError(user_id)
+            data = {
+                'user_id': user_id
+            }
+            if args.password is not None:
+                data['password'] = args.password
+            if args.first_name is not None:
+                data['first_name'] = args.first_name
+            if args.last_name is not None:
+                data['last_name'] = args.last_name
+            if args.roles is not None:
+                roles_id = []
+                for role in args.roles:
+                    status, role_id = utils.get_role(args.url, auth, role)
+                    if not status:
+                        raise RuntimeError(role_id)
+                    roles_id.append(role_id)
+                data['roles'] = roles_id
+            if args.groups is not None:
+                groups_id = []
+                for group in args.groups:
+                    status, group_id = utils.get_group(args.url, auth, group)
+                    if not status:
+                        raise RuntimeError(group_id)
+                    groups_id.append(group_id)
+                data['groups'] = groups_id
+            r = requests.post(os.path.join(args.url, "user/modify"), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'user/modify\' service: %s' % r.text)
+            res = 'ok'
+        elif args.subcmd == 'password':
+            data = {
+                'password': args.password,
+            }
+            r = requests.post(os.path.join(args.url, "user/modify"), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'user/modify\' service: %s' % r.text)
+            res = 'ok'
+        elif args.subcmd == 'delete':
+            status, user_id = utils.get_user(args.url, auth, args.user)
+            if not status:
+                raise RuntimeError(user_id)
+            data = {
+                'user_id': user_id
+            }
+            r = requests.post(os.path.join(args.url, "user/delete"), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'user/delete\' service: %s' % r.text)
+            res = 'ok'
+    elif args.cmd == 'docker' and args.subcmd == 'list':
+        r = requests.get(os.path.join(args.url, "docker/list"),
+                         auth=auth, params={'docker': args.docker})
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'docker/list\' service: %s' % r.text)
+        result = r.json()
+        if not is_json:
+            res = PrettyTable(["Date", "IMAGE", "Tag", "Configurations"])
+            res.align["Configurations"] = "l"
+            for r in sorted(result, key=lambda r: float(r["date"])):
+                d = date.fromtimestamp(math.ceil(float(r["date"] or 0))).isoformat()
+                imgtag = r["image"].split(':')
+                res.add_row([d, imgtag[0], imgtag[1], r["configs"]])
+        else:
+            res = result
+    elif args.cmd == 'docker' and args.subcmd == 'add':
+        data = {
+            'image': args.image
+        }
+
+        if not os.path.exists(args.configs):
+            raise RuntimeError('%s is not a file.' % args.configs)
+
+        if not os.path.exists(args.schema):
+            raise RuntimeError('%s is not a file.' % args.schema)
+
+        with open(args.configs) as cfile:
+            data['configs'] = cfile.read()
+
+        with open(args.schema) as sfile:
+            data['schema'] = sfile.read()
+
+        r = requests.post(os.path.join(args.url, "docker/add"), auth=auth, data=data)
+
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'docker/add\' service: %s' % r.text)
+
+        res = 'ok'
+    elif args.cmd == 'permission':
+        if args.subcmd == 'list':
+            status_code, result = utils.permission_list(args.url, auth)
+            if status_code != 200:
+                raise RuntimeError(result)
+            if not is_json:
+                res = PrettyTable(["ID", "Name", "Description"])
+                for r in result:
+                    if "entity_code" in r:
+                        r["name"] = r["entity_code"] + ":" + r["name"]
+                    res.add_row([r["id"], r["name"], r["description"]])
+            else:
+                res = result
+    elif args.cmd == 'group':
+        if args.subcmd == 'list':
+            status_code, result = utils.group_list(args.url, auth)
+            if status_code != 200:
+                raise RuntimeError(result)
+            if not is_json:
+                res = PrettyTable(["ID", "Name", "Roles", "Users"])
+                res.align["Name"] = "l"
+                res.align["Roles"] = "l"
+                res.align["Users"] = "l"
+                for g in result:
+                    name = g["entity_code"] + ":" + g["name"]
+                    roles = []
+                    for r in g["roles"]:
+                        if "entity_code" in r:
+                            roles.append(r["entity_code"]+":"+r["name"])
+                        else:
+                            roles.append(r["name"])
+                    users = []
+                    for u in g["users"]:
+                        u["name"] = u["first_name"] + " " + u["last_name"]
+                        users.append(u["tid"]+"("+u["name"]+")")
+                    res.add_row([g["id"], name, " ".join(roles), " ".join(users)])
+            else:
+                res = result
+        elif args.subcmd == 'add' or args.subcmd == 'modify' or args.subcmd == 'delete':
+            if args.subcmd != 'delete':
+                data = {
+                    'name': args.name
+                }
+                if args.users is not None:
+                    users_id = []
+                    for user in args.users:
+                        status, user_id = utils.get_user(args.url, auth, user)
+                        if not status:
+                            raise RuntimeError(user_id)
+                        users_id.append(user_id)
+                    data['users'] = users_id
+                if args.roles is not None:
+                    roles_id = []
+                    for role in args.roles:
+                        status, role_id = utils.get_role(args.url, auth, role)
+                        if not status:
+                            raise RuntimeError(role_id)
+                        roles_id.append(role_id)
+                    data['roles'] = roles_id
+            else:
+                data = {}
+            if args.subcmd == 'add':
+                if args.entity is not None:
+                    status, entity_id = utils.get_entity(args.url, auth, args.entity)
+                    if not status:
+                        raise RuntimeError(entity_id)
+                    data['entity_id'] = entity_id
+            if args.subcmd == 'modify' or args.subcmd == 'delete':
+                status, group_id = utils.get_group(args.url, auth, args.group)
+                if not status:
+                    raise RuntimeError(group_id)
+                data['group_id'] = group_id
+            r = requests.post(os.path.join(args.url, "group/" + args.subcmd), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'group/%s\' service: %s' % (args.subcmd, r.text))
+            res = 'ok'
+    elif args.cmd == 'role':
+        if args.subcmd == 'list':
+            status_code, result = utils.role_list(args.url, auth)
+            if status_code != 200:
+                raise RuntimeError(result)
+            if not is_json:
+                res = PrettyTable(["ID", "Name", "Permissions"])
+                res.align["Name"] = "l"
+                res.align["Permissions"] = "l"
+                for r in result:
+                    name = r["name"]
+                    if "entity_code" in r:
+                        name = r["entity_code"] + ":" + name
+                    permissions = []
+                    for p in r["permissions"]:
+                        if "entity_code" in p:
+                            permissions.append(p["entity_code"]+":"+p["permission"])
+                        else:
+                            permissions.append(p["permission"])
+                    res.add_row([r["id"], name, " ".join(permissions)])
+            else:
+                res = result
+        elif args.subcmd == 'add' or args.subcmd == 'modify' or args.subcmd == 'delete':
+            if args.subcmd != 'delete':
+                data = {
+                    'name': args.name
+                }
+                if args.permissions is None:
+                    if args.subcmd == 'add':
+                        raise ValueError("missing permissions")
+                else:
+                    data['permissions'] = []
+                    for p in args.permissions:
+                        psplit = p.split(':')
+                        if len(psplit) > 2:
+                            raise ValueError("invalid format for permission: %s" % p)
+                        status, permission_id = utils.get_permission(args.url, auth, psplit[-1])
+                        if not status:
+                            raise RuntimeError(permission_id)
+                        data["permissions"].append({'permission': permission_id})
+                        if len(psplit) == 2:
+                            status, entity_id = utils.get_entity(args.url, auth, psplit[0])
+                            if not status:
+                                raise RuntimeError(permission_id)
+                            data["permissions"][-1]["entity"] = entity_id
+            else:
+                data = {}
+            if args.subcmd == 'add':
+                status, entity_id = utils.get_entity(args.url, auth, args.entity)
+                if not status:
+                    raise RuntimeError(entity_id)
+                data['entity_id'] = entity_id
+            if args.subcmd == 'modify' or args.subcmd == 'delete':
+                status, role_id = utils.get_role(args.url, auth, args.role)
+                if not status:
+                    raise RuntimeError(role_id)
+                data['role_id'] = role_id
+            r = requests.post(os.path.join(args.url, "role/" + args.subcmd), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'role/%s\' service: %s' % (args.subcmd, r.text))
+            res = 'ok'
+    elif args.cmd == 'share':
+        if args.subcmd == 'add':
+            data = {"roles": []}
+            for role in args.roles:
+                status, role_id = utils.get_role(args.url, auth, role)
+                if not status:
+                    raise RuntimeError(role_id)
+                data['roles'].append(role_id)
+            status, src_entity_id = utils.get_entity(args.url, auth, args.src_entity)
+            if not status:
+                raise RuntimeError(src_entity_id)
+            data['src_entity_id'] = src_entity_id
+            status, dest_entity_id = utils.get_entity(args.url, auth, args.dest_entity)
+            if not status:
+                raise RuntimeError(dest_entity_id)
+            data['dest_entity_id'] = dest_entity_id
+            r = requests.post(os.path.join(args.url, "role/share/add"), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'role/share/add\' service: %s' % r.text)
+            res = 'ok'
+        if args.subcmd == 'delete':
+            data = {}
+            status, src_entity_id = utils.get_entity(args.url, auth, args.src_entity)
+            if not status:
+                raise RuntimeError(src_entity_id)
+            data['src_entity_id'] = src_entity_id
+            status, dest_entity_id = utils.get_entity(args.url, auth, args.dest_entity)
+            if not status:
+                raise RuntimeError(dest_entity_id)
+            data['dest_entity_id'] = dest_entity_id
+            for role in args.roles:
+                status, role_id = utils.get_role(args.url, auth, role)
+                if not status:
+                    raise RuntimeError(role_id)
+                data['role_id'] = role_id
+                r = requests.post(os.path.join(args.url, "role/share/remove"), auth=auth, json=data)
+                if r.status_code != 200:
+                    raise RuntimeError('incorrect result from \'role/share/remove\' service: %s' % r.text)
+            res = 'ok'
+    elif args.cmd == 'entity':
+        if args.subcmd == 'list':
+            r = requests.get(os.path.join(args.url, "entity/list"),
+                             auth=auth, params={"detail": True, "all": args.all})
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'entity/list\' service: %s' % r.text)
+            result = r.json()
+            if not is_json:
+                row = ["ID", "Code", "Name", "Email", "Description"]
+                if args.all:
+                    row.append("Active")
+                res = PrettyTable(row)
+                for r in sorted(result, key=lambda r: r["id"]):
+                    r_row = [r["id"], r["entity_code"], r["name"], r["email"], r["description"]]
+                    if args.all:
+                        r_row.append(r["active"])
+                    res.add_row(r_row)
+            else:
+                res = result
+        else:
+            # add/modify/disable/enable
+            if args.subcmd == 'add' or args.subcmd == 'modify':
+                data = {
+                    'name': args.name,
+                    'email': args.email,
+                    'tel': args.tel,
+                    'address': args.address,
+                    'description': args.description
+                }
+            else:
+                data = {}
+            if args.subcmd != 'add':
+                status, entity_id = utils.get_entity(args.url, auth, args.entity)
+                if not status:
+                    raise RuntimeError(entity_id)
+                data['entity_id'] = entity_id
+            if args.subcmd == 'add':
+                if not re.match(r"^[A-Z]{2}$", args.entity_code):
+                    raise ValueError('entity_code should be [A-Z]{2}')
+                data['entity_code'] = args.entity_code
+            r = requests.post(os.path.join(args.url, "entity/"+args.subcmd), auth=auth, json=data)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'entity/%s\' service: %s' % (args.subcmd, r.text))
+            if args.subcmd == 'add':
+                res = "ok new entity: name=%s -> id=%d" % (args.name, r.json())
+            else:
+                res = "ok"
+    elif args.cmd == 'resource' and args.subcmd == 'list':
+        r = requests.get(os.path.join(args.url, "resource/list"),
+                         auth=auth, data={'path': args.path, 'service': args.service})
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'resource/list\' service: %s' % r.text)
+        result = r.json()
+        if not is_json:
+            if args.path is None or args.path == '':
+                res = PrettyTable(['Pool', 'Name', 'Type', 'Description'])
+                res.align["Name"] = "l"
+                res.align["Type"] = "l"
+                res.align["Pool"] = "l"
+                res.align["Description"] = "l"
+                for r in result:
+                    res.add_row([r["pool"], r["name"]+":", r["type"], r["description"]])
+            else:
+                res = PrettyTable(['Type', 'Path', 'Suffixes'])
+                res.align["Path"] = "l"
+                res.align["Suffixes"] = "l"
+                files = {}
+                if not isinstance(result, list):
+                    result = [result]
+                for k in result:
+                    if k.endswith('/'):
+                        res.add_row(['dir', k, ''])
+                    else:
+                        suffix = ""
+                        if k.endswith(".gz"):
+                            suffix = ".gz"
+                            k = k[:-3]
+                        p = k.rfind(".")
+                        if p != -1:
+                            suffix = k[p:] + suffix
+                            k = k[:p]
+                        if k not in files:
+                            files[k] = []
+                        files[k].append(suffix)
+                for k, v in six.iteritems(files):
+                    res.add_row(['file', k, ', '.join(sorted(v))])
+        else:
+            res = result
+    elif args.cmd == 'model' and args.subcmd == 'delete':
+        allres = []
+        for m in args.models:
+            if args.dryrun or not args.force:
+                params = {'recursive': args.recursive, 'dryrun': True}
+                r = requests.get(os.path.join(args.url,
+                                              "model/delete/%s/%s/%s" % (args.source,
+                                                                         args.target,
+                                                                         m)),
+                                 params=params, auth=auth)
+                if r.status_code == 200:
+                    mres = r.json()
+                else:
+                    launcher.logger.error('cannot remove %s (%s)' % (m, r.text))
+                    continue
+                launcher.logger.info('-- %sremoving %s and %d '
+                                     'childrens:\n\t%s' % (args.dryrun and "not " or "",
+                                                           m,
+                                                           len(mres)-1,
+                                                           "\n\t".join(mres)))
+            confirm = args.force
+            if args.dryrun:
+                continue
+            confirm = confirm or launcher.confirm()
+            if confirm:
+                params = {'recursive': args.recursive}
+                r = requests.get(os.path.join(args.url,
+                                              "model/delete/%s/%s/%s" % (args.source,
+                                                                         args.target,
+                                                                         m)),
+                                 params=params, auth=auth)
+                if r.status_code == 200:
+                    mres = r.json()
+                    launcher.logger.info('  => %d models removed: %s' % (len(mres), " ".join(mres)))
+                    allres += mres
+                else:
+                    launcher.logger.error('cannot remove %s (%s)' % (m, r.text))
+            else:
+                launcher.logger.info("  ... skipping")
+        res = "Total %d models removed" % len(allres)
+    elif args.cmd == 'task' and args.subcmd == 'change':
+        if args.prefix is None and len(args.task_ids) == 0 and args.gpus is None:
+            raise RuntimeError('you need to specify either `--prefix PREFIX` '
+                               'or task_id(s) or `--gpus NGPUS`')
+        if args.prefix is not None and len(args.task_ids) != 0:
+            raise RuntimeError('you cannot to specify both `--prefix PREFIX` '
+                               'and task_id(s)')
+        if args.service is None and args.priority is None:
+            raise RuntimeError('you need to specify new service (`--service SERVICE`)'
+                               ' and/or new priority (`--priority PRIORITY`)')
+        if args.prefix:
+            r = requests.get(os.path.join(args.url, "task/list", args.prefix + '*'), auth=auth)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'task/list\' service: %s' % r.text)
+            result = r.json()
+            args.task_ids = [k["task_id"] for k in result]
+            if len(result) == 0:
+                raise RuntimeError('no task matching prefix %s' % args.prefix)
+        launcher.logger.info('Change %d tasks (%s)' % (len(args.task_ids), ", ".join(args.task_ids)))
+        if len(args.task_ids) == 1 or launcher.confirm():
+            modification = ""
+            if args.service:
+                modification += "service=%s" % args.service
+            if args.priority:
+                if len(modification) > 0:
+                    modification += ", "
+                modification += "priority=%d" % args.priority
+            if args.gpus:
+                if len(modification) > 0:
+                    modification += ", "
+                modification += "ngpus=%d" % args.gpus
+            launcher.logger.info("modifying tasks (%s) for:" % modification)
+            error = False
+            for k in args.task_ids:
+                launcher.logger.info("*** %s" % k)
+                p = args.priority
+                if p is not None and args.priority_rand != 0:
+                    p += random.randint(0, args.priority_rand)
+                params = {'priority': p, 'service': args.service, 'ngpus': args.gpus}
+                r = requests.get(os.path.join(args.url, "task/change", k),
+                                 auth=auth, params=params)
+                if r.status_code != 200:
+                    launcher.logger.error('>> %s' % r.json()["message"])
+                    error = True
+                else:
+                    launcher.logger.info(">> %s" % r.json()["message"])
+                res = ""
+        else:
+            res = ""
+    elif args.cmd == 'model' and args.subcmd == 'add':
+        if not os.path.exists(args.file):
+            raise RuntimeError('file `%s` does not exists' % args.file)
+        if not args.file.endswith(".tgz"):
+            raise RuntimeError('file `%s` should be a .tgz file' % args.file)
+        filename = os.path.basename(args.file)[:-4]
+        parts = filename.split('_')
+        if len(parts) < 4 or len(parts) > 5:
+            raise RuntimeError('incorrect model naming: %s' % filename)
+        trid = parts.pop(0)
+        lp = parts.pop(0)
+        name = parts.pop(0)
+        nn = parts.pop(0)
+        tar = tarfile.open(args.file, "r:gz")
+        try:
+            f = tar.extractfile("%s/config.json" % filename)
+            content = f.read()
+            config_json = json.loads(content)
+        except Exception as e:
+            raise ValueError('cannot extract `%s/config.json` from model: %s' % (filename, str(e)))
+        if config_json["model"] != filename:
+            raise ValueError('model name does not match directory %s/%s' % (config_json["model"], filename))
+
+        params = {
+            "ignore_parent": args.ignore_parent,
+            "compute_checksum": args.compute_checksum,
+            "name": args.name
+        }
+        files = {'tgz': (filename, open(args.file, mode='rb'), 'application/octet-stream')}
+        r = requests.post(os.path.join(args.url, "model", "add", filename),
+                          auth=auth, params=params, files=files)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'model/add\' service: %s' % r.text)
+        res = r.json()
+    elif args.cmd == 'model' and args.subcmd == 'list':
+        if args.skip_noscores and args.scores is None:
+            raise RuntimeError('cannot use --skip_noscores without --scores')
+        if args.has_noscores and args.scores is None:
+            raise RuntimeError('cannot use --has_noscores without --scores')
+        if args.has_noscores and args.skip_noscores:
+            raise RuntimeError('cannot use --has_noscores with --skip_noscores')
+        params = {'source': args.source, 'target': args.target, 'model': args.model}
+        if args.scores is not None:
+            params['scores'] = ",".join(args.scores)
+        if args.count:
+            r = requests.get(os.path.join(args.url, "model/lp/list"), auth=auth)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'model/lp/list\' service: %s' % r.text)
+            response = r.json()
+            if not is_json:
+                res = PrettyTable(["LP", "#Models"])
+                for item in response:
+                    res.add_row([item["lp"], int(item["count_model"])])
+            else:
+                res = response
+        else:
+            r = requests.get(os.path.join(args.url, "model/list"), params=params, auth=auth)
+            if r.status_code != 200:
+                raise RuntimeError('incorrect result from \'model/list\' service: %s' % r.text)
+            response = r.json()
+            result = []
+            metrics = Counter()
+            for item in response:
+                if args.model and args.model not in item['model']:
+                    continue
+                if args.scores is not None:
+                    new_scores = {}
+                    for p, v in six.iteritems(item['scores']):
+                        p = os.path.basename(p)
+                        if not is_json:
+                            if isinstance(v, float):
+                                v = {'BLEU': v}
+                            for m in v:
+                                metrics[m] += 1
+                            v = v.get(args.metric)
+                        if v is not None:
+                            new_scores[p] = v
+                    item['scores'] = new_scores
+                result.append(item)
+            if not is_json:
+                scorenames = {}
+                bestscores = {}
+
+                # Calculate the aggregate sentence feed
+                idx_result = {}
+                root = []
+                for r in result:
+                    r['children_models'] = []
+                    idx_result[r['lp']+":"+r['model']] = r
+                for k, v in six.iteritems(idx_result):
+                    parent_model = v['parent_model']
+                    if 'parent_model' in v and v['parent_model'] is not None and \
+                       v['lp']+":"+v['parent_model'] in idx_result:
+                        p = v['lp']+":"+v['parent_model']
+                        idx_result[p]['children_models'].append(k)
+                    else:
+                        root.append(k)
+                cum_sentenceCount(root, idx_result, 0)
+
+                idx_result = {}
+                root = []
+                if args.aggr:
+                    aggr_result = {}
+                    for r in result:
+                        model = r["model"]
+                        q = model.find("_")
+                        if q != -1:
+                            q = model.find("_", q+1)
+                            model = model[q+1:]
+                            q = model.find("_")
+                            if q != -1:
+                                model = model[:q]
+                        lpmodel = r["lp"]
+                        if args.aggr == 'model':
+                            lpmodel += ":" + model
+                        if lpmodel not in aggr_result:
+                            aggr_result[lpmodel] = {'lp': r["lp"], 'cumSentenceCount': 0,
+                                                    'date': 0, 'model': '', 'scores': {}, 'count': 0,
+                                                    'imageTag': ''}
+                            if args.aggr == 'model':
+                                aggr_result[lpmodel]["imageTag"] = r["imageTag"]
+                                aggr_result[lpmodel]["model"] = model
+                        aggr_result[lpmodel]['count'] += 1
+                        for s, v in six.iteritems(r['scores']):
+                            if s not in aggr_result[lpmodel]['scores'] or \
+                               aggr_result[lpmodel]['scores'][s] < v:
+                                aggr_result[lpmodel]['scores'][s] = v
+                        if r["date"] > aggr_result[lpmodel]['date']:
+                            aggr_result[lpmodel]['date'] = r["date"]
+                        if r["cumSentenceCount"] > aggr_result[lpmodel]['cumSentenceCount']:
+                            aggr_result[lpmodel]['cumSentenceCount'] = r["cumSentenceCount"]
+                    result = [aggr_result[k] for k in aggr_result]
+                for r in result:
+                    r['children_models'] = []
+                    lpmodel = r["lp"]+":"+r["model"]
+                    if 'parent_model' in r and r['parent_model'] is not None:
+                        r["parent_model"] = r["lp"]+':'+r["parent_model"]
+                    idx_result[lpmodel] = r
+                    for s, v in six.iteritems(r['scores']):
+                        scorenames[s] = scorenames.get(s, 0) + 1
+                        if s not in bestscores or v > bestscores[s]:
+                            bestscores[s] = v
+                for k, v in six.iteritems(idx_result):
+                    if 'parent_model' in v and v['parent_model'] in idx_result:
+                        p = v['parent_model']
+                        idx_result[p]['children_models'].append(k)
+                    else:
+                        root.append(k)
+                max_depth = tree_depth(0, root, idx_result)
+                model_maxsize = max_depth + 42
+                scorenames_key = sorted(scorenames.keys())
+                scoretable = []
+                scorecols = []
+                for i in xrange(len(scorenames_key)):
+                    scorecols.append("T%d" % (i+1))
+                    scoretable.append("\tT%d:\t%s\t%d" % (i+1, scorenames_key[i],
+                                                          scorenames[scorenames_key[i]]))
+                if args.quiet:
+                    res = []
+                    tree_display(res, 0, root, idx_result, model_maxsize,
+                                 scorenames_key, bestscores, args.skip_noscores, args.has_noscores, args.quiet)
+                else:
+                    res1 = PrettyTable(["Date", "LP", "Type", "Model ID", "#Sentences"]+scorecols)
+                    res1.align["Model ID"] = "l"
+                    tree_display(res1, 0, root, idx_result, model_maxsize,
+                                 scorenames_key, bestscores, args.skip_noscores, args.has_noscores)
+                    res = [res1]
+                    res.append('* TOTAL: %d models\n' % len(result))
+                    if metrics:
+                        res.append("* AVAILABLE METRICS: %s" % ", ".join(metrics.keys()))
+                    if len(scoretable):
+                        res.append("* TESTSET:")
+                        res.append('\n'.join(scoretable) + "\n")
+            else:
+                res = result
+    elif args.cmd == 'model' and args.subcmd == 'describe':
+        r = requests.get(os.path.join(args.url, "model/describe", args.model), auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/describe\' service: %s' % r.text)
+        res = r.json()
+    elif args.cmd == 'docker' and args.subcmd == 'describe':
+        image = args.docker
+        p = image.find(":")
+        tag = image[p+1:]
+        image = image[:p]
+        assert args.config, "docker describe requires --config parameter"
+        r = requests.get(os.path.join(args.url, "docker/describe"),
+                         params={'config': args.config, 'image': image, 'tag': tag},
+                         auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'service/describe\' service: %s' % r.text)
+        res = r.json()
+    elif args.cmd == "task" and args.subcmd == "file":
+        p = args.filename.find(':')
+        if p == -1:
+            r = requests.get(os.path.join(args.url, "task/file", args.task_id, args.filename),
+                             auth=auth)
+        else:
+            r = requests.get(os.path.join(args.url, "task/file_storage",
+                                          args.filename[0:p], args.task_id, args.filename[p+1:]),
+                             auth=auth)
+        if r.status_code != 200:
+            raise RuntimeError('incorrect result from \'task/file_extended\' service: %s' % r.text)
+        res = r.content
+    if res is None:
+        skip_launch = False
+        if args.cmd == 'task' and args.subcmd == 'launch':
+            mode = None
+            model = None
+            src_lang = None
+            tgt_lang = None
+            totranslate = None
+            # implement -t option for translation
+
+            # first pass to get model if present and if no image given, determine
+            # docker image to be used
+            i = 0
+            while i < len(args.docker_command):
+                tok = args.docker_command[i]
+                if mode is None and (tok == "-m" or tok == "--model"):
+                    assert i+1 < len(args.docker_command), "`-m` missing value"
+                    model = args.docker_command[i+1]
+
+                    if args.docker_image is None:
+                        # no image specified with -i, first try to infer it from model
+                        r = requests.get(os.path.join(args.url, "model/describe", model),
+                                         params={"short": True}, auth=auth)
+                        if r.status_code != 200:
+                            raise RuntimeError("cannot infer docker_image for "
+                                               "model %s -- %s" % (model, r.text))
+                        args.docker_image = r.json()['imageTag']
+                        # if docker_tag option (-t) specified, it overrule on docker image modifier
+                        if args.docker_tag:
+                            p = args.docker_image.find(':')
+                            if p != -1:
+                                args.docker_image = args.docker_image[:p]
+
+                    split = model.split("_")
+                    if len(split) > 2 and src_lang is None:
+                        lp = split[1]
+                        m = re.match(r"^([a-z]{2}([-+][A-Z]+)?)([a-z]{2}.*)$", lp)
+                        if m is not None:
+                            src_lang = m.group(1)
+                            tgt_lang = m.group(3)
+                    i += 1
+                i += 1
+            # second pass to apply other options
+            i = 0
+            config = None
+            while i < len(args.docker_command):
+                tok = args.docker_command[i]
+                if mode is None and (tok == "train" or tok == "trans" or
+                                     tok == "preprocess" or tok == "release"):
+                    mode = tok
+                    assert mode != "trans" or model is not None, "missing model for `trans`"
+                # get config if present and validate it against schema
+                elif mode is None and (tok == "-c" or tok == "--config"):
+                    assert i+1 < len(args.docker_command), "`-c` missing value"
+
+                    # get JSON config passed as parameter
+                    c = args.docker_command[i+1]
+                    if c.startswith("@"):
+                        with open(c[1:], "rt") as f:
+                            c = f.read()
+                    config = json.loads(c)
+                    if "source" in config:
+                        src_lang = config["source"]
+                    if "target" in config:
+                        tgt_lang = config["target"]
+                    i += 1
+                elif mode == "trans" and tok == "-t":
+                    assert i+1 < len(args.docker_command), "`trans -t` missing value"
+                    files = args.docker_command[i+1:]
+                    filename = files[0]
+                    p = filename.rfind(".")
+                    assert p != -1, "-t filename should include language suffix"
+                    if src_lang is None:
+                        src_lang = filename[p+1:]
+                    else:
+                        assert src_lang == filename[p+1:], "incompatible language suffix"
+                    if tgt_lang is None:
+                        p = model.find("_")
+                        q = model.find("_", p+1)
+                        assert p != -1 and q != -1, "cannot find language pair in model name"
+                        lp = model[p+1:q]
+                        assert lp[:len(src_lang)] == src_lang, "model lp does not match " \
+                                                               "language suffix"
+                        tgt_lang = lp[len(src_lang):]
+                    input_files = []
+                    output_files = []
+                    for f in files:
+                        launcher.logger.info("translating: pn9_testing:"+f)
+                        input_files.append("pn9_testing:"+f)
+                        output_files.append("pn9_testtrans:"+model+"/"+f+"."+tgt_lang)
+                    new_params = ["-i"] + input_files + ["-o"] + output_files
+                    args.docker_command = args.docker_command[0:i]
+                    args.docker_command += new_params
+                    break
+                elif mode == "trans" and (tok == "-T" or tok == "-Tm"):
+                    assert i+1 < len(args.docker_command), "`trans -T` missing value"
+                    path = args.docker_command[i+1]
+                    assert i+2 == len(args.docker_command), "`trans -T [PATH]` has extra values"
+                    assert path != "" and path.find(":") == -1, "`trans -T[m] path` - path should "\
+                                                                "be subpath of pn9_testing:"
+                    if path[-1:] == "/":
+                        path = path[:-1]
+                    files = _get_testfiles(args.url, auth, args.service, path,
+                                           model, src_lang, tgt_lang)
+                    if tok == '-Tm':
+                        translatedfiles = _get_outfiles(args.url, auth, args.service, path,
+                                                        model, src_lang, tgt_lang)
+                        files = [(test, out) for (test, out) in files if test not in translatedfiles]
+                    assert len(files) != 0, "no file found to translate " \
+                                            "(%s>%s)" % (src_lang, tgt_lang)
+                    launcher.logger.info('found %d test files' % len(files))
+                    args.toscore = _get_reffiles(args.url, auth, args.service,
+                                                 src_lang, tgt_lang, files)
+                    launcher.logger.info('found %d test references' % len(args.toscore))
+                    docker_command = args.docker_command
+                    res = []
+                    input_files = []
+                    output_files = []
+                    for f in files:
+                        launcher.logger.info("translating: "+f[0])
+                        input_files.append(f[0])
+                        output_files.append(f[1])
+                    new_params = ["-i"] + input_files + ["-o"] + output_files
+                    args.docker_command = docker_command[0:i]
+                    args.docker_command += new_params
+
+                    skip_launch = True
+                    break
+                i += 1
+
+            if args.docker_image is None:
+                raise RuntimeError('missing docker image (you can set LAUNCHER_IMAGE)')
+            # if docker_tag option (-t) specified, it overrule on docker image modifier
+            p = args.docker_image.find(':')
+            if p != -1:
+                if args.docker_tag is not None:
+                    raise RuntimeError("ambiguous definition of docker tag (-i %s/-t %s)",
+                                       (args.docker_image, args.docker_tag))
+                args.docker_tag = args.docker_image[p+1:]
+                args.docker_image = args.docker_image[:p]
+
+            # if we are translating check if there are reference files
+            if mode == "trans":
+                idx = args.docker_command.index("trans")
+                input_files = _get_params(("-i", "--input"), args.docker_command[idx+1:])
+                output_files = _get_params(("-o", "--output"), args.docker_command[idx+1:])
+                if len(input_files) != len(output_files):
+                    launcher.logger.error("invalid trans command - misaligned input/output")
+                    sys.exit(1)
+                args.toscore = _get_reffiles(args.url, auth, args.service,
+                                             src_lang, tgt_lang,
+                                             list(zip(input_files, output_files)))
+                launcher.logger.info('found %d test references' % len(args.toscore))
+
+            # check if we can upgrade version
+            args.docker_image, upgraded = check_upgrades(args.docker_image, args.docker_tag)
+            args.docker_tag = None
+            announce_usage(args.docker_image)
+
+            if mode == "trans" and (tok == "-T" or tok == "-Tm"):
+                res.append(launcher.process_request(serviceList, args.cmd, args.subcmd,
+                                                        args.display == "JSON",
+                                                        args, auth=auth))
+
+            if args.novalidschema:
+                launcher.logger.warning("schema validation is skipped, your config is potentially erroneous")
+            else:
+                if not(config is None) or upgraded:
+                    if model:
+                        # if model is present, collect its config
+                        r = requests.get(os.path.join(args.url, "model/describe", model), auth=auth)
+                        if r.status_code != 200:
+                            raise RuntimeError("cannot retrieve configuraton for "
+                                               "model %s -- %s" % (model, r.text))
+                        model_config = r.json()
+                        if config:
+                            # merge to validate complete config
+                            config = merge_config(model_config, config)
+                        else:
+                            config = model_config
+
+                    image = args.docker_image
+                    _, version_main_number = parse_version_number(image)
+                    if version_main_number > 0:
+                        p = image.find(":")
+                        tag = image[p+1:]
+                        image = image[:p]
+                        r = requests.get(os.path.join(args.url, "docker/schema"),
+                                         params={'image': image, 'tag': tag}, auth=auth)
+                        if r.status_code != 200:
+                            raise RuntimeError('cannot retrieve schema from docker image %s,'
+                                               ' tag %s: %s' % (image, tag))
+                        schema_res = r.json()
+                        schema = json.loads(schema_res)
+                        # validate config against JSON schema
+                        try:
+                            validate(config, schema)
+                        except ValidationError as error:
+                            all_errors = get_schema_errors(schema, config)
+                            raise ValidationError(all_errors)
+
+            if mode == "release":
+                args.docker_command += ["-d", "pn9_release:"]
+            if args.no_test_trans:
+                assert mode == "train", "`--no_test_trans` can only be used with `train` mode"
+            elif mode == "train":
+                assert not(src_lang is None or tgt_lang is None), "src/tgt_lang not determined: " \
+                                                                  "cannot find test sets"
+                if src_lang < tgt_lang:
+                    test_dir = src_lang + "_" + tgt_lang
+                else:
+                    test_dir = tgt_lang + "_" + src_lang
+                args.totranslate = _get_testfiles(args.url, auth, args.service, test_dir,
+                                                  "<MODEL>", src_lang, tgt_lang)
+                args.toscore = _get_reffiles(args.url, auth, args.service, src_lang, tgt_lang, args.totranslate)
+                launcher.logger.info('found %d test references' % len(args.toscore))
+        if not skip_launch:
+            res = launcher.process_request(serviceList, args.cmd, args.subcmd,
+                                           args.display == "JSON", args, auth=auth)
+except RuntimeError as err:
+    launcher.logger.error(str(err))
+    sys.exit(1)
+except ValueError as err:
+    launcher.logger.error(str(err))
+    sys.exit(1)
+
+if not isinstance(res, list):
+    res = [res]
+for r in res:
+    if args.display == "JSON" or isinstance(r, dict):
+        print(json.dumps(r, indent=2))
+    else:
+        if isinstance(r, PrettyTable):
+            if args.display == "TABLE":
+                print(r)
+            elif args.display == "RAW":
+                r.set_style(PLAIN_COLUMNS)
+                print(r)
+            else:
+                print(r.get_html_string())
+        else:
+            sys.stdout.write(r)
+            if args.cmd != "file" and args.cmd != "log" and not r.endswith("\n"):
+                sys.stdout.write("\n")
+            sys.stdout.flush()
