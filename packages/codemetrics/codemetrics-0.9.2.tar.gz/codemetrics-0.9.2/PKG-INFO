@@ -1,0 +1,173 @@
+Metadata-Version: 2.1
+Name: codemetrics
+Version: 0.9.2
+Summary: SCM mining utility classes
+Home-page: http://github.com/elmotec/codemetrics
+Author: Elmotec
+Author-email: elmotec@gmx.com
+License: MIT
+Description: .. image:: https://img.shields.io/pypi/v/codemetrics.svg
+            :target: https://pypi.org/pypi/codemetrics/
+            :alt: PyPi version
+        
+        .. image:: https://img.shields.io/pypi/pyversions/codemetrics.svg
+            :target: https://pypi.org/pypi/codemetrics/
+            :alt: Python compatibility
+        
+        .. image:: https://img.shields.io/travis/elmotec/codemetrics.svg
+            :target: https://travis-ci.org/elmotec/codemetrics
+            :alt: Build Status
+        
+        .. image:: https://img.shields.io/readthedocs/codemetrics.svg
+            :target: https://codemetrics.readthedocs.org/
+            :alt: Documentation
+        
+        .. image:: https://coveralls.io/repos/github/elmotec/codemetrics/badge.svg?branch=master
+            :target: https://coveralls.io/github/elmotec/codemetrics?branch=master
+            :alt: Test coverage
+        
+        .. image:: https://api.codacy.com/project/badge/Grade/dd4a11eb66674b3bbe518d8f829b6234
+            :target: https://www.codacy.com/app/elmotec/codemetrics?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=elmotec/codemetrics&amp;utm_campaign=Badge_Grade
+            :alt: Codacy
+        
+        ===========
+        codemetrics
+        ===========
+        
+        Mine your SCM for insight on your software. A work of love
+        inspired by `Adam Tornhill`_'s books.
+        
+        Code metrics is a simple Python module that leverage pandas and your source control management (SCM) tool togenerate
+        insight on your code base.
+        
+        - pandas_: for data munching.
+        - lizard_: for code complexity calculation.
+        - cloc.pl (script): for line counts from cloc_
+        - For now, only Subversion and git are supported.
+        
+        
+        Installation
+        ------------
+        
+        To install codemetrics, simply use pip:
+        
+        ::
+        
+          pip install codemetrics
+        
+        
+        
+        Usage
+        -----
+        
+        This is a simple tool that makes it easy to retrieve information from your
+        Source Control Management (SCM) repository and hopefully gain insight from it.
+        
+        ::
+        
+          import codemetrics as cm
+          import cm.git
+        
+          log_df = cm.get_git_log()
+          ages_df = cm.get_ages(log_df)
+        
+        
+        To retrieve the number of lines changed by revision with Subversion:
+        
+        ::
+        
+          import codemetrics as cm
+          import cm.git
+        
+          log_df = cm.get_svn_log().set_index(['revision', 'path'])
+          log_df.loc[:, ['added', 'removed']] = log_df.reset_index().\
+                                                   groupby('revision').\
+                                                   apply(cm.svn.get_diff_stats, chunks=False)
+        
+        See `module documentation`_ for more advanced functions or the `example notebook`_
+        
+        
+        License
+        -------
+        
+        Licensed under the term of `MIT License`_. See attached file LICENSE.txt.
+        
+        
+        Credits
+        -------
+        
+        - This package was inspired by `Adam Tornhill`_'s books.
+        - This package was created with Cookiecutter_.
+        
+        
+        .. _Cookiecutter: https://github.com/audreyr/cookiecutter
+        .. _lizard: https://github.com/terryyin/lizard
+        .. _pandas: https://pandas.pydata.org/
+        .. _cloc: http://cloc.sourceforge.net/
+        .. _Pandas documentation: https://pandas.pydata.org/pandas-docs/stable/text.html
+        .. _MIT License: https://en.wikipedia.org/wiki/MIT_License
+        .. _Adam Tornhill: https://www.adamtornhill.com/
+        .. _module documentation: https://codemetrics.readthedocs.org/
+        .. _example notebook: https://github.com/elmotec/codemetrics/tree/master/notebooks
+        
+        
+        =======
+        History
+        =======
+        
+        0.9.2 (2019-03-28)
+        ----------------
+        * Fixed retrieval of added and removed lines when there are spaces in a file name.
+        * Fixed indexed input in `get_mass_changes`
+        * Fixed handling of removed files in `svn.get_diff_stats`
+        
+        0.9 (2019-03-19)
+        ----------------
+        
+        * Started changing interfaces to leverage apply and groupby.
+        * Added lines added/removed for Subversion.
+        
+        0.8.2 (2019-02-26)
+        ------------------
+        
+        * Added `svn.get_diff_stats` to retrieve line changes stats per diff.
+        
+        0.8 (2019-02-13)
+        ----------------
+        
+        * Integrated lizard to calculate average and function level cyclomatic complexity.
+        
+        0.7 (2019-01-09)
+        ----------------
+        
+        * Function oriented interface.
+        * Visualization via Vega, Altair.
+        * Documentation.
+        
+        0.6
+        ---
+        
+        * Alpha work.
+        
+        0.5 (2018-05-12)
+        ----------------
+        
+        * First release on PyPI.
+        
+        
+        
+Keywords: code metrics mining scm subversion svn Adam Tornhill utilities
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Environment :: Console
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development
+Classifier: Topic :: Utilities
+Classifier: Topic :: Software Development :: Version Control
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Requires-Python: >=3.6
+Description-Content-Type: text/x-rst
