@@ -1,0 +1,2026 @@
+# Fortuna: Random Value Generator
+Fortuna's main goal is to provide a quick and easy way to build custom random generators that don't suck.
+
+The core functionality of Fortuna is based on the RNG Storm engine. While Storm is a high quality random engine, Fortuna is not appropriate for cryptography of any kind. Fortuna is meant for games, data science, A.I. and experimental programming, not security.
+
+Suggested Installation: `$ pip install Fortuna`
+
+Installation on platforms other than MacOS may require building from source files.
+
+
+### Documentation Table of Contents:
+- Random Value Generators
+    - `TruffleShuffle(Sequence) -> Callable`
+    - `QuantumMonty(Sequence) -> Callable`
+    - `CumulativeWeightedChoice(Table) -> Callable`
+    - `RelativeWeightedChoice(Table) -> Callable`
+    - `FlexCat(Matrix) -> Callable`
+- Random Integer Functions
+    - `randbelow(number: int) -> int`
+    - `randint(left_lmit: int, right_limit: int) -> int`
+    - `randrange(start: int, stop: int, step: int) -> int`
+    - `d(sides: int) -> int`
+    - `dice(rolls: int, sides: int) -> int`
+    - `plus_or_minus(number: int) -> int`
+    - `plus_or_minus_linear(number: int) -> int`
+    - `binomial(number_of_trials: int, probability: float) -> int`
+    - `negative_binomial(trial_successes: int, probability: float) -> int`
+    - `geometric(probability: float) -> int`
+    - `poisson(mean: float) -> int`
+    - `discrete(count: int, xmin: int, xmax: int) -> int`
+- Random Float Functions
+    - `random() -> float`
+    - `uniform(a: float, b: float) -> float`
+    - `expovariate(lambd: float) -> float`
+    - `gammavariate(alpha, beta) -> float`
+    - `weibullvariate(alpha, beta) -> float`
+    - `betavariate(alpha, beta) -> float`
+    - `paretovariate(alpha) -> float`
+    - `gauss(mu: float, sigma: float) -> float`
+    - `normalvariate(mu: float, sigma: float) -> float`
+    - `lognormvariate(mu: float, sigma: float) -> float`
+    - `vonmisesvariate(mu: float, kappa: float) -> float`
+    - `triangular(low: float, high: float, mode: float = None)`
+    - `extreme_value(location: float, scale: float) -> float`
+    - `chi_squared(degrees_of_freedom: float) -> float`
+    - `cauchy(location: float, scale: float) -> float`
+    - `fisher_f(degrees_of_freedom_1: float, degrees_of_freedom_2: float) -> float`
+    - `student_t(degrees_of_freedom: float) -> float`
+- Random Bool Function
+    - `percent_true(truth_factor: float) -> bool`
+- Random Shuffle Functions
+    - `shuffle(array: list) -> None`
+    - `knuth(array: list) -> None`
+    - `fisher_yates(array: list) -> None`
+- Test Suite Functions
+    - `distribution_timer(func: staticmethod, *args, **kwargs) -> None`
+    - `quick_test()`
+- Test Suite Output
+    - Distributions and performance data from the most recent build.
+- Development Log
+- Legal Information
+
+
+##### Project Definitions:
+- Integer: 64 bit signed long long int.
+    - Input & Output Range: `(-2**63, 2**63)` or approximately +/- 9.2 billion billion.
+    - Minimum: -9223372036854775807
+    - Maximum:  9223372036854775807
+- Float: 64 bit double precision real number.
+    - Minimum: -1.7976931348623157e+308
+    - Maximum:  1.7976931348623157e+308
+    - Epsilon Below Zero: -5e-324
+    - Epsilon Above Zero:  5e-324
+- Value: Any python object that can be put inside a list: str, int, and lambda to name a few. Almost anything.
+- Callable: Any function, method or lambda.
+- Sequence: Any object that can be converted into a list.
+    - List, Tuple, Set, etc...
+    - Comprehensions and Generators that produce Sequences also qualify.
+- Array: List or tuple.
+    - Must be indexed like a list.
+    - List comprehensions are ok, but sets and generators are not indexed.
+    - All arrays are sequences but not all sequences are arrays.
+    - Classes that wrap a list will take any Sequence or Array and copy it or convert it as needed.
+    - Functions that operate on a list will require an Array.
+- Pair: Sequence of two values.
+- Table: Sequence of Pairs.
+    - List of lists of two values each.
+    - Tuple of tuples of two values each.
+    - Generators that produce Tables also qualify.
+    - The result of zip(list_1, list_2) also qualifies.
+- Matrix: Dictionary of Sequences.
+    - Generators that produce Matrices also qualify.
+
+
+## Random Value Classes
+### TruffleShuffle
+`TruffleShuffle(list_of_values: Sequence) -> callable`
+- The input Sequence can be any list like object (list, set, tuple or generator).
+- The input Sequence must not be empty. Values can be any python object.
+- The returned callable produces a random value from the list with a wide uniform distribution.
+
+#### TruffleShuffle, Basic Use Case
+```python
+from Fortuna import TruffleShuffle
+
+
+list_of_values = [1, 2, 3, 4, 5, 6]
+
+truffle_shuffle = TruffleShuffle(list_of_values)
+
+print(truffle_shuffle())  # prints a random value from the list_of_values.
+```
+
+**Wide Uniform Sequence**: *"Wide"* refers to the average distance between consecutive occurrences of the same item in the output sequence. The goal of this type of distribution is to keep the output sequence free of clumps while maintaining randomness and the uniform probability of each value.
+
+This is not the same as a *flat uniform distribution*. The two distributions will be statistically similar, but the output sequences are very different. For a more general solution that offers several statistical distributions, please refer to QuantumMonty. For a more custom solution featuring discrete rarity refer to RelativeWeightedChoice and its counterpart CumulativeWeightedChoice.
+
+**Micro-shuffle**: This is the hallmark of TruffleShuffle and how it creates a wide uniform distribution efficiently. While adjacent duplicates are forbidden, nearly consecutive occurrences of the same item are also required to be extremely rare with respect to the size of the set. This gives rise to output sequences that seem less mechanical than other random sequences. Somehow more and less random at the same time, almost human-like?
+
+**Automatic Flattening**: TruffleShuffle and all higher-order Fortuna classes will recursively unpack callable objects returned from the data set at call time. Automatic flattening is dynamic, lazy, fault tolerant and on by default. Un-callable objects or those that require arguments will be returned in an uncalled state without error. A callable object can be any class, function, method or lambda. Mixing callable objects with un-callable objects is fully supported. Nested callable objects are fully supported. It's lambda all the way down.
+
+To disable automatic flattening, pass the optional argument flat=False during instantiation.
+
+Please review the code examples of each section. If higher-order functions and lambdas make your head spin, concentrate only on the first example of each section. Because `lambda(lambda) -> lambda` fixes everything for arbitrary values of 'because', 'fixes' and 'everything'.
+
+
+#### Flattening
+```python
+from Fortuna import TruffleShuffle
+
+
+flatted = TruffleShuffle([lambda: 1, lambda: 2])
+print(flatted())  # will print the value 1 or 2
+
+un_flat = TruffleShuffle([lambda: 1, lambda: 2], flat=False)
+print(un_flat()())  # will print the value 1 or 2, mind the double-double parenthesis
+
+auto_un_flat = TruffleShuffle([lambda x: x, lambda x: x + 1])
+# flat=False is not required here because the lambdas can't be called without input x satisfied.
+print(auto_un_flat()(1))  # will print the value 1 or 2, mind the double-double parenthesis
+
+```
+
+
+#### Mixing Static Objects with Callable Objects
+```python
+from Fortuna import TruffleShuffle
+
+
+mixed_flat = TruffleShuffle([1, lambda: 2])
+print(mixed_flat())  # will print 1 or 2
+
+mixed_un_flat = TruffleShuffle([1, lambda: 2], flat=False) # not recommended.
+print(mixed_flat())  # will print 1 or <lambda at some_address>
+# This pattern is not recommended because you wont know the nature of what you get back.
+# This is almost always not what you want, and always messy.
+```
+
+
+##### Dynamic Strings
+To successfully express a dynamic string, at least one level of indirection is required.
+Without an indirection the f-string would collapse into a static string too soon.
+
+WARNING: The following example features a higher order function that takes a tuple of lambdas and returns a higher order function that returns a random lambda that returns a dynamic f-string.
+
+```python
+from Fortuna import TruffleShuffle, d
+
+
+# d is a simple dice function.
+brainiac = TruffleShuffle((
+    lambda: f"A{d(2)}",
+    lambda: f"B{d(4)}",
+    lambda: f"C{d(6)}",
+))
+
+print(brainiac())  # prints a random dynamic string.
+```
+
+
+### QuantumMonty
+`QuantumMonty(some_list: Sequence) -> callable`
+- The input Sequence can be any list like object (list, set, tuple or generator).
+- The input Sequence must not be empty. Values can be any python object.
+- The returned callable will produce random values from the list using the selected distribution model or "monty".
+- The default monty is the Quantum Monty Algorithm.
+
+```python
+from Fortuna import QuantumMonty
+
+
+list_of_values = [1, 2, 3, 4, 5, 6]
+quantum_monty = QuantumMonty(list_of_values)
+
+print(quantum_monty())          # prints a random value from the list_of_values.
+                                # uses the default Quantum Monty Algorithm.
+
+print(quantum_monty.uniform())  # prints a random value from the list_of_values.
+                                # uses the "uniform" monty: a flat uniform distribution.
+                                # equivalent to random.choice(list_of_values) but better.
+```
+The QuantumMonty class represents a diverse collection of strategies for producing random values from a sequence where the output distribution is based on the method you choose. Generally speaking, each value in the sequence will have a probability that is based on its position in the sequence. For example: the "front" monty produces random values where the beginning of the sequence is geometrically more common than the back. Given enough samples the "front" monty will always converge to a 45 degree slope down for any list of unique values.
+
+There are three primary method families: geometric, gaussian, and poisson. Each family has three base methods; 'front', 'middle', 'back', plus a 'quantum' method that incorporates all three base methods. The quantum algorithms for each family produce distributions by overlapping the probability waves of the other methods in their family. The Quantum Monty Algorithm incorporates all nine base methods.
+
+In addition to the thirteen positional methods that are core to QuantumMonty, it also implements a uniform distribution as a simple base case.
+
+**Automatic Flattening**: All higher-order Fortuna classes will recursively unpack callable objects returned from the data set at call time. Automatic flattening is dynamic, lazy, fault tolerant and on by default. Un-callable objects or those that require arguments will be returned in an uncalled state without error.
+
+```python
+import Fortuna
+
+
+quantum_monty = Fortuna.QuantumMonty(
+    ["Alpha", "Beta", "Delta", "Eta", "Gamma", "Kappa", "Zeta"]
+)
+
+""" Each of the following methods will return a random value from the sequence.
+Each method has its own unique distribution model for the same data set. """
+
+""" Flat Base Case """
+quantum_monty.uniform()             # Flat Uniform Distribution
+
+""" Geometric Positional """
+quantum_monty.front()               # Geometric Descending, Triangle
+quantum_monty.middle()              # Geometric Median Peak, Equilateral Triangle
+quantum_monty.back()                # Geometric Ascending, Triangle
+quantum_monty.quantum()             # Geometric Overlay, Saw Tooth
+
+""" Gaussian Positional """
+quantum_monty.front_gauss()         # Exponential Gamma
+quantum_monty.middle_gauss()        # Scaled Gaussian
+quantum_monty.back_gauss()          # Reversed Gamma
+quantum_monty.quantum_gauss()       # Gaussian Overlay
+
+""" Poisson Positional """
+quantum_monty.front_poisson()       # 1/3 Mean Poisson
+quantum_monty.middle_poisson()      # 1/2 Mean Poisson
+quantum_monty.back_poisson()        # 2/3 Mean Poisson
+quantum_monty.quantum_poisson()     # Poisson Overlay
+
+""" Quantum Monty Algorithm """
+quantum_monty.quantum_monty()       # Quantum Monty Algorithm
+
+```
+
+### Weighted Choice: Custom Rarity
+Weighted Choice offers two strategies for selecting random values from a sequence where programmable rarity is desired. Both produce a custom distribution of values based on the weights of the values.
+
+Flatten: Both will recursively unpack callable objects returned from the data set. Callable objects that require arguments are returned in an uncalled state. To disable this behavior pass the optional argument flat=False during instantiation. By default flat=True.
+
+- Constructor takes a copy of a sequence of weighted value pairs... `[(weight, value), ... ]`
+- Automatically optimizes the sequence for correctness and optimal call performance for large data sets.
+- The sequence must not be empty, and each pair must contain a weight and a value.
+- Weights must be positive integers.
+- Values can be any Python object that can be passed around... string, int, list, function etc.
+- Performance scales by some fraction of the length of the sequence.
+
+**Automatic Flattening**: All higher-order Fortuna classes will recursively unpack callable objects returned from the data set at call time. Automatic flattening is dynamic, lazy, fault tolerant and on by default. Un-callable objects or those that require arguments will be returned in an uncalled state without error.
+
+The following examples produce equivalent distributions with comparable performance.
+The choice to use one strategy over the other is purely about which one suits you or your data best. Relative weights are easier to understand at a glance. However, many RPG Treasure Tables map rather nicely to a cumulative weighted strategy.
+
+#### Cumulative Weight Strategy
+`CumulativeWeightedChoice(weighted_table: Table) -> callable`
+
+_Note: Logic dictates Cumulative Weights must be unique!_
+
+```python
+from Fortuna import CumulativeWeightedChoice
+
+
+cum_weighted_choice = CumulativeWeightedChoice([
+    (7, "Apple"),
+    (11, "Banana"),
+    (13, "Cherry"),
+    (23, "Grape"),
+    (26, "Lime"),
+    (30, "Orange"),  # same as rel weight 4 because 30 - 26 = 4
+])
+
+print(cum_weighted_choice())  # prints a weighted random value
+```
+
+#### Relative Weight Strategy
+`RelativeWeightedChoice(weighted_table: Table) -> callable`
+
+```python
+from Fortuna import RelativeWeightedChoice
+
+
+population = ["Apple", "Banana", "Cherry", "Grape", "Lime", "Orange"]
+rel_weights = [7, 4, 2, 10, 3, 4]  # Alternate zip setup.
+rel_weighted_choice = RelativeWeightedChoice(zip(rel_weights, population))
+
+print(rel_weighted_choice())  # prints a weighted random value
+```
+
+### FlexCat
+`FlexCat(dict_of_lists: Matrix) -> callable`
+
+FlexCat is a 2d QuantumMonty.
+
+Rather than taking a sequence, FlexCat takes a Matrix: a dictionary of sequences. When the the instance is called it returns a random value from a random sequence.
+
+The constructor takes two optional keyword arguments to specify the algorithms to be used to make random selections. The algorithm specified for selecting a key need not be the same as the one for selecting values. An optional key may be provided at call time to bypass the random key selection and select a random value from that category. Keys passed in this way must match a key in the Matrix.
+
+By default, FlexCat will use key_bias="front" and val_bias="truffle_shuffle", this will make the top of the data structure geometrically more common than the bottom and it will truffle shuffle the sequence values. This config is known as Top Cat, it produces a descending-step distribution. Many other combinations are available.
+
+**Automatic Flattening**: All higher-order Fortuna classes will recursively unpack callable objects returned from the data set at call time. Automatic flattening is dynamic, lazy, fault tolerant and on by default. Un-callable objects or those that require arguments will be returned in an uncalled state without error.
+
+
+Algorithm Options: _See QuantumMonty & TruffleShuffle for more details._
+- 'front', Geometric Descending
+- 'middle', Geometric Median Peak
+- 'back', Geometric Ascending
+- 'quantum', Geometric Overlay
+- 'front_gauss', Exponential Gamma
+- 'middle_gauss', Scaled Gaussian
+- 'back_gauss', Reversed Gamma
+- 'quantum_gauss', Gaussian Overlay
+- 'front_poisson', 1/3 Mean Poisson
+- 'middle_poisson', 1/2 Mean Poisson
+- 'back_poisson', 2/3 Mean Poisson
+- 'quantum_poisson', Poisson Overlay
+- 'quantum_monty', Quantum Monty Algorithm
+- 'uniform', uniform flat distribution
+- 'truffle_shuffle', TruffleShuffle, wide uniform distribution
+
+
+```python
+from Fortuna import FlexCat
+
+matrix_data = {
+    "Cat_A": ("A1", "A2", "A3", "A4", "A5"),
+    "Cat_B": ("B1", "B2", "B3", "B4", "B5"),
+    "Cat_C": ("C1", "C2", "C3", "C4", "C5"),
+}
+flex_cat = FlexCat(matrix_data, key_bias="front", val_bias="back")
+
+flex_cat()          # returns a random "back" value from a random "front" category
+flex_cat("Cat_B")   # returns a random "back" value specifically from "Cat_B"
+```
+
+## Fortuna Functions
+### Random Numbers
+- `Fortuna.randbelow(number: int) -> int`
+    - Returns a random integer in the exclusive range:
+        - [0, number) for positive values.
+        - (number, 0] for negative values.
+        - Always returns zero when the input is zero
+    - Flat uniform distribution.
+
+
+- `Fortuna.randint(left_limit: int, right_limit: int) -> int`
+    - Fault-tolerant, efficient version of random.randint()
+    - Returns a random integer in the range [left_limit, right_limit]
+    - `randint(1, 10) -> [1, 10]`
+    - `randint(10, 1) -> [1, 10]` same as above.
+    - Flat uniform distribution.
+
+
+- `Fortuna.randrange(start: int, stop: int = 0, step: int = 1) -> int`
+    - Fault-tolerant, efficient version of random.randrange()
+    - Returns a random integer in the range [A, B) by increments of C.
+    - `randrange(2, 11, 2) -> [2, 10] by 2` even numbers from 2 to 10.
+    - `randrange(10, 1, 0) -> [10]` a step size or range size of zero always returns the first parameter.
+    - Flat uniform distribution.
+
+
+- `Fortuna.d(sides: int) -> int`
+    - Represents a single die roll of a given size die.
+    - Returns a random integer in the range [1, sides].
+    - Flat uniform distribution.
+
+
+- `Fortuna.dice(rolls: int, sides: int) -> int`
+    - Returns a random integer in range [X, Y] where X = rolls and Y = rolls * sides.
+    - The return value represents the sum of multiple rolls of the same size die.
+    - Geometric distribution based on the number and size of the dice rolled.
+    - Complexity scales primarily with the number of rolls, not the size of the dice.
+
+
+- `Fortuna.plus_or_minus(number: int) -> int`
+    - Returns a random integer in range [-number, number].
+    - Flat uniform distribution.
+
+
+- `Fortuna.plus_or_minus_linear(number: int) -> int`
+    - Returns a random integer in range [-number, number].
+    - Linear geometric, triangle distribution.
+
+
+- `binomial(number_of_trials: int, probability: float) -> int`
+- `negative_binomial(trial_successes: int, probability: float) -> int`
+- `geometric(probability: float) -> int`
+- `poisson(mean: float) -> int`
+- `discrete(count: int, xmin: int, xmax: int) -> int`
+
+### Random Float Functions
+- `random() -> float`
+- `uniform(a: float, b: float) -> float`
+- `expovariate(lambd: float) -> float`
+- `gammavariate(alpha, beta) -> float`
+- `weibullvariate(alpha, beta) -> float`
+- `betavariate(alpha, beta) -> float`
+- `paretovariate(alpha) -> float`
+- `gauss(mu: float, sigma: float) -> float`
+- `normalvariate(mu: float, sigma: float) -> float`
+- `lognormvariate(mu: float, sigma: float) -> float`
+- `vonmisesvariate(mu: float, kappa: float) -> float`
+- `triangular(low: float, high: float, mode: float = None)`
+- `extreme_value(location: float, scale: float) -> float`
+- `chi_squared(degrees_of_freedom: float) -> float`
+- `cauchy(location: float, scale: float) -> float`
+- `fisher_f(degrees_of_freedom_1: float, degrees_of_freedom_2: float) -> float`
+- `student_t(degrees_of_freedom: float) -> float`
+
+### Random Truth
+- `Fortuna.percent_true(truth_factor: float = 50.0) -> bool`
+    - Always returns False if num is 0.0 or less
+    - Always returns True if num is 100.0 or more.
+    - Produces True or False based truth_factor: the probability of True as a percentage.
+
+### Random Shuffle Functions
+- `shuffle(array: list) -> None`
+- `knuth(array: list) -> None`
+- `fisher_yates(array: list) -> None`
+
+### Test Suite Functions
+- `distribution_timer(func: staticmethod, *args, **kwargs) -> None`
+- `quick_test()`
+
+
+## Fortuna Distribution and Performance Test Suite
+```
+Fortuna Test Suite: RNG Storm Engine
+
+TruffleShuffle
+Output Analysis: TruffleShuffle([4, 8, 5, 0, 3, 9, 6, 2, 1, 7], flat=True)()
+Approximate Single Execution Time: Min: 406ns, Mid: 437ns, Max: 1031ns
+Raw Samples: 3, 0, 1, 8, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.514
+ Std Deviation: 2.8800405315457516
+Sample Distribution:
+ 0: 9.98%
+ 1: 10.27%
+ 2: 9.69%
+ 3: 9.98%
+ 4: 9.53%
+ 5: 10.11%
+ 6: 10.17%
+ 7: 10.1%
+ 8: 10.11%
+ 9: 10.06%
+
+
+QuantumMonty([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+Output Distribution: QuantumMonty.uniform()
+Approximate Single Execution Time: Min: 156ns, Mid: 187ns, Max: 593ns
+Raw Samples: 3, 8, 9, 8, 4
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.5303
+ Std Deviation: 2.854382010114618
+Sample Distribution:
+ 0: 9.29%
+ 1: 10.17%
+ 2: 9.89%
+ 3: 10.18%
+ 4: 10.33%
+ 5: 9.72%
+ 6: 10.57%
+ 7: 9.84%
+ 8: 9.77%
+ 9: 10.24%
+
+Output Distribution: QuantumMonty.front()
+Approximate Single Execution Time: Min: 250ns, Mid: 281ns, Max: 1125ns
+Raw Samples: 9, 0, 4, 0, 0
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 3
+ Maximum: 9
+ Mean: 2.9621
+ Std Deviation: 2.4628175200395384
+Sample Distribution:
+ 0: 19.14%
+ 1: 16.62%
+ 2: 13.89%
+ 3: 12.66%
+ 4: 10.75%
+ 5: 8.91%
+ 6: 7.35%
+ 7: 5.16%
+ 8: 3.62%
+ 9: 1.9%
+
+Output Distribution: QuantumMonty.back()
+Approximate Single Execution Time: Min: 250ns, Mid: 281ns, Max: 1062ns
+Raw Samples: 4, 2, 5, 7, 8
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 6
+ Maximum: 9
+ Mean: 5.9948
+ Std Deviation: 2.4601581652039735
+Sample Distribution:
+ 0: 1.9%
+ 1: 3.49%
+ 2: 5.56%
+ 3: 7.51%
+ 4: 9.12%
+ 5: 10.73%
+ 6: 12.89%
+ 7: 14.11%
+ 8: 16.11%
+ 9: 18.58%
+
+Output Distribution: QuantumMonty.middle()
+Approximate Single Execution Time: Min: 250ns, Mid: 281ns, Max: 406ns
+Raw Samples: 5, 4, 7, 9, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 9
+ Mean: 4.4764
+ Std Deviation: 2.2352052823544923
+Sample Distribution:
+ 0: 3.52%
+ 1: 6.45%
+ 2: 10.68%
+ 3: 13.64%
+ 4: 16.31%
+ 5: 16.49%
+ 6: 12.98%
+ 7: 9.57%
+ 8: 6.89%
+ 9: 3.47%
+
+Output Distribution: QuantumMonty.quantum()
+Approximate Single Execution Time: Min: 250ns, Mid: 312ns, Max: 937ns
+Raw Samples: 4, 3, 3, 1, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.5274
+ Std Deviation: 2.696956914312827
+Sample Distribution:
+ 0: 7.85%
+ 1: 8.9%
+ 2: 9.87%
+ 3: 11.05%
+ 4: 11.96%
+ 5: 12.27%
+ 6: 10.73%
+ 7: 9.99%
+ 8: 8.97%
+ 9: 8.41%
+
+Output Distribution: QuantumMonty.front_gauss()
+Approximate Single Execution Time: Min: 187ns, Mid: 187ns, Max: 562ns
+Raw Samples: 0, 0, 0, 0, 2
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 0
+ Maximum: 8
+ Mean: 0.5855
+ Std Deviation: 0.9393497686159186
+Sample Distribution:
+ 0: 62.56%
+ 1: 23.63%
+ 2: 8.94%
+ 3: 3.2%
+ 4: 1.19%
+ 5: 0.29%
+ 6: 0.11%
+ 7: 0.07%
+ 8: 0.01%
+
+Output Distribution: QuantumMonty.back_gauss()
+Approximate Single Execution Time: Min: 187ns, Mid: 187ns, Max: 625ns
+Raw Samples: 9, 9, 8, 9, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 9
+ Maximum: 9
+ Mean: 8.427
+ Std Deviation: 0.9391268263230436
+Sample Distribution:
+ 1: 0.02%
+ 2: 0.05%
+ 3: 0.11%
+ 4: 0.4%
+ 5: 1.08%
+ 6: 3.16%
+ 7: 8.64%
+ 8: 23.05%
+ 9: 63.49%
+
+Output Distribution: QuantumMonty.middle_gauss()
+Approximate Single Execution Time: Min: 187ns, Mid: 250ns, Max: 406ns
+Raw Samples: 6, 3, 4, 4, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 5
+ Maximum: 8
+ Mean: 4.5004
+ Std Deviation: 1.043124465663176
+Sample Distribution:
+ 1: 0.17%
+ 2: 2.03%
+ 3: 13.92%
+ 4: 33.65%
+ 5: 34.37%
+ 6: 13.55%
+ 7: 2.18%
+ 8: 0.13%
+
+Output Distribution: QuantumMonty.quantum_gauss()
+Approximate Single Execution Time: Min: 187ns, Mid: 218ns, Max: 625ns
+Raw Samples: 8, 0, 9, 0, 9
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.5356
+ Std Deviation: 3.359116104885422
+Sample Distribution:
+ 0: 21.07%
+ 1: 7.58%
+ 2: 3.68%
+ 3: 5.5%
+ 4: 11.57%
+ 5: 11.64%
+ 6: 5.95%
+ 7: 3.52%
+ 8: 8.11%
+ 9: 21.38%
+
+Output Distribution: QuantumMonty.front_poisson()
+Approximate Single Execution Time: Min: 218ns, Mid: 250ns, Max: 625ns
+Raw Samples: 6, 3, 2, 1, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 3
+ Maximum: 9
+ Mean: 3.1899
+ Std Deviation: 1.7746979870655542
+Sample Distribution:
+ 0: 4.1%
+ 1: 13.3%
+ 2: 20.61%
+ 3: 22.25%
+ 4: 17.89%
+ 5: 11.45%
+ 6: 5.9%
+ 7: 2.96%
+ 8: 1.07%
+ 9: 0.47%
+
+Output Distribution: QuantumMonty.back_poisson()
+Approximate Single Execution Time: Min: 218ns, Mid: 250ns, Max: 1656ns
+Raw Samples: 6, 9, 4, 6, 8
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 6
+ Maximum: 9
+ Mean: 5.8557
+ Std Deviation: 1.7515662443741153
+Sample Distribution:
+ 0: 0.29%
+ 1: 1.0%
+ 2: 2.62%
+ 3: 5.81%
+ 4: 11.64%
+ 5: 18.06%
+ 6: 21.36%
+ 7: 21.05%
+ 8: 14.0%
+ 9: 4.17%
+
+Output Distribution: QuantumMonty.middle_poisson()
+Approximate Single Execution Time: Min: 218ns, Mid: 250ns, Max: 375ns
+Raw Samples: 4, 8, 2, 3, 2
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.5386
+ Std Deviation: 2.220270929481362
+Sample Distribution:
+ 0: 2.28%
+ 1: 7.27%
+ 2: 11.35%
+ 3: 14.0%
+ 4: 14.33%
+ 5: 14.23%
+ 6: 14.54%
+ 7: 12.3%
+ 8: 7.22%
+ 9: 2.48%
+
+Output Distribution: QuantumMonty.quantum_poisson()
+Approximate Single Execution Time: Min: 250ns, Mid: 250ns, Max: 437ns
+Raw Samples: 2, 6, 4, 6, 8
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 9
+ Mean: 4.4762
+ Std Deviation: 2.197069928706677
+Sample Distribution:
+ 0: 2.19%
+ 1: 7.3%
+ 2: 12.22%
+ 3: 14.23%
+ 4: 14.08%
+ 5: 14.93%
+ 6: 14.35%
+ 7: 11.64%
+ 8: 6.9%
+ 9: 2.16%
+
+Output Distribution: QuantumMonty.quantum_monty()
+Approximate Single Execution Time: Min: 250ns, Mid: 281ns, Max: 562ns
+Raw Samples: 5, 2, 2, 3, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 9
+ Mean: 4.4721
+ Std Deviation: 2.808417759349756
+Sample Distribution:
+ 0: 10.7%
+ 1: 8.29%
+ 2: 8.6%
+ 3: 10.45%
+ 4: 12.5%
+ 5: 12.4%
+ 6: 10.14%
+ 7: 8.53%
+ 8: 7.69%
+ 9: 10.7%
+
+
+Weighted Choice
+Base Case
+Output Distribution: Random.choices([36, 30, 24, 18], cum_weights=[1, 10, 100, 1000])
+Approximate Single Execution Time: Min: 1687ns, Mid: 1859ns, Max: 2906ns
+Raw Samples: [18], [18], [18], [18], [18]
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 18
+ Median: 18
+ Maximum: 36
+ Mean: 18.6684
+ Std Deviation: 2.107720495836404
+Sample Distribution:
+ 18: 89.98%
+ 24: 9.0%
+ 30: 0.92%
+ 36: 0.1%
+
+Output Analysis: CumulativeWeightedChoice([(1, 36), (10, 30), (100, 24), (1000, 18)], flat=True)()
+Approximate Single Execution Time: Min: 281ns, Mid: 312ns, Max: 468ns
+Raw Samples: 18, 18, 18, 18, 18
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 18
+ Median: 18
+ Maximum: 36
+ Mean: 18.6642
+ Std Deviation: 2.0910465340495787
+Sample Distribution:
+ 18: 89.97%
+ 24: 9.1%
+ 30: 0.82%
+ 36: 0.11%
+
+Base Case
+Output Distribution: Random.choices([36, 30, 24, 18], weights=[1, 9, 90, 900])
+Approximate Single Execution Time: Min: 2125ns, Mid: 2156ns, Max: 2562ns
+Raw Samples: [18], [18], [18], [18], [24]
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 18
+ Median: 18
+ Maximum: 36
+ Mean: 18.66
+ Std Deviation: 2.069016211344967
+Sample Distribution:
+ 18: 89.97%
+ 24: 9.14%
+ 30: 0.81%
+ 36: 0.08%
+
+Output Analysis: RelativeWeightedChoice([(1, 36), (9, 30), (90, 24), (900, 18)], flat=True)()
+Approximate Single Execution Time: Min: 281ns, Mid: 312ns, Max: 468ns
+Raw Samples: 18, 18, 18, 18, 18
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 18
+ Median: 18
+ Maximum: 36
+ Mean: 18.6966
+ Std Deviation: 2.163611924920032
+Sample Distribution:
+ 18: 89.66%
+ 24: 9.17%
+ 30: 1.07%
+ 36: 0.1%
+
+Output Distribution: cumulative_weighted_choice([(1, 36), (10, 30), (100, 24), (1000, 18)])
+Approximate Single Execution Time: Min: 187ns, Mid: 218ns, Max: 562ns
+Raw Samples: 18, 18, 18, 18, 24
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 18
+ Median: 18
+ Maximum: 36
+ Mean: 18.6378
+ Std Deviation: 2.0330333205454956
+Sample Distribution:
+ 18: 90.3%
+ 24: 8.83%
+ 30: 0.81%
+ 36: 0.06%
+
+
+FlexCat
+Output Analysis: FlexCat({1: [1, 2, 3], 2: [10, 20, 30], 3: [100, 200, 300]}, key_bias='front', val_bias='truffle_shuffle', flat=True)()
+Approximate Single Execution Time: Min: 781ns, Mid: 812ns, Max: 1093ns
+Raw Samples: 200, 20, 100, 3, 1
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 10
+ Maximum: 300
+ Mean: 41.4995
+ Std Deviation: 79.2849141357355
+Sample Distribution:
+ 1: 16.21%
+ 2: 16.69%
+ 3: 16.42%
+ 10: 11.22%
+ 20: 10.96%
+ 30: 11.59%
+ 100: 5.66%
+ 200: 5.69%
+ 300: 5.56%
+
+
+Random Integers
+Base Case
+Output Distribution: Random.randrange(10)
+Approximate Single Execution Time: Min: 843ns, Mid: 906ns, Max: 2531ns
+Raw Samples: 5, 6, 7, 9, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.4852
+ Std Deviation: 2.877604736738889
+Sample Distribution:
+ 0: 10.15%
+ 1: 10.13%
+ 2: 10.08%
+ 3: 10.22%
+ 4: 9.31%
+ 5: 10.05%
+ 6: 9.95%
+ 7: 10.15%
+ 8: 10.31%
+ 9: 9.65%
+
+Output Distribution: randbelow(10)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 812ns
+Raw Samples: 8, 0, 4, 8, 5
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 9
+ Mean: 4.4767
+ Std Deviation: 2.89044850832149
+Sample Distribution:
+ 0: 10.29%
+ 1: 10.25%
+ 2: 9.93%
+ 3: 10.39%
+ 4: 9.4%
+ 5: 9.98%
+ 6: 9.54%
+ 7: 10.22%
+ 8: 9.89%
+ 9: 10.11%
+
+Base Case
+Output Distribution: Random.randint(-5, 5)
+Approximate Single Execution Time: Min: 1156ns, Mid: 1187ns, Max: 2562ns
+Raw Samples: -3, -1, 2, -1, 1
+Test Samples: 10000
+Sample Statistics:
+ Minimum: -5
+ Median: 0
+ Maximum: 5
+ Mean: 0.0101
+ Std Deviation: 3.182862084838913
+Sample Distribution:
+ -5: 8.96%
+ -4: 9.34%
+ -3: 9.24%
+ -2: 9.05%
+ -1: 9.06%
+ 0: 8.98%
+ 1: 8.79%
+ 2: 8.75%
+ 3: 9.04%
+ 4: 9.31%
+ 5: 9.48%
+
+Output Distribution: randint(-5, 5)
+Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 156ns
+Raw Samples: -5, -5, 0, -2, -5
+Test Samples: 10000
+Sample Statistics:
+ Minimum: -5
+ Median: 0
+ Maximum: 5
+ Mean: -0.0136
+ Std Deviation: 3.1388533384068777
+Sample Distribution:
+ -5: 8.79%
+ -4: 9.29%
+ -3: 9.54%
+ -2: 8.58%
+ -1: 9.2%
+ 0: 9.03%
+ 1: 9.12%
+ 2: 9.57%
+ 3: 9.68%
+ 4: 8.57%
+ 5: 8.63%
+
+Base Case
+Output Distribution: Random.randrange(1, 21, 2)
+Approximate Single Execution Time: Min: 1312ns, Mid: 1375ns, Max: 2625ns
+Raw Samples: 3, 5, 3, 7, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 11
+ Maximum: 19
+ Mean: 10.0916
+ Std Deviation: 5.728009291983115
+Sample Distribution:
+ 1: 9.76%
+ 3: 9.78%
+ 5: 9.86%
+ 7: 9.84%
+ 9: 9.62%
+ 11: 10.42%
+ 13: 9.98%
+ 15: 10.85%
+ 17: 9.86%
+ 19: 10.03%
+
+Output Distribution: randrange(1, 21, 2)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 156ns
+Raw Samples: 9, 13, 13, 13, 15
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 11
+ Maximum: 19
+ Mean: 10.013
+ Std Deviation: 5.758467417177896
+Sample Distribution:
+ 1: 10.33%
+ 3: 9.41%
+ 5: 10.2%
+ 7: 10.0%
+ 9: 10.05%
+ 11: 9.94%
+ 13: 9.99%
+ 15: 9.69%
+ 17: 10.34%
+ 19: 10.05%
+
+Output Distribution: d(10)
+Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 500ns
+Raw Samples: 9, 2, 10, 6, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 1
+ Median: 5
+ Maximum: 10
+ Mean: 5.4937
+ Std Deviation: 2.8975506708233763
+Sample Distribution:
+ 1: 10.08%
+ 2: 10.35%
+ 3: 10.11%
+ 4: 9.98%
+ 5: 9.58%
+ 6: 10.33%
+ 7: 9.19%
+ 8: 9.73%
+ 9: 10.21%
+ 10: 10.44%
+
+Output Distribution: dice(2, 6)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 656ns
+Raw Samples: 7, 7, 3, 7, 7
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 2
+ Median: 7
+ Maximum: 12
+ Mean: 7.0092
+ Std Deviation: 2.4034751983956335
+Sample Distribution:
+ 2: 2.56%
+ 3: 5.54%
+ 4: 8.21%
+ 5: 11.45%
+ 6: 13.83%
+ 7: 16.91%
+ 8: 13.67%
+ 9: 10.89%
+ 10: 8.46%
+ 11: 5.99%
+ 12: 2.49%
+
+Output Distribution: plus_or_minus(5)
+Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 781ns
+Raw Samples: -1, -4, 1, 2, 2
+Test Samples: 10000
+Sample Statistics:
+ Minimum: -5
+ Median: 0
+ Maximum: 5
+ Mean: -0.0197
+ Std Deviation: 3.166783030375802
+Sample Distribution:
+ -5: 8.97%
+ -4: 9.44%
+ -3: 9.39%
+ -2: 9.2%
+ -1: 8.63%
+ 0: 9.08%
+ 1: 9.02%
+ 2: 9.13%
+ 3: 8.89%
+ 4: 9.36%
+ 5: 8.89%
+
+Output Distribution: binomial(4, 0.5)
+Approximate Single Execution Time: Min: 156ns, Mid: 156ns, Max: 281ns
+Raw Samples: 3, 3, 2, 1, 3
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 2
+ Maximum: 4
+ Mean: 2.005
+ Std Deviation: 0.9870523933625429
+Sample Distribution:
+ 0: 5.86%
+ 1: 24.88%
+ 2: 38.16%
+ 3: 25.1%
+ 4: 6.0%
+
+Output Distribution: negative_binomial(5, 0.75)
+Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 312ns
+Raw Samples: 1, 3, 3, 1, 2
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 1
+ Maximum: 10
+ Mean: 1.655
+ Std Deviation: 1.4750568054342603
+Sample Distribution:
+ 0: 23.77%
+ 1: 29.91%
+ 2: 22.03%
+ 3: 13.21%
+ 4: 6.45%
+ 5: 2.7%
+ 6: 1.32%
+ 7: 0.32%
+ 8: 0.19%
+ 9: 0.08%
+ 10: 0.02%
+
+Output Distribution: geometric(0.75)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 406ns
+Raw Samples: 0, 0, 0, 0, 0
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 0
+ Maximum: 6
+ Mean: 0.3302
+ Std Deviation: 0.6551418785943307
+Sample Distribution:
+ 0: 74.94%
+ 1: 19.08%
+ 2: 4.41%
+ 3: 1.2%
+ 4: 0.34%
+ 5: 0.02%
+ 6: 0.01%
+
+Output Distribution: poisson(4.5)
+Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 718ns
+Raw Samples: 5, 1, 1, 6, 2
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 15
+ Mean: 4.5301
+ Std Deviation: 2.143024322149549
+Sample Distribution:
+ 0: 1.15%
+ 1: 5.03%
+ 2: 11.03%
+ 3: 16.83%
+ 4: 18.66%
+ 5: 16.8%
+ 6: 12.69%
+ 7: 8.79%
+ 8: 4.95%
+ 9: 2.3%
+ 10: 1.03%
+ 11: 0.46%
+ 12: 0.21%
+ 13: 0.05%
+ 14: 0.01%
+ 15: 0.01%
+
+Output Distribution: discrete(7, 1, 30, 1)
+Approximate Single Execution Time: Min: 406ns, Mid: 406ns, Max: 1312ns
+Raw Samples: 5, 3, 3, 3, 6
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 6
+ Mean: 4.013
+ Std Deviation: 1.7209088159211898
+Sample Distribution:
+ 0: 3.62%
+ 1: 6.68%
+ 2: 10.32%
+ 3: 14.95%
+ 4: 18.25%
+ 5: 20.95%
+ 6: 25.23%
+
+
+Random Floats
+Output Distribution: random()
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 93ns
+Raw Samples: 0.5800464922493787, 0.043488866632812775, 0.3859588768371167, 0.9483497804889398, 0.5306540070010375
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 8.867019995467186e-05
+ Median: (0.502485454928805, 0.5025552828547625)
+ Maximum: 0.9999692057231605
+ Mean: 0.49917873810390834
+ Std Deviation: 0.29107651583413235
+Post-processor Distribution using round method:
+ 0: 49.73%
+ 1: 50.27%
+
+Output Distribution: uniform(0.0, 10.0)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 750ns
+Raw Samples: 7.683740476726002, 9.112257793602874, 6.261677200248692, 2.68161504518201, 3.0361560487097154
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.0006271204327472748
+ Median: (5.062511102027736, 5.0630253511783705)
+ Maximum: 9.999646485915989
+ Mean: 5.049980179323852
+ Std Deviation: 2.901416912289138
+Post-processor Distribution using floor method:
+ 0: 10.09%
+ 1: 9.29%
+ 2: 10.08%
+ 3: 10.26%
+ 4: 9.73%
+ 5: 10.36%
+ 6: 9.39%
+ 7: 9.97%
+ 8: 10.0%
+ 9: 10.83%
+
+Output Distribution: expovariate(1.0)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 750ns
+Raw Samples: 2.044791422815635, 1.0386588628457503, 0.30526375253255594, 0.17130910168862182, 1.006102205522561
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 4.973385005531503e-06
+ Median: (0.6873287191294839, 0.6873564642122496)
+ Maximum: 10.917165422193088
+ Mean: 0.9950001220827994
+ Std Deviation: 0.9904648080651394
+Post-processor Distribution using floor method:
+ 0: 62.81%
+ 1: 24.13%
+ 2: 8.14%
+ 3: 3.11%
+ 4: 1.18%
+ 5: 0.44%
+ 6: 0.09%
+ 7: 0.07%
+ 8: 0.01%
+ 10: 0.02%
+
+Output Distribution: gammavariate(2.0, 1.0)
+Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 218ns
+Raw Samples: 1.926573565330512, 1.428510478433571, 2.7330389786756197, 3.006561883726166, 1.0901161121027156
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.001191091237989772
+ Median: (1.6869925853483823, 1.6871907479781751)
+ Maximum: 11.439663216059733
+ Mean: 2.005584879431955
+ Std Deviation: 1.395623425106559
+Post-processor Distribution using round method:
+ 0: 8.92%
+ 1: 34.73%
+ 2: 27.09%
+ 3: 15.43%
+ 4: 7.71%
+ 5: 3.64%
+ 6: 1.51%
+ 7: 0.6%
+ 8: 0.24%
+ 9: 0.08%
+ 10: 0.04%
+ 11: 0.01%
+
+Output Distribution: weibullvariate(1.0, 1.0)
+Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 250ns
+Raw Samples: 2.5733534061575347, 0.0014765045026283606, 0.22121842103841668, 0.35362623203448945, 0.39939185217450446
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 1.6268418852022657e-05
+ Median: (0.6847523818807449, 0.6847852460602326)
+ Maximum: 8.235654817179471
+ Mean: 0.9901923773201728
+ Std Deviation: 0.9901515528423851
+Post-processor Distribution using floor method:
+ 0: 64.03%
+ 1: 22.73%
+ 2: 8.49%
+ 3: 2.96%
+ 4: 1.05%
+ 5: 0.41%
+ 6: 0.26%
+ 7: 0.06%
+ 8: 0.01%
+
+Output Distribution: betavariate(3.0, 3.0)
+Approximate Single Execution Time: Min: 156ns, Mid: 187ns, Max: 1000ns
+Raw Samples: 0.8917331579916562, 0.4636264518663151, 0.6508654934417588, 0.22319725992278755, 0.6254231021374439
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.023898932338302068
+ Median: (0.49780200401673536, 0.4978118297934674)
+ Maximum: 0.9803148496362412
+ Mean: 0.49923547491357523
+ Std Deviation: 0.18915337211317368
+Post-processor Distribution using round method:
+ 0: 50.51%
+ 1: 49.49%
+
+Output Distribution: paretovariate(4.0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 312ns
+Raw Samples: 1.627480878980606, 1.3487554529406793, 1.1821544411961245, 1.1373384120690586, 1.1457859805595632
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 1.0000015211597575
+ Median: (1.1857605069832788, 1.1858898510877436)
+ Maximum: 9.56685975652894
+ Mean: 1.326264669119937
+ Std Deviation: 0.4630862614994137
+Post-processor Distribution using floor method:
+ 1: 93.89%
+ 2: 5.08%
+ 3: 0.61%
+ 4: 0.2%
+ 5: 0.07%
+ 6: 0.08%
+ 7: 0.06%
+ 9: 0.01%
+
+Output Distribution: gauss(0.0, 1.0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 812ns
+Raw Samples: -1.6689154253827059, 2.24335243002752, -1.187248264616695, -0.2777899861560098, -0.31456910558065837
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: -3.5006094315128915
+ Median: (0.021185934410276126, 0.021619492456612224)
+ Maximum: 3.3266350559345987
+ Mean: 0.006178195950939541
+ Std Deviation: 0.9917787223515085
+Post-processor Distribution using round method:
+ -4: 0.01%
+ -3: 0.53%
+ -2: 5.69%
+ -1: 24.36%
+ 0: 37.95%
+ 1: 25.04%
+ 2: 5.9%
+ 3: 0.52%
+
+Output Distribution: normalvariate(0.0, 1.0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 187ns
+Raw Samples: -0.5735329587129836, -0.6672135228213479, 2.0602826184684746, -1.3282234609194108, 1.4696925734480908
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: -3.6135859002824002
+ Median: (-0.011302420369202431, -0.011002550434201605)
+ Maximum: 4.252040575161474
+ Mean: -0.01941086513686669
+ Std Deviation: 0.9936380155911713
+Post-processor Distribution using round method:
+ -4: 0.02%
+ -3: 0.52%
+ -2: 6.38%
+ -1: 24.98%
+ 0: 37.97%
+ 1: 23.87%
+ 2: 5.72%
+ 3: 0.52%
+ 4: 0.02%
+
+Output Distribution: lognormvariate(0.0, 0.5)
+Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 718ns
+Raw Samples: 3.7293729665455264, 1.9389746959485228, 0.9688237961464069, 1.0599587039817806, 0.7060794671167071
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.15155327939751997
+ Median: (1.0066568125923447, 1.0066638044408405)
+ Maximum: 6.574290056206128
+ Mean: 1.1350491576201573
+ Std Deviation: 0.6048203380048177
+Post-processor Distribution using round method:
+ 0: 8.04%
+ 1: 71.25%
+ 2: 17.36%
+ 3: 2.74%
+ 4: 0.47%
+ 5: 0.09%
+ 6: 0.03%
+ 7: 0.02%
+
+Output Distribution: vonmisesvariate(0, 0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 187ns
+Raw Samples: 0.020552987454550725, 3.180714221545409, 4.659009367442065, 5.564254519032381, 3.5595833122959752
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.0008371474004456611
+ Median: (3.171370489150539, 3.1722657149837343)
+ Maximum: 6.2822693775643215
+ Mean: 3.144364752655393
+ Std Deviation: 1.8096549638134425
+Post-processor Distribution using floor method:
+ 0: 15.66%
+ 1: 16.52%
+ 2: 15.27%
+ 3: 15.73%
+ 4: 16.73%
+ 5: 15.44%
+ 6: 4.65%
+
+Output Distribution: triangular(0.0, 10.0, 0.0)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 125ns
+Raw Samples: 2.4700412929536952, 3.672628737609809, 3.338539978803998, 2.8700398961344584, 1.5870282689381543
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.0003708367176968874
+ Median: (2.9276846793106714, 2.9277153654471078)
+ Maximum: 9.869549682620763
+ Mean: 3.33398171116572
+ Std Deviation: 2.3701354758766024
+Post-processor Distribution using floor method:
+ 0: 19.07%
+ 1: 17.56%
+ 2: 14.48%
+ 3: 12.72%
+ 4: 11.08%
+ 5: 8.74%
+ 6: 7.05%
+ 7: 5.41%
+ 8: 2.82%
+ 9: 1.07%
+
+Output Distribution: extreme_value(0.0, 1.0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 187ns
+Raw Samples: 0.7056514468735201, -0.916581536106132, 0.22913636245854976, -1.5236394821687687, -0.3642494086593194
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: -2.2004522079539828
+ Median: (0.3704415824039264, 0.37076007265322025)
+ Maximum: 8.094561618952314
+ Mean: 0.5834155760886909
+ Std Deviation: 1.2850277722861412
+Post-processor Distribution using round method:
+ -2: 1.08%
+ -1: 18.28%
+ 0: 35.21%
+ 1: 25.14%
+ 2: 12.08%
+ 3: 5.0%
+ 4: 2.07%
+ 5: 0.76%
+ 6: 0.27%
+ 7: 0.1%
+ 8: 0.01%
+
+Output Distribution: chi_squared(1.0)
+Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 281ns
+Raw Samples: 1.0129768119802582, 4.914557707629436, 0.20114125166589553, 0.305603882224802, 2.4030352963677726
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 1.805332135790612e-09
+ Median: (0.44174970712423706, 0.4420126089195971)
+ Maximum: 14.458205846412724
+ Mean: 0.9982183984548565
+ Std Deviation: 1.436369503804896
+Post-processor Distribution using <lambda> method:
+ 0: 68.53%
+ 1: 16.09%
+ 2: 7.55%
+ 3: 3.62%
+ 4: 1.83%
+ 5: 1.12%
+ 6: 0.59%
+ 7: 0.4%
+ 8: 0.2%
+ 9: 0.07%
+
+Output Distribution: cauchy(0.0, 1.0)
+Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 562ns
+Raw Samples: -2.921281686246588, -1.0500628980385103, 1.1006468989825988, 0.632063201222543, -0.5649399556174318
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: -15450.41368191262
+ Median: (0.030410924768096138, 0.03061868442733929)
+ Maximum: 4591.941813716859
+ Mean: -0.9362604103563443
+ Std Deviation: 163.37592157494655
+Post-processor Distribution using <lambda> method:
+ 0: 26.32%
+ 1: 11.44%
+ 2: 5.89%
+ 3: 3.81%
+ 4: 3.23%
+ 5: 3.07%
+ 6: 3.82%
+ 7: 5.76%
+ 8: 10.9%
+ 9: 25.76%
+
+Output Distribution: fisher_f(8.0, 8.0)
+Approximate Single Execution Time: Min: 156ns, Mid: 187ns, Max: 343ns
+Raw Samples: 0.8098470368512319, 1.217651400724475, 0.6713018573996729, 1.5121908622540627, 0.9075475903089096
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: 0.03898416401414178
+ Median: (0.9987218291088052, 0.9987333435378458)
+ Maximum: 29.77068913546185
+ Mean: 1.323288021228715
+ Std Deviation: 1.234406249229726
+Post-processor Distribution using <lambda> method:
+ 0: 50.15%
+ 1: 33.01%
+ 2: 10.34%
+ 3: 3.34%
+ 4: 1.59%
+ 5: 0.68%
+ 6: 0.44%
+ 7: 0.19%
+ 8: 0.13%
+ 9: 0.13%
+
+Output Distribution: student_t(8.0)
+Approximate Single Execution Time: Min: 125ns, Mid: 156ns, Max: 281ns
+Raw Samples: 0.8317552688887871, -0.7070521826246058, -2.747842541211386e-05, -1.1209033294075401, 0.37818550316721766
+Test Samples: 10000
+Pre-processor Statistics:
+ Minimum: -6.043268347043494
+ Median: (0.018717718012266273, 0.018729300582745693)
+ Maximum: 7.6827083627044335
+ Mean: 0.02297590344939811
+ Std Deviation: 1.1506335287280576
+Post-processor Distribution using round method:
+ -6: 0.04%
+ -5: 0.09%
+ -4: 0.25%
+ -3: 1.25%
+ -2: 6.36%
+ -1: 23.04%
+ 0: 37.09%
+ 1: 22.9%
+ 2: 7.02%
+ 3: 1.53%
+ 4: 0.32%
+ 5: 0.08%
+ 6: 0.01%
+ 7: 0.01%
+ 8: 0.01%
+
+
+Random Booleans
+Output Distribution: percent_true(33.33)
+Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 93ns
+Raw Samples: False, False, False, True, True
+Test Samples: 10000
+Sample Statistics:
+ Minimum: False
+ Median: False
+ Maximum: True
+ Mean: 0.3361
+ Std Deviation: 0.4723971908368963
+Sample Distribution:
+ False: 66.39%
+ True: 33.61%
+
+
+Random Shuffles
+Base Case
+Timer only: random.shuffle(some_list) of size 10:
+Approximate Single Execution Time: Min: 6781ns, Mid: 6937ns, Max: 11281ns
+
+Timer only: shuffle(some_list) of size 10:
+Approximate Single Execution Time: Min: 343ns, Mid: 375ns, Max: 1187ns
+
+Timer only: knuth(some_list) of size 10:
+Approximate Single Execution Time: Min: 812ns, Mid: 843ns, Max: 1593ns
+
+Timer only: fisher_yates(some_list) of size 10:
+Approximate Single Execution Time: Min: 968ns, Mid: 1000ns, Max: 1687ns
+
+
+Random Values
+Base Case
+Output Distribution: Random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+Approximate Single Execution Time: Min: 750ns, Mid: 812ns, Max: 2062ns
+Raw Samples: 4, 3, 3, 8, 9
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 4
+ Maximum: 9
+ Mean: 4.4991
+ Std Deviation: 2.8745130844279094
+Sample Distribution:
+ 0: 9.87%
+ 1: 9.98%
+ 2: 10.38%
+ 3: 10.22%
+ 4: 9.59%
+ 5: 9.91%
+ 6: 9.85%
+ 7: 10.01%
+ 8: 10.28%
+ 9: 9.91%
+
+Output Distribution: random_value([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 156ns
+Raw Samples: 5, 4, 1, 5, 0
+Test Samples: 10000
+Sample Statistics:
+ Minimum: 0
+ Median: 5
+ Maximum: 9
+ Mean: 4.5317
+ Std Deviation: 2.8613657318464445
+Sample Distribution:
+ 0: 9.81%
+ 1: 9.69%
+ 2: 10.0%
+ 3: 9.95%
+ 4: 9.71%
+ 5: 10.5%
+ 6: 10.03%
+ 7: 10.28%
+ 8: 10.12%
+ 9: 9.91%
+
+
+-------------------------------------------------------------------------
+Total Test Time: 1.942 seconds
+```
+
+
+## Fortuna Development Log
+##### Fortuna 2.1.1
+- Small bug fixes.
+- Test updates.
+
+##### Fortuna 2.1.0, Major Feature Update
+- Fortuna now includes the best of RNG and Pyewacket.
+
+##### Fortuna 2.0.3
+- Bug fix.
+
+##### Fortuna 2.0.2
+- Clarified some documentation.
+
+##### Fortuna 2.0.1
+- Fixed some typos.
+
+##### Fortuna 2.0.0b1-10
+- Total rebuild. New RNG Storm Engine.
+
+##### Fortuna 1.26.7.1
+- README updated.
+
+##### Fortuna 1.26.7
+- Small bug fix.
+
+##### Fortuna 1.26.6
+- Updated README to reflect recent changes to the test script.
+
+##### Fortuna 1.26.5
+- Fixed small bug in test script.
+
+##### Fortuna 1.26.4
+- Updated documentation for clarity.
+- Fixed a minor typo in the test script.
+
+##### Fortuna 1.26.3
+- Clean build.
+
+##### Fortuna 1.26.2
+- Fixed some minor typos.
+
+##### Fortuna 1.26.1
+- Release.
+
+##### Fortuna 1.26.0 beta 2
+- Moved README and LICENSE files into fortuna_extras folder.
+
+##### Fortuna 1.26.0 beta 1
+- Dynamic version scheme implemented.
+- The Fortuna Extension now requires the fortuna_extras package, previously it was optional.
+
+##### Fortuna 1.25.4
+- Fixed some minor typos in the test script.
+
+##### Fortuna 1.25.3
+- Since version 1.24 Fortuna requires Python 3.7 or higher. This patch corrects an issue where the setup script incorrectly reported requiring Python 3.6 or higher.
+
+##### Fortuna 1.25.2
+- Updated test suite.
+- Major performance update for TruffleShuffle.
+- Minor performance update for QuantumMonty & FlexCat: cycle monty.
+
+##### Fortuna 1.25.1
+- Important bug fix for TruffleShuffle, QuantumMonty and FlexCat.
+
+##### Fortuna 1.25
+- Full 64bit support.
+- The Distribution & Performance Tests have been redesigned.
+- Bloat Control: Two experimental features have been removed.
+    - RandomWalk
+    - CatWalk
+- Bloat Control: Several utility functions have been removed from the top level API. These function remain in the Fortuna namespace for now, but may change in the future without warning.
+    - stretch_bell, internal only.
+    - min_max, not used anymore.
+    - analytic_continuation, internal only.
+    - flatten, internal only.
+
+##### Fortuna 1.24.3
+- Low level refactoring, non-breaking patch.
+
+##### Fortuna 1.24.2
+- Setup config updated to improve installation.
+
+##### Fortuna 1.24.1
+- Low level patch to avoid potential ADL issue. All low level function calls are now qualified.
+
+##### Fortuna 1.24
+- Documentation updated for even more clarity.
+- Bloat Control: Two naïve utility functions that are no longer used in the module have been removed.
+    - n_samples -> use a list comprehension instead. `[f(x) for _ in range(n)]`
+    - bind -> use a lambda instead. `lambda: f(x)`
+
+##### Fortuna 1.23.7
+- Documentation updated for clarity.
+- Minor bug fixes.
+- TruffleShuffle has been redesigned slightly, it now uses a random rotate instead of swap.
+- Custom `__repr__` methods have been added to each class.
+
+##### Fortuna 1.23.6
+- New method for QuantumMonty: quantum_not_monty - produces the upside down quantum_monty.
+- New bias option for FlexCat: not_monty.
+
+##### Fortuna 1.23.5.1
+- Fixed some small typos.
+
+##### Fortuna 1.23.5
+- Documentation updated for clarity.
+- All sequence wrappers can now accept generators as input.
+- Six new functions added:
+    - random_float() -> float in range [0.0..1.0) exclusive, uniform flat distribution.
+    - percent_true_float(num: float) -> bool, Like percent_true but with floating point precision.
+    - plus_or_minus_linear_down(num: int) -> int in range [-num..num], upside down pyramid.
+    - plus_or_minus_curve_down(num: int) -> int in range [-num..num], upside down bell curve.
+    - mostly_not_middle(num: int) -> int in range [0..num], upside down pyramid.
+    - mostly_not_center(num: int) -> int in range [0..num], upside down bell curve.
+- Two new methods for QuantumMonty:
+    - mostly_not_middle
+    - mostly_not_center
+- Two new bias options for FlexCat, either can be used to define x and/or y axis bias:
+    - not_middle
+    - not_center
+
+##### Fortuna 1.23.4.2
+- Fixed some minor typos in the README.md file.
+
+##### Fortuna 1.23.4.1
+- Fixed some minor typos in the test suite.
+
+##### Fortuna 1.23.4
+- Fortuna is now Production/Stable!
+- Fortuna and Fortuna Pure now use the same test suite.
+
+##### Fortuna 0.23.4, first release candidate.
+- RandomCycle, BlockCycle and TruffleShuffle have been refactored and combined into one class: TruffleShuffle.
+- QuantumMonty and FlexCat will now use the new TruffleShuffle for cycling.
+- Minor refactoring across the module.
+
+##### Fortuna 0.23.3, internal
+- Function shuffle(arr: list) added.
+
+##### Fortuna 0.23.2, internal
+- Simplified the plus_or_minus_curve(num: int) function, output will now always be bounded to the range [-num..num].
+- Function stretched_bell(num: int) added, this matches the previous behavior of an unbounded plus_or_minus_curve.
+
+##### Fortuna 0.23.1, internal
+- Small bug fixes and general clean up.
+
+##### Fortuna 0.23.0
+- The number of test cycles in the test suite has been reduced to 10,000 (down from 100,000). The performance of the pure python implementation and the c-extension are now directly comparable.
+- Minor tweaks made to the examples in `.../fortuna_extras/fortuna_examples.py`
+
+##### Fortuna 0.22.2, experimental features
+- BlockCycle class added.
+- RandomWalk class added.
+- CatWalk class added.
+
+##### Fortuna 0.22.1
+- Fortuna classes no longer return lists of values, this behavior has been extracted to a free function called n_samples.
+
+##### Fortuna 0.22.0, experimental features
+- Function bind added.
+- Function n_samples added.
+
+##### Fortuna 0.21.3
+- Flatten will no longer raise an error if passed a callable item that it can't call. It correctly returns such items in an uncalled state without error.
+- Simplified `.../fortuna_extras/fortuna_examples.py` - removed unnecessary class structure.
+
+##### Fortuna 0.21.2
+- Fix some minor bugs.
+
+##### Fortuna 0.21.1
+- Fixed a bug in `.../fortuna_extras/fortuna_examples.py`
+
+##### Fortuna 0.21.0
+- Function flatten added.
+- Flatten: The Fortuna classes will recursively unpack callable objects in the data set.
+
+##### Fortuna 0.20.10
+- Documentation updated.
+
+##### Fortuna 0.20.9
+- Minor bug fixes.
+
+##### Fortuna 0.20.8, internal
+- Testing cycle for potential new features.
+
+##### Fortuna 0.20.7
+- Documentation updated for clarity.
+
+##### Fortuna 0.20.6
+- Tests updated based on recent changes.
+
+##### Fortuna 0.20.5, internal
+- Documentation updated based on recent changes.
+
+##### Fortuna 0.20.4, internal
+- WeightedChoice (both types) can optionally return a list of samples rather than just one value, control the length of the list via the n_samples argument.
+
+##### Fortuna 0.20.3, internal
+- RandomCycle can optionally return a list of samples rather than just one value,
+control the length of the list via the n_samples argument.
+
+##### Fortuna 0.20.2, internal
+- QuantumMonty can optionally return a list of samples rather than just one value,
+control the length of the list via the n_samples argument.
+
+##### Fortuna 0.20.1, internal
+- FlexCat can optionally return a list of samples rather than just one value,
+control the length of the list via the n_samples argument.
+
+##### Fortuna 0.20.0, internal
+- FlexCat now accepts a standard dict as input. The ordered(ness) of dict is now part of the standard in Python 3.7.1. Previously FlexCat required an OrderedDict, now it accepts either and treats them the same.
+
+##### Fortuna 0.19.7
+- Fixed bug in `.../fortuna_extras/fortuna_examples.py`.
+
+##### Fortuna 0.19.6
+- Updated documentation formatting.
+- Small performance tweak for QuantumMonty and FlexCat.
+
+##### Fortuna 0.19.5
+- Minor documentation update.
+
+##### Fortuna 0.19.4
+- Minor update to all classes for better debugging.
+
+##### Fortuna 0.19.3
+- Updated plus_or_minus_curve to allow unbounded output.
+
+##### Fortuna 0.19.2
+- Internal development cycle.
+- Minor update to FlexCat for better debugging.
+
+##### Fortuna 0.19.1
+- Internal development cycle.
+
+##### Fortuna 0.19.0
+- Updated documentation for clarity.
+- MultiCat has been removed, it is replaced by FlexCat.
+- Mostly has been removed, it is replaced by QuantumMonty.
+
+##### Fortuna 0.18.7
+- Fixed some more README typos.
+
+##### Fortuna 0.18.6
+- Fixed some README typos.
+
+##### Fortuna 0.18.5
+- Updated documentation.
+- Fixed another minor test bug.
+
+##### Fortuna 0.18.4
+- Updated documentation to reflect recent changes.
+- Fixed some small test bugs.
+- Reduced default number of test cycles to 10,000 - down from 100,000.
+
+##### Fortuna 0.18.3
+- Fixed some minor README typos.
+
+##### Fortuna 0.18.2
+- Fixed a bug with Fortuna Pure.
+
+##### Fortuna 0.18.1
+- Fixed some minor typos.
+- Added tests for `.../fortuna_extras/fortuna_pure.py`
+
+##### Fortuna 0.18.0
+- Introduced new test format, now includes average call time in nanoseconds.
+- Reduced default number of test cycles to 100,000 - down from 1,000,000.
+- Added pure Python implementation of Fortuna: `.../fortuna_extras/fortuna_pure.py`
+- Promoted several low level functions to top level.
+    - `zero_flat(num: int) -> int`
+    - `zero_cool(num: int) -> int`
+    - `zero_extreme(num: int) -> int`
+    - `max_cool(num: int) -> int`
+    - `max_extreme(num: int) -> int`
+    - `analytic_continuation(func: staticmethod, num: int) -> int`
+    - `min_max(num: int, lo: int, hi: int) -> int`
+
+##### Fortuna 0.17.3
+- Internal development cycle.
+
+##### Fortuna 0.17.2
+- User Requested: dice() and d() functions now support negative numbers as input.
+
+##### Fortuna 0.17.1
+- Fixed some minor typos.
+
+##### Fortuna 0.17.0
+- Added QuantumMonty to replace Mostly, same default behavior with more options.
+- Mostly is depreciated and may be removed in a future release.
+- Added FlexCat to replace MultiCat, same default behavior with more options.
+- MultiCat is depreciated and may be removed in a future release.
+- Expanded the Treasure Table example in `.../fortuna_extras/fortuna_examples.py`
+
+##### Fortuna 0.16.2
+- Minor refactoring for WeightedChoice.
+
+##### Fortuna 0.16.1
+- Redesigned fortuna_examples.py to feature a dynamic random magic item generator.
+- Raised cumulative_weighted_choice function to top level.
+- Added test for cumulative_weighted_choice as free function.
+- Updated MultiCat documentation for clarity.
+
+##### Fortuna 0.16.0
+- Pushed distribution_timer to the .pyx layer.
+- Changed default number of iterations of tests to 1 million, up form 1 hundred thousand.
+- Reordered tests to better match documentation.
+- Added Base Case Fortuna.fast_rand_below.
+- Added Base Case Fortuna.fast_d.
+- Added Base Case Fortuna.fast_dice.
+
+##### Fortuna 0.15.10
+- Internal Development Cycle
+
+##### Fortuna 0.15.9
+- Added Base Cases for random.choices()
+- Added Base Case for randint_dice()
+
+##### Fortuna 0.15.8
+- Clarified MultiCat Test
+
+##### Fortuna 0.15.7
+- Fixed minor typos.
+
+##### Fortuna 0.15.6
+- Fixed minor typos.
+- Simplified MultiCat example.
+
+##### Fortuna 0.15.5
+- Added MultiCat test.
+- Fixed some minor typos in docs.
+
+##### Fortuna 0.15.4
+- Performance optimization for both WeightedChoice() variants.
+- Cython update provides small performance enhancement across the board.
+- Compilation now leverages Python3 all the way down.
+- MultiCat pushed to the .pyx layer for better performance.
+
+##### Fortuna 0.15.3
+- Reworked the MultiCat example to include several randomizing strategies working in concert.
+- Added Multi Dice 10d10 performance tests.
+- Updated sudo code in documentation to be more pythonic.
+
+##### Fortuna 0.15.2
+- Fixed: Linux installation failure.
+- Added: complete source files to the distribution (.cpp .hpp .pyx).
+
+##### Fortuna 0.15.1
+- Updated & simplified distribution_timer in `fortuna_tests.py`
+- Readme updated, fixed some typos.
+- Known issue preventing successful installation on some linux platforms.
+
+##### Fortuna 0.15.0
+- Performance tweaks.
+- Readme updated, added some details.
+
+##### Fortuna 0.14.1
+- Readme updated, fixed some typos.
+
+##### Fortuna 0.14.0
+- Fixed a bug where the analytic continuation algorithm caused a rare issue during compilation on some platforms.
+
+##### Fortuna 0.13.3
+- Fixed Test Bug: percent sign was missing in output distributions.
+- Readme updated: added update history, fixed some typos.
+
+##### Fortuna 0.13.2
+- Readme updated for even more clarity.
+
+##### Fortuna 0.13.1
+- Readme updated for clarity.
+
+##### Fortuna 0.13.0
+- Minor Bug Fixes.
+- Readme updated for aesthetics.
+- Added Tests: `.../fortuna_extras/fortuna_tests.py`
+
+##### Fortuna 0.12.0
+- Internal test for future update.
+
+##### Fortuna 0.11.0
+- Initial Release: Public Beta
+
+##### Fortuna 0.10.0
+- Module name changed from Dice to Fortuna
+
+##### Dice 0.1.x - 0.9.x
+- Experimental Phase
+
+
+## Legal Information
+Fortuna © 2019 Broken aka Robert W Sharp, all rights reserved.
+
+Fortuna is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported License.
+
+See online version of this license here: <http://creativecommons.org/licenses/by-nc/3.0/>
