@@ -1,0 +1,37 @@
+image: python:3.5
+
+definitions:
+  steps:
+    - step: &run-tests
+        caches:
+          - pip
+        script:
+          - apt-get -y -qq update || true
+          - apt-get -y -qq install mercurial
+          - pip install .[ci]
+          - tox -e py$((34+${BITBUCKET_PARALLEL_STEP}))
+          - python setup.py bdist_wheel sdist
+    - parallel: &build
+      - step:
+          <<: *run-tests
+          image: python:3.5
+      - step:
+          <<: *run-tests
+          image: python:3.6
+      - step:
+          <<: *run-tests
+          image: python:3.7
+          artifacts:
+            - dist/*
+
+pipelines:
+  default:
+    - parallel: *build
+    - step:
+        name: Deploy to PyPI
+        deployment: production
+        script:
+          - apt-get -y -qq update || true
+          - apt-get -y -qq install mercurial
+          - pip install .[ci]
+          - ./scripts/deploy.sh
