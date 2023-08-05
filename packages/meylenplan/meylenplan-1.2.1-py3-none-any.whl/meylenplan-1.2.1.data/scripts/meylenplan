@@ -1,0 +1,59 @@
+#!python
+
+import argparse
+import os
+import datetime
+
+from utils import menuConverter
+from utils import menuDownloader
+from utils import menuLinkScraper
+from utils import menuParser
+from utils import menuPrinter
+from utils.config import config
+from utils.exceptions import InvalidDateException
+
+
+def prepare_menu():
+    # Scrape link to current menu pdf from meyle website
+    menu_url = menuLinkScraper.get_menu_link()
+
+    # Download menu and get file name
+    menuDownloader.download_menu(menu_url, config['pdf_path'])
+
+    # Convert pdf to txt
+    menuConverter.convert_menu(config['pdf_path'], config['flattened_pdf_path'], config['txt_path'])
+
+    # Return menu
+    return menuParser.parse_menu(config['txt_path'])
+
+
+def main(args):
+    # print version end exit
+    if args.version:
+        with open('VERSION.txt', 'r') as file:
+            print('meylenplan version ' + file.readlines()[0])
+            return
+
+    current_date = datetime.date.today()
+
+    try:
+        menu = menuParser.parse_menu(config['txt_path'])
+        if current_date < menu.valid_from.date or current_date > menu.valid_to.date:
+            raise InvalidDateException
+    except (FileNotFoundError, InvalidDateException):
+        menu = prepare_menu()
+
+    # Print today's menu
+    menuPrinter.print_menu(menu, current_date, args)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-I', '--no-internal', action='store_true', default=False, help='hide internal price')
+    parser.add_argument('-E', '--no-external', action='store_true', default=False, help='hide external price')
+    parser.add_argument('-a', '--allergens', action='store_true', default=False, help='display allergens')
+    parser.add_argument('-V', '--version', action='store_true', default=False, help='show version and exit')
+    args = parser.parse_args()
+
+    main(args)
+
