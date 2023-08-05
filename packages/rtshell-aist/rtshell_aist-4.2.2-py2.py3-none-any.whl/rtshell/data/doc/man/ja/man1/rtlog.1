@@ -1,0 +1,518 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTLOG 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtlog \- ポートのデータをログに保存、再生する
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH 書式
+.sp
+rtlog [options] <path1>:<port1> [<path2>:<port2>...]
+.SH 概要
+.sp
+コンポーネントがデータポートで送るデータをログファイルに保存したり、再
+生したりします。複数のポートでもログが可能です。ログされたコンポーネント
+を再現するためにログファイルを再生することが加能です。
+.sp
+ログの複数データストリームから再生されたストリームを選択することができま
+す。例えばログに複数のレーザからのデータが保存されたら一つのみのレーザ
+データを再生することが加能です。再生はログの始まりだけではなくて途中から
+途中までを再生して、再生レートを変えたり出力されたデータのタイムスタン
+プを編集することも可能です。
+.sp
+デフォルトでログを保存します。コマンドに渡したすべてのポートはアウトポ
+ートにする必要があります。再生モードの場合、すべてのポートはインポートに
+してログのデータ型に合わせる必要があります。
+.sp
+ログで記録されるそれぞれのポートは一つのデータストリームを作ります。
+再生の時、このデータストリームは複数のインポートに送ることができます。
+データストリームは名前で区別されます。名前はコマンドラインに与えられな
+かった場合、デフォルトの名前を自動的に作ります。
+.sp
+ログツールから目的のポートまでの接続はデフォルトのプロパティで作られま
+す。
+.SH オプション
+.INDENT 0.0
+.TP
+.B \-a\fP,\fB  \-\-absolute\-times
+ログデータからのタイムスタンプは記録されたままの値を送ります。
+指定しない場合、タイムスタンプは現在の時刻でオフセットされます。
+.TP
+.B \-d\fP,\fB  \-\-display\-info
+ログの情報を表示して終了します。
+.TP
+.BI \-e \ END\fP,\fB \ \-\-end\fB= END
+記録や再生を止めるタイムスタンプまたはインデクスを指定します。ログの
+最初と最後のデータの間を指定してください。 \fB\-1\fP を指定すると永遠に記
+録またはログの最後まで再生します。インデクスで指定したい場合、
+\fB\-\-index\fP も指定してください。
+.TP
+.BI \-f \ FILENAME\fP,\fB \ \-\-filename\fB= FILENAME
+ログファイルの名前を指定します。指定しない場合、現在の時刻がファイル
+名になります。
+再生の時は必須です。
+.TP
+.BI \-\-path\fB= PATHS
+モジュールのサーチパスを指定します。Pythonの \fBPYTHONPATH\fP 変数に追加
+されます。
+.TP
+.B \-i\fP,\fB  \-\-index
+\fB\-\-start\fP と \fB\-\-end\fP の値をタイムスタンプではなくてインデクスとして
+指定します。
+.TP
+.BI \-l \ LOGGER\fP,\fB \ \-\-logger\fB= LOGGER
+ログ種類を選択します。デフォルトはSimplePickle（ \fBsimpkl\fP ）です。テ
+キストログ（ \fBtext\fP ）を使うこともできます。テキストログは再生できま
+せん。
+.TP
+.BI \-m \ MODULES\fP,\fB \ \-\-mod\fB= MODULES
+Import する必要な Python モジュールを指定します。値に必要なモジュー
+ルが自動的にロードされていない場合、このオプションで指定してください。
+モジュールとそのモジュールの \fB__POA\fP のモジュールも import します。
+.TP
+.B \-n\fP,\fB  \-\-ignore\-times
+（再生のみ）ログに記録されたタイムスタンプを無視して定期的にログデー
+タを再生します。周期を変える場合、 \fB\-\-exec\-rate\fP を使ってください。
+.TP
+.B \-p\fP,\fB  \-\-play
+再生モード。
+.TP
+.BI \-r \ RATE\fP,\fB \ \-\-rate\fB= RATE
+（再生のみ）再生レートをスケールします。
+.TP
+.BI \-s \ START\fP,\fB \ \-\-start\fB= START
+（再生のみ）再生を始めるタイムスタンプまたはインデクスを指定します。
+ログの最初と最後のデータの間にすることは必須です。インデクスで指定す
+る場合、 \fB\-\-index\fP も指定してください。
+.TP
+.BI \-t \ TIMEOUT\fP,\fB \ \-\-timeout\fB= TIMEOUT
+記録または再生のタイムアウト時間を指定します。このオプションを使う場
+合、 \fB\-\-start\fP と \fB\-\-end\fP を使うことはできません。
+.TP
+.BI \-x \ EXEC_RATE\fP,\fB \ \-\-exec\-rate\fB= EXEC_RATE
+コンポーネントの実行レートを指定します。単位はヘルツです。
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-version
+プログラムのバージョン番号を表示して終了する
+.TP
+.B \-h\fP,\fB  \-\-help
+ヘルプを表示して終了する
+.TP
+.B \-v\fP,\fB  \-\-verbose
+冗長な情報を出力する [デフォルト： \fBFalse\fP]
+.UNINDENT
+.SH パス
+.sp
+\fBrtshell\fP は \fIパス\fP でRTCツリーのオブジェクトを示します。パスは
+オブジェクトのアドレスです。ネームサーバとネームコンテクストは
+ダイレクトリで、マネージャとRTコンポーネントはファイルです。POSIXの
+\fBcat\fP 等のコマンドと同じように、コマンドに渡したパスはrtshellの
+ワーキングディレクトリに追加されます。rtshellの現在のワーキングディレクトリは
+\fBRTCSH_CWD\fP という環境変数に保存されて、 \fBrtcwd\fP というコマンドで
+変更することができます。
+.sp
+利用できるパスはコマンド実行時のネームサーバによって変わります。
+\fBRTCSH_NAMESERVERS\fP という環境変数の値に記録されたネームサーバとパスに
+指定された ネームサーバを組み合わせて提供します。
+.sp
+例えば、 \fB/localhost/comp0.rtc\fP は \fBlocalhost\fP にあるネームサーバに登録
+された \fBcomp0.rtc\fP というRTコンポーネントを示します。
+\fB/localhost/manager/comp0.rtc\fP は \fBlocalhost\fP にあるネームサーバの下の
+\fBmanager\fP というディレクトリに登録された \fBcomp0.rtc\fP というRT
+コンポーネントを示します。 \fB\&./comp0.rtc\fP は現在のワーキングディレクトリ
+の中にある \fBcomp0.rtc\fP というRTコンポーネントを示します。
+.sp
+RTコンポーネントのポートを示す場合、パスの後にコロン（「:」）で区切って
+示します。例えば、 \fB/localhost/comp0.rtc:data\fP は
+\fBcomp0.rtc\fP というRTコンポーネントの \fBdata\fP というポートを示します。
+.sp
+新しいポートを作るコマンドもあります。この場合、オプションをパスに追加
+することができます。使えるオプションは作られるポートの名前とフォーマッタ
+です。指定方法は以下の通りです:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+作られるポートの名前は \fBstuff\fP で、データは \fBa_printer\fP という関数で
+ターミナルに表示するように指定してます。（ \fBa_printer\fP の関数はPythonが利
+用可能な場所に存在する必要があります。普通はユーザがモジュールで提供します。）
+作られたポートは \fBcomp0.rtc\fP の \fBinput\fP というポートに接続します。
+.sp
+「name」という部分は必須ではありません。書いていない場合は「.」文字も
+書かないでください。例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+「formatter」という部分は必須ではありません。書いていない場合は「.」文字も
+書かないでください。例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH 環境変数
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+ORBを作る時に渡す変数です。セミコロンで区切ります。必須ではありません。
+.TP
+.B RTCTREE_NAMESERVERS
+RTCツリーを作る時に参照するネームサーバのアドレスです。アドレスをセミ
+コロンで区切ります。リストされたアドレスはすべてRTCツリーに追加して
+rtshellで見ることができるようになります。必須ではありません。
+.TP
+.B RTSH_CWD
+rtshellの現在のワーキングディレクトリ。rtshellが自動的に設定します。
+設定しないでください。
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+普通、ユーザが設定する変数は \fBRTCTREE_NAMESERVERS\fP のみです。よく使うネ
+ームサーバを設定しておくと便利です。例えば、Bashシェルの場合、以下のコマンド
+は \fBlocalhost\fP 、 \fB192.168.0.1:65346\fP および \fBexample.com\fP にあるネーム
+サーバをいつもrtshellで利用できるようにします。
+.INDENT 0.0
+.INDENT 3.5
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.UNINDENT
+.UNINDENT
+.SH 返り値
+.sp
+成功の場合はゼロを返します。失敗の場合はゼロではない値を返します。
+.sp
+デバグ情報とエラーは \fBstderr\fP に出します。
+.SH 例
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBConsoleIn0.rtc\fP コンポーネントは \fBout\fP ポートで送るデータをログします。
+データストリームは \fBnumbers\fP という名前で区別されます。ログファイル名は
+\fBlog.rtlog\fP です。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+ログファイルから \fBnumbers\fP というデータストリームを \fBConsoleOut0.rtc\fP の
+\fBin\fP ポートに再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-d
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+ログの情報を表示します。ログの開始時間、終了時間、データストリーム等が
+含まれています。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-e 1292489690
+  /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+コンピュータの時計が「1292489690」になるまでログし、終了します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-e 10 \-i /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+10個のデータをログして終了します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-t 10 /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+10秒間ログして終了します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 1292489690
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+「1292489690」のタイムスタンプから再生を始めます。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-e 1292489700
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+最初のデータから「1292489700」のタイムスタンプまで再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 1292489690 \-e 1292489700
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+「1292489690」のタイムスタンプから「1292489700」のタイムスタンプまで再
+生します.（大体10秒のデータ。）
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 5 \-i
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+５個目のデータから再生を始めます。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-e 10 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+最初のデータから10個目のデータまで再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 5 \-e 10
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+5個目のデータから10個目のデータまで再生します。（5個のデータ。）
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-t 10 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+最初の10秒間のデータを再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-r 5 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+ログの記録の早さを5倍で再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-r 0.2 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+ログの記録の早さを0.2倍で再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-n 5 \-x 1 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+1秒に1回実行して、1回の実行で5個のデータを再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/Sensor0.rtc:out.sensor
+  /localhost/Controller0.rtc:out.ctrl /localhost/Motor0.rtc:out.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+一つのファイルに三つのデータストリームを記録します。ストリームの名前は
+\fBsensor\fP と \fBctrl\fP と \fBmotor\fP です。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/Sensor0.rtc:in.motor
+  /localhost/Motor0.rtc:in.ctrl
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+一つのログから二つのデータストリームを別々のポートに再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/Controller0.rtc:in.sensor
+  /localhost/Controller0.rtc:in.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+一つのログから二つのデータストリームを同じポートに再生します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/Sensor0.rtc:in.motor
+  /localhost/Controller0.rtc:in.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+ログから一つのデータストリームを複数のポートに再生します。
+.sp
+\fB\-\-mod\fP と \fB\-\-path\fP の例は \fBrtinject(1)\fP を参照してください。
+.SH 参照
+.INDENT 0.0
+.INDENT 3.5
+\fBrtcat\fP (1),
+\fBrtinject\fP (1),
+\fBrtprint\fP (1)
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.

@@ -1,0 +1,533 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTLOG 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtlog \- record and replay log files
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+rtlog [options] <path1>:<port1> [<path2>:<port2>...]
+.SH DESCRIPTION
+.sp
+Records and replays logs of data sent by components over their ports.
+A log file can be made from the data of any number of output ports. This
+log file can be replayed at a later time, maintaining the timing
+information in order to mimic the original system that was recorded.
+.sp
+It is possible to only replay some of the streams of data contained in a
+log file, for example to select just one laser sensor\(aqs data from a log
+file containing many laser sensors. Options are available to play back a
+selection of entries from the log file based on index or time, change
+the playback rate, and modify the timestamps in the replayed data.
+.sp
+The default action is to record a log file. All ports specified on the
+command line must be output ports. If replay mode is enabled, all
+specified ports must be input ports matching the recorded data\(aqs data
+types.
+.sp
+Each port recorded in a log file creates a single data stream. When
+replaying the log file, each data stream can be sent to one or more
+target ports. Data streams are identified by name. This name is
+specified on the command line as part of the source port. If no name is
+given, a default name is created automatically.
+.sp
+Connections will be made to the ports using the default connection
+settings compatible with the port.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-a\fP,\fB  \-\-absolute\-times
+Times from the logged data are sent as recorded during replay, rather
+than adjusted to the current timeframe.
+.TP
+.B \-d\fP,\fB  \-\-display\-info
+Display the log information and exit.
+.TP
+.BI \-e \ END\fP,\fB \ \-\-end\fB= END
+Time or entry index to stop recording or playback. Must be within the
+bounds of the log. Specify \fB\-1\fP to record forever or replay to the
+end of the log.  Use \fB\-\-index\fP to specify that this value is an
+index.
+.TP
+.BI \-f \ FILENAME\fP,\fB \ \-\-filename\fB= FILENAME
+File name of the log file to record to/playback from. If not specified
+for recording, a default will be created based on the current time.
+Must be specified for playback.
+.TP
+.BI \-\-path\fB= PATHS
+Extra module search paths to add to the \fBPYTHONPATH\fP\&.
+.TP
+.B \-i\fP,\fB  \-\-index
+Interpret the start and end values as entry indices instead of
+timestamps.
+.TP
+.BI \-l \ LOGGER\fP,\fB \ \-\-logger\fB= LOGGER
+The type of logger to use. The default is the SimplePickle logger
+(\fBsimpkl\fP). Alternatively, the text logger (specify using \fBtext\fP)
+may be used. The text logger does not support playback.
+.TP
+.BI \-m \ MODULES\fP,\fB \ \-\-mod\fB= MODULES
+Extra modules to import. If automatic module loading struggles with
+the data types, try listing the modules here. The module and its
+\fB__POA\fP partner will be imported.
+.TP
+.B \-n\fP,\fB  \-\-ignore\-times
+(Replay mode only.) Ignore the log timestamps and play back a fixed
+number of entries per execution cycle. Use \fB\-\-exec\-rate\fP to change
+the execution rate.
+.TP
+.B \-p\fP,\fB  \-\-play
+Replay mode.
+.TP
+.BI \-r \ RATE\fP,\fB \ \-\-rate\fB= RATE
+(Replay mode only.) Scale the playback speed of the log.
+.TP
+.BI \-s \ START\fP,\fB \ \-\-start\fB= START
+(Replay mode only.) Time or entry index to start playback from. Must
+be within the bounds of the log. Use \fB\-\-index\fP to specify that this
+value is an index.
+.TP
+.BI \-t \ TIMEOUT\fP,\fB \ \-\-timeout\fB= TIMEOUT
+Record/replay data for this many seconds. This option overrides
+\fB\-\-start\fP/\fB\-\-end\fP\&.
+.TP
+.BI \-x \ EXEC_RATE\fP,\fB \ \-\-exec\-rate\fB= EXEC_RATE
+Specify the rate in Hertz at which to run the component.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-version
+Show program\(aqs version number and exit
+.TP
+.B \-h\fP,\fB  \-\-help
+Show a help message and exit
+.TP
+.B \-v\fP,\fB  \-\-verbose
+Output verbose information. [Default: \fBFalse\fP]
+.UNINDENT
+.SH PATHS
+.sp
+\fBrtshell\fP uses \fIpaths\fP to indicate objects in the RTC Tree. A path is
+the address of object. Name servers and naming contexts on name servers
+are considered directories. Managers and RT\-Components are considered
+\(aqfiles\(aq. As with the POSIX \fBcat\fP command, the path specified as an
+argument to commands is appended to the current rtshell working
+directory, which is stored in the \fBRTCSH_CWD\fP environment variable and
+changeable using the \fBrtcwd\fP command.
+.sp
+The available paths depend on the known name servers at the time the
+command is executed. This is a combination of the servers listed in the
+\fBRTCSH_NAMESERVERS\fP environment variable and the servers used in given
+paths.
+.sp
+For example, \fB/localhost/comp0.rtc\fP refers to the component named
+\fBcomp0.rtc\fP registered on the name server at \fBlocalhost\fP\&.
+\fB/localhost/manager/comp0.rtc\fP refers to the component \fBcomp0.rtc\fP
+in the directory \fBmanager\fP on the \fBlocalhost\fP name server.
+\fB\&./comp0.rtc\fP refers to that component in the current directory.
+.sp
+When specifying a port on an RT\-Component, it should be placed after the
+path, separated by a colon. For example, \fB/localhost/comp0.rtc:data\fP
+refers to the port \fBdata\fP on the component \fBcomp0.rtc\fP\&.
+.sp
+Some commands that create new ports accept extra options in the paths,
+such as a name for the automatically generated port, or a formatter. The
+format for specifying these paths is:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This specifies that the automatically generated port should be named
+\fBstuff\fP, and the data type it handles should be printed using the
+\fBa_printer\fP function (which must be available, usually it is provided
+by the user in a loadable module). The port will be connected to the
+\fBinput\fP port of the \fBcomp0.rtc\fP component.
+.sp
+The name component is optional. If it is not present, neither
+should the \fB\&.\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The formatter component is optional. If it is not present, neither
+should the \fB#\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH ENVIRONMENT
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+A list of arguments, separated by semi\-colons, to pass to the ORB
+when creating it. Optional.
+.TP
+.B RTCTREE_NAMESERVERS
+A list of name server addresses, separated by semi\-colons, to parse
+when creating the RTCTree. Each server in the list will be added to
+the tree, making it available for browsing with rtshell.  Optional.
+.TP
+.B RTSH_CWD
+The current working directory in the tree. Do not set this variable;
+it is set automatically by rtshell.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+The only variable that should normally be set by the user is
+\fBRTCTREE_NAMESERVERS\fP\&. Set this to a list of name server addresses,
+separated by semi\-colons, that rtshell should interact with. For
+example, in a Bash shell, the following command will set the known name
+serves to \fBlocalhost\fP, \fB192.168.0.1:65346\fP and \fBexample.com\fP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH DIAGNOSTICS
+.sp
+Returns \fBzero\fP on success and \fBnon\-zero\fP on failure.
+.sp
+Verbose output and error messages are printed to \fBstderr\fP\&.
+.SH EXAMPLES
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Log values sent by the \fBConsoleIn0.rtc\fP component over its \fBout\fP
+output port. The data stream will be named \fBnumbers\fP in the log file.
+The log file will be named \fBlog.rtlog\fP\&.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Play the entries from the stream named \fBnumbers\fP in the log file into
+the \fBin\fP input port of the \fBConsoleOut0.rtc\fP component.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-d
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Display information about the log file, including its start and end
+times and the data streams it contains.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-e 1292489690
+  /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Record data until the computer\(aqs clock reads 1292489690, then stop
+logging.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-e 10 \-i /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Record 10 entries, then stop logging.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-t 10 /localhost/ConsoleIn0.rtc:out.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Record for 10 seconds, then stop logging.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 1292489690
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file starting at timestamp 1292489690.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-e 1292489700
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file from the beginning until timestamp
+1292489700.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 1292489690 \-e 1292489700
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file from timestamp 1292489690 until timestamp
+1292489700 (i.e. 10 seconds of data).
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 5 \-i
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file starting at the 5th entry.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-e 10 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file from the beginning until the 10th entry.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-s 5 \-e 10
+  /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data from the log file from the 5th entry until the 10th entry
+(i.e. 5 entries).
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-t 10 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay data the first 10 seconds of data from the log file.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-r 5 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay the data at five times the speed it was recorded at.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-r 0.2 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay the data at one fifth of the speed it was recorded at.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p \-n 5 \-x 1 /localhost/ConsoleOut0.rtc:in.numbers
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Replay the data, executing once per second and playing exactly 5 entries
+per execution.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/Sensor0.rtc:out.sensor
+  /localhost/Controller0.rtc:out.ctrl /localhost/Motor0.rtc:out.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Record three streams of data into a single log file. The streams will be
+named \fBsensor\fP, \fBctrl\fP and \fBmotor\fP\&.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog /localhost/Sensor0.rtc:in.motor
+  /localhost/Motor0.rtc:in.ctrl
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Play two streams of data from a single log file into different targets.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/Controller0.rtc:in.sensor
+  /localhost/Controller0.rtc:in.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Play two streams of data from a log file into a single port.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtlog \-f log.rtlog \-p /localhost/Sensor0.rtc:in.motor
+  /localhost/Controller0.rtc:in.motor
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Play the same stream of data from a log file into multiple ports.
+.sp
+See rtinject(1) for examples using \fB\-\-mod\fP and \fB\-\-path\fP\&.
+.SH SEE ALSO
+.INDENT 0.0
+.INDENT 3.5
+\fBrtcat\fP (1),
+\fBrtinject\fP (1),
+\fBrtprint\fP (1)
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.

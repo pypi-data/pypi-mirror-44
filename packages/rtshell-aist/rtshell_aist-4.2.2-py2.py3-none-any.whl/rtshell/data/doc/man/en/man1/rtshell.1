@@ -1,0 +1,377 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTSHELL 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtshell \- command line tools for RT-Middleware
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH DESCRIPTION
+.sp
+rtshell provides commands used to manage individual RT components and
+managers, as well as complete RT Systems. It can be used with the
+OpenRTM\-aist middleware or middlewares that use a compatible CORBA\-based
+introspection system.
+.sp
+Many of the commands allow components and managers running on
+nameservers to be treated like a file system. Directories can be
+entered, components can be cat\(aqd and activated/deactivated/reset,
+connections made and removed, and so on.  Other commands are used in
+conjunction with RtsProfile XML/YAML files to manage complete RT
+Systems.
+.sp
+The commands are aimed at users of OpenRTM\-aist who wish to manage
+components on low\-resource systems, systems where a GUI is not available
+(particularly where no network connection is available to manage
+components from another computer), as well as those who face other
+difficulties using RTSystemEditor.  Being familiar with using a
+command\-line is a benefit when using these commands of rtshell.
+.SH COMMANDS
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B rtact
+Activate components.
+.TP
+.B rtcat
+View component information and meta\-data.
+.TP
+.B rtcheck
+Check the consistency of a running system against an RTSProfile.
+.TP
+.B rtcomp
+Create composite components.
+.TP
+.B rtcon
+Connect ports together.
+.TP
+.B rtconf
+View and change configuration parameters and sets.
+.TP
+.B rtcryo
+Preserve a running system as an RTSProfile.
+.TP
+.B rtcwd
+Change the current working directory in the RTC Tree.
+.TP
+.B rtdeact
+Deactivate components.
+.TP
+.B rtdel
+Delete registrations from a name server.
+.TP
+.B rtdis
+Disconnect ports.
+.TP
+.B rtdoc
+Print RT\-Component documentation.
+.TP
+.B rtexit
+Make an RT\-Component stop running and exit.
+.TP
+.B rtfind
+Search for components, managers, etc. in the known name servers.
+.TP
+.B rtinject
+Inject data into an input port.
+.TP
+.B rtlog
+Record and replay logs of data sent by ports.
+.TP
+.B rtls
+List a directory in the RTC Tree.
+.TP
+.B rtmgr
+Use managers to create and delete RT\-Components.
+.TP
+.B rtprint
+Display the data being written by an output port.
+.TP
+.B rtpwd
+Print the current working directory in the RTC Tree.
+.TP
+.B rtreset
+Reset components in the error state.
+.TP
+.B rtresurrect
+Restore a running system from an RTSProfile.
+.TP
+.B rtstart
+Start an entire RT\-System using an RTSProfile.
+.TP
+.B rtstodot
+Visualise the running RT\-System using the dot file format.
+.TP
+.B rtstop
+Stop an entire RT\-System using an RTSProfile.
+.TP
+.B rtteardown
+Remove all connections in an RT\-System using an RTSProfile.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SH RTC TREE
+.sp
+The commands operate on the RTC Tree. This is a file system\-like tree
+built by parsing name servers to find directories, components and
+managers. It can be treated like a normal file system.
+.sp
+Name servers are treated as directories off the root directory, \fB/\fP\&.
+Below them are \(aqfiles\(aq and sub\-directories. A sub\-directory represents a
+naming context below the root naming context of a name server. Files are
+components and managers.
+.sp
+The name servers parsed to build the tree are taken from two sources.
+The first is the path given to a command. This is appended to the
+current working directory of the tree, and the first element is treated
+as a name server.
+.sp
+The second source for name servers is the \fBRTCTREE_NAMESERVERS\fP
+environment variable. This is a semi\-colon separated list of name server
+addresses.
+.SH SHELL COMPLETION
+.sp
+Users of a Bash\-compatible shell can use the included completion script
+to make using the commands easier. The script is installed in
+\fB${prefix}/share/rtshell\fP\&. Run the following command to load it:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ source bash_completion
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This can be added to the \fB~/.bashrc\fP file to have it loaded in every
+new shell instance. Here are some examples of completion:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcwd [TAB]
+$ rtcwd localhost/
+$ rtcwd localhost/[TAB]
+$ rtcwd localhost/kenroke.host_cxt/
+$ rtcwd localhost/kenroke.host_cxt/[TAB][TAB]
+ConsoleIn0.rtc  ConfigSample0.rtc  manager.mgr  Sensor0.rtc
+$ rtcwd localhost/kenroke.host_cxt/[ENTER]
+$ rtconf ConfigSample0.rtc set [TAB]
+double_param0  double_param1  int_param0     int_param1     str_param0
+str_param1     vector_param0
+$ rtcon Sensor0.rtc:[TAB]
+in   out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH SYSTEM REQUIREMENTS
+.sp
+rtshell requires \fBrtctree 3.0\fP\&. It must be installed for the commands
+to function.
+.sp
+The commands that work with RTSProfile files require \fBrtsprofile 2.0\fP\&.
+It must be installed for these commands to function.
+.sp
+rtshell uses the new string formatting operations that were introduced
+in \fBPython 2.6\fP\&. It will not function with an earlier version of
+Python.  It has not been tested with Python 3 and it is likely that
+several changes will be necessary to make it function using this version
+of Python.
+.sp
+\fBrtinject\fP, \fBrtlog\fP and \fBrtprint\fP require the \fBPython version of
+OpenRTM\-aist\fP\&.
+.sp
+For Ubuntu users using a version of Ubuntu prior to 9.04, a suitable
+Python version must be installed by hand. Consider upgrading to Ubuntu
+9.04 or later (10.04 offers LTS).
+.SH PATHS
+.sp
+\fBrtshell\fP uses \fIpaths\fP to indicate objects in the RTC Tree. A path is
+the address of object. Name servers and naming contexts on name servers
+are considered directories. Managers and RT\-Components are considered
+\(aqfiles\(aq. As with the POSIX \fBcat\fP command, the path specified as an
+argument to commands is appended to the current rtshell working
+directory, which is stored in the \fBRTCSH_CWD\fP environment variable and
+changeable using the \fBrtcwd\fP command.
+.sp
+The available paths depend on the known name servers at the time the
+command is executed. This is a combination of the servers listed in the
+\fBRTCSH_NAMESERVERS\fP environment variable and the servers used in given
+paths.
+.sp
+For example, \fB/localhost/comp0.rtc\fP refers to the component named
+\fBcomp0.rtc\fP registered on the name server at \fBlocalhost\fP\&.
+\fB/localhost/manager/comp0.rtc\fP refers to the component \fBcomp0.rtc\fP
+in the directory \fBmanager\fP on the \fBlocalhost\fP name server.
+\fB\&./comp0.rtc\fP refers to that component in the current directory.
+.sp
+When specifying a port on an RT\-Component, it should be placed after the
+path, separated by a colon. For example, \fB/localhost/comp0.rtc:data\fP
+refers to the port \fBdata\fP on the component \fBcomp0.rtc\fP\&.
+.sp
+Some commands that create new ports accept extra options in the paths,
+such as a name for the automatically generated port, or a formatter. The
+format for specifying these paths is:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This specifies that the automatically generated port should be named
+\fBstuff\fP, and the data type it handles should be printed using the
+\fBa_printer\fP function (which must be available, usually it is provided
+by the user in a loadable module). The port will be connected to the
+\fBinput\fP port of the \fBcomp0.rtc\fP component.
+.sp
+The name component is optional. If it is not present, neither
+should the \fB\&.\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The formatter component is optional. If it is not present, neither
+should the \fB#\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH ENVIRONMENT
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+A list of arguments, separated by semi\-colons, to pass to the ORB
+when creating it. Optional.
+.TP
+.B RTCTREE_NAMESERVERS
+A list of name server addresses, separated by semi\-colons, to parse
+when creating the RTCTree. Each server in the list will be added to
+the tree, making it available for browsing with rtshell.  Optional.
+.TP
+.B RTSH_CWD
+The current working directory in the tree. Do not set this variable;
+it is set automatically by rtshell.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+The only variable that should normally be set by the user is
+\fBRTCTREE_NAMESERVERS\fP\&. Set this to a list of name server addresses,
+separated by semi\-colons, that rtshell should interact with. For
+example, in a Bash shell, the following command will set the known name
+serves to \fBlocalhost\fP, \fB192.168.0.1:65346\fP and \fBexample.com\fP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH DIAGNOSTICS
+.sp
+Returns \fBzero\fP on success and \fBnon\-zero\fP on failure.
+.sp
+Verbose output and error messages are printed to \fBstderr\fP\&.
+.SH BUGS
+.sp
+The tools have been reported to not work well with the JAVA ORB.
+.SH SEE ALSO
+.INDENT 0.0
+.INDENT 3.5
+\fBrtact\fP (1),
+\fBrtcat\fP (1),
+\fBrtcheck\fP (1),
+\fBrtcomp\fP (1),
+\fBrtcon\fP (1),
+\fBrtconf\fP (1),
+\fBrtcryo\fP (1),
+\fBrtcwd\fP (1),
+\fBrtdeact\fP (1),
+\fBrtdel\fP (1),
+\fBrtdis\fP (1),
+\fBrtexit\fP (1),
+\fBrtfind\fP (1),
+\fBrtinject\fP (1),
+\fBrtlog\fP (1),
+\fBrtls\fP (1),
+\fBrtmgr\fP (1),
+\fBrtprint\fP (1),
+\fBrtpwd\fP (1),
+\fBrtreset\fP (1),
+\fBrtresurrect\fP (1),
+\fBrtstart\fP (1),
+\fBrtstodot\fP (1),
+\fBrtstop\fP (1),
+\fBrtteardown\fP (1)
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.

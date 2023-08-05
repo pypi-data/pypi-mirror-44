@@ -1,0 +1,393 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTDOC 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtdoc \- print RT-Component documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+rtdoc [options] <path>
+.SH DESCRIPTION
+.sp
+Print the documentation for an RT\-Component.
+.sp
+Some RT\-Components contain documentation internally, stored in hidden
+configuration sets. This tool prints that documentation in several
+convenient formats, including reStructuredText, HTML and LaTeX (suitable
+for compiling to PDF).
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.BI \-f \ FORMAT\fP,\fB \ \-\-format\fB= FORMAT
+Output format (one of \fBrst\fP, \fBhtml\fP or \fBlatex\fP).
+.TP
+.B \-g\fP,\fB  \-\-graph
+Draw the component graph.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-version
+Show program\(aqs version number and exit
+.TP
+.B \-h\fP,\fB  \-\-help
+Show a help message and exit
+.TP
+.B \-v\fP,\fB  \-\-verbose
+Output verbose information. [Default: \fBFalse\fP]
+.UNINDENT
+.SH RT-COMPONENT DOCUMENTATION
+.sp
+To be compatible with this tool, an RT\-Component must store its
+documentation in a configuration set called \fB__doc__\fP\&. Any parameters
+in this set that are \fInot\fP hidden are added to the documentation as
+sections.
+.sp
+The common sections are:
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B intro
+An introduction to the component, giving a brief description of its
+purpose. (Title: \fBIntroduction\fP\&.)
+.TP
+.B reqs
+Pre\-requisites for using the component, such as other software that
+must be installed. (Title: \fBPre\-requisites\fP\&.)
+.TP
+.B install
+How to install the component. (Title: \fBInstallation\fP\&.)
+.TP
+.B usage
+How to launch and use the component. (Title: \fBUsage\fP\&.)
+.TP
+.B misc
+Any other information important to using the component. (Title:
+\fBMiscellaneous\fP\&.)
+.TP
+.B changelog
+A description of changes to the component since the previous
+versions. (Title: \fBChangelog\fP\&.)
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+In addition, a \fBports\fP section and a \fBconfig\fP section are
+automatically created if the component has any ports or any
+configuration parameters in its \fBdefault\fP configuration set. Any other
+sections present in the \fB__doc__\fP set will also be added to the
+documentation.
+.sp
+You can also set three parameters to add extra information to the
+documentation preamble:
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B __license__
+The license of the component, such as \fBGPL\fP or \fBBSD\fP\&.
+.TP
+.B __contact__
+Contact information, such as the author\(aqs email address.
+.TP
+.B __url__
+The component\(aqs home page.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+These parameters can be set either in the component source or in a
+configuration file loaded when the component is launched. Because
+in\-source documentation increases the size of the component binary and
+memory requirements, it is recommended that the documentation be set in
+a configuration file, with the possible exception of brief contact and
+usage information.
+.sp
+For example, to set them in the source, use something similar to the
+following:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\(aqconf.__doc__.__license__\(aq, \(aqLGPL\(aq,
+\(aqconf.__doc__.__contact__\(aq, \(aqa@example.com\(aq,
+\(aqconf.__doc__.__url__\(aq, \(aqhttp://www.openrtm.org\(aq,
+\(aqconf.__doc__.intro\(aq, \(aqThis is the introduction.\(aq,
+\(aqconf.__doc__.reqs\(aq, \(aqThis component requires nothing.\(aq,
+\(aqconf.__doc__.install\(aq, \(aqType "make install"\(aq,
+\(aqconf.__doc__.usage\(aq, \(aqRun comp_standalone.\(aq,
+\(aqconf.__doc__.misc\(aq, \(aqExtra information.\(aq,
+\(aqconf.__doc__.changelog\(aq, \(aqNo changes.\(aq,
+\(aqconf.__doc__.Another\(aq, \(aqA non\-standard section.\(aq,
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+By default, the sections are included in the following order:
+.INDENT 0.0
+.INDENT 3.5
+intro, reqs, usage, ports, config, misc, changelog, [other sections]
+.UNINDENT
+.UNINDENT
+.sp
+This can be changed by setting the \fB__order__\fP parameter in the
+\fB__doc__\fP set. It must be set to a comma\-separated list of parameter
+names, where each parameter name is a section in the documentation. For
+example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\(aqconf.__doc__.__order__\(aq, \(aqintro,ports,config,reqs,Another\(aq
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Any sections not mentioned in this parameter are added after the
+specified sections. The order in which they are added is not defined.
+.sp
+To document ports, add a \fBdescription\fP property to the port. For
+example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+self._inport.addProperty(\(aqdescription\(aq, \(aqThis port receives stuff.\(aq)
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+To document configuration parameters, set the parameter in the
+\fB__description__\fP set. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\(aqconf.default.param\(aq, \(aq0\(aq,
+\(aqconf.__description__.param\(aq, \(aqA test parameter.\(aq,
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH PATHS
+.sp
+\fBrtshell\fP uses \fIpaths\fP to indicate objects in the RTC Tree. A path is
+the address of object. Name servers and naming contexts on name servers
+are considered directories. Managers and RT\-Components are considered
+\(aqfiles\(aq. As with the POSIX \fBcat\fP command, the path specified as an
+argument to commands is appended to the current rtshell working
+directory, which is stored in the \fBRTCSH_CWD\fP environment variable and
+changeable using the \fBrtcwd\fP command.
+.sp
+The available paths depend on the known name servers at the time the
+command is executed. This is a combination of the servers listed in the
+\fBRTCSH_NAMESERVERS\fP environment variable and the servers used in given
+paths.
+.sp
+For example, \fB/localhost/comp0.rtc\fP refers to the component named
+\fBcomp0.rtc\fP registered on the name server at \fBlocalhost\fP\&.
+\fB/localhost/manager/comp0.rtc\fP refers to the component \fBcomp0.rtc\fP
+in the directory \fBmanager\fP on the \fBlocalhost\fP name server.
+\fB\&./comp0.rtc\fP refers to that component in the current directory.
+.sp
+When specifying a port on an RT\-Component, it should be placed after the
+path, separated by a colon. For example, \fB/localhost/comp0.rtc:data\fP
+refers to the port \fBdata\fP on the component \fBcomp0.rtc\fP\&.
+.sp
+Some commands that create new ports accept extra options in the paths,
+such as a name for the automatically generated port, or a formatter. The
+format for specifying these paths is:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This specifies that the automatically generated port should be named
+\fBstuff\fP, and the data type it handles should be printed using the
+\fBa_printer\fP function (which must be available, usually it is provided
+by the user in a loadable module). The port will be connected to the
+\fBinput\fP port of the \fBcomp0.rtc\fP component.
+.sp
+The name component is optional. If it is not present, neither
+should the \fB\&.\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The formatter component is optional. If it is not present, neither
+should the \fB#\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH ENVIRONMENT
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+A list of arguments, separated by semi\-colons, to pass to the ORB
+when creating it. Optional.
+.TP
+.B RTCTREE_NAMESERVERS
+A list of name server addresses, separated by semi\-colons, to parse
+when creating the RTCTree. Each server in the list will be added to
+the tree, making it available for browsing with rtshell.  Optional.
+.TP
+.B RTSH_CWD
+The current working directory in the tree. Do not set this variable;
+it is set automatically by rtshell.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+The only variable that should normally be set by the user is
+\fBRTCTREE_NAMESERVERS\fP\&. Set this to a list of name server addresses,
+separated by semi\-colons, that rtshell should interact with. For
+example, in a Bash shell, the following command will set the known name
+serves to \fBlocalhost\fP, \fB192.168.0.1:65346\fP and \fBexample.com\fP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH DIAGNOSTICS
+.sp
+Returns \fBzero\fP on success and \fBnon\-zero\fP on failure.
+.sp
+Verbose output and error messages are printed to \fBstderr\fP\&.
+.SH EXAMPLES
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtdoc /localhost/ConsoleOut0.rtc
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the \fBConsoleOut0.rtc\fP component\(aqs documentation to stdout.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtdoc /localhost/ConsoleOut0.rtc > doc.html
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the \fBConsoleOut0.rtc\fP component\(aqs documentation to the file
+\fBdoc.html\fP\&.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtdoc /localhost/ConsoleOut0.rtc \-f rst
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the \fBConsoleOut0.rtc\fP component\(aqs documentation in
+reStructuredText format.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtdoc /localhost/ConsoleOut0.rtc \-f latex > doc.tex &&
+  rubber \-d doc.tex
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Make a PDF of \fBConsoleOut0.rtc\fP\(aqs documentation, using the \fBrubber\fP
+tool to compile the LaTeX file.
+.SH SEE ALSO
+.INDENT 0.0
+.INDENT 3.5
+\fBrtconf\fP (1),
+\fBrubber\fP (1)
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.

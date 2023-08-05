@@ -1,0 +1,314 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTPRINT 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtprint \- display data from ports
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+rtprint [options] <path1>:<port1> [<path2>:<port2>...]
+.SH DESCRIPTION
+.sp
+Print the data being sent by one or more output ports to stdout.
+.sp
+By default, only the first value received from one or more ports is
+printed.  Options are available to print multiple values or print
+regularly for a specified length of time. In any one loop of the port
+checks, if only one port out of multiple has data available, that is
+counted as a print for the purposes of printing a fixed number of times.
+.sp
+To print data which cannot be natively printed by Python, create a
+formatting function to print that data. The function must receive one
+argument: the data to print. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+def rawpy(data):
+    return data.__repr__()
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+A connection will be made to each port using the default connection
+settings compatible with that port.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.BI \-m \ MODULES\fP,\fB \ \-\-mod\fB= MODULES
+Extra modules to import. If automatic module loading struggles with
+the constant\(aqs data types, try listing the modules here. The module
+and its \fB__POA\fP partner will be imported.
+.TP
+.BI \-n \ MAX\fP,\fB \ \-\-number\fB= MAX
+Specify the number of times to read from any ports.
+.TP
+.BI \-p \ PATHS\fP,\fB \ \-\-path\fB= PATHS
+Extra module search paths to add to the \fBPYTHONPATH\fP\&.
+.TP
+.BI \-r \ RATE\fP,\fB \ \-\-rate\fB= RATE
+Specify the rate in Hertz at which to read and print.
+.TP
+.BI \-t \ TIMEOUT\fP,\fB \ \-\-timeout\fB= TIMEOUT
+Read data for this many seconds, then stop.  This option overrides
+\fB\-\-number\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-version
+Show program\(aqs version number and exit
+.TP
+.B \-h\fP,\fB  \-\-help
+Show a help message and exit
+.TP
+.B \-v\fP,\fB  \-\-verbose
+Output verbose information. [Default: \fBFalse\fP]
+.UNINDENT
+.SH PATHS
+.sp
+\fBrtshell\fP uses \fIpaths\fP to indicate objects in the RTC Tree. A path is
+the address of object. Name servers and naming contexts on name servers
+are considered directories. Managers and RT\-Components are considered
+\(aqfiles\(aq. As with the POSIX \fBcat\fP command, the path specified as an
+argument to commands is appended to the current rtshell working
+directory, which is stored in the \fBRTCSH_CWD\fP environment variable and
+changeable using the \fBrtcwd\fP command.
+.sp
+The available paths depend on the known name servers at the time the
+command is executed. This is a combination of the servers listed in the
+\fBRTCSH_NAMESERVERS\fP environment variable and the servers used in given
+paths.
+.sp
+For example, \fB/localhost/comp0.rtc\fP refers to the component named
+\fBcomp0.rtc\fP registered on the name server at \fBlocalhost\fP\&.
+\fB/localhost/manager/comp0.rtc\fP refers to the component \fBcomp0.rtc\fP
+in the directory \fBmanager\fP on the \fBlocalhost\fP name server.
+\fB\&./comp0.rtc\fP refers to that component in the current directory.
+.sp
+When specifying a port on an RT\-Component, it should be placed after the
+path, separated by a colon. For example, \fB/localhost/comp0.rtc:data\fP
+refers to the port \fBdata\fP on the component \fBcomp0.rtc\fP\&.
+.sp
+Some commands that create new ports accept extra options in the paths,
+such as a name for the automatically generated port, or a formatter. The
+format for specifying these paths is:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This specifies that the automatically generated port should be named
+\fBstuff\fP, and the data type it handles should be printed using the
+\fBa_printer\fP function (which must be available, usually it is provided
+by the user in a loadable module). The port will be connected to the
+\fBinput\fP port of the \fBcomp0.rtc\fP component.
+.sp
+The name component is optional. If it is not present, neither
+should the \fB\&.\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The formatter component is optional. If it is not present, neither
+should the \fB#\fP character be. For example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH ENVIRONMENT
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+A list of arguments, separated by semi\-colons, to pass to the ORB
+when creating it. Optional.
+.TP
+.B RTCTREE_NAMESERVERS
+A list of name server addresses, separated by semi\-colons, to parse
+when creating the RTCTree. Each server in the list will be added to
+the tree, making it available for browsing with rtshell.  Optional.
+.TP
+.B RTSH_CWD
+The current working directory in the tree. Do not set this variable;
+it is set automatically by rtshell.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+The only variable that should normally be set by the user is
+\fBRTCTREE_NAMESERVERS\fP\&. Set this to a list of name server addresses,
+separated by semi\-colons, that rtshell should interact with. For
+example, in a Bash shell, the following command will set the known name
+serves to \fBlocalhost\fP, \fB192.168.0.1:65346\fP and \fBexample.com\fP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH DIAGNOSTICS
+.sp
+Returns \fBzero\fP on success and \fBnon\-zero\fP on failure.
+.sp
+Verbose output and error messages are printed to \fBstderr\fP\&.
+.SH EXAMPLES
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the first value sent by the \fBConsoleIn0.rtc\fP component over its
+\fBout\fP port.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out \-n 5
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the first five values sent by the \fBConsoleIn0.rtc\fP component
+over its \fBout\fP port.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out \-t 5
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the values sent by the \fBConsoleIn0.rtc\fP component over its
+\fBout\fP port for five seconds.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out \-t 5 \-r 10
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the values sent by the \fBConsoleIn0.rtc\fP component over its
+\fBout\fP port up to ten times a second for for five seconds.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out#rawpy
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the first value sent by the \fBConsoleIn0.rtc\fP component over its
+\fBout\fP port as a Python expression using the inbuilt \fBrawpy\fP
+formatter.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtprint /localhost/ConsoleIn0.rtc:out#printers.my_formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Print the first value sent by the \fBConsoleIn0.rtc\fP component over its
+\fBout\fP port using the \fBmy_formatter\fP formatting function from the
+\fBprinters\fP module to print the data.
+.sp
+See rtinject(1) for examples using \fB\-\-mod\fP and \fB\-\-path\fP\&.
+.SH SEE ALSO
+.INDENT 0.0
+.INDENT 3.5
+\fBrtcat\fP (1),
+\fBrtinject\fP (1),
+\fBrtlog\fP (1)
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.

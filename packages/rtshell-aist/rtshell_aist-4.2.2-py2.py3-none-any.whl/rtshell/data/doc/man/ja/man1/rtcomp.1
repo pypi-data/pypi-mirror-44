@@ -1,0 +1,297 @@
+.\" Man page generated from reStructuredText.
+.
+.TH RTCOMP 1 "2015-08-13" "4.0" "User commands"
+.SH NAME
+rtcomp \- コンポジットコンポーネントの管理
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH 書式
+.sp
+rtcomp [options] <manager[:name]|composite component path>
+.SH 概要
+.sp
+実行している複数のコンポーネントを一つのコンポジットコンポーネントとして
+構成し、選択されたポートを外部に公開します。Execution contextも選択する
+ことが可能です。また、新しいコンポジットコンポーネントを作成したり、既存
+のコンポジットコンポーネントを編集することが可能です。
+さらに、既存のコンポジットコンポーネントに新しいメンバーを追加、またはメ
+ンバーを削除することができます。
+公開されているポートの変更も可能です。
+.sp
+オプションには既存のコンポジットコンポーネントのパスまたはマネージャのパ
+スが必要です。マネージャを指定した場合、新しいコンポジットコンポーネント
+を作成します。コンポジットコンポーネントの名前を指定する場合はマネージャ
+のパスにコロンと名前を追加することで指定可能です。名前が指定されていない
+場合はデフォルトが選択されます。
+\fI\%例\fP を参照してください。
+.sp
+コンポーネントを追加（\-a）または削除（\-r）する場合、公開または非公開する
+ポートはコンポーネントのパスにカンマで区切ったリストとして指定してくださ
+い。 \fI\%例\fP を参照してください。
+.SH オプション
+.INDENT 0.0
+.TP
+.BI \-a \ ADD\fP,\fB \ \-\-add\fB= ADD
+コンポジットコンポーネントに含むコンポーネントとポートを指定する。
+ポート名はカンマで区切ったリストとしてパスに追加する。
+このオプションは複数指定可能。
+.TP
+.BI \-o \ OPTIONS\fP,\fB \ \-\-options\fB= OPTIONS
+コンポーネント作成時の追加オプション。
+.TP
+.BI \-r \ REMOVE\fP,\fB \ \-\-remove\fB= REMOVE
+コンポジットコンポーネントから削除するコンポーネントやポートを指定する。
+ポート名はカンマで区切ったリストとしてパスに追加する。
+このオプションは複数指定可能。
+.TP
+.BI \-t \ TYPE\fP,\fB \ \-\-type\fB= TYPE
+Execution contextのタイプ。[デフォルト: PeriodicECSharedComposite]
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-\-version
+プログラムのバージョン番号を表示して終了する
+.TP
+.B \-h\fP,\fB  \-\-help
+ヘルプを表示して終了する
+.TP
+.B \-v\fP,\fB  \-\-verbose
+冗長な情報を出力する [デフォルト： \fBFalse\fP]
+.UNINDENT
+.SH パス
+.sp
+\fBrtshell\fP は \fIパス\fP でRTCツリーのオブジェクトを示します。パスは
+オブジェクトのアドレスです。ネームサーバとネームコンテクストは
+ダイレクトリで、マネージャとRTコンポーネントはファイルです。POSIXの
+\fBcat\fP 等のコマンドと同じように、コマンドに渡したパスはrtshellの
+ワーキングディレクトリに追加されます。rtshellの現在のワーキングディレクトリは
+\fBRTCSH_CWD\fP という環境変数に保存されて、 \fBrtcwd\fP というコマンドで
+変更することができます。
+.sp
+利用できるパスはコマンド実行時のネームサーバによって変わります。
+\fBRTCSH_NAMESERVERS\fP という環境変数の値に記録されたネームサーバとパスに
+指定された ネームサーバを組み合わせて提供します。
+.sp
+例えば、 \fB/localhost/comp0.rtc\fP は \fBlocalhost\fP にあるネームサーバに登録
+された \fBcomp0.rtc\fP というRTコンポーネントを示します。
+\fB/localhost/manager/comp0.rtc\fP は \fBlocalhost\fP にあるネームサーバの下の
+\fBmanager\fP というディレクトリに登録された \fBcomp0.rtc\fP というRT
+コンポーネントを示します。 \fB\&./comp0.rtc\fP は現在のワーキングディレクトリ
+の中にある \fBcomp0.rtc\fP というRTコンポーネントを示します。
+.sp
+RTコンポーネントのポートを示す場合、パスの後にコロン（「:」）で区切って
+示します。例えば、 \fB/localhost/comp0.rtc:data\fP は
+\fBcomp0.rtc\fP というRTコンポーネントの \fBdata\fP というポートを示します。
+.sp
+新しいポートを作るコマンドもあります。この場合、オプションをパスに追加
+することができます。使えるオプションは作られるポートの名前とフォーマッタ
+です。指定方法は以下の通りです:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+path:port.name#formatter
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+作られるポートの名前は \fBstuff\fP で、データは \fBa_printer\fP という関数で
+ターミナルに表示するように指定してます。（ \fBa_printer\fP の関数はPythonが利
+用可能な場所に存在する必要があります。普通はユーザがモジュールで提供します。）
+作られたポートは \fBcomp0.rtc\fP の \fBinput\fP というポートに接続します。
+.sp
+「name」という部分は必須ではありません。書いていない場合は「.」文字も
+書かないでください。例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input#a_printer
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+「formatter」という部分は必須ではありません。書いていない場合は「.」文字も
+書かないでください。例:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+/localhost/blurg.host_cxt/comp0.rtc:input.stuff
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH 環境変数
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.B RTCTREE_ORB_ARGS
+ORBを作る時に渡す変数です。セミコロンで区切ります。必須ではありません。
+.TP
+.B RTCTREE_NAMESERVERS
+RTCツリーを作る時に参照するネームサーバのアドレスです。アドレスをセミ
+コロンで区切ります。リストされたアドレスはすべてRTCツリーに追加して
+rtshellで見ることができるようになります。必須ではありません。
+.TP
+.B RTSH_CWD
+rtshellの現在のワーキングディレクトリ。rtshellが自動的に設定します。
+設定しないでください。
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+普通、ユーザが設定する変数は \fBRTCTREE_NAMESERVERS\fP のみです。よく使うネ
+ームサーバを設定しておくと便利です。例えば、Bashシェルの場合、以下のコマンド
+は \fBlocalhost\fP 、 \fB192.168.0.1:65346\fP および \fBexample.com\fP にあるネーム
+サーバをいつもrtshellで利用できるようにします。
+.INDENT 0.0
+.INDENT 3.5
+$ export RTCTREE_NAMESERVERS=localhost;192.168.0.1:65346;example.com
+.UNINDENT
+.UNINDENT
+.SH 返り値
+.sp
+成功の場合はゼロを返します。失敗の場合はゼロではない値を返します。
+.sp
+デバグ情報とエラーは \fBstderr\fP に出します。
+.SH 例
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/manager.mgr:MotorUnit \-a
+/localhost/Motor0.rtc:out \-a /localhost/Controller0.rtc:in,out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fBController0.rtc\fP の \fBin\fP というポートと \fBMotor0.rtc\fP の \fBout\fP という
+ポートを公開して \fBMotor0.rtc\fP と \fBController0.rtc\fP によってコンポジットコ
+ンポーネントを作成します。コンポジットコンポーネントのインスタンス名は
+\fBMotorUnit\fP になります。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/MotorUnit.rtc \-a /localhost/Sensor0.rtc:out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+既存の \fBMotorUnit.rtc\fP コンポジットコンポーネントを編集し、
+\fBSensor0.rtc\fP の \fBout\fP ポートを公開して \fBSensor0.rtc\fP を
+コンポジットコンポーネントに追加します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/MotorUnit.rtc \-a /localhost/Sensor0.rtc:in
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+すでに \fBSensor0.rtc\fP がメンバーとして登録されている既存の \fBMotorUnit.rtc\fP
+コンポジットコンポーネントを編集し、 \fBSensor0.rtc\fP の \fBin\fP ポートを公開
+します。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/MotorUnit.rtc \-r /localhost/Sensor0.rtc:out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+すでに \fBSensor0.rtc\fP がメンバーとして登録されている既存の \fBMotorUnit.rtc\fP
+コンポジットコンポーネントを編集し、 \fBSensor0.rtc\fP の \fBout\fP ポートを非公
+開にします。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/MotorUnit.rtc \-r /localhost/Controller0.rtc:in,out
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+すでに \fBController0.rtc\fP がメンバーとして登録されている既存の \fBMotorUnit.rtc\fP
+コンポジットコンポーネントを編集し、 \fBController0.rtc\fP の \fBin\fP と \fBout\fP
+ポートを非公開にします。
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ rtcomp /localhost/MotorUnit.rtc \-r /localhost/Controller0.rtc \-r
+/localhost/Motor0.rtc
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+すでに \fBController0.rtc\fP と \fBMotor0.rtc\fP がメンバーとして登録されている
+既存の \fBMotorUnit.rtc\fP コンポジットコンポーネントを編集し、 \fBController0.rtc\fP
+と \fBMotor0.rtc\fP を削除します。
+.SH 参照
+.sp
+\fBrtmgr\fP (1)
+.SH AUTHOR
+Geoffrey Biggs and contributors
+.SH COPYRIGHT
+LGPL3
+.\" Generated by docutils manpage writer.
+.
