@@ -1,0 +1,268 @@
+.. include:: /../../book/docs/shared/include/defs.rst
+.. _xl.changes.2019:
+
+=======================
+Changes 2019 in Lino XL
+=======================
+
+.. Note: Changes are grouped by date. Every new day gives a new
+   heading. If a release deserves separate release notes, we create a separate
+   document and this file will have a link to it.
+
+.. contents::
+  :local:
+
+2019-03-27 (v19.3.3 and v19.3.4)
+==================================
+
+Minor changes in :mod:`lino_xl.lib.eevat`: VAT rate 20% (not 21%). Removed
+regime "Delay in collection".
+
+Released Lino XL 19.3.3 and 19.3.4 to PyPI.  In 19.3.3 :mod:`lino_xl.lib.eevat`
+failed.
+
+
+2019-03-19
+==========
+
+Released Lino XL 19.3.2 to PyPI.
+
+
+2019-03-18
+==========
+
+- New config setting :mod:`lino_xl.lib.vat.Plugin.declaration_plugins`.
+
+
+2019-03-17
+==========
+
+- Added a new plugin :mod:`lino_xl.lib.eevat`.  This is a quickly adapted copy
+  of bevat where we just removed the regimes that make no sense in Estonia.  The
+  declaration itself will need more work.
+
+
+2019-03-16
+==========
+
+- :mod:`lino_xl.lib.bevat` has been cleaned up and documented because it will
+  serve as template for the new :mod:`lino_xl.lib.eevat` plugin.
+
+
+2019-03-15
+==========
+
+- :mod:`lino_xl.lib.vat` can now be used
+  without also using any of :mod:`lino_xl.lib.bevat` or
+  :mod:`lino_xl.lib.bevats`.
+  It defines a VAT regime ``normal`` and a VAT rule which allows everything.
+
+- :class:`lino_xl.lib.ledger.MatchRule` now has :attr:`allow_cascaded_delete`
+  set to "journal" (when you delete a journal, related match rules should delete
+  automatically)
+
+
+
+2019-03-11 (v 19.3.1)
+=====================
+
+.. currentmodule:: lino_xl.lib.beid
+
+Moved :func:`read_card_data_from_file` out of :func:`load_card_data`. 
+This is just an internal change used for writing test cases.
+
+Released XL 19.3.1 to PyPI.
+
+2019-03-07 (v 19.3.0)
+=====================
+
+Released XL 19.3.0 to PyPI.
+
+2019-03-04
+==========
+
+Add new action :meth:`lino_xl.lib.ledger.Voucher.changing_state` to the :class:`lino_xl.lib.ledger.Voucher`. This action
+changes the invoice between the two Registered and Draft states. This action can be trigger using the Ctrl+X keyboard
+shortcut. It is defined in the :meth:`lino_xl.lib.ledger.ui.Vouchers.get_actions_hotkeys` .
+
+2019-02-27
+==========
+
+Courses with a Course.max_date before today are now longer available as choices when creating a new enrolment.
+As it was already before for Course.enrolments_until
+
+
+2019-02-25
+==========
+
+Fixed :ticket:`2811` (UnicodeError when re-reading a beid card where the diff
+contained non-ascii chars).
+
+2019-02-20
+==========
+
+It is now possible to easily redefine the detail layout for
+:class:`lino_xl.lib.cal.Rooms` by overriding
+:class:`lino_xl.lib.cal.RoomDetail`
+
+2019-02-13
+==========
+
+:meth:`lino_xl.lib.ledger.Voucher.get_wanted_movements` now has a default
+implementation which returns no movements.
+
+
+2019-02-12
+==========
+
+More changes in the :mod:`lino_xl.lib.orders` plugin which is still work in
+progress for :ref:`presto`.
+
+
+2019-02-09
+==========
+
+Released Lino XL 19.2.0 to PyPI.
+
+
+2019-02-08
+==========
+
+Changes in :mod:`lino_xl.lib.vat` and :mod:`lino_xl.lib.ledger` to use the new
+"volumes" feature (library uploads).  For :ticket:`2826`.
+
+Concretely:
+
+- The detail of a :class:`lino_xl.lib.vat.VatAccountInvoice` now shows
+  the :class:`UploadsByController` slave table.
+
+  But what if an application wants to use :mod:`lino_xl.lib.vat` without
+  :mod:`lino.modlib.uploads`?  e.g. :ref:`tera`. Quick fix : add plugins also
+  to these applications.
+
+  And :class:`lino_xl.lib.vat.VatAccountInvoice` should implement this method
+  by asking the journal.  New field
+  :attr:`lino_xl.lib.ledger.Journal.uploads_volume`.
+
+- Every voucher is now potentially an upload controller: :class:`ledger.Voucher
+  <lino_xl.lib.ledger.Voucher>` inherits from :class:`UploadController`.
+
+  Added a new field :attr:`lino_xl.lib.ledger.Journal.uploads_volume`, and the
+  :meth:`UploadController.get_uploads_volume` for a
+  voucher returns this.
+
+
+
+2019-02-03
+==========
+
+.. currentmodule:: lino_xl.lib.beid
+
+In :mod:`lino_xl.lib.beid` we moved some functionality from
+:class:`BeIdCardHolder` into a separate new mixin :class:`SSIN` which can be
+used also when the plugin is not installed.  Existing applications don't need
+to adapt.  Converted docstrings to prosa docs.
+
+More changes in the :mod:`lino_xl.lib.orders` plugin which is still work in
+progress.
+
+
+
+2019-01-31
+==========
+
+.. currentmodule:: lino_xl.lib.products
+
+In :mod:`lino_xl.lib.products` we now have a new model :class:`PriceRule` and a
+new choicelist :class:`PriceFactors` (taken from :mod:`lino_tera.lib.courses`).
+For :ref:`tera` this means a minor data migration: change "courses.PriceRule"
+to "products.PriceRule" in the :xfile:`restore.py` field.
+
+We have a new plugin :mod:`lino_xl.lib.orders` that is being developed for
+:ref:`presto`.  Not yet stable.
+
+2019-01-24
+==========
+
+The field :attr:`lino_xl.lib.contacts.Role.type` had a verbose name "Role"
+which was useless and irritating because "Function" is clear enough and the
+same word as in :menuselection:`Configure --> Contacts --> Functions`.
+
+Optimized the detail layout of 
+:class:`lino_xl.lib.ledger.Journal` and 
+the library base class for partner details (:class:`lino_xl.lib.contacts.PartnerDetail`).
+
+Fixed :ticket:`2813` (the summary of :class:`lino_xl.lib.blogs.LatestEntries` 
+inserted an additional line break when rendering links to database objects using 
+a memo command.  Also the German translation did not correctly show date and author 
+of a blog entry in this summary.
+
+
+2019-01-22
+==========
+
+Fixed a little bug in :mod:`lino_xl.lib.vat` : when you created an invoice in a
+journal with `edit_totals` and leave the total field empty, Lino said
+"TypeError: unsupported operand type(s) for -: 'NoneType' and 'Decimal'"
+
+Added intersphinx_urls, srcref_url and doc_trees settings to the main module so
+that other doctrees can link to the docs.
+
+Released version 19.1.1
+
+2019-01-21
+==========
+
+The change notes for :ref:`xl` are now separated from those of :ref:`lino`.
+
+New plugin attribute :attr:`lino_xl.lib.tim2lino.Plugin.timloader_kwargs` to be
+used e.g. as follows::
+
+    def setup_plugins(self):
+        self.plugins.tim2lino.configure(
+            languages='de fr',
+            timloader_kwargs=dict(etat_registered="C"))
+        super(Site, self).setup_plugins()
+
+This new feature is not tested because the reason was just a missing "u"
+prefix.
+
+
+2019-01-18
+==========
+
+The categories (:class:`lino_xl.lib.products.ProductCat`) now have a field
+:attr:`product_type <lino_xl.lib.products.ProductCat.product_type>` (i.e. all
+applications that depend on it need to migrate).  This is because I realized
+that categories are not useless.  The difference between the "category" and the
+"type" of a product is that end-users can edit the former while the latter are
+to be provided by the application developer.
+
+I fixed a subtle bug in the :meth:`lino_xl.lib.ledger.Plugin.setup_main_menu`
+method: the Accounting menu came before the Sales menu because a menu for
+"ledger" was being created before looping over the journal groups. I removed an
+unused plugin attribute :attr:`intrusive_menu` (whether a journal group is
+"intrusive" or not now depends on its :attr:`menu_group`).
+
+2019-01-17
+==========
+
+The :attr:`ref_max_length <lino.mixins.Referrable.ref_max_length>` for
+:class:`lino_xl.lib.ledger.Journal` is now 5 instead of the default 40.
+
+Printing invoices was broken (since we changed the default build method from
+appy to weasy).  It said "No template found for
+sales/VatProductInvoice/default.weasy.html, excerpts/default.weasy.html". We
+created a new template :xfile:`sales/VatProductInvoice/default.weasy.html` (in
+the :xfile:`config` directory of :mod:`lino_xl.lib.sales`).
+
+
+2019-01-04
+==========
+
+We released XL 19.1.0
+
+The fields :attr:`addr2` and :attr:`prefix` are now mostly hidden in forms. We
+consider them obsolete.  :mod:`lino_xl.lib.contacts`.
+
+
