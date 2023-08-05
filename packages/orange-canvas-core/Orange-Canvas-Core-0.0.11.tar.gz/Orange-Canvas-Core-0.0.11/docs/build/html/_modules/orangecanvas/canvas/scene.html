@@ -1,0 +1,1094 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.canvas.scene &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.canvas.scene</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.canvas.scene</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=====================</span>
+<span class="sd">Canvas Graphics Scene</span>
+<span class="sd">=====================</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="k">import</span> <span class="n">escape</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="n">QGraphicsScene</span><span class="p">,</span> <span class="n">QGraphicsItem</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QFont</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Qt</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QSizeF</span><span class="p">,</span> <span class="n">QLineF</span><span class="p">,</span> <span class="n">QBuffer</span><span class="p">,</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QSignalMapper</span><span class="p">,</span>
+    <span class="n">QT_VERSION</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtSvg</span> <span class="k">import</span> <span class="n">QSvgGenerator</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">scheme</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">items</span>
+<span class="kn">from</span> <span class="nn">.layout</span> <span class="k">import</span> <span class="n">AnchorLayout</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CanvasScene"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene">[docs]</a><span class="k">class</span> <span class="nc">CanvasScene</span><span class="p">(</span><span class="n">QGraphicsScene</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Graphics Scene for displaying an :class:`~.scheme.Scheme` instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Signal emitted when a :class:`NodeItem` has been added to the scene.</span>
+    <span class="n">node_item_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when a :class:`NodeItem` has been removed from the</span>
+    <span class="c1">#: scene.</span>
+    <span class="n">node_item_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when a new :class:`LinkItem` has been added to the</span>
+    <span class="c1">#: scene.</span>
+    <span class="n">link_item_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when a :class:`LinkItem` has been removed.</span>
+    <span class="n">link_item_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when a :class:`Annotation` item has been added.</span>
+    <span class="n">annotation_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when a :class:`Annotation` item has been removed.</span>
+    <span class="n">annotation_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when the position of a :class:`NodeItem` has changed.</span>
+    <span class="n">node_item_position_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when an :class:`NodeItem` has been double clicked.</span>
+    <span class="n">node_item_double_clicked</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: An node item has been activated (clicked)</span>
+    <span class="n">node_item_activated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: An node item has been hovered</span>
+    <span class="n">node_item_hovered</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="c1">#: Link item has been hovered</span>
+    <span class="n">link_item_hovered</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># All node items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Mapping from SchemeNodes to canvas items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># All link items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Mapping from SchemeLinks to canvas items.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># All annotation items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Mapping from SchemeAnnotations to canvas items.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Is the scene editable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">editable</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Anchor Layout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span> <span class="o">=</span> <span class="n">AnchorLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__channel_names_visible</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_animation_enabled</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">activated_mapper</span> <span class="o">=</span> <span class="n">QSignalMapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activated_mapper</span><span class="o">.</span><span class="n">mapped</span><span class="p">[</span><span class="n">QObject</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_item_activated</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovered_mapper</span> <span class="o">=</span> <span class="n">QSignalMapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovered_mapper</span><span class="o">.</span><span class="n">mapped</span><span class="p">[</span><span class="n">QObject</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_item_hovered</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_change_mapper</span> <span class="o">=</span> <span class="n">QSignalMapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_change_mapper</span><span class="o">.</span><span class="n">mapped</span><span class="p">[</span><span class="n">QObject</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_on_position_change</span>
+        <span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; intitialized.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CanvasScene.clear_scene"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.clear_scene">[docs]</a>    <span class="k">def</span> <span class="nf">clear_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear (reset) the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_link</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_link</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">annotation_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">annotation_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_annotation</span><span class="p">)</span>
+
+            <span class="c1"># Remove all items to make sure all signals from scheme items</span>
+            <span class="c1"># to canvas items are disconnected.</span>
+
+            <span class="k">for</span> <span class="n">annot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">annot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">remove_annotation</span><span class="p">(</span><span class="n">annot</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">remove_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; cleared.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.set_scheme"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.set_scheme">[docs]</a>    <span class="k">def</span> <span class="nf">set_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the scheme to display. Populates the scene with nodes and links</span>
+<span class="sd">        already in the scheme. Any further change to the scheme will be</span>
+<span class="sd">        reflected in the scene.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scheme : :class:`~.scheme.Scheme`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Clear the old scheme</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_scene</span><span class="p">()</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting scheme &#39;</span><span class="si">%s</span><span class="s2">&#39; on &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_link</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_link</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">annotation_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">annotation_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_annotation</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">annot</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span><span class="n">annot</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CanvasScene.set_registry"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.set_registry">[docs]</a>    <span class="k">def</span> <span class="nf">set_registry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widget registry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Remove/Deprecate. Is used only to get the category/background</span>
+        <span class="c1"># color. That should be part of the SchemeNode/WidgetDescription.</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting registry &#39;</span><span class="si">%s</span><span class="s2"> on &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registry</span> <span class="o">=</span> <span class="n">registry</span></div>
+
+<div class="viewcode-block" id="CanvasScene.set_anchor_layout"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.set_anchor_layout">[docs]</a>    <span class="k">def</span> <span class="nf">set_anchor_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layout</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set an :class:`~.layout.AnchorLayout`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span> <span class="o">!=</span> <span class="n">layout</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span> <span class="o">=</span> <span class="n">layout</span></div>
+
+<div class="viewcode-block" id="CanvasScene.anchor_layout"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.anchor_layout">[docs]</a>    <span class="k">def</span> <span class="nf">anchor_layout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the anchor layout instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span></div>
+
+<div class="viewcode-block" id="CanvasScene.set_channel_names_visible"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.set_channel_names_visible">[docs]</a>    <span class="k">def</span> <span class="nf">set_channel_names_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the channel names visibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__channel_names_visible</span> <span class="o">=</span> <span class="n">visible</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span><span class="p">:</span>
+            <span class="n">link</span><span class="o">.</span><span class="n">setChannelNamesVisible</span><span class="p">(</span><span class="n">visible</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.channel_names_visible"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.channel_names_visible">[docs]</a>    <span class="k">def</span> <span class="nf">channel_names_visible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the channel names visibility state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__channel_names_visible</span></div>
+
+<div class="viewcode-block" id="CanvasScene.set_node_animation_enabled"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.set_node_animation_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">set_node_animation_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set node animation enabled state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_animation_enabled</span> <span class="o">!=</span> <span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__node_animation_enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">setAnimationEnabled</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_node_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_node_item">[docs]</a>    <span class="k">def</span> <span class="nf">add_node_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a :class:`.NodeItem` instance to the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is already in the scene.&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="p">:</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">QPointF</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+
+            <span class="n">item</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+
+        <span class="c1"># Set signal mappings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activated_mapper</span><span class="o">.</span><span class="n">setMapping</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activated_mapper</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovered_mapper</span><span class="o">.</span><span class="n">setMapping</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">hovered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hovered_mapper</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_change_mapper</span><span class="o">.</span><span class="n">setMapping</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">positionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_change_mapper</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_item_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Added item &#39;</span><span class="si">%s</span><span class="s2">&#39; to &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_node"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add and return a default constructed :class:`.NodeItem` for a</span>
+<span class="sd">        :class:`SchemeNode` instance `node`. If the `node` is already in</span>
+<span class="sd">        the scene do nothing and just return its item.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">:</span>
+            <span class="c1"># Already added</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_node_item</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">position</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setTitle</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setProcessingState</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">processing_state</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setProgress</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">progress</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">state_messages</span><span class="p">():</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setStateMessage</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setStatusMessage</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">status_message</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">position_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_node_pos_changed</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">title_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setTitle</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">progress_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setProgress</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">processing_state_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setProcessingState</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">state_message_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setStateMessage</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">status_message_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setStatusMessage</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_node_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.new_node_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.new_node_item">[docs]</a>    <span class="k">def</span> <span class="nf">new_node_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget_desc</span><span class="p">,</span> <span class="n">category_desc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct an new :class:`.NodeItem` from a `WidgetDescription`.</span>
+<span class="sd">        Optionally also set `CategoryDescription`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">NodeItem</span><span class="p">()</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setWidgetDescription</span><span class="p">(</span><span class="n">widget_desc</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">category_desc</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span> <span class="ow">and</span> <span class="n">widget_desc</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
+            <span class="n">category_desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">category</span><span class="p">(</span><span class="n">widget_desc</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">category_desc</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">category_desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">category</span><span class="p">(</span><span class="n">widget_desc</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">category_desc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setWidgetCategory</span><span class="p">(</span><span class="n">category_desc</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setAnimationEnabled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__node_animation_enabled</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_node_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_node_item">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove `item` (:class:`.NodeItem`) from the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activated_mapper</span><span class="o">.</span><span class="n">removeMappings</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovered_mapper</span><span class="o">.</span><span class="n">removeMappings</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position_change_mapper</span><span class="o">.</span><span class="n">removeMappings</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_item_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removed item &#39;</span><span class="si">%s</span><span class="s2">&#39; from &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_node"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove the :class:`.NodeItem` instance that was previously</span>
+<span class="sd">        constructed for a :class:`SchemeNode` `node` using the `add_node`</span>
+<span class="sd">        method.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">position_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_node_pos_changed</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">title_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setTitle</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">progress_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setProgress</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">processing_state_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setProcessingState</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">state_message_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setStateMessage</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_node_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.node_items"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.node_items">[docs]</a>    <span class="k">def</span> <span class="nf">node_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all :class:`.NodeItem` instances in the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_link_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_link_item">[docs]</a>    <span class="k">def</span> <span class="nf">add_link_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a link (:class:`.LinkItem`) to the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">scene</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_item_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Added link </span><span class="si">%r</span><span class="s2"> -&gt; </span><span class="si">%r</span><span class="s2"> to &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">sourceItem</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="n">item</span><span class="o">.</span><span class="n">sinkItem</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">invalidateLink</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_link"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_link">[docs]</a>    <span class="k">def</span> <span class="nf">add_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme_link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and add a :class:`.LinkItem` instance for a</span>
+<span class="sd">        :class:`SchemeLink` instance. If the link is already in the scene</span>
+<span class="sd">        do nothing and just return its :class:`.LinkItem`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scheme_link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">[</span><span class="n">scheme_link</span><span class="p">]</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">scheme_link</span><span class="o">.</span><span class="n">source_node</span><span class="p">]</span>
+        <span class="n">sink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">scheme_link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">]</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_link_item</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">scheme_link</span><span class="o">.</span><span class="n">source_channel</span><span class="p">,</span>
+                                  <span class="n">sink</span><span class="p">,</span> <span class="n">scheme_link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">scheme_link</span><span class="o">.</span><span class="n">enabled</span><span class="p">)</span>
+        <span class="n">scheme_link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scheme_link</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">():</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setDynamic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setDynamicEnabled</span><span class="p">(</span><span class="n">scheme_link</span><span class="o">.</span><span class="n">dynamic_enabled</span><span class="p">)</span>
+            <span class="n">scheme_link</span><span class="o">.</span><span class="n">dynamic_enabled_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setDynamicEnabled</span><span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setRuntimeState</span><span class="p">(</span><span class="n">scheme_link</span><span class="o">.</span><span class="n">runtime_state</span><span class="p">())</span>
+        <span class="n">scheme_link</span><span class="o">.</span><span class="n">state_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setRuntimeState</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_link_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">[</span><span class="n">scheme_link</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.new_link_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.new_link_item">[docs]</a>    <span class="k">def</span> <span class="nf">new_link_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_item</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span>
+                      <span class="n">sink_item</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct and return a new :class:`.LinkItem`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">LinkItem</span><span class="p">()</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setSourceItem</span><span class="p">(</span><span class="n">source_item</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setSinkItem</span><span class="p">(</span><span class="n">sink_item</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">channel_name</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">channel</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">channel</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">source_name</span> <span class="o">=</span> <span class="n">channel_name</span><span class="p">(</span><span class="n">source_channel</span><span class="p">)</span>
+        <span class="n">sink_name</span> <span class="o">=</span> <span class="n">channel_name</span><span class="p">(</span><span class="n">sink_channel</span><span class="p">)</span>
+
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;&lt;b&gt;</span><span class="si">{0}</span><span class="s2">&lt;/b&gt;&amp;nbsp; </span><span class="se">\u2192</span><span class="s2"> &amp;nbsp;&lt;b&gt;</span><span class="si">{1}</span><span class="s2">&lt;/b&gt;&quot;</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span>
+            <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">escape</span><span class="p">(</span><span class="n">source_name</span><span class="p">),</span>
+                       <span class="n">escape</span><span class="p">(</span><span class="n">sink_name</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="n">item</span><span class="o">.</span><span class="n">setSourceName</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setSinkName</span><span class="p">(</span><span class="n">sink_name</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setChannelNamesVisible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__channel_names_visible</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_link_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_link_item">[docs]</a>    <span class="k">def</span> <span class="nf">remove_link_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a link (:class:`.LinkItem`) from the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Invalidate the anchor layout.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">invalidateAnchorItem</span><span class="p">(</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">sourceItem</span><span class="o">.</span><span class="n">outputAnchorItem</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">invalidateAnchorItem</span><span class="p">(</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">sinkItem</span><span class="o">.</span><span class="n">inputAnchorItem</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="c1"># Remove the anchor points.</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">removeLink</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_item_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removed link &#39;</span><span class="si">%s</span><span class="s2">&#39; from &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_link"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_link">[docs]</a>    <span class="k">def</span> <span class="nf">remove_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme_link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a :class:`.LinkItem` instance that was previously constructed</span>
+<span class="sd">        for a :class:`SchemeLink` instance `link` using the `add_link` method.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">scheme_link</span><span class="p">)</span>
+        <span class="n">scheme_link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scheme_link</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">():</span>
+            <span class="n">scheme_link</span><span class="o">.</span><span class="n">dynamic_enabled_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">setDynamicEnabled</span>
+            <span class="p">)</span>
+        <span class="n">scheme_link</span><span class="o">.</span><span class="n">state_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setRuntimeState</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_link_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.link_items"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.link_items">[docs]</a>    <span class="k">def</span> <span class="nf">link_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all :class:`.LinkItem`\s in the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_annotation_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_annotation_item">[docs]</a>    <span class="k">def</span> <span class="nf">add_annotation_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an :class:`.Annotation` item to the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">annotation</span></div>
+
+<div class="viewcode-block" id="CanvasScene.add_annotation"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.add_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">add_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme_annot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new item for :class:`SchemeAnnotation` and add it</span>
+<span class="sd">        to the scene. If the `scheme_annot` is already in the scene do</span>
+<span class="sd">        nothing and just return its item.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scheme_annot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">:</span>
+            <span class="c1"># Already added</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">[</span><span class="n">scheme_annot</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scheme_annot</span><span class="p">,</span> <span class="n">scheme</span><span class="o">.</span><span class="n">SchemeTextAnnotation</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">TextAnnotation</span><span class="p">()</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">scheme_annot</span><span class="o">.</span><span class="n">rect</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">TextEditorInteraction</span><span class="p">)</span>
+
+            <span class="n">font</span> <span class="o">=</span> <span class="n">font_from_dict</span><span class="p">(</span><span class="n">scheme_annot</span><span class="o">.</span><span class="n">font</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setContent</span><span class="p">(</span><span class="n">scheme_annot</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">scheme_annot</span><span class="o">.</span><span class="n">content_type</span><span class="p">)</span>
+            <span class="n">scheme_annot</span><span class="o">.</span><span class="n">content_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setContent</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scheme_annot</span><span class="p">,</span> <span class="n">scheme</span><span class="o">.</span><span class="n">SchemeArrowAnnotation</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">ArrowAnnotation</span><span class="p">()</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">scheme_annot</span><span class="o">.</span><span class="n">start_pos</span><span class="p">,</span> <span class="n">scheme_annot</span><span class="o">.</span><span class="n">end_pos</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span><span class="n">QLineF</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">start</span><span class="p">),</span> <span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">end</span><span class="p">)))</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="n">scheme_annot</span><span class="o">.</span><span class="n">color</span><span class="p">))</span>
+
+        <span class="n">scheme_annot</span><span class="o">.</span><span class="n">geometry_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_scheme_annot_geometry_change</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_annotation_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">[</span><span class="n">scheme_annot</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_annotation_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_annotation_item">[docs]</a>    <span class="k">def</span> <span class="nf">remove_annotation_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove an :class:`.Annotation` instance from the scene.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.remove_annotation"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.remove_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">remove_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme_annotation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove an :class:`.Annotation` instance that was previously added</span>
+<span class="sd">        using :func:`add_anotation`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">scheme_annotation</span><span class="p">)</span>
+
+        <span class="n">scheme_annotation</span><span class="o">.</span><span class="n">geometry_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_scheme_annot_geometry_change</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scheme_annotation</span><span class="p">,</span> <span class="n">scheme</span><span class="o">.</span><span class="n">SchemeTextAnnotation</span><span class="p">):</span>
+            <span class="n">scheme_annotation</span><span class="o">.</span><span class="n">content_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">setContent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_annotation_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.annotation_items"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.annotation_items">[docs]</a>    <span class="k">def</span> <span class="nf">annotation_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all :class:`.Annotation` items in the scene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span></div>
+
+    <span class="k">def</span> <span class="nf">item_for_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme_annotation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">[</span><span class="n">scheme_annotation</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">annotation_for_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">rev</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> \
+                   <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">rev</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CanvasScene.commit_scheme_node"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.commit_scheme_node">[docs]</a>    <span class="k">def</span> <span class="nf">commit_scheme_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Commit the `node` into the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">editable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Scheme not editable.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No &#39;NodeItem&#39; for node.&quot;</span><span class="p">)</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;An error occurred while committing node &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+                      <span class="n">node</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Cleanup (remove the node item)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_node_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Commited node &#39;</span><span class="si">%s</span><span class="s2">&#39; from &#39;</span><span class="si">%s</span><span class="s2">&#39; to &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CanvasScene.commit_scheme_link"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.commit_scheme_link">[docs]</a>    <span class="k">def</span> <span class="nf">commit_scheme_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Commit a scheme link.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">editable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Scheme not editable&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">link</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No &#39;LinkItem&#39; for link.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Commited link &#39;</span><span class="si">%s</span><span class="s2">&#39; from &#39;</span><span class="si">%s</span><span class="s2">&#39; to &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CanvasScene.node_for_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.node_for_item">[docs]</a>    <span class="k">def</span> <span class="nf">node_for_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the `SchemeNode` for the `item`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rev</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="n">rev</span><span class="p">[</span><span class="n">item</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.item_for_node"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.item_for_node">[docs]</a>    <span class="k">def</span> <span class="nf">item_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the :class:`NodeItem` instance for a :class:`SchemeNode`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.link_for_item"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.link_for_item">[docs]</a>    <span class="k">def</span> <span class="nf">link_for_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the `SchemeLink for `item` (:class:`LinkItem`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rev</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="n">rev</span><span class="p">[</span><span class="n">item</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.item_for_link"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.item_for_link">[docs]</a>    <span class="k">def</span> <span class="nf">item_for_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the :class:`LinkItem` for a :class:`SchemeLink`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_link</span><span class="p">[</span><span class="n">link</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.selected_node_items"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.selected_node_items">[docs]</a>    <span class="k">def</span> <span class="nf">selected_node_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the selected :class:`NodeItem`&#39;s.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_items</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">isSelected</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.selected_annotation_items"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.selected_annotation_items">[docs]</a>    <span class="k">def</span> <span class="nf">selected_annotation_items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the selected :class:`Annotation`&#39;s</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotation_items</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">isSelected</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.node_links"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.node_links">[docs]</a>    <span class="k">def</span> <span class="nf">node_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all links from the `node_item` (:class:`NodeItem`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_output_links</span><span class="p">(</span><span class="n">node_item</span><span class="p">)</span> <span class="o">+</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">node_input_links</span><span class="p">(</span><span class="n">node_item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.node_output_links"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.node_output_links">[docs]</a>    <span class="k">def</span> <span class="nf">node_output_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of all output links from `node_item`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">link</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span>
+                <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">sourceItem</span> <span class="o">==</span> <span class="n">node_item</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.node_input_links"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.node_input_links">[docs]</a>    <span class="k">def</span> <span class="nf">node_input_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of all input links for `node_item`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">link</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__link_items</span>
+                <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">sinkItem</span> <span class="o">==</span> <span class="n">node_item</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CanvasScene.neighbor_nodes"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.neighbor_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">neighbor_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of `node_item`&#39;s (class:`NodeItem`) neighbor nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;sourceItem&quot;</span><span class="p">),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">node_input_links</span><span class="p">(</span><span class="n">node_item</span><span class="p">)))</span>
+
+        <span class="n">neighbors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;sinkItem&quot;</span><span class="p">),</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">node_output_links</span><span class="p">(</span><span class="n">node_item</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">neighbors</span></div>
+
+    <span class="k">def</span> <span class="nf">_on_position_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="c1"># Invalidate the anchor point layout and schedule a layout.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__anchor_layout</span><span class="o">.</span><span class="n">invalidateNode</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_item_position_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__on_node_pos_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">()</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__on_scheme_annot_geometry_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">annot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">()</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_annotation</span><span class="p">[</span><span class="n">annot</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annot</span><span class="p">,</span> <span class="n">scheme</span><span class="o">.</span><span class="n">SchemeTextAnnotation</span><span class="p">):</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">QRectF</span><span class="p">(</span><span class="o">*</span><span class="n">annot</span><span class="o">.</span><span class="n">rect</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annot</span><span class="p">,</span> <span class="n">scheme</span><span class="o">.</span><span class="n">SchemeArrowAnnotation</span><span class="p">):</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">mapFromScene</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">annot</span><span class="o">.</span><span class="n">start_pos</span><span class="p">))</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">mapFromScene</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="o">*</span><span class="n">annot</span><span class="o">.</span><span class="n">end_pos</span><span class="p">))</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span><span class="n">QLineF</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+<div class="viewcode-block" id="CanvasScene.item_at"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.item_at">[docs]</a>    <span class="k">def</span> <span class="nf">item_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">type_or_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">buttons</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the item at `pos` that is an instance of the specified</span>
+<span class="sd">        type (`type_or_tuple`). If `buttons` (`Qt.MouseButtons`) is given</span>
+<span class="sd">        only return the item if it is the top level item that would</span>
+<span class="sd">        accept any of the buttons (`QGraphicsItem.acceptedMouseButtons`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">QSizeF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">buttons</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">dropwhile</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">acceptedMouseButtons</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">buttons</span><span class="p">,</span>
+                <span class="n">items</span>
+            <span class="p">)</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">items</span><span class="p">)[:</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">type_or_tuple</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">type_or_tuple</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">items</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CanvasScene.mousePressEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.mousePressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Right (context) click on the node item. If the widget is not</span>
+        <span class="c1"># in the current selection then select the widget (only the widget).</span>
+        <span class="c1"># Else simply return and let customContextMenuRequested signal</span>
+        <span class="c1"># handle it</span>
+        <span class="n">shape_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_at</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">scenePos</span><span class="p">(),</span> <span class="n">items</span><span class="o">.</span><span class="n">NodeItem</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shape_item</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">RightButton</span> <span class="ow">and</span> \
+                <span class="n">shape_item</span><span class="o">.</span><span class="n">flags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsSelectable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">shape_item</span><span class="o">.</span><span class="n">isSelected</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
+                <span class="n">shape_item</span><span class="o">.</span><span class="n">setSelected</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.mouseMoveEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.mouseMoveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.mouseReleaseEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.mouseReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">mouseDoubleClickEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseDoubleClickEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.keyPressEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.keyPressEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.keyReleaseEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.keyReleaseEvent">[docs]</a>    <span class="k">def</span> <span class="nf">keyReleaseEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">keyReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">keyReleaseEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CanvasScene.contextMenuEvent"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.CanvasScene.contextMenuEvent">[docs]</a>    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">contextMenuEvent</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">contextMenuEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">set_user_interaction_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">isFinished</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting interaction &#39;</span><span class="si">%s</span><span class="s2">&#39; to &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_interaction_handler</span> <span class="o">=</span> <span class="n">handler</span>
+        <span class="k">if</span> <span class="n">handler</span><span class="p">:</span>
+            <span class="n">handler</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">(objectName=</span><span class="si">%r</span><span class="s2">, ...)&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objectName</span><span class="p">()))</span></div>
+
+
+<span class="k">def</span> <span class="nf">font_from_dict</span><span class="p">(</span><span class="n">font_dict</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="n">QFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;family&quot;</span> <span class="ow">in</span> <span class="n">font_dict</span><span class="p">:</span>
+        <span class="n">font</span><span class="o">.</span><span class="n">setFamily</span><span class="p">(</span><span class="n">font_dict</span><span class="p">[</span><span class="s2">&quot;family&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s2">&quot;size&quot;</span> <span class="ow">in</span> <span class="n">font_dict</span><span class="p">:</span>
+        <span class="n">font</span><span class="o">.</span><span class="n">setPixelSize</span><span class="p">(</span><span class="n">font_dict</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">font</span>
+
+
+<span class="k">if</span> <span class="n">QT_VERSION</span> <span class="o">&gt;=</span> <span class="mh">0x50900</span> <span class="ow">and</span> \
+      <span class="n">QSvgGenerator</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">QSvgGenerator</span><span class="o">.</span><span class="n">PdmDevicePixelRatioScaled</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="c1"># QTBUG-63159</span>
+    <span class="k">class</span> <span class="nc">QSvgGenerator</span><span class="p">(</span><span class="n">QSvgGenerator</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="n">QSvgGenerator</span><span class="o">.</span><span class="n">PdmDevicePixelRatioScaled</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="n">QSvgGenerator</span><span class="o">.</span><span class="n">devicePixelRatioFScale</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="grab_svg"><a class="viewcode-back" href="../../../orangecanvas/canvas.scene.html#orangecanvas.canvas.scene.grab_svg">[docs]</a><span class="k">def</span> <span class="nf">grab_svg</span><span class="p">(</span><span class="n">scene</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a SVG rendering of the scene contents.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scene : :class:`CanvasScene`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">svg_buffer</span> <span class="o">=</span> <span class="n">QBuffer</span><span class="p">()</span>
+    <span class="n">gen</span> <span class="o">=</span> <span class="n">QSvgGenerator</span><span class="p">()</span>
+    <span class="n">gen</span><span class="o">.</span><span class="n">setOutputDevice</span><span class="p">(</span><span class="n">svg_buffer</span><span class="p">)</span>
+
+    <span class="n">items_rect</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">itemsBoundingRect</span><span class="p">()</span><span class="o">.</span><span class="n">adjusted</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">items_rect</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+        <span class="n">items_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">items_rect</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">items_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+    <span class="n">rect_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="n">height</span>
+
+    <span class="c1"># Keep a fixed aspect ratio.</span>
+    <span class="n">aspect_ratio</span> <span class="o">=</span> <span class="mf">1.618</span>
+    <span class="k">if</span> <span class="n">rect_ratio</span> <span class="o">&gt;</span> <span class="n">aspect_ratio</span><span class="p">:</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">height</span> <span class="o">*</span> <span class="n">rect_ratio</span> <span class="o">/</span> <span class="n">aspect_ratio</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">width</span> <span class="o">*</span> <span class="n">aspect_ratio</span> <span class="o">/</span> <span class="n">rect_ratio</span><span class="p">)</span>
+
+    <span class="n">target_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">source_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">source_rect</span><span class="o">.</span><span class="n">moveCenter</span><span class="p">(</span><span class="n">items_rect</span><span class="o">.</span><span class="n">center</span><span class="p">())</span>
+
+    <span class="n">gen</span><span class="o">.</span><span class="n">setSize</span><span class="p">(</span><span class="n">target_rect</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">toSize</span><span class="p">())</span>
+    <span class="n">gen</span><span class="o">.</span><span class="n">setViewBox</span><span class="p">(</span><span class="n">target_rect</span><span class="p">)</span>
+
+    <span class="n">painter</span> <span class="o">=</span> <span class="n">QPainter</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+
+    <span class="c1"># Draw background.</span>
+    <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">base</span><span class="p">())</span>
+    <span class="n">painter</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="n">target_rect</span><span class="p">)</span>
+
+    <span class="c1"># Render the scene</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">painter</span><span class="p">,</span> <span class="n">target_rect</span><span class="p">,</span> <span class="n">source_rect</span><span class="p">)</span>
+    <span class="n">painter</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+    <span class="n">buffer_str</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">svg_buffer</span><span class="o">.</span><span class="n">buffer</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">buffer_str</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

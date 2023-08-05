@@ -1,0 +1,1109 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.signalmanager &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.signalmanager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.signalmanager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=================================</span>
+<span class="sd">SignalManager (``signalmanager``)</span>
+<span class="sd">=================================</span>
+
+<span class="sd">A SignalManager instance handles the runtime signal propagation between</span>
+<span class="sd">widgets in a scheme workflow.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">enum</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span><span class="p">,</span> <span class="n">reduce</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QTimer</span><span class="p">,</span> <span class="n">QEvent</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">pyqtSlot</span> <span class="k">as</span> <span class="n">Slot</span>
+
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="n">unique</span>
+<span class="kn">from</span> <span class="nn">..registry</span> <span class="k">import</span> <span class="n">OutputSignal</span>
+<span class="kn">from</span> <span class="nn">.scheme</span> <span class="k">import</span> <span class="n">Scheme</span><span class="p">,</span> <span class="n">SchemeNode</span><span class="p">,</span> <span class="n">SchemeLink</span>
+
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">)</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;K&quot;</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">typing</span><span class="o">.</span><span class="n">Hashable</span><span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Signal"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.Signal">[docs]</a><span class="k">class</span> <span class="nc">Signal</span><span class="p">(</span>
+    <span class="n">NamedTuple</span><span class="p">(</span>
+        <span class="s2">&quot;Signal&quot;</span><span class="p">,</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">Any</span><span class="p">),</span>
+        <span class="p">))</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A signal sent via a link between two nodes.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    link : SchemeLink</span>
+<span class="sd">        The link on which the signal is sent</span>
+<span class="sd">    value : Any</span>
+<span class="sd">        The signal value</span>
+<span class="sd">    id : Any</span>
+<span class="sd">        A signal id used to (optionally) differentiate multiple signals</span>
+<span class="sd">        (`Multiple` is in `link.sink_channel.flags`)</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    InputSignal.flags, OutputSignal.flags</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<span class="n">is_enabled</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">)</span>
+
+<span class="n">MAX_CONCURRENT</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="SignalManager"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager">[docs]</a><span class="k">class</span> <span class="nc">SignalManager</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SignalManager handles the runtime signal propagation for a :class:`.Scheme`</span>
+<span class="sd">    instance.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    If a scheme instance is passed as a parent to the constructor it is also</span>
+<span class="sd">    set as the workflow model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SignalManager.State"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.State">[docs]</a>    <span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SignalManager state flags.</span>
+
+<span class="sd">        .. seealso:: :func:`SignalManager.state()`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#: The manager is running, i.e. it propagates signals</span>
+        <span class="n">Running</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#: The manager is stopped. It does not track node output changes,</span>
+        <span class="c1">#: and does not deliver signals to dependent nodes</span>
+        <span class="n">Stopped</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1">#: The manager is paused. It still tracks node output changes, but</span>
+        <span class="c1">#: does not deliver new signals to dependent nodes. The pending signals</span>
+        <span class="c1">#: will be delivered once it enters Running state again</span>
+        <span class="n">Paused</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+    <span class="c1">#: The manager is running, i.e. it propagates signals</span>
+    <span class="n">Running</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">Running</span>
+    <span class="c1">#: The manager is stopped. It does not track node ouput changes,</span>
+    <span class="c1">#: and does not deliver signals to dependent nodes</span>
+    <span class="n">Stopped</span> <span class="o">=</span> <span class="n">State</span><span class="o">.</span><span class="n">Stopped</span>
+    <span class="c1">#: The manager is paused. It still tracks node output changes, but</span>
+    <span class="c1">#: does not deliver new signals to dependent nodes. The pending signals</span>
+    <span class="c1">#: will be delivered once it enters Running state again</span>
+    <span class="n">Paused</span> <span class="o">=</span> <span class="n">Stopped</span><span class="o">.</span><span class="n">Paused</span>
+
+    <span class="c1"># unused; back-compatibility</span>
+    <span class="n">Error</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="SignalManager.RuntimeState"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.RuntimeState">[docs]</a>    <span class="k">class</span> <span class="nc">RuntimeState</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        SignalManager runtime state.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        SignalManager.runtime_state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#: Waiting, idle state. The signal queue is empty</span>
+        <span class="n">Waiting</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#: ...</span>
+        <span class="n">Processing</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+    <span class="n">Waiting</span> <span class="o">=</span> <span class="n">RuntimeState</span><span class="o">.</span><span class="n">Waiting</span>
+    <span class="n">Processing</span> <span class="o">=</span> <span class="n">RuntimeState</span><span class="o">.</span><span class="n">Processing</span>
+
+    <span class="c1">#: Emitted when the state of the signal manager changes.</span>
+    <span class="n">stateChanged</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="c1">#: Emitted when signals are added to the queue.</span>
+    <span class="n">updatesPending</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="c1">#: Emitted right before a `SchemeNode` instance has its inputs updated.</span>
+    <span class="n">processingStarted</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">([],</span> <span class="p">[</span><span class="n">SchemeNode</span><span class="p">])</span>
+    <span class="c1">#: Emitted right after a `SchemeNode` instance has had its inputs updated.</span>
+    <span class="n">processingFinished</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">([],</span> <span class="p">[</span><span class="n">SchemeNode</span><span class="p">])</span>
+    <span class="c1">#: Emitted when `SignalManager`&#39;s runtime state changes.</span>
+    <span class="n">runtimeStateChanged</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[Scheme]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># type: List[Signal]</span>
+
+        <span class="c1"># mapping a node to its current outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[Node, Dict[OutputSignal, Dict[Any, Any]]]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Waiting</span>
+
+        <span class="c1"># A flag indicating if UpdateRequest event should be rescheduled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__reschedule</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span> <span class="o">=</span> <span class="n">QTimer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">singleShot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__process_next</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">Scheme</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_workflow</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_can_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a bool indicating if the manger can enter the main</span>
+<span class="sd">        processing loop.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Stopped</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SignalManager.workflow"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.workflow">[docs]</a>    <span class="k">def</span> <span class="nf">workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; Scheme</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the :class:`Scheme` instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span></div>
+    <span class="c1">#: Alias</span>
+    <span class="n">scheme</span> <span class="o">=</span> <span class="n">workflow</span>
+
+<div class="viewcode-block" id="SignalManager.set_workflow"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.set_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">set_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow</span><span class="p">):</span>
+        <span class="c1"># type: (Scheme) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the workflow model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        workflow : Scheme</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">workflow</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+                <span class="n">link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_enabled_changed</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_node_added</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_node_removed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_added</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_removed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="o">=</span> <span class="n">workflow</span>
+
+        <span class="k">if</span> <span class="n">workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_node_added</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_node_removed</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_added</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_removed</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+                <span class="n">link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_enabled_changed</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SignalManager.has_pending"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.has_pending">[docs]</a>    <span class="k">def</span> <span class="nf">has_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Does the manager have any signals to deliver?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SignalManager.start"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the update loop.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        The updates will not happen until the control reaches the Qt event</span>
+<span class="sd">        loop.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">!=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SignalManager.stop"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop the update loop.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        If the `SignalManager` is currently in `process_queues` it will</span>
+<span class="sd">        still update all current pending signals, but will not re-enter</span>
+<span class="sd">        until `start()` is called again.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">!=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Stopped</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Stopped</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Stopped</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SignalManager.pause"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.pause">[docs]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pause the delivery of signals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">!=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Paused</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Paused</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SignalManager.resume"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.resume">[docs]</a>    <span class="k">def</span> <span class="nf">resume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume the delivery of signals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SignalManager.step"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deliver signals to a single node (only applicable while the `state()`</span>
+<span class="sd">        is `Paused`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Paused</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_queued</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SignalManager.state"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; State</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current state.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        state : SignalManager.State</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span></div>
+
+    <span class="k">def</span> <span class="nf">_set_runtime_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the runtime state.</span>
+
+<span class="sd">        Should only be called by `SignalManager` implementations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runtimeStateChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SignalManager.runtime_state"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.runtime_state">[docs]</a>    <span class="k">def</span> <span class="nf">runtime_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; RuntimeState</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the runtime state. This can be `SignalManager.Waiting`</span>
+<span class="sd">        or `SignalManager.Processing`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span></div>
+
+    <span class="k">def</span> <span class="nf">on_node_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># remove all pending input signals for node so we don&#39;t get</span>
+        <span class="c1"># stale references in process_node.</span>
+        <span class="c1"># NOTE: This does not remove output signals for this node. In</span>
+        <span class="c1"># particular the final &#39;None&#39; will be delivered to the sink</span>
+        <span class="c1"># nodes even after the source node is no longer in the scheme.</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removing pending signals for &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_pending_signals</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">on_node_added</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">link_added</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="c1"># push all current source values to the sink</span>
+        <span class="n">link</span><span class="o">.</span><span class="n">set_runtime_state</span><span class="p">(</span><span class="n">SchemeLink</span><span class="o">.</span><span class="n">Empty</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Scheduling signal data update for &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_schedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signals_on_link</span><span class="p">(</span><span class="n">link</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+        <span class="n">link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_enabled_changed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">link_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="c1"># purge all values in sink&#39;s queue</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Scheduling signal data purge (</span><span class="si">%s</span><span class="s2">).&quot;</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">purge_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">link</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_enabled_changed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">link_enabled_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">enabled</span><span class="p">:</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">()</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Link </span><span class="si">%s</span><span class="s2"> enabled. Scheduling signal data update.&quot;</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_schedule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signals_on_link</span><span class="p">(</span><span class="n">link</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SignalManager.signals_on_link"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.signals_on_link">[docs]</a>    <span class="k">def</span> <span class="nf">signals_on_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeLink) -&gt; List[Signal]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return :class:`Signal` instances representing the current values</span>
+<span class="sd">        present on the link.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_contents</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Signal</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">signals</span></div>
+
+<div class="viewcode-block" id="SignalManager.link_contents"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.link_contents">[docs]</a>    <span class="k">def</span> <span class="nf">link_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the contents on link.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">channel</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">channel</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if the the node was already removed its tracked outputs in</span>
+            <span class="c1"># __node_outputs are cleared, however the final &#39;None&#39; signal</span>
+            <span class="c1"># deliveries for the link are left in the _input_queue.</span>
+            <span class="n">pending</span> <span class="o">=</span> <span class="p">[</span><span class="n">sig</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span>
+                       <span class="k">if</span> <span class="n">sig</span><span class="o">.</span><span class="n">link</span> <span class="ow">is</span> <span class="n">link</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">sig</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">sig</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="SignalManager.send"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.send">[docs]</a>    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, OutputSignal, Any, Any) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send the `value` with `id` on an output `channel` from node.</span>
+
+<span class="sd">        Schedule the signal delivery to all dependent nodes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : SchemeNode</span>
+<span class="sd">            The originating node.</span>
+<span class="sd">        channel : OutputSignal</span>
+<span class="sd">            The nodes output on which the value is sent.</span>
+<span class="sd">        value : Any</span>
+<span class="sd">            The value to send,</span>
+<span class="sd">        id : Any</span>
+<span class="sd">            Signal id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> sending </span><span class="si">%r</span><span class="s2"> (id: </span><span class="si">%r</span><span class="s2">) on channel </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="nb">id</span><span class="p">,</span> <span class="n">channel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node_outputs</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">channel</span><span class="p">][</span><span class="nb">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">links</span> <span class="o">=</span> <span class="n">scheme</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">source_channel</span><span class="o">=</span><span class="n">channel</span><span class="p">)</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">is_enabled</span><span class="p">,</span> <span class="n">links</span><span class="p">)</span>
+
+        <span class="n">signals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+            <span class="n">signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Signal</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">id</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schedule</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SignalManager.purge_link"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.purge_link">[docs]</a>    <span class="k">def</span> <span class="nf">purge_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Purge the link (send None for all ids currently present)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_contents</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="p">[</span><span class="n">Signal</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span> <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schedule</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Schedule a list of :class:`Signal` for delivery.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="p">{</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">}:</span>
+            <span class="c1"># update the SchemeLink&#39;s runtime state flags</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">link_contents</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">contents</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Active</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Empty</span>
+            <span class="n">link</span><span class="o">.</span><span class="n">set_runtime_state</span><span class="p">(</span><span class="n">state</span> <span class="o">|</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Pending</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">signals</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updatesPending</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_update_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Schedule update of a single link.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signals_on_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schedule</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SignalManager.process_queued"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.process_queued">[docs]</a>    <span class="k">def</span> <span class="nf">process_queued</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process queued signals.</span>
+
+<span class="sd">        Take one node node from the pending input queue and deliver</span>
+<span class="sd">        all scheduled signals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">max_nodes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">max_nodes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;`max_nodes` is deprecated and unused (will always equal 1)&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Processing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot re-enter &#39;process_queued&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_process</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t process in state </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;SignalManager: Processing queued signals&quot;</span><span class="p">)</span>
+
+        <span class="n">node_update_front</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_update_front</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;SignalManager: Nodes eligible for update </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">title</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_update_front</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">node_update_front</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">node_update_front</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_runtime_state</span><span class="p">(</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Processing</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_runtime_state</span><span class="p">(</span><span class="n">SignalManager</span><span class="o">.</span><span class="n">Waiting</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SignalManager.process_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.process_node">[docs]</a>    <span class="k">def</span> <span class="nf">process_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process pending input signals for `node`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">signals_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_input_signals</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_pending_signals</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">signals_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress_signals</span><span class="p">(</span><span class="n">signals_in</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Processing </span><span class="si">%r</span><span class="s2">, sending </span><span class="si">%i</span><span class="s2"> signals.&quot;</span><span class="p">,</span>
+                  <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">signals_in</span><span class="p">))</span>
+        <span class="c1"># Clear the link&#39;s pending flag.</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="p">{</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals_in</span><span class="p">}:</span>
+            <span class="n">link</span><span class="o">.</span><span class="n">set_runtime_state</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">runtime_state</span><span class="p">()</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">SchemeLink</span><span class="o">.</span><span class="n">Pending</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_dynamic</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+            <span class="c1"># type: (List[Signal]) -&gt; List[Signal]</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Process dynamic signals; Update the link&#39;s dynamic_enabled flag if</span>
+<span class="sd">            the value is valid; replace values that do not type check with</span>
+<span class="sd">            `None`</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+                <span class="c1"># Check and update the dynamic link state</span>
+                <span class="n">link</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">link</span>
+                <span class="k">if</span> <span class="n">sig</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">():</span>
+                    <span class="n">link</span><span class="o">.</span><span class="n">dynamic_enabled</span> <span class="o">=</span> <span class="n">can_enable_dynamic</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">sig</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">link</span><span class="o">.</span><span class="n">dynamic_enabled</span><span class="p">:</span>
+                        <span class="c1"># Send None instead</span>
+                        <span class="n">sig</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sig</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="n">signals_in</span> <span class="o">=</span> <span class="n">process_dynamic</span><span class="p">(</span><span class="n">signals_in</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">({</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="p">}</span>
+                <span class="o">.</span><span class="n">intersection</span><span class="p">({</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals_in</span><span class="p">})</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processingStarted</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processingStarted</span><span class="p">[</span><span class="n">SchemeNode</span><span class="p">]</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_to_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">signals_in</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processingFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processingFinished</span><span class="p">[</span><span class="n">SchemeNode</span><span class="p">]</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SignalManager.compress_signals"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.compress_signals">[docs]</a>    <span class="k">def</span> <span class="nf">compress_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signals</span><span class="p">):</span>
+        <span class="c1"># type: (List[Signal]) -&gt; List[Signal]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compress a list of :class:`Signal` instances to be delivered.</span>
+
+<span class="sd">        Before the signal values are delivered to the sink node they can be</span>
+<span class="sd">        optionally `compressed`, i.e. values can be merged or dropped</span>
+<span class="sd">        depending on the execution semantics.</span>
+
+<span class="sd">        The input list is in the order that the signals were enqueued.</span>
+
+<span class="sd">        The base implementation returns the list unmodified.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        signals : List[Signal]</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        signals : List[Signal]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">signals</span></div>
+
+<div class="viewcode-block" id="SignalManager.send_to_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.send_to_node">[docs]</a>    <span class="k">def</span> <span class="nf">send_to_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">signals</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, List[Signal]) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Abstract. Reimplement in subclass.</span>
+
+<span class="sd">        Send/notify the `node` instance (or whatever object/instance it is a</span>
+<span class="sd">        representation of) that it has new inputs as represented by the</span>
+<span class="sd">        `signals` list).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : SchemeNode</span>
+<span class="sd">        signals : List[Signal]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="SignalManager.is_pending"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.is_pending">[docs]</a>    <span class="k">def</span> <span class="nf">is_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; bool</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is `node` (class:`SchemeNode`) scheduled for processing (i.e.</span>
+<span class="sd">        it has incoming pending signals).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : SchemeNode</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pending : bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">node</span> <span class="ow">in</span> <span class="p">[</span><span class="n">signal</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SignalManager.pending_nodes"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.pending_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">pending_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; List[SchemeNode]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of pending nodes.</span>
+
+<span class="sd">        The nodes are returned in the order they were enqueued for</span>
+<span class="sd">        signal delivery.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nodes : List[SchemeNode]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignalManager.pending_input_signals"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.pending_input_signals">[docs]</a>    <span class="k">def</span> <span class="nf">pending_input_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; List[Signal]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of pending input signals for node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">signal</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="n">signal</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SignalManager.remove_pending_signals"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.remove_pending_signals">[docs]</a>    <span class="k">def</span> <span class="nf">remove_pending_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove pending signals for `node`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_input_signals</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">signal</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SignalManager.blocking_nodes"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.blocking_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">blocking_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; List[SchemeNode]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of nodes in a blocking state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_blocking</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="SignalManager.is_blocking"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.is_blocking">[docs]</a>    <span class="k">def</span> <span class="nf">is_blocking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; bool</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the node in `blocking` state.</span>
+
+<span class="sd">        Is it currently in a state where will produce new outputs and</span>
+<span class="sd">        therefore no signals should be delivered to dependent nodes until</span>
+<span class="sd">        it does so.</span>
+
+<span class="sd">        The default implementation returns False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: this needs a different name</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="SignalManager.node_update_front"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.node_update_front">[docs]</a>    <span class="k">def</span> <span class="nf">node_update_front</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; List[SchemeNode]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of nodes on the update front, i.e. nodes scheduled for</span>
+<span class="sd">        an update that have no ancestor which is either itself scheduled</span>
+<span class="sd">        for update or is in a blocking state).</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        The node&#39;s ancestors are only computed over enabled links.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span>
+                    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">enabled</span><span class="p">]</span>
+
+        <span class="n">components</span> <span class="o">=</span> <span class="n">strongly_connected_components</span><span class="p">(</span><span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">expand</span><span class="p">)</span>
+        <span class="n">node_scc</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">scc</span> <span class="k">for</span> <span class="n">scc</span> <span class="ow">in</span> <span class="n">components</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scc</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">isincycle</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_scc</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+        <span class="c1"># a list of all nodes currently active/executing a task.</span>
+        <span class="n">blocking_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_nodes</span><span class="p">())</span>
+
+        <span class="n">dependents</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">dependent_nodes</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
+
+        <span class="n">blocked_nodes</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">,</span>
+                               <span class="nb">map</span><span class="p">(</span><span class="n">dependents</span><span class="p">,</span> <span class="n">blocking_nodes</span><span class="p">),</span>
+                               <span class="nb">set</span><span class="p">(</span><span class="n">blocking_nodes</span><span class="p">))</span>
+
+        <span class="n">pending</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_nodes</span><span class="p">()</span>
+        <span class="n">pending_downstream</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">pending</span><span class="p">:</span>
+            <span class="n">depend</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dependents</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">isincycle</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="c1"># a pending node in a cycle would would have a circular</span>
+                <span class="c1"># dependency on itself, preventing any progress being made</span>
+                <span class="c1"># by the workflow execution.</span>
+                <span class="n">cc</span> <span class="o">=</span> <span class="n">node_scc</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">depend</span> <span class="o">-=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+            <span class="n">pending_downstream</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">depend</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Pending nodes: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pending</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Blocking nodes: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">blocking_nodes</span><span class="p">)</span>
+
+        <span class="n">noneligible</span> <span class="o">=</span> <span class="n">pending_downstream</span> <span class="o">|</span> <span class="n">blocked_nodes</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pending</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">noneligible</span><span class="p">]</span></div>
+
+    <span class="nd">@Slot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__process_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Received &#39;UpdateRequest&#39; while not in &#39;Running&#39; state&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__runtime_state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Processing</span><span class="p">:</span>
+            <span class="c1"># This happens if QCoreApplication.processEvents is called from</span>
+            <span class="c1"># the input handlers. A `__process_next` must be rescheduled when</span>
+            <span class="c1"># exiting process_queued.</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Received &#39;UpdateRequest&#39; while in &#39;process_queued&#39;. &quot;</span>
+                        <span class="s2">&quot;An update will be re-scheduled when exiting the &quot;</span>
+                        <span class="s2">&quot;current update.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__reschedule</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span>
+
+        <span class="n">nbusy</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_nodes</span><span class="p">())</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&#39;UpdateRequest&#39; event, queued signals: </span><span class="si">%i</span><span class="s2">, nbusy: </span><span class="si">%i</span><span class="s2"> &quot;</span>
+                 <span class="s2">&quot;(MAX_CONCURRENT: </span><span class="si">%i</span><span class="s2">)&quot;</span><span class="p">,</span>
+                 <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span><span class="p">),</span> <span class="n">nbusy</span><span class="p">,</span> <span class="n">MAX_CONCURRENT</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__input_queue</span> <span class="ow">and</span> <span class="n">nbusy</span> <span class="o">&lt;</span> <span class="n">MAX_CONCURRENT</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_queued</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reschedule</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__reschedule</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Rescheduling signal update&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">nbusy</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_nodes</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_update_front</span><span class="p">()</span> <span class="ow">and</span> <span class="n">nbusy</span> <span class="o">&lt;</span> <span class="n">MAX_CONCURRENT</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;More nodes are eligible for an update. &quot;</span>
+                      <span class="s2">&quot;Scheduling another update.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Schedule processing at a later time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Running</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">isActive</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update_timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SignalManager.eventFilter"><a class="viewcode-back" href="../../../orangecanvas/scheme.signalmanager.html#orangecanvas.scheme.signalmanager.SignalManager.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reimplemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">DeferredDelete</span> \
+                <span class="ow">and</span> <span class="n">receiver</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="p">:</span>
+            <span class="c1"># ?? This is really, probably, mostly, likely not needed. Should</span>
+            <span class="c1"># just raise error from __process_next.</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runtime_state</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">SignalManager</span><span class="o">.</span><span class="n">Processing</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
+                    <span class="s2">&quot;The workflow model </span><span class="si">%r</span><span class="s2"> received a deferred delete request &quot;</span>
+                    <span class="s2">&quot;while performing an input update. &quot;</span>
+                    <span class="s2">&quot;Deferring a &#39;DeferredDelete&#39; event for the workflow &quot;</span>
+                    <span class="s2">&quot;until SignalManager exits the current update step.&quot;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>
+                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;The workflow model received a deferred delete request &quot;</span>
+                    <span class="s2">&quot;while updating inputs. In the future this will raise &quot;</span>
+                    <span class="s2">&quot;a RuntimeError&quot;</span><span class="p">,</span> <span class="n">_FutureRuntimeWarning</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">setAccepted</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">eventFilter</span><span class="p">(</span><span class="n">receiver</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_FutureRuntimeWarning</span><span class="p">(</span><span class="ne">FutureWarning</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">can_enable_dynamic</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Can the a dynamic `link` (:class:`SchemeLink`) be enabled for`value`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_type</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">compress_signals</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+    <span class="c1"># type: (List[Signal]) -&gt; List[Signal]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compress a list of signals by dropping &#39;stale&#39; signals.</span>
+
+<span class="sd">    Only the latest signal value on a link is preserved except when one of</span>
+<span class="sd">    the signals on the link had `None` value in which case the None signal</span>
+<span class="sd">    is preserved (by historical convention this meant a reset of the input</span>
+<span class="sd">    for pending nodes).</span>
+
+<span class="sd">    So for instance if a link had: `1, 2, None, 3` scheduled then the</span>
+<span class="sd">    list would be compressed to `None, 3`</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    SignalManager.compress_signals</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">group_by_all</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">signals</span><span class="p">),</span>
+                          <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sig</span><span class="p">:</span> <span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">link</span><span class="p">,</span> <span class="n">sig</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+    <span class="n">signals</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">has_none</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="nb">id</span><span class="p">),</span> <span class="n">signals_grouped</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">signals_grouped</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">has_none</span><span class="p">(</span><span class="n">signals_grouped</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">signals_grouped</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Signal</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">signals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">signals_grouped</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">dependent_nodes</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="c1"># type: (Scheme, SchemeNode) -&gt; List[SchemeNode]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of all nodes (in breadth first order) in `scheme` that</span>
+<span class="sd">    are dependent on `node`,</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This does not include nodes only reachable by disables links.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span>
+                <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">enabled</span><span class="p">]</span>
+
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">traverse_bf</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">expand</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">node</span>
+    <span class="c1"># Remove the first item (`node`).</span>
+    <span class="k">return</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+
+<span class="k">def</span> <span class="nf">traverse_bf</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">expand</span><span class="p">):</span>
+    <span class="c1"># type: (T, Callable[[T], Iterable[T]]) -&gt; Iterable[T]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Breadth first traversal of a DAG starting from `start`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : T</span>
+<span class="sd">        A starting node</span>
+<span class="sd">    expand : (T) -&gt; Iterable[T]</span>
+<span class="sd">        A function returning children of a node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start</span><span class="p">])</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">item</span>
+            <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">group_by_all</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># type: (Iterable[V], Callable[[V], K]) -&gt; List[Tuple[K, List[V]]]</span>
+    <span class="n">order_seen</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item_key</span> <span class="o">=</span> <span class="n">key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item_key</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">if</span> <span class="n">item_key</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="n">groups</span><span class="p">[</span><span class="n">item_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groups</span><span class="p">[</span><span class="n">item_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span>
+            <span class="n">order_seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item_key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="n">groups</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">order_seen</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">strongly_connected_components</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">expand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of strongly connected components.</span>
+
+<span class="sd">    Implementation of Tarjan&#39;s SCC algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># SCC found</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># node stack in BFS</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># == set(stack) : a set of all nodes in stack (for faster lookup)</span>
+    <span class="n">stackset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="c1"># node -&gt; int increasing node numbering as encountered in DFS traversal</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># node -&gt; int the lowest node index reachable from a node</span>
+    <span class="n">lowlink</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">indexgen</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">push_node</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Push node onto the stack.&quot;&quot;&quot;</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">stackset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">index</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">indexgen</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pop_scc</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Pop from the stack a SCC rooted at node v.&quot;&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">scc</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+        <span class="k">del</span> <span class="n">stack</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+        <span class="n">stackset</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">scc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scc</span>
+
+    <span class="n">isvisited</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">index</span>
+
+    <span class="k">def</span> <span class="nf">strong_connect</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="n">push_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">expand</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">isvisited</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+                <span class="n">strong_connect</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">stackset</span><span class="p">:</span>
+                <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">index</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">index</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+            <span class="n">scc</span> <span class="o">=</span> <span class="n">pop_scc</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scc</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isvisited</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="n">strong_connect</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">components</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

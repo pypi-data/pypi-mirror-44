@@ -1,0 +1,1076 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.canvas.items.annotationitem &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.canvas.items.annotationitem</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.canvas.items.annotationitem</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="k">import</span> <span class="n">escape</span>
+
+<span class="kn">import</span> <span class="nn">docutils.core</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QGraphicsItem</span><span class="p">,</span> <span class="n">QGraphicsPathItem</span><span class="p">,</span> <span class="n">QGraphicsWidget</span><span class="p">,</span> <span class="n">QGraphicsTextItem</span><span class="p">,</span>
+    <span class="n">QGraphicsDropShadowEffect</span><span class="p">,</span> <span class="n">QMenu</span><span class="p">,</span> <span class="n">QAction</span><span class="p">,</span> <span class="n">QActionGroup</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QPainterPath</span><span class="p">,</span> <span class="n">QPainterPathStroker</span><span class="p">,</span> <span class="n">QPolygonF</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span>
+    <span class="n">QPalette</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Qt</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QSizeF</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QLineF</span><span class="p">,</span> <span class="n">QEvent</span><span class="p">,</span> <span class="n">QMetaObject</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span><span class="p">,</span> <span class="n">pyqtSlot</span> <span class="k">as</span> <span class="n">Slot</span>
+<span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.graphicspathobject</span> <span class="k">import</span> <span class="n">GraphicsPathObject</span>
+
+
+<div class="viewcode-block" id="Annotation"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.Annotation">[docs]</a><span class="k">class</span> <span class="nc">Annotation</span><span class="p">(</span><span class="n">QGraphicsWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for annotations in the canvas scheme.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">GraphicsTextEdit</span><span class="p">(</span><span class="n">QGraphicsTextItem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    QGraphicsTextItem subclass defining an additional placeholderText</span>
+<span class="sd">    property (text displayed when no text is set).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#: Signal emitted when editing operation starts (the item receives edit</span>
+    <span class="c1">#: focus)</span>
+    <span class="n">editingStarted</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+    <span class="c1">#: Signal emitted when editing operation ends (the item loses edit focus)</span>
+    <span class="n">editingFinished</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptHoverEvents</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># text editing in progress</span>
+
+    <span class="k">def</span> <span class="nf">setPlaceholderText</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the placeholder text. This is shown when the item has no text,</span>
+<span class="sd">        i.e when `toPlainText()` returns an empty string.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span> <span class="o">!=</span> <span class="n">text</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span> <span class="o">=</span> <span class="n">text</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">placeholderText</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the placeholder text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span>
+
+    <span class="n">placeholderText_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">placeholderText</span><span class="p">,</span> <span class="n">setPlaceholderText</span><span class="p">,</span>
+                                <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Placeholder text&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">paint</span><span class="p">(</span><span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+
+        <span class="c1"># Draw placeholder text if necessary</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">toHtml</span><span class="p">())</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hasFocus</span><span class="p">()</span> <span class="ow">and</span> \
+                     <span class="bp">self</span><span class="o">.</span><span class="n">textInteractionFlags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextEditable</span><span class="p">):</span>
+            <span class="n">brect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="n">painter</span><span class="o">.</span><span class="n">fontMetrics</span><span class="p">()</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">elidedText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__placeholderText</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ElideRight</span><span class="p">,</span>
+                                      <span class="n">brect</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultTextColor</span><span class="p">()</span>
+            <span class="n">color</span><span class="o">.</span><span class="n">setAlpha</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">alpha</span><span class="p">(),</span> <span class="mi">150</span><span class="p">))</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">drawText</span><span class="p">(</span><span class="n">brect</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">hoverMoveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">documentLayout</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">anchorAt</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setCursor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">PointingHandCursor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unsetCursor</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">hoverMoveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">mousePressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">textInteractionFlags</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LinksAccessibleByMouse</span> \
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextSelectableByMouse</span> \
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">documentLayout</span><span class="p">()</span><span class="o">.</span><span class="n">anchorAt</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()):</span>
+            <span class="c1"># QGraphicsTextItem ignores the press event without</span>
+            <span class="c1"># Qt.TextSelectableByMouse flag set. This causes the</span>
+            <span class="c1"># corresponding mouse release to never get to this item</span>
+            <span class="c1"># and therefore no linkActivated/openUrl ...</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">isAccepted</span><span class="p">():</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mousePressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setTextInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasFocus</span><span class="p">()</span> <span class="ow">and</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextEditable</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">editingStarted</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">focusInEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">focusInEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">textInteractionFlags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextEditable</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">editingStarted</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">focusOutEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">focusOutEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span> <span class="ow">and</span> \
+                <span class="n">event</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">Qt</span><span class="o">.</span><span class="n">ActiveWindowFocusReason</span><span class="p">,</span>
+                                       <span class="n">Qt</span><span class="o">.</span><span class="n">PopupFocusReason</span><span class="p">}:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__editing</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">render_plain</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a html fragment for a plain pre-formatted text</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    content : str</span>
+<span class="sd">        Plain text content</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    html : str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;&lt;p style=&quot;white-space: pre-wrap;&quot;&gt;&#39;</span> <span class="o">+</span> <span class="n">escape</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/p&gt;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">render_html</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a html fragment unchanged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    content : str</span>
+<span class="sd">        Html text.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    html : str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">content</span>
+
+
+<span class="k">def</span> <span class="nf">render_markdown</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a html fragment from markdown text content</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    content : str</span>
+<span class="sd">        A markdown formatted text</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    html : str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># commonmark &gt;= 0.8.1; but only optionally. Many other packages may pin it</span>
+    <span class="c1"># to &lt;0.8 due to breaking changes.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">commonmark</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;div style=&quot;color: red;&quot;&gt;&#39;</span> <span class="o">+</span> <span class="n">render_plain</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/div&gt;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">commonmark</span><span class="o">.</span><span class="n">commonmark</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">render_rst</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a html fragment from a RST text content</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    content : str</span>
+<span class="sd">        A RST formatted text content</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    html : str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">overrides</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;report_level&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>  <span class="c1"># suppress errors from appearing in the html</span>
+        <span class="s2">&quot;output-encoding&quot;</span><span class="p">:</span> <span class="s2">&quot;utf-8&quot;</span>
+    <span class="p">}</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="n">docutils</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">publish_string</span><span class="p">(</span>
+        <span class="n">content</span><span class="p">,</span> <span class="n">writer_name</span><span class="o">=</span><span class="s2">&quot;html&quot;</span><span class="p">,</span>
+        <span class="n">settings_overrides</span><span class="o">=</span><span class="n">overrides</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TextAnnotation"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation">[docs]</a><span class="k">class</span> <span class="nc">TextAnnotation</span><span class="p">(</span><span class="n">Annotation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Text annotation item for the canvas scheme.</span>
+
+<span class="sd">    Text interaction (if enabled) is started by double clicking the item.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#: Emitted when the editing is finished (i.e. the item loses edit focus).</span>
+    <span class="n">editingFinished</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="c1">#: Emitted when the text content changes on user interaction.</span>
+    <span class="n">textEdited</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="c1">#: Emitted when the text annotation&#39;s contents change</span>
+    <span class="c1">#: (`content` or `contentType` changed)</span>
+    <span class="n">contentChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="c1">#: Mapping of supported content types to corresponding</span>
+    <span class="c1">#: content -&gt; html transformer.</span>
+    <span class="n">ContentRenderer</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+        <span class="p">(</span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span> <span class="n">render_plain</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;text/rst&quot;</span><span class="p">,</span> <span class="n">render_rst</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;text/markdown&quot;</span><span class="p">,</span> <span class="n">render_markdown</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;text/html&quot;</span><span class="p">,</span> <span class="n">render_html</span><span class="p">),</span>
+    <span class="p">])</span>  <span class="c1"># type: Dict[str, Callable[[str], [str]]]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsSelectable</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFocusPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ClickFocus</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__content</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__renderer</span> <span class="o">=</span> <span class="n">render_plain</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textMargins</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textInteractionFlags</span> <span class="o">=</span> <span class="n">Qt</span><span class="o">.</span><span class="n">NoTextInteraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__defaultInteractionFlags</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Qt</span><span class="o">.</span><span class="n">LinksAccessibleByMouse</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LinksAccessibleByKeyboard</span><span class="p">)</span>
+
+        <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoPen</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span> <span class="o">=</span> <span class="n">QGraphicsPathItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span> <span class="o">=</span> <span class="n">GraphicsTextEdit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setOpenExternalLinks</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setPlaceholderText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Enter text here&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTabChangesFocus</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__defaultInteractionFlags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__textEditingFinished</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Text</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">scene</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">installSceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">documentLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">documentSizeChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onDocumentSizeChanged</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateFrame</span><span class="p">()</span>
+        <span class="c1"># set parent item at the end in order to ensure</span>
+        <span class="c1"># QGraphicsItem.ItemSceneHasChanged is delivered after initialization</span>
+        <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setParentItem</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TextAnnotation.itemChange"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.itemChange">[docs]</a>    <span class="k">def</span> <span class="nf">itemChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">change</span> <span class="o">==</span> <span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemSceneHasChanged</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">scene</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">installSceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">change</span> <span class="o">==</span> <span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemSelectedHasChanged</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateFrameStyle</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">itemChange</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.adjustSize"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.adjustSize">[docs]</a>    <span class="k">def</span> <span class="nf">adjustSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Resize to a reasonable size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">adjustSize</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">textMargins</span><span class="p">()</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">(),</span> <span class="n">size</span> <span class="o">+</span> <span class="n">QSizeF</span><span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.setFramePen"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setFramePen">[docs]</a>    <span class="k">def</span> <span class="nf">setFramePen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pen</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the frame pen. By default Qt.NoPen is used (i.e. the frame</span>
+<span class="sd">        is not shown).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pen</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateFrameStyle</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.framePen"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.framePen">[docs]</a>    <span class="k">def</span> <span class="nf">framePen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the frame pen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.setFrameBrush"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setFrameBrush">[docs]</a>    <span class="k">def</span> <span class="nf">setFrameBrush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brush</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the frame brush.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.frameBrush"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.frameBrush">[docs]</a>    <span class="k">def</span> <span class="nf">frameBrush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the frame brush.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span><span class="o">.</span><span class="n">brush</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__updateFrameStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSelected</span><span class="p">():</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">158</span><span class="p">,</span> <span class="mi">215</span><span class="p">),</span> <span class="mf">1.25</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">DashDotLine</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__framePen</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">contentType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span>
+
+    <span class="k">def</span> <span class="nf">setContent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">contentType</span><span class="o">=</span><span class="s2">&quot;text/plain&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__content</span> <span class="o">!=</span> <span class="n">content</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span> <span class="o">!=</span> <span class="n">contentType</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span> <span class="o">=</span> <span class="n">contentType</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__content</span> <span class="o">=</span> <span class="n">content</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateRenderedContent</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contentChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__content</span>
+
+<div class="viewcode-block" id="TextAnnotation.setPlainText"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setPlainText">[docs]</a>    <span class="k">def</span> <span class="nf">setPlainText</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the annotation text as plain text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setContent</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">toPlainText</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TextAnnotation.setHtml"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setHtml">[docs]</a>    <span class="k">def</span> <span class="nf">setHtml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the annotation text as html.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setContent</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;text/html&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">toHtml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">toHtml</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TextAnnotation.setDefaultTextColor"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setDefaultTextColor">[docs]</a>    <span class="k">def</span> <span class="nf">setDefaultTextColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the default text color.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">defaultTextColor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">defaultTextColor</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TextAnnotation.setTextMargins"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.setTextMargins">[docs]</a>    <span class="k">def</span> <span class="nf">setTextMargins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the text margins.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">margins</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textMargins</span> <span class="o">!=</span> <span class="n">margins</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textMargins</span> <span class="o">=</span> <span class="n">margins</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.textMargins"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.textMargins">[docs]</a>    <span class="k">def</span> <span class="nf">textMargins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the text margins.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textMargins</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.document"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.document">[docs]</a>    <span class="k">def</span> <span class="nf">document</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the QTextDocument instance used internally.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">document</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">setTextCursor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cursor</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextCursor</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">textCursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">textCursor</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setTextInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textInteractionFlags</span> <span class="o">=</span> <span class="n">flags</span>
+
+    <span class="k">def</span> <span class="nf">textInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textInteractionFlags</span>
+
+    <span class="k">def</span> <span class="nf">setDefaultStyleSheet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stylesheet</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">setDefaultStyleSheet</span><span class="p">(</span><span class="n">stylesheet</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TextAnnotation.mouseDoubleClickEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.mouseDoubleClickEvent">[docs]</a>    <span class="k">def</span> <span class="nf">mouseDoubleClickEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">mouseDoubleClickEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">buttons</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">__textInteractionFlags</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextEditable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">startEdit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.startEdit"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.startEdit">[docs]</a>    <span class="k">def</span> <span class="nf">startEdit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start the annotation text edit process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setPlainText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__content</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__textInteractionFlags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setFocus</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">MouseFocusReason</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">contentsChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">textEdited</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.endEdit"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.endEdit">[docs]</a>    <span class="k">def</span> <span class="nf">endEdit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;End the annotation edit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextInteractionFlags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__defaultInteractionFlags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">contentsChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">textEdited</span>
+        <span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">textCursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">clearSelection</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextCursor</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__content</span> <span class="o">=</span> <span class="n">content</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+        <span class="c1"># Cannot change the textItem&#39;s html immediately, this method is</span>
+        <span class="c1"># invoked from it.</span>
+        <span class="c1"># TODO: Separate the editor from the view.</span>
+        <span class="n">QMetaObject</span><span class="o">.</span><span class="n">invokeMethod</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;__updateRenderedContent&quot;</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">QueuedConnection</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__onDocumentSizeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="c1"># The size of the text document has changed. Expand the text</span>
+        <span class="c1"># control rect&#39;s height if the text no longer fits inside.</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">textMargins</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="n">bottom</span> <span class="o">+</span> <span class="n">top</span><span class="p">):</span>
+            <span class="n">rect</span><span class="o">.</span><span class="n">setHeight</span><span class="p">(</span><span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="n">bottom</span> <span class="o">+</span> <span class="n">top</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__updateFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span>
+        <span class="n">rect</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">addRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__framePathItem</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TextAnnotation.resizeEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.resizeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">resizeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">newSize</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">textMargins</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="n">left</span> <span class="o">-</span> <span class="n">right</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateFrame</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__textEditingFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endEdit</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TextAnnotation.sceneEventFilter"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.sceneEventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">sceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">hasFocus</span><span class="p">()</span> <span class="ow">and</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">textInteractionFlags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">TextEditable</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">QEvent</span><span class="o">.</span><span class="n">GraphicsSceneContextMenu</span><span class="p">}</span> <span class="ow">and</span> \
+                <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AltModifier</span><span class="p">:</span>
+            <span class="c1"># Handle Alt + context menu events here</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contextMenuEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sceneEventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextAnnotation.changeEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.changeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">changeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">FontChange</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">PaletteChange</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Text</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">changeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+    <span class="nd">@Slot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__updateRenderedContent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">renderer</span> <span class="o">=</span> <span class="n">TextAnnotation</span><span class="o">.</span><span class="n">ContentRenderer</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">renderer</span> <span class="o">=</span> <span class="n">render_plain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textItem</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="n">renderer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__content</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TextAnnotation.contextMenuEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.TextAnnotation.contextMenuEvent">[docs]</a>    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">modifiers</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AltModifier</span><span class="p">:</span>
+            <span class="n">menu</span> <span class="o">=</span> <span class="n">QMenu</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">widget</span><span class="p">())</span>
+            <span class="n">menu</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_DeleteOnClose</span><span class="p">)</span>
+            <span class="n">formatmenu</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s2">&quot;Render as&quot;</span><span class="p">)</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">QActionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">makeaction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">action</span><span class="o">.</span><span class="n">setData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">action</span>
+
+            <span class="n">formatactions</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">makeaction</span><span class="p">(</span><span class="s2">&quot;Plain Text&quot;</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">toolTip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Render contents as plain text&quot;</span><span class="p">),</span>
+                           <span class="n">data</span><span class="o">=</span><span class="s2">&quot;text/plain&quot;</span><span class="p">),</span>
+                <span class="n">makeaction</span><span class="p">(</span><span class="s2">&quot;HTML&quot;</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">toolTip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Render contents as HTML&quot;</span><span class="p">),</span>
+                           <span class="n">data</span><span class="o">=</span><span class="s2">&quot;text/html&quot;</span><span class="p">),</span>
+                <span class="n">makeaction</span><span class="p">(</span><span class="s2">&quot;RST&quot;</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">toolTip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Render contents as RST &quot;</span>
+                                           <span class="s2">&quot;(reStructuredText)&quot;</span><span class="p">),</span>
+                           <span class="n">data</span><span class="o">=</span><span class="s2">&quot;text/rst&quot;</span><span class="p">),</span>
+                <span class="n">makeaction</span><span class="p">(</span><span class="s2">&quot;Markdown&quot;</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">toolTip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tr</span><span class="p">(</span><span class="s2">&quot;Render contents as Markdown&quot;</span><span class="p">),</span>
+                           <span class="n">data</span><span class="o">=</span><span class="s2">&quot;text/markdown&quot;</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">formatactions</span><span class="p">:</span>
+                <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">data</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__contentType</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                <span class="n">formatmenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">ontriggered</span><span class="p">(</span><span class="n">action</span><span class="p">):</span>
+                <span class="n">mimetype</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+                <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setContent</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+            <span class="n">menu</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ontriggered</span><span class="p">)</span>
+            <span class="n">menu</span><span class="o">.</span><span class="n">popup</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">screenPos</span><span class="p">())</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">ArrowItem</span><span class="p">(</span><span class="n">GraphicsPathObject</span><span class="p">):</span>
+
+    <span class="c1">#: Arrow Style</span>
+    <span class="n">Plain</span><span class="p">,</span> <span class="n">Concave</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lineWidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">=</span> <span class="n">line</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span> <span class="o">=</span> <span class="n">lineWidth</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowStyle</span> <span class="o">=</span> <span class="n">ArrowItem</span><span class="o">.</span><span class="n">Plain</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateArrowPath</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the baseline of the arrow (:class:`QLineF`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">!=</span> <span class="n">line</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateArrowPath</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the baseline of the arrow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QLineF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__line</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineWidth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the width of the arrow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span> <span class="o">!=</span> <span class="n">lineWidth</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span> <span class="o">=</span> <span class="n">lineWidth</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateArrowPath</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">lineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the width of the arrow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span>
+
+    <span class="k">def</span> <span class="nf">setArrowStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the arrow style (`ArrowItem.Plain` or `ArrowItem.Concave`)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowStyle</span> <span class="o">!=</span> <span class="n">style</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__arrowStyle</span> <span class="o">=</span> <span class="n">style</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateArrowPath</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">arrowStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the arrow style</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowStyle</span>
+
+    <span class="k">def</span> <span class="nf">__updateArrowPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowStyle</span> <span class="o">==</span> <span class="n">ArrowItem</span><span class="o">.</span><span class="n">Plain</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">arrow_path_plain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">arrow_path_concave</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lineWidth</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">arrow_path_plain</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an :class:`QPainterPath` of a plain looking arrow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">(),</span> <span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="c1"># Require some minimum length.</span>
+    <span class="n">baseline</span><span class="o">.</span><span class="n">setLength</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">()</span> <span class="o">-</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">p1</span><span class="p">())</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+
+    <span class="n">stroker</span> <span class="o">=</span> <span class="n">QPainterPathStroker</span><span class="p">()</span>
+    <span class="n">stroker</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">stroker</span><span class="o">.</span><span class="n">createStroke</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="n">arrow_head_len</span> <span class="o">=</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="n">arrow_head_angle</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">line_angle</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">angle</span><span class="p">()</span> <span class="o">-</span> <span class="mi">180</span>
+
+    <span class="n">angle_1</span> <span class="o">=</span> <span class="n">line_angle</span> <span class="o">-</span> <span class="n">arrow_head_angle</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">angle_2</span> <span class="o">=</span> <span class="n">line_angle</span> <span class="o">+</span> <span class="n">arrow_head_angle</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">p2</span><span class="p">,</span>
+              <span class="n">p2</span> <span class="o">+</span> <span class="n">QLineF</span><span class="o">.</span><span class="n">fromPolar</span><span class="p">(</span><span class="n">arrow_head_len</span><span class="p">,</span> <span class="n">angle_1</span><span class="p">)</span><span class="o">.</span><span class="n">p2</span><span class="p">(),</span>
+              <span class="n">p2</span> <span class="o">+</span> <span class="n">QLineF</span><span class="o">.</span><span class="n">fromPolar</span><span class="p">(</span><span class="n">arrow_head_len</span><span class="p">,</span> <span class="n">angle_2</span><span class="p">)</span><span class="o">.</span><span class="n">p2</span><span class="p">(),</span>
+              <span class="n">p2</span><span class="p">]</span>
+
+    <span class="n">poly</span> <span class="o">=</span> <span class="n">QPolygonF</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">path_head</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+    <span class="n">path_head</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">path_head</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="k">def</span> <span class="nf">arrow_path_concave</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a :class:`QPainterPath` of a pretty looking arrow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">(),</span> <span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">path</span>
+
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="c1"># Require some minimum length.</span>
+    <span class="n">baseline</span><span class="o">.</span><span class="n">setLength</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">length</span><span class="p">()</span> <span class="o">-</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">p1</span><span class="p">(),</span> <span class="n">baseline</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span>
+    <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">normal</span> <span class="o">=</span> <span class="n">QLineF</span><span class="o">.</span><span class="n">fromPolar</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">baseline</span><span class="o">.</span><span class="n">angle</span><span class="p">()</span> <span class="o">+</span> <span class="mi">90</span><span class="p">)</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span>
+
+    <span class="n">path</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">))</span>
+
+    <span class="n">path</span><span class="o">.</span><span class="n">quadTo</span><span class="p">(</span><span class="n">mid</span> <span class="o">+</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">),</span>
+                <span class="n">end</span> <span class="o">+</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">))</span>
+
+    <span class="n">path</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">))</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">quadTo</span><span class="p">(</span><span class="n">mid</span> <span class="o">-</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">),</span>
+                <span class="n">start</span> <span class="o">-</span> <span class="p">(</span><span class="n">normal</span> <span class="o">*</span> <span class="n">width</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">))</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">closeSubpath</span><span class="p">()</span>
+
+    <span class="n">arrow_head_len</span> <span class="o">=</span> <span class="n">width</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="n">arrow_head_angle</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">line_angle</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">angle</span><span class="p">()</span> <span class="o">-</span> <span class="mi">180</span>
+
+    <span class="n">angle_1</span> <span class="o">=</span> <span class="n">line_angle</span> <span class="o">-</span> <span class="n">arrow_head_angle</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">angle_2</span> <span class="o">=</span> <span class="n">line_angle</span> <span class="o">+</span> <span class="n">arrow_head_angle</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">p2</span><span class="p">,</span>
+              <span class="n">p2</span> <span class="o">+</span> <span class="n">QLineF</span><span class="o">.</span><span class="n">fromPolar</span><span class="p">(</span><span class="n">arrow_head_len</span><span class="p">,</span> <span class="n">angle_1</span><span class="p">)</span><span class="o">.</span><span class="n">p2</span><span class="p">(),</span>
+              <span class="n">baseline</span><span class="o">.</span><span class="n">p2</span><span class="p">(),</span>
+              <span class="n">p2</span> <span class="o">+</span> <span class="n">QLineF</span><span class="o">.</span><span class="n">fromPolar</span><span class="p">(</span><span class="n">arrow_head_len</span><span class="p">,</span> <span class="n">angle_2</span><span class="p">)</span><span class="o">.</span><span class="n">p2</span><span class="p">(),</span>
+              <span class="n">p2</span><span class="p">]</span>
+
+    <span class="n">poly</span> <span class="o">=</span> <span class="n">QPolygonF</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">path_head</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+    <span class="n">path_head</span><span class="o">.</span><span class="n">addPolygon</span><span class="p">(</span><span class="n">poly</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">path_head</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<div class="viewcode-block" id="ArrowAnnotation"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation">[docs]</a><span class="k">class</span> <span class="nc">ArrowAnnotation</span><span class="p">(</span><span class="n">Annotation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsMovable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemIsSelectable</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFocusPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ClickFocus</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">red</span><span class="p">)</span>
+        <span class="c1"># An item with the same shape as this arrow, stacked behind this</span>
+        <span class="c1"># item as a source for QGraphicsDropShadowEffect. Cannot attach</span>
+        <span class="c1"># the effect to this item directly as QGraphicsEffect makes the item</span>
+        <span class="c1"># non devicePixelRatio aware.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span> <span class="o">=</span> <span class="n">ArrowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoPen</span><span class="p">)</span>  <span class="c1"># no pen -&gt; slightly thinner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setArrowStyle</span><span class="p">(</span><span class="n">ArrowItem</span><span class="o">.</span><span class="n">Concave</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setLineWidth</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shadow</span> <span class="o">=</span> <span class="n">QGraphicsDropShadowEffect</span><span class="p">(</span>
+            <span class="n">blurRadius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">QPointF</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setGraphicsEffect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__shadow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shadow</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># The &#39;real&#39; shape item</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span> <span class="o">=</span> <span class="n">ArrowItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setArrowStyle</span><span class="p">(</span><span class="n">ArrowItem</span><span class="o">.</span><span class="n">Concave</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setLineWidth</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autoAdjustGeometry</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="ArrowAnnotation.setAutoAdjustGeometry"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.setAutoAdjustGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">setAutoAdjustGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">autoAdjust</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If set to `True` then the geometry will be adjusted whenever</span>
+<span class="sd">        the arrow is changed with `setLine`. Otherwise the geometry</span>
+<span class="sd">        of the item is only updated so the `line` lies within the</span>
+<span class="sd">        `geometry()` rect (i.e. it only grows). True by default</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autoAdjustGeometry</span> <span class="o">=</span> <span class="n">autoAdjust</span>
+        <span class="k">if</span> <span class="n">autoAdjust</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjustGeometry</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.autoAdjustGeometry"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.autoAdjustGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">autoAdjustGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Should the geometry of the item be adjusted automatically when</span>
+<span class="sd">        `setLine` is called.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autoAdjustGeometry</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.setLine"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.setLine">[docs]</a>    <span class="k">def</span> <span class="nf">setLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the arrow base line (a `QLineF` in object coordinates).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">!=</span> <span class="n">line</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+            <span class="c1"># local item coordinate system</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">geom</span><span class="o">.</span><span class="n">isNull</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+                <span class="n">geom</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">arrow_shape</span> <span class="o">=</span> <span class="n">arrow_path_concave</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lineWidth</span><span class="p">())</span>
+            <span class="n">arrow_rect</span> <span class="o">=</span> <span class="n">arrow_shape</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)):</span>
+                <span class="n">geom</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autoAdjustGeometry</span><span class="p">:</span>
+                <span class="c1"># Shrink the geometry if required.</span>
+                <span class="n">geom</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">intersected</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)</span>
+
+            <span class="c1"># topLeft can move changing the local coordinates.</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">topLeft</span><span class="p">()</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">()</span> <span class="o">-</span> <span class="n">diff</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span> <span class="o">-</span> <span class="n">diff</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__line</span> <span class="o">=</span> <span class="n">line</span>
+
+            <span class="c1"># parent item coordinate system</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.line"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.line">[docs]</a>    <span class="k">def</span> <span class="nf">line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the arrow base line (`QLineF` in object coordinates).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QLineF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.setColor"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.setColor">[docs]</a>    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set arrow brush color.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">!=</span> <span class="n">color</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateStyleState</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.color"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.color">[docs]</a>    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the arrow brush color.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.setLineWidth"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.setLineWidth">[docs]</a>    <span class="k">def</span> <span class="nf">setLineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineWidth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the arrow line width.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setLineWidth</span><span class="p">(</span><span class="n">lineWidth</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setLineWidth</span><span class="p">(</span><span class="n">lineWidth</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.lineWidth"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.lineWidth">[docs]</a>    <span class="k">def</span> <span class="nf">lineWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the arrow line width.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">lineWidth</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.adjustGeometry"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.adjustGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">adjustGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adjust the widget geometry to exactly fit the arrow inside</span>
+<span class="sd">        while preserving the arrow path scene geometry.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># local system coordinate</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__line</span>
+
+        <span class="n">arrow_rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">shape</span><span class="p">()</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">geom</span><span class="o">.</span><span class="n">isNull</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)):</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">united</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)</span>
+
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">intersected</span><span class="p">(</span><span class="n">arrow_rect</span><span class="p">)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">topLeft</span><span class="p">()</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">()</span> <span class="o">-</span> <span class="n">diff</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">()</span> <span class="o">-</span> <span class="n">diff</span><span class="p">)</span>
+        <span class="n">geom</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLine</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.shape"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">arrow_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">shape</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapFromItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="p">,</span> <span class="n">arrow_shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArrowAnnotation.itemChange"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.annotationitem.html#orangecanvas.canvas.items.annotationitem.ArrowAnnotation.itemChange">[docs]</a>    <span class="k">def</span> <span class="nf">itemChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">change</span> <span class="o">==</span> <span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemSelectedHasChanged</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateStyleState</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">itemChange</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__updateStyleState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the arrows&#39; brush, pen, ... based on it&#39;s state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSelected</span><span class="p">():</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="o">.</span><span class="n">darker</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">158</span><span class="p">,</span> <span class="mi">215</span><span class="p">),</span> <span class="n">Qt</span><span class="o">.</span><span class="n">DashDotLine</span><span class="p">)</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setWidthF</span><span class="p">(</span><span class="mf">1.25</span><span class="p">)</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setCosmetic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shadow</span> <span class="o">=</span> <span class="n">pen</span><span class="o">.</span><span class="n">color</span><span class="p">()</span><span class="o">.</span><span class="n">darker</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__color</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+            <span class="n">shadow</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">63</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowShadowBase</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shadow</span><span class="o">.</span><span class="n">setColor</span><span class="p">(</span><span class="n">shadow</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__arrowItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

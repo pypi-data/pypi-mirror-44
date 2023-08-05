@@ -1,0 +1,936 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.scheme &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.scheme</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.scheme</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">===============</span>
+<span class="sd">Scheme Workflow</span>
+<span class="sd">===============</span>
+
+<span class="sd">The :class:`Scheme` class defines a DAG (Directed Acyclic Graph) workflow.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">ExitStack</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QCoreApplication</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span>
+
+<span class="kn">from</span> <span class="nn">.node</span> <span class="k">import</span> <span class="n">SchemeNode</span>
+<span class="kn">from</span> <span class="nn">.link</span> <span class="k">import</span> <span class="n">SchemeLink</span><span class="p">,</span> <span class="n">compatible_channels</span>
+<span class="kn">from</span> <span class="nn">.annotations</span> <span class="k">import</span> <span class="n">BaseSchemeAnnotation</span>
+
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="n">check_arg</span><span class="p">,</span> <span class="n">check_type</span><span class="p">,</span> <span class="n">name_lookup</span>
+
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">SchemeCycleError</span><span class="p">,</span> <span class="n">IncompatibleChannelTypeError</span><span class="p">,</span> <span class="n">SinkChannelError</span><span class="p">,</span>
+    <span class="n">DuplicatedLinkError</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">events</span>
+
+
+<span class="kn">from</span> <span class="nn">..registry</span> <span class="k">import</span> <span class="n">WidgetDescription</span><span class="p">,</span> <span class="n">InputSignal</span><span class="p">,</span> <span class="n">OutputSignal</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Scheme"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme">[docs]</a><span class="k">class</span> <span class="nc">Scheme</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An :class:`QObject` subclass representing the scheme widget workflow</span>
+<span class="sd">    with annotations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parent : :class:`QObject`</span>
+<span class="sd">        A parent QObject item (default `None`).</span>
+<span class="sd">    title : str</span>
+<span class="sd">        The scheme title.</span>
+<span class="sd">    description : str</span>
+<span class="sd">        A longer description of the scheme.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes : list of :class:`.SchemeNode`</span>
+<span class="sd">        A list of all the nodes in the scheme.</span>
+
+<span class="sd">    links : list of :class:`.SchemeLink`</span>
+<span class="sd">        A list of all links in the scheme.</span>
+
+<span class="sd">    annotations : list of :class:`BaseSchemeAnnotation`</span>
+<span class="sd">        A list of all the annotations in the scheme.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Flags indicating if loops are allowed in the workflow.</span>
+    <span class="n">NoLoops</span><span class="p">,</span> <span class="n">AllowLoops</span><span class="p">,</span> <span class="n">AllowSelfLoops</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+
+    <span class="c1"># Signal emitted when a `node` is added to the scheme.</span>
+    <span class="n">node_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeNode</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when a `node` is removed from the scheme.</span>
+    <span class="n">node_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeNode</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when a `link` is added to the scheme.</span>
+    <span class="n">link_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeLink</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when a `link` is removed from the scheme.</span>
+    <span class="n">link_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeLink</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when a `annotation` is added to the scheme.</span>
+    <span class="n">annotation_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">BaseSchemeAnnotation</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when a `annotation` is removed from the scheme.</span>
+    <span class="n">annotation_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">BaseSchemeAnnotation</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when the title of scheme changes.</span>
+    <span class="n">title_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="c1"># Signal emitted when the description of scheme changes.</span>
+    <span class="n">description_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="c1">#: Signal emitted when the associated runtime environment changes</span>
+    <span class="n">runtime_env_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="p">{},</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__title</span> <span class="o">=</span> <span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="s2">&quot;Workflow title (empty string by default).&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__description</span> <span class="o">=</span> <span class="n">description</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="s2">&quot;Workflow description (empty string by default).&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__links</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__loop_flags</span> <span class="o">=</span> <span class="n">Scheme</span><span class="o">.</span><span class="n">NoLoops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__env</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A list of all nodes (:class:`.SchemeNode`) currently in the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">links</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A list of all links (:class:`.SchemeLink`) currently in the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A list of all annotations (:class:`.BaseSchemeAnnotation`) in the</span>
+<span class="sd">        scheme.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_loop_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__loop_flags</span> <span class="o">=</span> <span class="n">flags</span>
+
+    <span class="k">def</span> <span class="nf">loop_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loop_flags</span>
+
+<div class="viewcode-block" id="Scheme.set_title"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.set_title">[docs]</a>    <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the scheme title text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__title</span> <span class="o">!=</span> <span class="n">title</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__title</span> <span class="o">=</span> <span class="n">title</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">title</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The title (human readable string) of the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__title</span>
+
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">set_title</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scheme.set_description"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.set_description">[docs]</a>    <span class="k">def</span> <span class="nf">set_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the scheme description text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__description</span> <span class="o">!=</span> <span class="n">description</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__description</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">description</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scheme description text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__description</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">set_description</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scheme.add_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a node to the scheme. An error is raised if the node is</span>
+<span class="sd">        already in the scheme.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : :class:`.SchemeNode`</span>
+<span class="sd">            Node instance to add to the scheme.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_arg</span><span class="p">(</span><span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span><span class="p">,</span>
+                  <span class="s2">&quot;Node already in scheme.&quot;</span><span class="p">)</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">SchemeNode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">NodeEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">NodeEvent</span><span class="o">.</span><span class="n">NodeAdded</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Added node </span><span class="si">%r</span><span class="s2"> to scheme </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.new_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.new_node">[docs]</a>    <span class="k">def</span> <span class="nf">new_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new :class:`.SchemeNode` and add it to the scheme.</span>
+
+<span class="sd">        Same as::</span>
+
+<span class="sd">            scheme.add_node(SchemeNode(description, title, position,</span>
+<span class="sd">                                       properties))</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description : :class:`WidgetDescription`</span>
+<span class="sd">            The new node&#39;s description.</span>
+<span class="sd">        title : str, optional</span>
+<span class="sd">            Optional new nodes title. By default `description.name` is used.</span>
+<span class="sd">        position : `(x, y)` tuple of floats, optional</span>
+<span class="sd">            Optional position in a 2D space.</span>
+<span class="sd">        properties : dict, optional</span>
+<span class="sd">            A dictionary of optional extra properties.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        .SchemeNode, Scheme.add_node</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">WidgetDescription</span><span class="p">):</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">SchemeNode</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">position</span><span class="p">,</span>
+                              <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expected </span><span class="si">%r</span><span class="s2">, got </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> \
+                            <span class="p">(</span><span class="n">WidgetDescription</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">description</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="Scheme.remove_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a `node` from the scheme. All links into and out of the</span>
+<span class="sd">        `node` are also removed. If the node in not in the scheme an error</span>
+<span class="sd">        is raised.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : :class:`.SchemeNode`</span>
+<span class="sd">            Node instance to remove.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_arg</span><span class="p">(</span><span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span><span class="p">,</span>
+                  <span class="s2">&quot;Node is not in the scheme.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__remove_node_links</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">NodeEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">NodeEvent</span><span class="o">.</span><span class="n">NodeRemoved</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removed node </span><span class="si">%r</span><span class="s2"> from scheme </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node</span></div>
+
+    <span class="k">def</span> <span class="nf">__remove_node_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove all links for node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">links_in</span><span class="p">,</span> <span class="n">links_out</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="ow">is</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">links_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="ow">is</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">links_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links_out</span> <span class="o">+</span> <span class="n">links_in</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scheme.add_link"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.add_link">[docs]</a>    <span class="k">def</span> <span class="nf">add_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a `link` to the scheme.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        link : :class:`.SchemeLink`</span>
+<span class="sd">            An initialized link instance to add to the scheme.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_connect</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">LinkEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">LinkAdded</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Added link </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) -&gt; </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) to scheme </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+                 <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">link</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.new_link"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.new_link">[docs]</a>    <span class="k">def</span> <span class="nf">new_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_node</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span>
+                 <span class="n">sink_node</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new :class:`.SchemeLink` from arguments and add it to</span>
+<span class="sd">        the scheme. The new link is returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_node : :class:`.SchemeNode`</span>
+<span class="sd">            Source node of the new link.</span>
+<span class="sd">        source_channel : :class:`.OutputSignal`</span>
+<span class="sd">            Source channel of the new node. The instance must be from</span>
+<span class="sd">            ``source_node.output_channels()``</span>
+<span class="sd">        sink_node : :class:`.SchemeNode`</span>
+<span class="sd">            Sink node of the new link.</span>
+<span class="sd">        sink_channel : :class:`.InputSignal`</span>
+<span class="sd">            Sink channel of the new node. The instance must be from</span>
+<span class="sd">            ``sink_node.input_channels()``</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        .SchemeLink, Scheme.add_link</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span>
+                          <span class="n">sink_node</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">link</span></div>
+
+<div class="viewcode-block" id="Scheme.remove_link"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.remove_link">[docs]</a>    <span class="k">def</span> <span class="nf">remove_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a link from the scheme.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        link : :class:`.SchemeLink`</span>
+<span class="sd">            Link instance to remove.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_arg</span><span class="p">(</span><span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="p">,</span>
+                  <span class="s2">&quot;Link is not in the scheme.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">LinkEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">LinkRemoved</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removed link </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) -&gt; </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) from scheme </span><span class="si">%r</span><span class="s2">.&quot;</span> <span class="o">%</span> \
+                 <span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+                 <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">link</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.check_connect"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.check_connect">[docs]</a>    <span class="k">def</span> <span class="nf">check_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the `link` can be added to the scheme and raise an</span>
+<span class="sd">        appropriate exception.</span>
+
+<span class="sd">        Can raise:</span>
+<span class="sd">            - :class:`TypeError` if `link` is not an instance of</span>
+<span class="sd">              :class:`.SchemeLink`</span>
+<span class="sd">            - :class:`.SchemeCycleError` if the `link` would introduce a loop</span>
+<span class="sd">              in the graph which does not allow loops.</span>
+<span class="sd">            - :class:`.IncompatibleChannelTypeError` if the channel types are</span>
+<span class="sd">              not compatible</span>
+<span class="sd">            - :class:`.SinkChannelError` if a sink channel has a `Single` flag</span>
+<span class="sd">              specification and the channel is already connected.</span>
+<span class="sd">            - :class:`.DuplicatedLinkError` if a `link` duplicates an already</span>
+<span class="sd">              present link.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_flags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Scheme</span><span class="o">.</span><span class="n">AllowSelfLoops</span> <span class="ow">and</span> \
+                <span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="ow">is</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SchemeCycleError</span><span class="p">(</span><span class="s2">&quot;Cannot create self cycle in the scheme&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_flags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Scheme</span><span class="o">.</span><span class="n">AllowLoops</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">creates_cycle</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SchemeCycleError</span><span class="p">(</span><span class="s2">&quot;Cannot create cycles in the scheme&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">compatible_channels</span><span class="p">(</span><span class="n">link</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">IncompatibleChannelTypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot connect </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%r</span><span class="s2">.&quot;</span> \
+                    <span class="o">%</span> <span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">,</span>
+                                <span class="n">source_channel</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="p">,</span>
+                                <span class="n">sink_node</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">,</span>
+                                <span class="n">sink_channel</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DuplicatedLinkError</span><span class="p">(</span>
+                    <span class="s2">&quot;A link from </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) -&gt; </span><span class="si">%r</span><span class="s2"> (</span><span class="si">%r</span><span class="s2">) already exists&quot;</span> \
+                    <span class="o">%</span> <span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                       <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">single</span><span class="p">:</span>
+            <span class="n">links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">sink_node</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">,</span>
+                                    <span class="n">sink_channel</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SinkChannelError</span><span class="p">(</span>
+                        <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is already connected.&quot;</span> <span class="o">%</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span>
+                    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.creates_cycle"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.creates_cycle">[docs]</a>    <span class="k">def</span> <span class="nf">creates_cycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `True` if `link` would introduce a cycle in the scheme.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        link : :class:`.SchemeLink`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">)</span>
+        <span class="n">source_node</span><span class="p">,</span> <span class="n">sink_node</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span>
+        <span class="n">upstream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_nodes</span><span class="p">(</span><span class="n">source_node</span><span class="p">)</span>
+        <span class="n">upstream</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">source_node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sink_node</span> <span class="ow">in</span> <span class="n">upstream</span></div>
+
+<div class="viewcode-block" id="Scheme.compatible_channels"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.compatible_channels">[docs]</a>    <span class="k">def</span> <span class="nf">compatible_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `True` if the channels in `link` have compatible types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        link : :class:`.SchemeLink`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">compatible_channels</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.can_connect"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.can_connect">[docs]</a>    <span class="k">def</span> <span class="nf">can_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return `True` if `link` can be added to the scheme.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        Scheme.check_connect</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_connect</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">SchemeCycleError</span><span class="p">,</span> <span class="n">IncompatibleChannelTypeError</span><span class="p">,</span>
+                <span class="n">SinkChannelError</span><span class="p">,</span> <span class="n">DuplicatedLinkError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Scheme.upstream_nodes"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.upstream_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">upstream_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of all nodes upstream from `start_node` (i.e.</span>
+<span class="sd">        all ancestor nodes).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start_node : :class:`.SchemeNode`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start_node</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">snodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_links</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">source_node</span> <span class="ow">in</span> <span class="n">snodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">source_node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_node</span><span class="p">)</span>
+
+            <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">start_node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visited</span></div>
+
+<div class="viewcode-block" id="Scheme.downstream_nodes"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.downstream_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">downstream_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of all nodes downstream from `start_node`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start_node : :class:`.SchemeNode`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start_node</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">snodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_links</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">source_node</span> <span class="ow">in</span> <span class="n">snodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">source_node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_node</span><span class="p">)</span>
+
+            <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">start_node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visited</span></div>
+
+<div class="viewcode-block" id="Scheme.is_ancestor"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.is_ancestor">[docs]</a>    <span class="k">def</span> <span class="nf">is_ancestor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if `node` is an ancestor node of `child` (is upstream</span>
+<span class="sd">        of the child in the workflow). Both nodes must be in the scheme.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : :class:`.SchemeNode`</span>
+<span class="sd">        child : :class:`.SchemeNode`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downstream_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.children"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.children">[docs]</a>    <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of all children of `node`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_links</span><span class="p">(</span><span class="n">node</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Scheme.parents"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.parents">[docs]</a>    <span class="k">def</span> <span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of all parents of `node`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_links</span><span class="p">(</span><span class="n">node</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Scheme.input_links"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.input_links">[docs]</a>    <span class="k">def</span> <span class="nf">input_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of all input links (:class:`.SchemeLink`) connected</span>
+<span class="sd">        to the `node` instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">sink_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.output_links"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.output_links">[docs]</a>    <span class="k">def</span> <span class="nf">output_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of all output links (:class:`.SchemeLink`) connected</span>
+<span class="sd">        to the `node` instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">find_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">source_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">sink_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sink_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># TODO: Speedup - keep index of links by nodes and channels</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">query</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="p">(</span><span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="n">query</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__links</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="n">match</span><span class="p">(</span><span class="n">sink_node</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="n">match</span><span class="p">(</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="n">match</span><span class="p">(</span><span class="n">sink_channel</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="Scheme.propose_links"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.propose_links">[docs]</a>    <span class="k">def</span> <span class="nf">propose_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_node</span><span class="p">,</span> <span class="n">sink_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of ordered (:class:`OutputSignal`,</span>
+<span class="sd">        :class:`InputSignal`, weight) tuples that could be added to</span>
+<span class="sd">        the scheme between `source_node` and `sink_node`.</span>
+
+<span class="sd">        .. note:: This can depend on the links already in the scheme.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">source_node</span> <span class="ow">is</span> <span class="n">sink_node</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_flags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Scheme</span><span class="o">.</span><span class="n">AllowSelfLoops</span><span class="p">:</span>
+            <span class="c1"># Self loops are not enabled</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_flags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Scheme</span><span class="o">.</span><span class="n">AllowLoops</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_ancestor</span><span class="p">(</span><span class="n">sink_node</span><span class="p">,</span> <span class="n">source_node</span><span class="p">):</span>
+            <span class="c1"># Loops are not enabled.</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">source_node</span><span class="o">.</span><span class="n">output_channels</span><span class="p">()</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">sink_node</span><span class="o">.</span><span class="n">input_channels</span><span class="p">()</span>
+
+        <span class="c1"># Get existing links to sink channels that are Single.</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sink_node</span><span class="p">)</span>
+        <span class="n">already_connected_sinks</span> <span class="o">=</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span> \
+                                   <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">single</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">weight</span><span class="p">(</span><span class="n">out_c</span><span class="p">,</span> <span class="n">in_c</span><span class="p">):</span>
+            <span class="c1"># type: (OutputSignal, InputSignal) -&gt; int</span>
+            <span class="k">if</span> <span class="n">out_c</span><span class="o">.</span><span class="n">explicit</span> <span class="ow">or</span> <span class="n">in_c</span><span class="o">.</span><span class="n">explicit</span><span class="p">:</span>
+                <span class="c1"># Zero weight for explicit links</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Does the connection type check (can only ever be False for</span>
+                <span class="c1"># dynamic signals)</span>
+                <span class="n">type_checks</span> <span class="o">=</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">name_lookup</span><span class="p">(</span><span class="n">out_c</span><span class="o">.</span><span class="n">type</span><span class="p">),</span>
+                                         <span class="n">name_lookup</span><span class="p">(</span><span class="n">in_c</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+                <span class="k">assert</span> <span class="n">type_checks</span> <span class="ow">or</span> <span class="n">out_c</span><span class="o">.</span><span class="n">dynamic</span>
+                <span class="c1"># Dynamic signals that require runtime instance type check</span>
+                <span class="c1"># are considered last.</span>
+                <span class="n">check</span> <span class="o">=</span> <span class="p">[</span><span class="n">type_checks</span><span class="p">,</span>
+                         <span class="n">in_c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">already_connected_sinks</span><span class="p">,</span>
+                         <span class="nb">bool</span><span class="p">(</span><span class="n">in_c</span><span class="o">.</span><span class="n">default</span><span class="p">),</span>
+                         <span class="nb">bool</span><span class="p">(</span><span class="n">out_c</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+                         <span class="p">]</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">**</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">check</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">check</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">weight</span>
+
+        <span class="n">proposed_links</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">out_c</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">in_c</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">compatible_channels</span><span class="p">(</span><span class="n">out_c</span><span class="p">,</span> <span class="n">in_c</span><span class="p">):</span>
+                    <span class="n">proposed_links</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">out_c</span><span class="p">,</span> <span class="n">in_c</span><span class="p">,</span> <span class="n">weight</span><span class="p">(</span><span class="n">out_c</span><span class="p">,</span> <span class="n">in_c</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">proposed_links</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.add_annotation"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.add_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">add_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an annotation (:class:`BaseSchemeAnnotation` subclass) instance</span>
+<span class="sd">        to the scheme.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_arg</span><span class="p">(</span><span class="n">annotation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="p">,</span>
+                  <span class="s2">&quot;Cannot add the same annotation multiple times.&quot;</span><span class="p">)</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">BaseSchemeAnnotation</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">AnnotationEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">AnnotationEvent</span><span class="o">.</span><span class="n">AnnotationAdded</span><span class="p">,</span>
+                                    <span class="n">annotation</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.remove_annotation"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.remove_annotation">[docs]</a>    <span class="k">def</span> <span class="nf">remove_annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove the `annotation` instance from the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_arg</span><span class="p">(</span><span class="n">annotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="p">,</span>
+                  <span class="s2">&quot;Annotation is not in the scheme.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">AnnotationEvent</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">AnnotationEvent</span><span class="o">.</span><span class="n">AnnotationRemoved</span><span class="p">,</span>
+                                    <span class="n">annotation</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.clear"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove all nodes, links, and annotation items from the scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">is_terminal</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">))</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">terminal_nodes</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">is_terminal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">terminal_nodes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_annotation</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+
+        <span class="k">assert</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Scheme.sync_node_properties"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.sync_node_properties">[docs]</a>    <span class="k">def</span> <span class="nf">sync_node_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called before saving, allowing a subclass to update/sync.</span>
+
+<span class="sd">        The default implementation does nothing.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Scheme.save_to"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.save_to">[docs]</a>    <span class="k">def</span> <span class="nf">save_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">pretty</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the scheme as an xml formatted file to `stream`</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        readwrite.scheme_to_ows_stream</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">exitstack</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">stream</span> <span class="o">=</span> <span class="n">exitstack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sync_node_properties</span><span class="p">()</span>
+            <span class="n">readwrite</span><span class="o">.</span><span class="n">scheme_to_ows_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">pretty</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.load_from"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the scheme from xml formatted `stream`.</span>
+
+<span class="sd">        Any extra arguments are passed to `readwrite.scheme_load`</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        readwrite.scheme_load</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nodes</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__links</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotations</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scheme is not empty.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">exitstack</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">stream</span> <span class="o">=</span> <span class="n">exitstack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+            <span class="n">readwrite</span><span class="o">.</span><span class="n">scheme_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.set_runtime_env"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.set_runtime_env">[docs]</a>    <span class="k">def</span> <span class="nf">set_runtime_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a runtime environment variable `key` to `value`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">oldvalue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">oldvalue</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runtime_env_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">oldvalue</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.get_runtime_env"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.get_runtime_env">[docs]</a>    <span class="k">def</span> <span class="nf">get_runtime_env</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a runtime environment variable for `key`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.runtime_env"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.runtime_env">[docs]</a>    <span class="k">def</span> <span class="nf">runtime_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return (a view to) the full runtime environment.</span>
+
+<span class="sd">        The return value is a types.MappingProxyType of the</span>
+<span class="sd">        underlying environment dictionary. Changes to the env.</span>
+<span class="sd">        will be reflected in it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">MappingProxyType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__env</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.WindowGroup"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.WindowGroup">[docs]</a>    <span class="k">class</span> <span class="nc">WindowGroup</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">SimpleNamespace</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1"># type: str</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># type: bool</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="o">...</span>    <span class="c1"># type: List[Tuple[SchemeNode, bytes]]</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="p">[]):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scheme.window_group_presets"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.scheme.Scheme.window_group_presets">[docs]</a>    <span class="k">def</span> <span class="nf">window_group_presets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; List[Scheme.WindowGroup]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a collection of preset window groups and their encoded states.</span>
+
+<span class="sd">        The base implementation returns an empty list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s2">&quot;_presets&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span></div>
+
+    <span class="k">def</span> <span class="nf">set_window_group_presets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+        <span class="c1"># type: (List[Scheme.WindowGroup]) -&gt; None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s2">&quot;_presets&quot;</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span></div>
+
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">readwrite</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

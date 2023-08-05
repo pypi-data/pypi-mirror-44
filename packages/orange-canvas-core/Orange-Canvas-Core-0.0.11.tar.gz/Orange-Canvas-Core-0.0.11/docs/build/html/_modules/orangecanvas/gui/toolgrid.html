@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.gui.toolgrid &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.gui.toolgrid</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.gui.toolgrid</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A widget containing a grid of clickable actions/buttons.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span><span class="p">,</span> <span class="n">deque</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QFrame</span><span class="p">,</span> <span class="n">QAction</span><span class="p">,</span> <span class="n">QToolButton</span><span class="p">,</span> <span class="n">QGridLayout</span><span class="p">,</span>  <span class="n">QSizePolicy</span><span class="p">,</span>
+    <span class="n">QStyleOptionToolButton</span><span class="p">,</span> <span class="n">QStylePainter</span><span class="p">,</span> <span class="n">QStyle</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QFontMetrics</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QSize</span><span class="p">,</span> <span class="n">QEvent</span><span class="p">,</span> <span class="n">QSignalMapper</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+
+<span class="n">_ToolGridSlot</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;_ToolGridSlot&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;button&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;action&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;row&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;column&quot;</span>
+     <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_ToolGridButton</span><span class="p">(</span><span class="n">QToolButton</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">actionEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">actionEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">ActionChanged</span> <span class="ow">or</span> \
+                <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">ActionAdded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__textLayout</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">resizeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">resizeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__textLayout</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__textLayout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fm</span> <span class="o">=</span> <span class="n">QFontMetrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultAction</span><span class="p">()</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">curr_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">curr_line_word_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">option</span> <span class="o">=</span> <span class="n">QStyleOptionToolButton</span><span class="p">()</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">initFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">margin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">pixelMetric</span><span class="p">(</span><span class="n">QStyle</span><span class="o">.</span><span class="n">PM_ButtonMargin</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">margin</span>
+
+        <span class="k">while</span> <span class="n">words</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">curr_line_word_count</span><span class="p">:</span>
+                <span class="n">line_extended</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">curr_line</span><span class="p">,</span> <span class="n">w</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line_extended</span> <span class="o">=</span> <span class="n">w</span>
+
+            <span class="n">line_w</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">(</span><span class="n">line_extended</span><span class="p">)</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">line_w</span> <span class="o">&gt;=</span> <span class="n">width</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">curr_line_word_count</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># A single word that is too long must be elided.</span>
+                    <span class="c1"># Also if the text overflows 2 lines</span>
+                    <span class="c1"># Warning: hardcoded max lines</span>
+                    <span class="n">curr_line</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">elidedText</span><span class="p">(</span><span class="n">line_extended</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ElideRight</span><span class="p">,</span>
+                                              <span class="n">width</span><span class="p">)</span>
+                    <span class="n">curr_line</span> <span class="o">=</span> <span class="n">curr_line</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Put the word back</span>
+                    <span class="n">words</span><span class="o">.</span><span class="n">appendleft</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_line</span><span class="p">)</span>
+                <span class="n">curr_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">curr_line_word_count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr_line</span> <span class="o">=</span> <span class="n">line_extended</span>
+                <span class="n">curr_line_word_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">curr_line</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_line</span><span class="p">)</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;&amp;&amp;&#39;</span><span class="p">)</span>  <span class="c1"># Need escaped ampersand to show</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__text</span> <span class="o">=</span> <span class="n">text</span>
+
+    <span class="k">def</span> <span class="nf">paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">QStylePainter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">QStyleOptionToolButton</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initStyleOption</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__text</span><span class="p">:</span>
+            <span class="c1"># Replace the text</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__text</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">drawComplexControl</span><span class="p">(</span><span class="n">QStyle</span><span class="o">.</span><span class="n">CC_ToolButton</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ToolGrid"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid">[docs]</a><span class="k">class</span> <span class="nc">ToolGrid</span><span class="p">(</span><span class="n">QFrame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget containing a grid of actions/buttons.</span>
+
+<span class="sd">    Actions can be added using standard :func:`QWidget.addAction(QAction)`</span>
+<span class="sd">    and :func:`QWidget.insertAction(int, QAction)` methods.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parent : :class:`QWidget`</span>
+<span class="sd">        Parent widget.</span>
+<span class="sd">    columns : int</span>
+<span class="sd">        Number of columns in the grid layout.</span>
+<span class="sd">    buttonSize : :class:`QSize`, optional</span>
+<span class="sd">        Size of tool buttons in the grid.</span>
+<span class="sd">    iconSize : :class:`QSize`, optional</span>
+<span class="sd">        Size of icons in the buttons.</span>
+<span class="sd">    toolButtonStyle : :class:`Qt.ToolButtonStyle`</span>
+<span class="sd">        Tool button style.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">actionTriggered</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QAction</span><span class="p">)</span>
+    <span class="n">actionHovered</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QAction</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">buttonSize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">iconSize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">toolButtonStyle</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">ToolButtonTextUnderIcon</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">buttonSize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">buttonSize</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="n">buttonSize</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">iconSize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iconSize</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="n">iconSize</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span> <span class="o">=</span> <span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span> <span class="o">=</span> <span class="n">buttonSize</span> <span class="ow">or</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span> <span class="o">=</span> <span class="n">iconSize</span> <span class="ow">or</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">26</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__toolButtonStyle</span> <span class="o">=</span> <span class="n">toolButtonStyle</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__mapper</span> <span class="o">=</span> <span class="n">QSignalMapper</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__mapper</span><span class="o">.</span><span class="n">mapped</span><span class="p">[</span><span class="n">QObject</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onClicked</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__setupUi</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QGridLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">setContentsMargins</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">setSpacing</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">setSizeConstraint</span><span class="p">(</span><span class="n">QGridLayout</span><span class="o">.</span><span class="n">SetFixedSize</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">MinimumExpanding</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ToolGrid.setButtonSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.setButtonSize">[docs]</a>    <span class="k">def</span> <span class="nf">setButtonSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the button size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">:</span>
+                <span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">setFixedSize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.buttonSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.buttonSize">[docs]</a>    <span class="k">def</span> <span class="nf">buttonSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the button size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.setIconSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.setIconSize">[docs]</a>    <span class="k">def</span> <span class="nf">setIconSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the button icon size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">:</span>
+                <span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">setIconSize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.iconSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.iconSize">[docs]</a>    <span class="k">def</span> <span class="nf">iconSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the icon size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.setToolButtonStyle"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.setToolButtonStyle">[docs]</a>    <span class="k">def</span> <span class="nf">setToolButtonStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">style</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the tool button style.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__toolButtonStyle</span> <span class="o">!=</span> <span class="n">style</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__toolButtonStyle</span> <span class="o">=</span> <span class="n">style</span>
+            <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">:</span>
+                <span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">setToolButtonStyle</span><span class="p">(</span><span class="n">style</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.toolButtonStyle"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.toolButtonStyle">[docs]</a>    <span class="k">def</span> <span class="nf">toolButtonStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the tool button style.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__toolButtonStyle</span></div>
+
+<div class="viewcode-block" id="ToolGrid.setColumnCount"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.setColumnCount">[docs]</a>    <span class="k">def</span> <span class="nf">setColumnCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the number of button/action columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span> <span class="o">!=</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span> <span class="o">=</span> <span class="n">columns</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__relayout</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ToolGrid.columns"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.columns">[docs]</a>    <span class="k">def</span> <span class="nf">columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of columns in the grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span></div>
+
+<div class="viewcode-block" id="ToolGrid.clear"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear all actions/buttons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeAction</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">action</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="ToolGrid.insertAction"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.insertAction">[docs]</a>    <span class="k">def</span> <span class="nf">insertAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert a new action at the position currently occupied</span>
+<span class="sd">        by `before` (can also be an index).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        before : :class:`QAction` or int</span>
+<span class="sd">            Position where the `action` should be inserted.</span>
+<span class="sd">        action : :class:`QAction`</span>
+<span class="sd">            Action to insert</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">before</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">):</span>
+                <span class="c1"># Insert as the first action or the last action.</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+            <span class="n">before</span> <span class="o">=</span> <span class="n">actions</span><span class="p">[</span><span class="n">before</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">insertAction</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.setActions"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.setActions">[docs]</a>    <span class="k">def</span> <span class="nf">setActions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear the grid and add `actions`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.buttonForAction"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.buttonForAction">[docs]</a>    <span class="k">def</span> <span class="nf">buttonForAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the :class:`QToolButton` instance button for `action`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">action</span> <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">button</span></div>
+
+<div class="viewcode-block" id="ToolGrid.createButtonForAction"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.createButtonForAction">[docs]</a>    <span class="k">def</span> <span class="nf">createButtonForAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and return a :class:`QToolButton` for action.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">button</span> <span class="o">=</span> <span class="n">_ToolGridButton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">setDefaultAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setFixedSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__buttonSize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setIconSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__iconSize</span><span class="p">)</span>
+
+        <span class="n">button</span><span class="o">.</span><span class="n">setToolButtonStyle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__toolButtonStyle</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">setProperty</span><span class="p">(</span><span class="s2">&quot;tool-grid-button&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">button</span></div>
+
+<div class="viewcode-block" id="ToolGrid.count"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of buttons/actions in the grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.actionEvent"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.actionEvent">[docs]</a>    <span class="k">def</span> <span class="nf">actionEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">actionEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">ActionAdded</span><span class="p">:</span>
+            <span class="c1"># Note: the action is already in the self.actions() list.</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">())</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">action</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__insertActionButton</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">action</span><span class="p">())</span>
+
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">ActionRemoved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__removeActionButton</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">action</span><span class="p">())</span></div>
+
+    <span class="k">def</span> <span class="nf">__insertActionButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a button for the action and add it to the layout</span>
+<span class="sd">        at index.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shiftGrid</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createButtonForAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="n">row</span> <span class="o">=</span> <span class="n">index</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">index</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span>
+            <span class="n">button</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span>
+            <span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+            <span class="n">index</span><span class="p">,</span> <span class="n">_ToolGridSlot</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__mapper</span><span class="o">.</span><span class="n">setMapping</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__mapper</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__removeActionButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove the button for the action from the layout and delete it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">action</span> <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">slot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__mapper</span><span class="o">.</span><span class="n">removeMappings</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shiftGrid</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__shiftGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shift all buttons starting at index `start` by `count` cells.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">button_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">button_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span> <span class="n">button_count</span>
+
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="o">-</span><span class="n">direction</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">itemAtPosition</span><span class="p">(</span><span class="n">index</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">,</span>
+                                                <span class="n">index</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">:</span>
+                <span class="n">button</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+                <span class="n">new_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="n">count</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="n">new_index</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">,</span>
+                                        <span class="n">new_index</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">,</span>
+                                        <span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__relayout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Relayout the buttons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">())):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">takeAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span> <span class="o">=</span> <span class="p">[</span><span class="n">_ToolGridSlot</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">slot</span><span class="o">.</span><span class="n">action</span><span class="p">,</span>
+                                          <span class="n">i</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">,</span>
+                                          <span class="n">i</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">slot</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="n">slot</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">slot</span><span class="o">.</span><span class="n">column</span><span class="p">,</span>
+                                    <span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignTop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__indexOf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the index of button widget.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">buttons</span> <span class="o">=</span> <span class="p">[</span><span class="n">slot</span><span class="o">.</span><span class="n">button</span> <span class="k">for</span> <span class="n">slot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">buttons</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">button</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__onButtonEnter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">):</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">button</span><span class="o">.</span><span class="n">defaultAction</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionHovered</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__onClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionTriggered</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ToolGrid.paintEvent"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.paintEvent">[docs]</a>    <span class="k">def</span> <span class="nf">paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">StyledWidget_paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolGrid.eventFilter"><a class="viewcode-back" href="../../../orangecanvas/gui.toolgrid.html#orangecanvas.gui.toolgrid.ToolGrid.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">etype</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">KeyPress</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasFocus</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Qt</span><span class="o">.</span><span class="n">Key_Up</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Down</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Left</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Right</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__focusMove</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                    <span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">HoverEnter</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__onButtonEnter</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">eventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__focusMove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">focus</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">focus</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">focusWidget</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__indexOf</span><span class="p">(</span><span class="n">focus</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Down</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Up</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__columns</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Left</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Right</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">():</span>
+            <span class="n">button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gridSlots</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">button</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setFocus</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">TabFocusReason</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

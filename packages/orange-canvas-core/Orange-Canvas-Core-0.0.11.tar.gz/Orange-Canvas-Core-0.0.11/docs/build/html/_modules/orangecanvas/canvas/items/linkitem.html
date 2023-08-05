@@ -1,0 +1,933 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.canvas.items.linkitem &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.canvas.items.linkitem</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.canvas.items.linkitem</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=========</span>
+<span class="sd">Link Item</span>
+<span class="sd">=========</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="k">import</span> <span class="n">escape</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QGraphicsItem</span><span class="p">,</span> <span class="n">QGraphicsEllipseItem</span><span class="p">,</span> <span class="n">QGraphicsPathItem</span><span class="p">,</span> <span class="n">QGraphicsWidget</span><span class="p">,</span>
+    <span class="n">QGraphicsTextItem</span><span class="p">,</span> <span class="n">QGraphicsDropShadowEffect</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QPen</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QPainterPath</span><span class="p">,</span> <span class="n">QTransform</span><span class="p">,</span> <span class="n">QPalette</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QLineF</span><span class="p">,</span> <span class="n">QEvent</span>
+
+<span class="kn">from</span> <span class="nn">.nodeitem</span> <span class="k">import</span> <span class="n">SHADOW_COLOR</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">stroke_path</span>
+
+<span class="kn">from</span> <span class="nn">...scheme</span> <span class="k">import</span> <span class="n">SchemeLink</span>
+
+
+<span class="k">class</span> <span class="nc">LinkCurveItem</span><span class="p">(</span><span class="n">QGraphicsPathItem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Link curve item. The main component of a :class:`LinkItem`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptedMouseButtons</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoButton</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptHoverEvents</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shadow</span> <span class="o">=</span> <span class="n">QGraphicsDropShadowEffect</span><span class="p">(</span>
+            <span class="n">blurRadius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">QColor</span><span class="p">(</span><span class="n">SHADOW_COLOR</span><span class="p">),</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setGraphicsEffect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shadow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shadow</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath_disabled</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;#9CACB4&quot;</span><span class="p">)),</span> <span class="mf">2.0</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">setCurvePath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath_disabled</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">curvePath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">QPainterPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__curvepath</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setHoverState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setLinkEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">isLinkEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span>
+
+    <span class="k">def</span> <span class="nf">setPen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pen</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pen</span> <span class="o">!=</span> <span class="n">pen</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pen</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curvePath</span><span class="p">()</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="p">())</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setWidthF</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pen</span><span class="o">.</span><span class="n">widthF</span><span class="p">(),</span> <span class="mf">7.0</span><span class="p">))</span>
+            <span class="n">pen</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">SolidLine</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="n">stroke_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pen</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span>
+
+    <span class="k">def</span> <span class="nf">setPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">shadow_enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shadow</span><span class="o">.</span><span class="n">isEnabled</span><span class="p">()</span> <span class="o">!=</span> <span class="n">shadow_enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shadow</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="n">shadow_enabled</span><span class="p">)</span>
+        <span class="n">basecurve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath</span>
+        <span class="n">link_enabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span>
+        <span class="k">if</span> <span class="n">link_enabled</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">basecurve</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath_disabled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath_disabled</span> <span class="o">=</span> <span class="n">path_link_disabled</span><span class="p">(</span><span class="n">basecurve</span><span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__curvepath_disabled</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">bezier_subdivide</span><span class="p">(</span><span class="n">cp</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subdivide a cubic bezier curve defined by the control points `cp`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cp : List[QPointF]</span>
+<span class="sd">        The control points for a cubic bezier curve.</span>
+<span class="sd">    t : float</span>
+<span class="sd">        The cut point; a value between 0 and 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cp : Tuple[List[QPointF], List[QPointF]]</span>
+<span class="sd">        Two lists of new control points for the new left and right part</span>
+<span class="sd">        respectively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/Bezier/bezier-sub.html</span>
+    <span class="n">c00</span><span class="p">,</span> <span class="n">c01</span><span class="p">,</span> <span class="n">c02</span><span class="p">,</span> <span class="n">c03</span> <span class="o">=</span> <span class="n">cp</span>
+
+    <span class="n">c10</span> <span class="o">=</span> <span class="n">c00</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c01</span> <span class="o">*</span> <span class="n">t</span>
+    <span class="n">c11</span> <span class="o">=</span> <span class="n">c01</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c02</span> <span class="o">*</span> <span class="n">t</span>
+    <span class="n">c12</span> <span class="o">=</span> <span class="n">c02</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c03</span> <span class="o">*</span> <span class="n">t</span>
+
+    <span class="n">c20</span> <span class="o">=</span> <span class="n">c10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c11</span> <span class="o">*</span> <span class="n">t</span>
+    <span class="n">c21</span> <span class="o">=</span> <span class="n">c11</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c12</span> <span class="o">*</span> <span class="n">t</span>
+
+    <span class="n">c30</span> <span class="o">=</span> <span class="n">c20</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">c21</span> <span class="o">*</span> <span class="n">t</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="p">[</span><span class="n">c00</span><span class="p">,</span> <span class="n">c10</span><span class="p">,</span> <span class="n">c20</span><span class="p">,</span> <span class="n">c30</span><span class="p">]</span>
+    <span class="n">second</span> <span class="o">=</span> <span class="p">[</span><span class="n">c30</span><span class="p">,</span> <span class="n">c21</span><span class="p">,</span> <span class="n">c12</span><span class="p">,</span> <span class="n">c03</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span>
+
+
+<span class="k">def</span> <span class="nf">qpainterpath_simple_split</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split a QPainterPath defined simple curve.</span>
+
+<span class="sd">    The path must be either empty or composed of a single LineToElement or</span>
+<span class="sd">    CurveToElement.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : QPainterPath</span>
+
+<span class="sd">    t : float</span>
+<span class="sd">        Point where to split specified as a percentage along the path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    splitpath: Tuple[QPainterPath, QPainterPath]</span>
+<span class="sd">        A pair of QPainterPaths</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">path</span><span class="o">.</span><span class="n">elementCount</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">el0</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">el0</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">QPainterPath</span><span class="o">.</span><span class="n">MoveToElement</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">elementCount</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">p1</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">el0</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">el0</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p1</span><span class="p">,</span> <span class="n">QPainterPath</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+
+    <span class="n">el1</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">el1</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">QPainterPath</span><span class="o">.</span><span class="n">LineToElement</span><span class="p">:</span>
+        <span class="n">pointat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">pointAtPercent</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">l1</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">el0</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">el0</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">pointat</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">pointat</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+        <span class="n">l2</span> <span class="o">=</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">pointat</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">pointat</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span> <span class="n">el1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">el1</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">p1</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">l1</span><span class="o">.</span><span class="n">p1</span><span class="p">())</span>
+        <span class="n">p1</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">l1</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+        <span class="n">p2</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">l2</span><span class="o">.</span><span class="n">p1</span><span class="p">())</span>
+        <span class="n">p2</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">l2</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span>
+    <span class="k">elif</span> <span class="n">el1</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">QPainterPath</span><span class="o">.</span><span class="n">CurveToElement</span><span class="p">:</span>
+        <span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">el0</span><span class="p">,</span> <span class="n">el1</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">path</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">QPainterPath</span><span class="o">.</span><span class="n">CurveToDataElement</span>
+                   <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="p">[</span><span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">])</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="p">[</span><span class="n">QPointF</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="p">[</span><span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">]]</span>
+        <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">bezier_subdivide</span><span class="p">(</span><span class="n">cp</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">(),</span> <span class="n">QPainterPath</span><span class="p">()</span>
+        <span class="n">p1</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">first</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">p1</span><span class="o">.</span><span class="n">cubicTo</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">p2</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">second</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">p2</span><span class="o">.</span><span class="n">cubicTo</span><span class="p">(</span><span class="o">*</span><span class="n">second</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">path_link_disabled</span><span class="p">(</span><span class="n">basepath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a QPainterPath &#39;styled&#39; to indicate a &#39;disabled&#39; link.</span>
+
+<span class="sd">    A disabled link is displayed with a single disconnection symbol in the</span>
+<span class="sd">    middle (--||--)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    basepath : QPainterPath</span>
+<span class="sd">        The base path (a simple curve spine).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    path : QPainterPath</span>
+<span class="sd">        A &#39;styled&#39; link path</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">segmentlen</span> <span class="o">=</span> <span class="n">basepath</span><span class="o">.</span><span class="n">length</span><span class="p">()</span>
+    <span class="n">px</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="k">if</span> <span class="n">segmentlen</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">QPainterPath</span><span class="p">(</span><span class="n">basepath</span><span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">px</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">segmentlen</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qpainterpath_simple_split</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="mf">0.50</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">qpainterpath_simple_split</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="mf">0.50</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="n">basepath</span><span class="o">.</span><span class="n">angleAtPercent</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="mi">90</span>
+    <span class="n">angler</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">normal</span> <span class="o">=</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angler</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angler</span><span class="p">))</span>
+
+    <span class="n">end1</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">currentPosition</span><span class="p">()</span>
+    <span class="n">start2</span> <span class="o">=</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">p2</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">p2</span><span class="o">.</span><span class="n">elementAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">p1</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">start2</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">start2</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+    <span class="n">p1</span><span class="o">.</span><span class="n">addPath</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">QPainterPath_addLine</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p1</span><span class="p">())</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">lineTo</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">p2</span><span class="p">())</span>
+
+    <span class="n">QPainterPath_addLine</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">end1</span> <span class="o">-</span> <span class="n">normal</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">end1</span> <span class="o">+</span> <span class="n">normal</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">QPainterPath_addLine</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">QLineF</span><span class="p">(</span><span class="n">start2</span> <span class="o">-</span> <span class="n">normal</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">start2</span> <span class="o">+</span> <span class="n">normal</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">p1</span>
+
+
+<span class="k">class</span> <span class="nc">LinkAnchorIndicator</span><span class="p">(</span><span class="n">QGraphicsEllipseItem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A visual indicator of the link anchor point at both ends</span>
+<span class="sd">    of the :class:`LinkItem`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span><span class="o">-</span><span class="mf">3.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">7.</span><span class="p">,</span> <span class="mf">7.</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoPen</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;#9CACB4&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">setHoverState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The hover state is set by the LinkItem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">paint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">painter</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">brush</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">brush</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hover</span><span class="p">:</span>
+            <span class="n">brush</span> <span class="o">=</span> <span class="n">QBrush</span><span class="p">(</span><span class="n">brush</span><span class="o">.</span><span class="n">color</span><span class="p">()</span><span class="o">.</span><span class="n">darker</span><span class="p">(</span><span class="mi">110</span><span class="p">))</span>
+
+        <span class="n">painter</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pen</span><span class="p">())</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">drawEllipse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="LinkItem"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem">[docs]</a><span class="k">class</span> <span class="nc">LinkItem</span><span class="p">(</span><span class="n">QGraphicsWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Link item in the canvas that connects two :class:`.NodeItem`\s in the</span>
+<span class="sd">    canvas.</span>
+
+<span class="sd">    The link curve connects two `Anchor` items (see :func:`setSourceItem`</span>
+<span class="sd">    and :func:`setSinkItem`). Once the anchors are set the curve</span>
+<span class="sd">    automatically adjusts its end points whenever the anchors move.</span>
+
+<span class="sd">    An optional source/sink text item can be displayed above the curve&#39;s</span>
+<span class="sd">    central point (:func:`setSourceName`, :func:`setSinkName`)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Z value of the item</span>
+    <span class="n">Z_VALUE</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1">#: Runtime link state value</span>
+    <span class="c1">#: These are pulled from SchemeLink.State for ease of binding to it&#39;s</span>
+    <span class="c1">#: state</span>
+    <span class="n">State</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">State</span>
+    <span class="c1">#: The link has no associated state.</span>
+    <span class="n">NoState</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">NoState</span>
+    <span class="c1">#: Link is empty; the source node does not have any value on output</span>
+    <span class="n">Empty</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Empty</span>
+    <span class="c1">#: Link is active; the source node has a valid value on output</span>
+    <span class="n">Active</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Active</span>
+    <span class="c1">#: The link is pending; the sink node is scheduled for update</span>
+    <span class="n">Pending</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">Pending</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFlag</span><span class="p">(</span><span class="n">QGraphicsItem</span><span class="o">.</span><span class="n">ItemHasNoContents</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptedMouseButtons</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">RightButton</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftButton</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAcceptHoverEvents</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setZValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Z_VALUE</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span> <span class="o">=</span> <span class="n">LinkCurveItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sourceIndicator</span> <span class="o">=</span> <span class="n">LinkAnchorIndicator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span> <span class="o">=</span> <span class="n">LinkAnchorIndicator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sourceIndicator</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span> <span class="o">=</span> <span class="n">QGraphicsTextItem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setAcceptedMouseButtons</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoButton</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setAcceptHoverEvents</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dynamicEnabled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">LinkItem</span><span class="o">.</span><span class="n">NoState</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hover</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatePen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatePalette</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateFont</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LinkItem.setSourceItem"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setSourceItem">[docs]</a>    <span class="k">def</span> <span class="nf">setSourceItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the source `item` (:class:`.NodeItem`). Use `anchor`</span>
+<span class="sd">        (:class:`.AnchorPoint`) as the curve start point (if ``None`` a new</span>
+<span class="sd">        output anchor will be created using ``item.newOutputAnchor()``).</span>
+
+<span class="sd">        Setting item to ``None`` and a valid anchor is a valid operation</span>
+<span class="sd">        (for instance while mouse dragging one end of the link).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">anchor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">outputAnchors</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Anchor must be belong to the item&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span> <span class="o">!=</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="p">:</span>
+                <span class="c1"># Remove a previous source item and the corresponding anchor</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sourcePosChanged</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span><span class="o">.</span><span class="n">removeOutputAnchor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sourceItem</span> <span class="o">=</span> <span class="n">item</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Create a new output anchor for the item if none is provided.</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">newOutputAnchor</span><span class="p">()</span>
+
+            <span class="c1"># Update the visibility of the start point indicator.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sourceIndicator</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">anchor</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sourcePosChanged</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="o">=</span> <span class="n">anchor</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sourcePosChanged</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateCurve</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.setSinkItem"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setSinkItem">[docs]</a>    <span class="k">def</span> <span class="nf">setSinkItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the sink `item` (:class:`.NodeItem`). Use `anchor`</span>
+<span class="sd">        (:class:`.AnchorPoint`) as the curve end point (if ``None`` a new</span>
+<span class="sd">        input anchor will be created using ``item.newInputAnchor()``).</span>
+
+<span class="sd">        Setting item to ``None`` and a valid anchor is a valid operation</span>
+<span class="sd">        (for instance while mouse dragging one and of the link).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">anchor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">inputAnchors</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Anchor must be belong to the item&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span> <span class="o">!=</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="p">:</span>
+                <span class="c1"># Remove a previous source item and the corresponding anchor</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sinkPosChanged</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span><span class="o">.</span><span class="n">removeInputAnchor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinkItem</span> <span class="o">=</span> <span class="n">item</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Create a new input anchor for the item if none is provided.</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">newInputAnchor</span><span class="p">()</span>
+
+            <span class="c1"># Update the visibility of the end point indicator.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="o">!=</span> <span class="n">anchor</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sinkPosChanged</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="o">=</span> <span class="n">anchor</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="o">.</span><span class="n">scenePositionChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sinkPosChanged</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateCurve</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.setChannelNamesVisible"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setChannelNamesVisible">[docs]</a>    <span class="k">def</span> <span class="nf">setChannelNamesVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the visibility of the channel name text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">visible</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.setSourceName"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setSourceName">[docs]</a>    <span class="k">def</span> <span class="nf">setSourceName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the name of the source (used in channel name text).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateText</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.sourceName"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.sourceName">[docs]</a>    <span class="k">def</span> <span class="nf">sourceName</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the source name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span></div>
+
+<div class="viewcode-block" id="LinkItem.setSinkName"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setSinkName">[docs]</a>    <span class="k">def</span> <span class="nf">setSinkName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the name of the sink (used in channel name text).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateText</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.sinkName"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.sinkName">[docs]</a>    <span class="k">def</span> <span class="nf">sinkName</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the sink name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span></div>
+
+    <span class="k">def</span> <span class="nf">_sinkPosChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateCurve</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_sourcePosChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateCurve</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__updateCurve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="p">:</span>
+            <span class="n">source_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sourceAnchor</span><span class="o">.</span><span class="n">anchorScenePos</span><span class="p">()</span>
+            <span class="n">sink_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinkAnchor</span><span class="o">.</span><span class="n">anchorScenePos</span><span class="p">()</span>
+            <span class="n">source_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">mapFromScene</span><span class="p">(</span><span class="n">source_pos</span><span class="p">)</span>
+            <span class="n">sink_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">mapFromScene</span><span class="p">(</span><span class="n">sink_pos</span><span class="p">)</span>
+
+            <span class="c1"># Adaptive offset for the curve control points to avoid a</span>
+            <span class="c1"># cusp when the two points have the same y coordinate</span>
+            <span class="c1"># and are close together</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">source_pos</span> <span class="o">-</span> <span class="n">sink_pos</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">delta</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">cp_offset</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">)</span>
+
+            <span class="c1"># TODO: make the curve tangent orthogonal to the anchors path.</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">QPainterPath</span><span class="p">()</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="n">source_pos</span><span class="p">)</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">cubicTo</span><span class="p">(</span><span class="n">source_pos</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">cp_offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                         <span class="n">sink_pos</span> <span class="o">-</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">cp_offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                         <span class="n">sink_pos</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">setCurvePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sourceIndicator</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">source_pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">setPos</span><span class="p">(</span><span class="n">sink_pos</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateText</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">setPath</span><span class="p">(</span><span class="n">QPainterPath</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__updateText</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span><span class="p">:</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&lt;nobr&gt;</span><span class="si">{0}</span><span class="s2">&lt;/nobr&gt; </span><span class="se">\u2192</span><span class="s2"> &lt;nobr&gt;</span><span class="si">{1}</span><span class="s2">&lt;/nobr&gt;&quot;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">escape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span><span class="p">),</span>
+                                <span class="n">escape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sinkName</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If the names are the same show only one.</span>
+                <span class="c1"># Is this right? If the sink has two input channels of the</span>
+                <span class="c1"># same type having the name on the link help elucidate</span>
+                <span class="c1"># the scheme.</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">escape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__sourceName</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setHtml</span><span class="p">(</span><span class="s1">&#39;&lt;div align=&quot;center&quot;&gt;</span><span class="si">{0}</span><span class="s1">&lt;/div&gt;&#39;</span>
+                                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">curvePath</span><span class="p">()</span>
+
+        <span class="c1"># Constrain the text width if it is too long to fit on a single line</span>
+        <span class="c1"># between the two ends</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="c1"># Use the distance between the start/end points as a measure of</span>
+            <span class="c1"># available space</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">pointAtPercent</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">path</span><span class="o">.</span><span class="n">pointAtPercent</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">available_width</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">x</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">diff</span><span class="o">.</span><span class="n">y</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="c1"># Get the ideal text width if it was unconstrained</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">document</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">idealwidth</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">idealWidth</span><span class="p">()</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+
+            <span class="c1"># Constrain the text width but not below a certain min width</span>
+            <span class="n">minwidth</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="n">textwidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minwidth</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">available_width</span><span class="p">,</span> <span class="n">idealwidth</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="n">textwidth</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Reset the fixed width</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setTextWidth</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">pointAtPercent</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">angleAtPercent</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="n">brect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">QTransform</span><span class="p">()</span>
+            <span class="n">transform</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">())</span>
+            <span class="n">transform</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="o">-</span><span class="n">angle</span><span class="p">)</span>
+
+            <span class="c1"># Center and move above the curve path.</span>
+            <span class="n">transform</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">-</span><span class="n">brect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">brect</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">removeLink</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSinkItem</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSourceItem</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateCurve</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setHoverState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hover</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hover</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sourceIndicator</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePen</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LinkItem.hoverEnterEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.hoverEnterEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverEnterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1"># Hover enter event happens when the mouse enters any child object</span>
+        <span class="c1"># but we only want to show the &#39;hovered&#39; shadow when the mouse</span>
+        <span class="c1"># is over the &#39;curveItem&#39;, so we install self as an event filter</span>
+        <span class="c1"># on the LinkCurveItem and listen to its hover events.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">installSceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">hoverEnterEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.hoverLeaveEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.hoverLeaveEvent">[docs]</a>    <span class="k">def</span> <span class="nf">hoverLeaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1"># Remove the event filter to prevent unnecessary work in</span>
+        <span class="c1"># scene event filter when not needed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">removeSceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">hoverLeaveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.changeEvent"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.changeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">changeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">PaletteChange</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePalette</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">FontChange</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateFont</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">changeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.sceneEventFilter"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.sceneEventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">sceneEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">GraphicsSceneHoverEnter</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">GraphicsSceneHoverLeave</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setHoverState</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sceneEventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.boundingRect"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.boundingRect">[docs]</a>    <span class="k">def</span> <span class="nf">boundingRect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">childrenBoundingRect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span></div>
+
+<div class="viewcode-block" id="LinkItem.shape"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">shape</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.setEnabled"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reimplemented from :class:`QGraphicWidget`</span>
+
+<span class="sd">        Set link enabled state. When disabled the link is rendered with a</span>
+<span class="sd">        dashed line.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># This getter/setter pair override a property from the base class.</span>
+        <span class="c1"># They should be renamed to e.g. setLinkEnabled/linkEnabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">setLinkEnabled</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinkItem.isEnabled"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.isEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">isEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">isLinkEnabled</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.setDynamicEnabled"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setDynamicEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setDynamicEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the link&#39;s dynamic enabled state.</span>
+
+<span class="sd">        If the link is `dynamic` it will be rendered in red/green color</span>
+<span class="sd">        respectively depending on the state of the dynamic enabled state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamicEnabled</span> <span class="o">!=</span> <span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dynamicEnabled</span> <span class="o">=</span> <span class="n">enabled</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__updatePen</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.isDynamicEnabled"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.isDynamicEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">isDynamicEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the link dynamic enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamicEnabled</span></div>
+
+<div class="viewcode-block" id="LinkItem.setDynamic"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setDynamic">[docs]</a>    <span class="k">def</span> <span class="nf">setDynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dynamic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark the link as dynamic (i.e. it responds to</span>
+<span class="sd">        :func:`setDynamicEnabled`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span> <span class="o">!=</span> <span class="n">dynamic</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span> <span class="o">=</span> <span class="n">dynamic</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePen</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LinkItem.isDynamic"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.isDynamic">[docs]</a>    <span class="k">def</span> <span class="nf">isDynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the link dynamic.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span></div>
+
+<div class="viewcode-block" id="LinkItem.setRuntimeState"><a class="viewcode-back" href="../../../../orangecanvas/canvas.items.linkitem.html#orangecanvas.canvas.items.linkitem.LinkItem.setRuntimeState">[docs]</a>    <span class="k">def</span> <span class="nf">setRuntimeState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Style the link appropriate to the LinkItem.State</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : LinkItem.State</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">state</span>
+
+            <span class="k">if</span> <span class="n">state</span> <span class="o">&amp;</span> <span class="n">LinkItem</span><span class="o">.</span><span class="n">Pending</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">yellow</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sinkIndicator</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;#9CACB4&quot;</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePen</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">runtimeState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span>
+
+    <span class="k">def</span> <span class="nf">__updatePen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepareGeometryChange</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__boundingRect</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamicEnabled</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="p">),</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">hover</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">color</span><span class="o">.</span><span class="n">darker</span><span class="p">(</span><span class="mi">120</span><span class="p">)),</span> <span class="mf">2.1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">normal</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;#9CACB4&quot;</span><span class="p">)),</span> <span class="mf">2.0</span><span class="p">)</span>
+            <span class="n">hover</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="s2">&quot;#7D7D7D&quot;</span><span class="p">)),</span> <span class="mf">2.1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">&amp;</span> <span class="n">LinkItem</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+            <span class="n">pen_style</span> <span class="o">=</span> <span class="n">Qt</span><span class="o">.</span><span class="n">DashLine</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pen_style</span> <span class="o">=</span> <span class="n">Qt</span><span class="o">.</span><span class="n">SolidLine</span>
+
+        <span class="n">normal</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">pen_style</span><span class="p">)</span>
+        <span class="n">hover</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">pen_style</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hover</span><span class="p">:</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">hover</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">normal</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">curveItem</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__updatePalette</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setDefaultTextColor</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Text</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__updateFont</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linkTextItem</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">())</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

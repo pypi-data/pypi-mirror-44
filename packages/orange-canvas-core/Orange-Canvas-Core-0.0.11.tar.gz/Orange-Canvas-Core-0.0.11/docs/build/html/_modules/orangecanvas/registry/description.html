@@ -1,0 +1,696 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.registry.description &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.registry.description</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.registry.description</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Widget meta description classes</span>
+<span class="sd">===============================</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="c1"># Exceptions</span>
+
+
+<span class="k">class</span> <span class="nc">DescriptionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">WidgetSpecificationError</span><span class="p">(</span><span class="n">DescriptionError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">SignalSpecificationError</span><span class="p">(</span><span class="n">DescriptionError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">CategorySpecificationError</span><span class="p">(</span><span class="n">DescriptionError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="c1">###############</span>
+<span class="c1"># Channel flags</span>
+<span class="c1">###############</span>
+
+<span class="c1"># A single signal</span>
+<span class="n">Single</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Multiple signal (more then one input on the channel)</span>
+<span class="n">Multiple</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1"># Default signal (default or primary input/output)</span>
+<span class="n">Default</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">NonDefault</span> <span class="o">=</span> <span class="mi">16</span>
+
+<span class="c1"># Explicit - only connected if specifically requested or the only possibility</span>
+<span class="n">Explicit</span> <span class="o">=</span> <span class="mi">32</span>
+
+<span class="c1"># Dynamic type output signal</span>
+<span class="n">Dynamic</span> <span class="o">=</span> <span class="mi">64</span>
+
+
+<span class="c1"># Input/output signal (channel) description</span>
+
+
+<div class="viewcode-block" id="InputSignal"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.InputSignal">[docs]</a><span class="k">class</span> <span class="nc">InputSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Description of an input channel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the channel.</span>
+<span class="sd">    type : str or `type`</span>
+<span class="sd">        Type of the accepted signals.</span>
+<span class="sd">    handler : str</span>
+<span class="sd">        Name of the handler method for the signal.</span>
+<span class="sd">    flags : int, optional</span>
+<span class="sd">        Channel flags.</span>
+<span class="sd">    id : str</span>
+<span class="sd">        A unique id of the input signal.</span>
+<span class="sd">    doc : str, optional</span>
+<span class="sd">        A docstring documenting the channel.</span>
+<span class="sd">    replaces : List[str]</span>
+<span class="sd">        A list of names this input replaces.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">handler</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">Single</span> <span class="o">+</span> <span class="n">NonDefault</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">replaces</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handler</span> <span class="o">=</span> <span class="n">handler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">replaces</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Single</span> <span class="ow">or</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Multiple</span><span class="p">):</span>
+            <span class="n">flags</span> <span class="o">+=</span> <span class="n">Single</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Default</span> <span class="ow">or</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">NonDefault</span><span class="p">):</span>
+            <span class="n">flags</span> <span class="o">+=</span> <span class="n">NonDefault</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Single</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explicit</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Explicit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{0.__name__}</span><span class="s2">(name=</span><span class="si">{name!r}</span><span class="s2">, type=</span><span class="si">{type!s}</span><span class="s2">, &quot;</span>
+               <span class="s2">&quot;handler=</span><span class="si">{handler}</span><span class="s2">, ...)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+<span class="k">def</span> <span class="nf">input_channel_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InputSignal</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InputSignal</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">InputSignal</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tuple, dict or InputSignal expected &quot;</span>
+                        <span class="s2">&quot;(got </span><span class="si">{0!r}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="OutputSignal"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.OutputSignal">[docs]</a><span class="k">class</span> <span class="nc">OutputSignal</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Description of an output channel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the channel.</span>
+<span class="sd">    type : str or `type`</span>
+<span class="sd">        Type of the output signals.</span>
+<span class="sd">    flags : int, optional</span>
+<span class="sd">        Channel flags.</span>
+<span class="sd">    id : str</span>
+<span class="sd">        A unique id of the output signal.</span>
+<span class="sd">    doc : str, optional</span>
+<span class="sd">        A docstring documenting the channel.</span>
+<span class="sd">    replaces : List[str]</span>
+<span class="sd">        A list of names this output replaces.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">Single</span> <span class="o">+</span> <span class="n">NonDefault</span><span class="p">,</span>
+                 <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">replaces</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">replaces</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Single</span> <span class="ow">or</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Multiple</span><span class="p">):</span>
+            <span class="n">flags</span> <span class="o">+=</span> <span class="n">Single</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Default</span> <span class="ow">or</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">NonDefault</span><span class="p">):</span>
+            <span class="n">flags</span> <span class="o">+=</span> <span class="n">NonDefault</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Single</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explicit</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Explicit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamic</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&amp;</span> <span class="n">Dynamic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamic</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">single</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SignalSpecificationError</span><span class="p">(</span>
+                <span class="s2">&quot;Output signal can not be &#39;Multiple&#39; and &#39;Dynamic&#39;.&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{0.__name__}</span><span class="s2">(name=</span><span class="si">{name!r}</span><span class="s2">, type=</span><span class="si">{type!s}</span><span class="s2">, &quot;</span>
+               <span class="s2">&quot;...)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
+
+
+<span class="k">def</span> <span class="nf">output_channel_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">OutputSignal</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">OutputSignal</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">OutputSignal</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tuple, dict or OutputSignal expected &quot;</span>
+                        <span class="s2">&quot;(got </span><span class="si">{0!r}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="WidgetDescription"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.WidgetDescription">[docs]</a><span class="k">class</span> <span class="nc">WidgetDescription</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Description of a widget.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        A human readable name of the widget.</span>
+<span class="sd">    id : str</span>
+<span class="sd">        A unique identifier of the widget (in most situations this should</span>
+<span class="sd">        be the full module name).</span>
+<span class="sd">    category : str, optional</span>
+<span class="sd">        A name of the category in which this widget belongs.</span>
+<span class="sd">    version : str, optional</span>
+<span class="sd">        Version of the widget. By default the widget inherits the project</span>
+<span class="sd">        version.</span>
+<span class="sd">    description : str, optional</span>
+<span class="sd">        A short description of the widget, suitable for a tool tip.</span>
+<span class="sd">    long_description : str, optional</span>
+<span class="sd">        A longer description of the widget, suitable for a &#39;what&#39;s this?&#39;</span>
+<span class="sd">        role.</span>
+<span class="sd">    qualified_name : str</span>
+<span class="sd">        A qualified name (import name) of the class implementing the widget.</span>
+<span class="sd">    package : str, optional</span>
+<span class="sd">        A package name where the widget is implemented.</span>
+<span class="sd">    project_name : str, optional</span>
+<span class="sd">        The distribution name that provides the widget.</span>
+<span class="sd">    inputs : list of :class:`InputSignal`, optional</span>
+<span class="sd">        A list of input channels provided by the widget.</span>
+<span class="sd">    outputs : list of :class:`OutputSignal`, optional</span>
+<span class="sd">        A list of output channels provided by the widget.</span>
+<span class="sd">    help : str, optional</span>
+<span class="sd">        URL or an Resource template of a detailed widget help page.</span>
+<span class="sd">    help_ref : str, optional</span>
+<span class="sd">        A text reference id that can be used to identify the help</span>
+<span class="sd">        page, for instance an intersphinx reference.</span>
+<span class="sd">    author : str, optional</span>
+<span class="sd">        Author name.</span>
+<span class="sd">    author_email : str, optional</span>
+<span class="sd">        Author email address.</span>
+<span class="sd">    maintainer : str, optional</span>
+<span class="sd">        Maintainer name</span>
+<span class="sd">    maintainer_email : str, optional</span>
+<span class="sd">        Maintainer email address.</span>
+<span class="sd">    keywords : list-of-str, optional</span>
+<span class="sd">        A list of keyword phrases.</span>
+<span class="sd">    priority : int, optional</span>
+<span class="sd">        Widget priority (the order of the widgets in a GUI presentation).</span>
+<span class="sd">    icon : str, optional</span>
+<span class="sd">        A filename of the widget icon (in relation to the package).</span>
+<span class="sd">    background : str, optional</span>
+<span class="sd">        Widget&#39;s background color (in the canvas GUI).</span>
+<span class="sd">    replaces : list-of-str, optional</span>
+<span class="sd">        A list of ids this widget replaces (optional).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">long_description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">qualified_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">package</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">inputs</span><span class="o">=</span><span class="p">[],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[],</span>
+                 <span class="n">author</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">author_email</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">maintainer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maintainer_email</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">help</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">priority</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">,</span>
+                 <span class="n">icon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">replaces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">qualified_name</span><span class="p">:</span>
+            <span class="c1"># TODO: Should also check that the name is real.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;qualified_name&#39; must be supplied.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">category</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">long_description</span> <span class="o">=</span> <span class="n">long_description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qualified_name</span> <span class="o">=</span> <span class="n">qualified_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">package</span> <span class="o">=</span> <span class="n">package</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="o">=</span> <span class="n">project_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">help</span> <span class="o">=</span> <span class="n">help</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">help_ref</span> <span class="o">=</span> <span class="n">help_ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">author</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author_email</span> <span class="o">=</span> <span class="n">author_email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintainer</span> <span class="o">=</span> <span class="n">maintainer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintainer_email</span> <span class="o">=</span> <span class="n">maintainer_email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span> <span class="o">=</span> <span class="n">keywords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">icon</span> <span class="o">=</span> <span class="n">icon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replaces</span> <span class="o">=</span> <span class="n">replaces</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;WidgetDescription(name=</span><span class="si">%(name)r</span><span class="s2">, id=</span><span class="si">%(id)r</span><span class="s2">), &quot;</span>
+                <span class="s2">&quot;category=</span><span class="si">%(category)r</span><span class="s2">, ...)&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="WidgetDescription.from_module"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.WidgetDescription.from_module">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_module</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the widget description from a module.</span>
+
+<span class="sd">        The module is inspected for global variables (upper case versions of</span>
+<span class="sd">        `WidgetDescription.__init__` parameters).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        module : `module` or str</span>
+<span class="sd">            A module to inspect for widget description. Can be passed</span>
+<span class="sd">            as a string (qualified import name).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">])</span>
+
+        <span class="n">module_name</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">__package__</span><span class="p">:</span>
+            <span class="n">package_name</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">__package__</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">package_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Default widget class name unless otherwise specified is the</span>
+        <span class="c1"># module name, and default category the package name</span>
+        <span class="n">default_cls_name</span> <span class="o">=</span> <span class="n">module_name</span>
+        <span class="n">default_cat_name</span> <span class="o">=</span> <span class="n">package_name</span> <span class="k">if</span> <span class="n">package_name</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">widget_cls_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;WIDGET_CLASS&quot;</span><span class="p">,</span> <span class="n">default_cls_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">widget_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">widget_cls_name</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># The module does not have a widget class implementation or the</span>
+            <span class="c1"># widget name.</span>
+            <span class="k">raise</span> <span class="n">WidgetSpecificationError</span>
+
+        <span class="n">qualified_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">widget_cls_name</span><span class="p">)</span>
+
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;ID&quot;</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;INPUTS&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;OUTPUTS&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;CATEGORY&quot;</span><span class="p">,</span> <span class="n">default_cat_name</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;VERSION&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;DESCRIPTION&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">long_description</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;LONG_DESCRIPTION&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;AUTHOR&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">author_email</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;AUTHOR_EMAIL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">maintainer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;MAINTAINER&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">maintainer_email</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;MAINTAINER_EMAIL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">help</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;HELP&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">help_ref</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;HELP_REF&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">icon</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;ICON&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;PRIORITY&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">)</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;KEYWORDS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;BACKGROUND&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">replaces</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;REPLACES&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">input_channel_from_args</span><span class="p">,</span> <span class="n">inputs</span><span class="p">))</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">output_channel_from_args</span><span class="p">,</span> <span class="n">outputs</span><span class="p">))</span>
+
+        <span class="c1"># Convert all signal types into qualified names.</span>
+        <span class="c1"># This is to prevent any possible import problems when cached</span>
+        <span class="c1"># descriptions are unpickled (the relevant code using this lists</span>
+        <span class="c1"># should be able to handle missing types better).</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">inputs</span> <span class="o">+</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">WidgetDescription</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">long_description</span><span class="o">=</span><span class="n">long_description</span><span class="p">,</span>
+            <span class="n">qualified_name</span><span class="o">=</span><span class="n">qualified_name</span><span class="p">,</span>
+            <span class="n">package</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">__package__</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
+            <span class="n">author_email</span><span class="o">=</span><span class="n">author_email</span><span class="p">,</span>
+            <span class="n">maintainer</span><span class="o">=</span><span class="n">maintainer</span><span class="p">,</span>
+            <span class="n">maintainer_email</span><span class="o">=</span><span class="n">maintainer_email</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span>
+            <span class="n">help_ref</span><span class="o">=</span><span class="n">help_ref</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">icon</span><span class="o">=</span><span class="n">icon</span><span class="p">,</span>
+            <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+            <span class="n">replaces</span><span class="o">=</span><span class="n">replaces</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CategoryDescription"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.CategoryDescription">[docs]</a><span class="k">class</span> <span class="nc">CategoryDescription</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Description of a widget category.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    name : str</span>
+<span class="sd">        A human readable name.</span>
+<span class="sd">    version : str, optional</span>
+<span class="sd">        Version string.</span>
+<span class="sd">    description : str, optional</span>
+<span class="sd">        A short description of the category, suitable for a tool tip.</span>
+<span class="sd">    long_description : str, optional</span>
+<span class="sd">        A longer description.</span>
+<span class="sd">    qualified_name : str,</span>
+<span class="sd">        Qualified name</span>
+<span class="sd">    project_name : str</span>
+<span class="sd">        A project name providing the category.</span>
+<span class="sd">    priority : int</span>
+<span class="sd">        Priority (order in the GUI).</span>
+<span class="sd">    icon : str</span>
+<span class="sd">        An icon filename (a resource name retrievable using `pkg_resources`</span>
+<span class="sd">        relative to `qualified_name`).</span>
+<span class="sd">    background : str</span>
+<span class="sd">        An background color for widgets in this category.</span>
+<span class="sd">    hidden : bool</span>
+<span class="sd">        Is this category (by default) hidden in the canvas gui.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">long_description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">qualified_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">package</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">project_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">author_email</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">maintainer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maintainer_email</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">widgets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">,</span>
+                 <span class="n">icon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="kc">False</span>
+                 <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">long_description</span> <span class="o">=</span> <span class="n">long_description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qualified_name</span> <span class="o">=</span> <span class="n">qualified_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">package</span> <span class="o">=</span> <span class="n">package</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="o">=</span> <span class="n">project_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">author</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author_email</span> <span class="o">=</span> <span class="n">author_email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintainer</span> <span class="o">=</span> <span class="n">maintainer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintainer_email</span> <span class="o">=</span> <span class="n">maintainer_email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">help</span> <span class="o">=</span> <span class="n">help</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span> <span class="o">=</span> <span class="n">keywords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widgets</span> <span class="o">=</span> <span class="n">widgets</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">priority</span> <span class="o">=</span> <span class="n">priority</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">icon</span> <span class="o">=</span> <span class="n">icon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden</span> <span class="o">=</span> <span class="n">hidden</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;CategoryDescription(name=</span><span class="si">%(name)r</span><span class="s2">, ...)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CategoryDescription.from_package"><a class="viewcode-back" href="../../../orangecanvas/registry.html#orangecanvas.registry.CategoryDescription.from_package">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_package</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">package</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CategoryDescription from a package.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        package : `module` or `str`</span>
+<span class="sd">            A package containing the category.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">package</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">])</span>
+        <span class="n">package_name</span> <span class="o">=</span> <span class="n">package</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">qualified_name</span> <span class="o">=</span> <span class="n">package_name</span>
+        <span class="n">default_name</span> <span class="o">=</span> <span class="n">package_name</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span> <span class="n">default_name</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;DESCRIPTION&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">long_description</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;LONG_DESCRIPTION&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;AUTHOR&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">author_email</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;AUTHOR_EMAIL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">maintainer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;MAINTAINER&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">maintainer_email</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;MAINTAINER_MAIL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">help</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;HELP&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;KEYWORDS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;WIDGETS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">priority</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;PRIORITY&quot;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">icon</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;ICON&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;BACKGROUND&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">hidden</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;HIDDEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">priority</span> <span class="o">==</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;prototypes&quot;</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span>
+
+        <span class="k">return</span> <span class="n">CategoryDescription</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">qualified_name</span><span class="o">=</span><span class="n">qualified_name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">long_description</span><span class="o">=</span><span class="n">long_description</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
+            <span class="n">author_email</span><span class="o">=</span><span class="n">author_email</span><span class="p">,</span>
+            <span class="n">maintainer</span><span class="o">=</span><span class="n">maintainer</span><span class="p">,</span>
+            <span class="n">maintainer_email</span><span class="o">=</span><span class="n">maintainer_email</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
+            <span class="n">widgets</span><span class="o">=</span><span class="n">widgets</span><span class="p">,</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">icon</span><span class="o">=</span><span class="n">icon</span><span class="p">,</span>
+            <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+            <span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.gui.dropshadow &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.gui.dropshadow</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.gui.dropshadow</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=================</span>
+<span class="sd">Drop Shadow Frame</span>
+<span class="sd">=================</span>
+
+<span class="sd">A widget providing a drop shadow (gaussian blur effect) around another</span>
+<span class="sd">widget.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QWidget</span><span class="p">,</span> <span class="n">QGraphicsScene</span><span class="p">,</span> <span class="n">QGraphicsRectItem</span><span class="p">,</span> <span class="n">QGraphicsDropShadowEffect</span><span class="p">,</span>
+    <span class="n">QStyleOption</span><span class="p">,</span> <span class="n">QAbstractScrollArea</span><span class="p">,</span> <span class="n">QToolBar</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QPixmap</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QPalette</span><span class="p">,</span> <span class="n">QRegion</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Qt</span><span class="p">,</span> <span class="n">QPoint</span><span class="p">,</span> <span class="n">QPointF</span><span class="p">,</span> <span class="n">QRect</span><span class="p">,</span> <span class="n">QRectF</span><span class="p">,</span> <span class="n">QSize</span><span class="p">,</span> <span class="n">QSizeF</span><span class="p">,</span> <span class="n">QEvent</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span>
+
+<span class="n">CACHED_SHADOW_RECT_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">render_drop_shadow_frame</span><span class="p">(</span><span class="n">pixmap</span><span class="p">,</span> <span class="n">shadow_rect</span><span class="p">,</span> <span class="n">shadow_color</span><span class="p">,</span>
+                             <span class="n">offset</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">rect_fill_color</span><span class="p">):</span>
+    <span class="n">pixmap</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">scene</span> <span class="o">=</span> <span class="n">QGraphicsScene</span><span class="p">()</span>
+    <span class="n">rect</span> <span class="o">=</span> <span class="n">QGraphicsRectItem</span><span class="p">(</span><span class="n">shadow_rect</span><span class="p">)</span>
+    <span class="n">rect</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="n">rect_fill_color</span><span class="p">))</span>
+    <span class="n">rect</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoPen</span><span class="p">))</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+    <span class="n">effect</span> <span class="o">=</span> <span class="n">QGraphicsDropShadowEffect</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">shadow_color</span><span class="p">,</span>
+                                       <span class="n">blurRadius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+                                       <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+
+    <span class="n">rect</span><span class="o">.</span><span class="n">setGraphicsEffect</span><span class="p">(</span><span class="n">effect</span><span class="p">)</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">setSceneRect</span><span class="p">(</span><span class="n">QRectF</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">QSizeF</span><span class="p">(</span><span class="n">pixmap</span><span class="o">.</span><span class="n">size</span><span class="p">())))</span>
+    <span class="n">painter</span> <span class="o">=</span> <span class="n">QPainter</span><span class="p">(</span><span class="n">pixmap</span><span class="p">)</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">painter</span><span class="p">)</span>
+    <span class="n">painter</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">scene</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">pixmap</span>
+
+
+<div class="viewcode-block" id="DropShadowFrame"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame">[docs]</a><span class="k">class</span> <span class="nc">DropShadowFrame</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget drawing a drop shadow effect around the geometry of</span>
+<span class="sd">    another widget (works similar to :class:`QFocusFrame`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parent : :class:`QObject`</span>
+<span class="sd">        Parent object.</span>
+<span class="sd">    color : :class:`QColor`</span>
+<span class="sd">        The color of the drop shadow.</span>
+<span class="sd">    radius : float</span>
+<span class="sd">        Shadow radius.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">QColor</span><span class="p">(),</span> <span class="n">radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_TransparentForMouseEvents</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_NoChildEventsForParent</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFocusPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoFocus</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">=</span> <span class="n">radius</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widgetParent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatePixmap</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DropShadowFrame.setColor"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.setColor">[docs]</a>    <span class="k">def</span> <span class="nf">setColor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the color of the shadow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">QColor</span><span class="p">):</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">!=</span> <span class="n">color</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__color</span> <span class="o">=</span> <span class="n">QColor</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePixmap</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DropShadowFrame.color"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.color">[docs]</a>    <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the color of the drop shadow.</span>
+
+<span class="sd">        By default this is a color from the `palette` (for</span>
+<span class="sd">        `self.foregroundRole()`)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">QColor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__color</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">foregroundRole</span><span class="p">())</span></div>
+
+    <span class="n">color_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="n">QColor</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">setColor</span><span class="p">,</span> <span class="n">designable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Drop shadow color&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DropShadowFrame.setRadius"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.setRadius">[docs]</a>    <span class="k">def</span> <span class="nf">setRadius</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the drop shadow&#39;s blur radius.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">!=</span> <span class="n">radius</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span> <span class="o">=</span> <span class="n">radius</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateGeometry</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updatePixmap</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DropShadowFrame.radius"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.radius">[docs]</a>    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the shadow blur radius.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__radius</span></div>
+
+    <span class="n">radius_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">setRadius</span><span class="p">,</span> <span class="n">designable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Drop shadow blur radius.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DropShadowFrame.setWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.setWidget">[docs]</a>    <span class="k">def</span> <span class="nf">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widget around which to show the shadow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span> <span class="o">=</span> <span class="n">widget</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="c1"># Find the parent for the frame</span>
+            <span class="c1"># This is the top level window a toolbar or a viewport</span>
+            <span class="c1"># of a scroll area</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">parentWidget</span><span class="p">()</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">(</span><span class="n">QAbstractScrollArea</span><span class="p">,</span> <span class="n">QToolBar</span><span class="p">))</span> <span class="ow">or</span> \
+                       <span class="n">parent</span><span class="o">.</span><span class="n">isWindow</span><span class="p">()):</span>
+                <span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">parentWidget</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">QAbstractScrollArea</span><span class="p">):</span>
+                <span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">viewport</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">__widgetParent</span> <span class="o">=</span> <span class="n">parent</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setParent</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stackUnder</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateGeometry</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">widget</span><span class="o">.</span><span class="n">isVisible</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="DropShadowFrame.widget"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.widget">[docs]</a>    <span class="k">def</span> <span class="nf">widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget that was set by `setWidget`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span></div>
+
+<div class="viewcode-block" id="DropShadowFrame.paintEvent"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.paintEvent">[docs]</a>    <span class="k">def</span> <span class="nf">paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1"># TODO: Use QPainter.drawPixmapFragments on Qt 4.7</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">QStyleOption</span><span class="p">()</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">initFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">pixmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shadowPixmap</span>
+
+        <span class="n">shadow_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">rect</span><span class="p">)</span>
+        <span class="n">widget_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">geometry</span><span class="p">())</span>
+        <span class="n">widget_rect</span><span class="o">.</span><span class="n">moveTo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_</span><span class="p">)</span>
+
+        <span class="n">left</span> <span class="o">=</span> <span class="n">top</span> <span class="o">=</span> <span class="n">right</span> <span class="o">=</span> <span class="n">bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_</span>
+        <span class="n">pixmap_rect</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">QSizeF</span><span class="p">(</span><span class="n">pixmap</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+
+        <span class="c1"># Shadow casting rectangle in the source pixmap.</span>
+        <span class="n">pixmap_shadow_rect</span> <span class="o">=</span> <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">adjusted</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="o">-</span><span class="n">right</span><span class="p">,</span> <span class="o">-</span><span class="n">bottom</span><span class="p">)</span>
+        <span class="n">source_rects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shadowPixmapFragments</span><span class="p">(</span><span class="n">pixmap_rect</span><span class="p">,</span>
+                                                   <span class="n">pixmap_shadow_rect</span><span class="p">)</span>
+        <span class="n">target_rects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shadowPixmapFragments</span><span class="p">(</span><span class="n">shadow_rect</span><span class="p">,</span> <span class="n">widget_rect</span><span class="p">)</span>
+
+        <span class="n">painter</span> <span class="o">=</span> <span class="n">QPainter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">source_rects</span><span class="p">,</span> <span class="n">target_rects</span><span class="p">):</span>
+            <span class="n">painter</span><span class="o">.</span><span class="n">drawPixmap</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">pixmap</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">painter</span><span class="o">.</span><span class="n">end</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DropShadowFrame.eventFilter"><a class="viewcode-back" href="../../../orangecanvas/gui.dropshadow.html#orangecanvas.gui.dropshadow.DropShadowFrame.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">etype</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Move</span> <span class="ow">or</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Resize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateGeometry</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Show</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__updateGeometry</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Hide</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">eventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__updateGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the shadow geometry to fit the widget&#39;s changed</span>
+<span class="sd">        geometry.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgetParent</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent</span> <span class="o">!=</span> <span class="n">widget</span><span class="o">.</span><span class="n">parentWidget</span><span class="p">():</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">parentWidget</span><span class="p">()</span><span class="o">.</span><span class="n">mapTo</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">widget</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+        <span class="n">geom</span><span class="o">.</span><span class="n">adjust</span><span class="p">(</span><span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">geom</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+
+        <span class="c1"># Set the widget mask (punch a hole through to the `widget` instance.</span>
+        <span class="n">rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rect</span><span class="p">()</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">QRegion</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="n">transparent</span> <span class="o">=</span> <span class="n">QRegion</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">adjusted</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="o">-</span><span class="n">radius</span><span class="p">))</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">subtracted</span><span class="p">(</span><span class="n">transparent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMask</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__updatePixmap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the cached shadow pixmap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rect_size</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">top</span> <span class="o">=</span> <span class="n">right</span> <span class="o">=</span> <span class="n">bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_</span>
+
+        <span class="c1"># Size of the pixmap.</span>
+        <span class="n">pixmap_size</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="n">rect_size</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">+</span> <span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">,</span>
+                            <span class="n">rect_size</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="n">top</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">)</span>
+        <span class="n">shadow_rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">QPoint</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">),</span> <span class="n">rect_size</span><span class="p">)</span>
+        <span class="n">pixmap</span> <span class="o">=</span> <span class="n">QPixmap</span><span class="p">(</span><span class="n">pixmap_size</span><span class="p">)</span>
+        <span class="n">pixmap</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">rect_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">palette</span><span class="p">()</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Window</span><span class="p">)</span>
+
+        <span class="n">pixmap</span> <span class="o">=</span> <span class="n">render_drop_shadow_frame</span><span class="p">(</span>
+                      <span class="n">pixmap</span><span class="p">,</span>
+                      <span class="n">QRectF</span><span class="p">(</span><span class="n">shadow_rect</span><span class="p">),</span>
+                      <span class="n">shadow_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">color_</span><span class="p">,</span>
+                      <span class="n">offset</span><span class="o">=</span><span class="n">QPointF</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                      <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius_</span><span class="p">,</span>
+                      <span class="n">rect_fill_color</span><span class="o">=</span><span class="n">rect_fill_color</span>
+                      <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__shadowPixmap</span> <span class="o">=</span> <span class="n">pixmap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__shadowPixmapFragments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixmap_rect</span><span class="p">,</span> <span class="n">shadow_rect</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of 8 QRectF fragments for drawing a shadow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s_left</span><span class="p">,</span> <span class="n">s_top</span><span class="p">,</span> <span class="n">s_right</span><span class="p">,</span> <span class="n">s_bottom</span> <span class="o">=</span> \
+            <span class="n">shadow_rect</span><span class="o">.</span><span class="n">left</span><span class="p">(),</span> <span class="n">shadow_rect</span><span class="o">.</span><span class="n">top</span><span class="p">(),</span> \
+            <span class="n">shadow_rect</span><span class="o">.</span><span class="n">right</span><span class="p">(),</span> <span class="n">shadow_rect</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="n">s_width</span><span class="p">,</span> <span class="n">s_height</span> <span class="o">=</span> <span class="n">shadow_rect</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">shadow_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+        <span class="n">p_width</span><span class="p">,</span> <span class="n">p_height</span> <span class="o">=</span> <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+
+        <span class="n">top_left</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">s_left</span><span class="p">,</span> <span class="n">s_top</span><span class="p">)</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">s_left</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">s_width</span><span class="p">,</span> <span class="n">s_top</span><span class="p">)</span>
+        <span class="n">top_right</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">s_right</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">p_width</span> <span class="o">-</span> <span class="n">s_width</span><span class="p">,</span> <span class="n">s_top</span><span class="p">)</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">s_right</span><span class="p">,</span> <span class="n">s_top</span><span class="p">,</span> <span class="n">p_width</span> <span class="o">-</span> <span class="n">s_right</span><span class="p">,</span> <span class="n">s_height</span><span class="p">)</span>
+        <span class="n">right_bottom</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">shadow_rect</span><span class="o">.</span><span class="n">bottomRight</span><span class="p">(),</span>
+                              <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">bottomRight</span><span class="p">())</span>
+        <span class="n">bottom</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">shadow_rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">(),</span>
+                        <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">bottomRight</span><span class="p">()</span> <span class="o">-</span> \
+                        <span class="n">QPointF</span><span class="p">(</span><span class="n">p_width</span> <span class="o">-</span> <span class="n">s_right</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">bottom_left</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">shadow_rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">-</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">s_left</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                             <span class="n">pixmap_rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="n">s_left</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">QRectF</span><span class="p">(</span><span class="n">pixmap_rect</span><span class="o">.</span><span class="n">topLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">QPointF</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">s_top</span><span class="p">),</span>
+                      <span class="n">shadow_rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">top_left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">top_right</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">right_bottom</span><span class="p">,</span>
+                <span class="n">bottom</span><span class="p">,</span> <span class="n">bottom_left</span><span class="p">,</span> <span class="n">left</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

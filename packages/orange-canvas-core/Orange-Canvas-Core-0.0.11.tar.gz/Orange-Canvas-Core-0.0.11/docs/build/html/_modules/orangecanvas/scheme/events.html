@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.events &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.events</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.events</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Workflow Events</span>
+<span class="sd">---------------</span>
+
+<span class="sd">Here defined are events dispatched to and from an Scheme workflow</span>
+<span class="sd">instance.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">QEvent</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">orangecanvas.scheme</span> <span class="k">import</span> <span class="n">SchemeLink</span><span class="p">,</span> <span class="n">SchemeNode</span><span class="p">,</span> <span class="n">BaseSchemeAnnotation</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;WorkflowEvent&quot;</span><span class="p">,</span> <span class="s2">&quot;NodeEvent&quot;</span><span class="p">,</span> <span class="s2">&quot;LinkEvent&quot;</span><span class="p">,</span> <span class="s2">&quot;AnnotationEvent&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;WorkflowEnvChanged&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="WorkflowEvent"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.events.WorkflowEvent">[docs]</a><span class="k">class</span> <span class="nc">WorkflowEvent</span><span class="p">(</span><span class="n">QEvent</span><span class="p">):</span>
+    <span class="c1">#: Delivered to Scheme when a node has been added</span>
+    <span class="n">NodeAdded</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: Delivered to Scheme when a node has been removed</span>
+    <span class="n">NodeRemoved</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: A Link has been added to the scheme</span>
+    <span class="n">LinkAdded</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: A Link has been removed from the scheme</span>
+    <span class="n">LinkRemoved</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="c1">#: An input Link has been added to a node</span>
+    <span class="n">InputLinkAdded</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: An output Link has been added to a node</span>
+    <span class="n">OutputLinkAdded</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: An input Link has been removed from a node</span>
+    <span class="n">InputLinkRemoved</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: An output Link has been removed from a node</span>
+    <span class="n">OutputLinkRemoved</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="c1">#: Node&#39;s (runtime) state has changed</span>
+    <span class="n">NodeStateChange</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: Link&#39;s (runtime) state has changed</span>
+    <span class="n">LinkStateChange</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: Request for Node&#39;s runtime initialization (e.g.</span>
+    <span class="c1">#: load required data, establish connection, ...)</span>
+    <span class="n">NodeInitialize</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: Restore the node from serialized state</span>
+    <span class="n">NodeRestore</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="n">NodeSaveStateRequest</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="c1">#: Node user activate request (e.g. on double click in the</span>
+    <span class="c1">#: canvas GUI)</span>
+    <span class="n">NodeActivateRequest</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="c1"># Workflow runtime changed (Running/Paused/Stopped, ...)</span>
+    <span class="n">RuntimeStateChange</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="c1">#: Workflow resource changed (e.g. work directory, env variable)</span>
+    <span class="n">WorkflowResourceChange</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="n">WorkflowEnvironmentChange</span> <span class="o">=</span> <span class="n">WorkflowResourceChange</span>
+    <span class="c1">#: Workflow is about to close.</span>
+    <span class="n">WorkflowAboutToClose</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="n">WorkflowClose</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="n">AnnotationAdded</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="n">AnnotationRemoved</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+    <span class="n">AnnotationChange</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span>
+
+    <span class="c1">#: Request activation (show and raise) of the window containing</span>
+    <span class="c1">#: the workflow view</span>
+    <span class="n">ActivateParentRequest</span> <span class="o">=</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="n">QEvent</span><span class="o">.</span><span class="n">registerEventType</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="NodeEvent"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.events.NodeEvent">[docs]</a><span class="k">class</span> <span class="nc">NodeEvent</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (QEvent.Type, SchemeNode) -&gt; None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">etype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__node</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="k">def</span> <span class="nf">node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; SchemeNode</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        node : SchemeNode</span>
+<span class="sd">            The node instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node</span></div>
+
+
+<div class="viewcode-block" id="LinkEvent"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.events.LinkEvent">[docs]</a><span class="k">class</span> <span class="nc">LinkEvent</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="c1"># type: (QEvent.Type, SchemeLink) -&gt; None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">etype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__link</span> <span class="o">=</span> <span class="n">link</span>
+
+    <span class="k">def</span> <span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; SchemeLink</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        link : SchemeLink</span>
+<span class="sd">            The link instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__link</span></div>
+
+
+<div class="viewcode-block" id="AnnotationEvent"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.events.AnnotationEvent">[docs]</a><span class="k">class</span> <span class="nc">AnnotationEvent</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="c1"># type: (QEvent.Type, BaseSchemeAnnotation) -&gt; None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">etype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__annotation</span> <span class="o">=</span> <span class="n">annotation</span>
+
+    <span class="k">def</span> <span class="nf">annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; BaseSchemeAnnotation</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        annotation : BaseSchemeAnnotation</span>
+<span class="sd">            The annotation instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__annotation</span></div>
+
+
+<div class="viewcode-block" id="WorkflowEnvChanged"><a class="viewcode-back" href="../../../orangecanvas/scheme.scheme.html#orangecanvas.scheme.events.WorkflowEnvChanged">[docs]</a><span class="k">class</span> <span class="nc">WorkflowEnvChanged</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An event notifying the receiver of a workflow environment change.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    Scheme.runtime_env</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">newValue</span><span class="p">,</span> <span class="n">oldValue</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="o">.</span><span class="n">WorkflowEnvironmentChange</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__oldValue</span> <span class="o">=</span> <span class="n">oldValue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__newValue</span> <span class="o">=</span> <span class="n">newValue</span>
+
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; str</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The name of the environment property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span>
+
+    <span class="k">def</span> <span class="nf">oldValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; Any</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The old value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__oldValue</span>
+
+    <span class="k">def</span> <span class="nf">newValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; Any</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The new value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__newValue</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

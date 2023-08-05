@@ -1,0 +1,1032 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.readwrite &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.readwrite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.readwrite</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Scheme save/load routines.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">import</span> <span class="n">TreeBuilder</span><span class="p">,</span> <span class="n">Element</span><span class="p">,</span> <span class="n">ElementTree</span><span class="p">,</span> <span class="n">parse</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">count</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="k">import</span> <span class="n">literal_eval</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">SchemeNode</span><span class="p">,</span> <span class="n">SchemeLink</span>
+<span class="kn">from</span> <span class="nn">.annotations</span> <span class="k">import</span> <span class="n">SchemeTextAnnotation</span><span class="p">,</span> <span class="n">SchemeArrowAnnotation</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">IncompatibleChannelTypeError</span>
+
+<span class="kn">from</span> <span class="nn">..registry</span> <span class="k">import</span> <span class="n">global_registry</span>
+<span class="kn">from</span> <span class="nn">..registry</span> <span class="k">import</span> <span class="n">WidgetDescription</span><span class="p">,</span> <span class="n">InputSignal</span><span class="p">,</span> <span class="n">OutputSignal</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="UnknownWidgetDefinition"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.UnknownWidgetDefinition">[docs]</a><span class="k">class</span> <span class="nc">UnknownWidgetDefinition</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="string_eval"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.string_eval">[docs]</a><span class="k">def</span> <span class="nf">string_eval</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a python string literal `source`. Raise ValueError if</span>
+<span class="sd">    `source` is not a string literal.</span>
+
+<span class="sd">    &gt;&gt;&gt; string_eval(&quot;&#39;a string&#39;&quot;)</span>
+<span class="sd">    a string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">&quot;&lt;source&gt;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eval&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is not a string literal&quot;</span> <span class="o">%</span> <span class="n">source</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="tuple_eval"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.tuple_eval">[docs]</a><span class="k">def</span> <span class="nf">tuple_eval</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a python tuple literal `source` where the elements are</span>
+<span class="sd">    constrained to be int, float or string. Raise ValueError if not</span>
+<span class="sd">    a tuple literal.</span>
+
+<span class="sd">    &gt;&gt;&gt; tuple_eval(&quot;(1, 2, &quot;3&quot;)&quot;)</span>
+<span class="sd">    (1, 2, &#39;3&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">&quot;&lt;source&gt;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eval&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Tuple</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is not a tuple literal&quot;</span> <span class="o">%</span> <span class="n">source</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">))</span> <span class="ow">or</span>
+               <span class="c1"># allow signed number literals in Python3 (i.e. -1|+1|-1.0)</span>
+               <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">))</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">operand</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">))</span>
+               <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">elts</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only contain numbers or strings&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">literal_eval</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="terminal_eval"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.terminal_eval">[docs]</a><span class="k">def</span> <span class="nf">terminal_eval</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a python &#39;constant&#39; (string, number, None, True, False)</span>
+<span class="sd">    `source`. Raise ValueError is not a terminal literal.</span>
+
+<span class="sd">    &gt;&gt;&gt; terminal_eval(&quot;True&quot;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">&quot;&lt;source&gt;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eval&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_terminal_value</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_terminal_value</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">s</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">s</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> \
+            <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">__builtins__</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">NameConstant</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not a terminal&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Intermediate scheme representation</span>
+<span class="n">_scheme</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_scheme&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="s1">&#39;List[_node]&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">,</span> <span class="s1">&#39;List[_link]&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;annotations&quot;</span><span class="p">,</span> <span class="s1">&#39;List[_annotation]&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;session_state&quot;</span><span class="p">,</span> <span class="s1">&#39;_session_data&#39;</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_node</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_node&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s1">&#39;Tuple[float, float]&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;qualified_name&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s1">&#39;_data&#39;</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_data</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_data&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_link</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_link&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;source_node_id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;sink_node_id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;source_channel&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;sink_channel&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_annotation</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_annotation&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;_text_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_arrow_params&#39;</span><span class="p">]),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_text_params</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_text_params&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;font&quot;</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">&quot;content_type&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_arrow_params</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_arrow_params&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+    <span class="p">])</span>
+
+<span class="n">_window_group</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_window_group&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]])</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">_session_data</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;_session_data&quot;</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;groups&quot;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">_window_group</span><span class="p">])</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_ows_etree_v_2_0"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.parse_ows_etree_v_2_0">[docs]</a><span class="k">def</span> <span class="nf">parse_ows_etree_v_2_0</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+    <span class="c1"># type: (ElementTree) -&gt; _scheme</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parset an xml.etree.ElementTree struct into a intermediate workflow</span>
+<span class="sd">    representation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scheme</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span>
+    <span class="n">nodes</span><span class="p">,</span> <span class="n">links</span><span class="p">,</span> <span class="n">annotations</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="c1"># First collect all properties</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="nb">property</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;node_properties/properties&quot;</span><span class="p">):</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="nb">property</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>
+        <span class="nb">format</span> <span class="o">=</span> <span class="nb">property</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;2.0&quot;</span> <span class="ow">and</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="nb">property</span><span class="o">.</span><span class="n">attrib</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">property</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">property</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">properties</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_data</span><span class="p">(</span><span class="nb">format</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Collect all nodes</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;nodes/node&quot;</span><span class="p">):</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">_node</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
+            <span class="n">position</span><span class="o">=</span><span class="n">tuple_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;position&quot;</span><span class="p">)),</span>
+            <span class="n">project_name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project_name&quot;</span><span class="p">),</span>
+            <span class="n">qualified_name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;qualified_name&quot;</span><span class="p">),</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;links/link&quot;</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_link</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span>
+            <span class="n">source_node_id</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;source_node_id&quot;</span><span class="p">),</span>
+            <span class="n">sink_node_id</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sink_node_id&quot;</span><span class="p">),</span>
+            <span class="n">source_channel</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;source_channel&quot;</span><span class="p">),</span>
+            <span class="n">sink_channel</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sink_channel&quot;</span><span class="p">),</span>
+            <span class="n">enabled</span><span class="o">=</span><span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">annot</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;annotations/*&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">annot</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">tuple_eval</span><span class="p">(</span><span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rect&quot;</span><span class="p">,</span> <span class="s2">&quot;(0.0, 0.0, 20.0, 20.0)&quot;</span><span class="p">))</span>
+
+            <span class="n">font_family</span> <span class="o">=</span> <span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;font-family&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">font_size</span> <span class="o">=</span> <span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;font-size&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="n">font</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">font_family</span><span class="p">:</span>
+                <span class="n">font</span><span class="p">[</span><span class="s2">&quot;family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">font_family</span>
+            <span class="k">if</span> <span class="n">font_size</span><span class="p">:</span>
+                <span class="n">font</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">font_size</span><span class="p">)</span>
+
+            <span class="n">content_type</span> <span class="o">=</span> <span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">)</span>
+
+            <span class="n">annotation</span> <span class="o">=</span> <span class="n">_annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">_text_params</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="n">annot</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">font</span><span class="p">,</span>
+                                    <span class="n">content_type</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">annot</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">tuple_eval</span><span class="p">(</span><span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;(0, 0)&quot;</span><span class="p">))</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">tuple_eval</span><span class="p">(</span><span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="s2">&quot;(0, 0)&quot;</span><span class="p">))</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fill&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span>
+            <span class="n">annotation</span> <span class="o">=</span> <span class="n">_annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">annot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span>
+                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;arrow&quot;</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">_arrow_params</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">color</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown annotation &#39;</span><span class="si">%s</span><span class="s2">&#39;. Skipping.&quot;</span><span class="p">,</span> <span class="n">annot</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+
+    <span class="n">window_presets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">window_group</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;session_state/window_groups/group&quot;</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">window_group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>  <span class="c1"># type: str</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="n">window_group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">state_</span> <span class="ow">in</span> <span class="n">window_group</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;window_state&quot;</span><span class="p">):</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="n">state_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>  <span class="c1"># type: str</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">decodebytes</span><span class="p">(</span><span class="n">state_</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">binascii</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+            <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+
+        <span class="n">window_presets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_window_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+
+    <span class="n">session_state</span> <span class="o">=</span> <span class="n">_session_data</span><span class="p">(</span><span class="n">window_presets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_scheme</span><span class="p">(</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">scheme</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">),</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>
+        <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+        <span class="n">annotations</span><span class="o">=</span><span class="n">annotations</span><span class="p">,</span>
+        <span class="n">session_state</span><span class="o">=</span><span class="n">session_state</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">parse_ows_stream</span><span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+    <span class="c1"># type: (...) -&gt; _scheme</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+    <span class="n">scheme_el</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">scheme_el</span><span class="o">.</span><span class="n">tag</span> <span class="o">!=</span> <span class="s2">&quot;scheme&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid Orange Workflow Scheme file&quot;</span>
+        <span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">scheme_el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Check for &quot;widgets&quot; tag - old Orange&lt;2.7 format</span>
+        <span class="k">if</span> <span class="n">scheme_el</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;widgets&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot open Orange Workflow Scheme v1.0. This format is no &quot;</span>
+                <span class="s2">&quot;longer supported&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid Orange Workflow Scheme file (missing version).&quot;</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;2.1&quot;</span><span class="p">}:</span>
+        <span class="k">return</span> <span class="n">parse_ows_etree_v_2_0</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">resolve_replaced</span><span class="p">(</span><span class="n">scheme_desc</span><span class="p">,</span> <span class="n">registry</span><span class="p">):</span>
+    <span class="n">widgets</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">widgets</span><span class="p">()</span>
+    <span class="n">nodes_by_id</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[str, _node]</span>
+    <span class="n">replacements</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">replacements_channels</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[str, Tuple[dict, dict]]</span>
+    <span class="c1"># collect all the replacement mappings</span>
+    <span class="k">for</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">widgets</span><span class="p">:</span>  <span class="c1"># type: WidgetDescription</span>
+        <span class="k">if</span> <span class="n">desc</span><span class="o">.</span><span class="n">replaces</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">repl_qname</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">replaces</span><span class="p">:</span>
+                <span class="n">replacements</span><span class="p">[</span><span class="n">repl_qname</span><span class="p">]</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">qualified_name</span>
+
+        <span class="n">input_repl</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idesc</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">inputs</span> <span class="ow">or</span> <span class="p">[]:</span>  <span class="c1"># type: InputSignal</span>
+            <span class="k">for</span> <span class="n">repl_qname</span> <span class="ow">in</span> <span class="n">idesc</span><span class="o">.</span><span class="n">replaces</span> <span class="ow">or</span> <span class="p">[]:</span>  <span class="c1"># type: str</span>
+                <span class="n">input_repl</span><span class="p">[</span><span class="n">repl_qname</span><span class="p">]</span> <span class="o">=</span> <span class="n">idesc</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">output_repl</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">odesc</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>  <span class="c1"># type: OutputSignal</span>
+            <span class="k">for</span> <span class="n">repl_qname</span> <span class="ow">in</span> <span class="n">odesc</span><span class="o">.</span><span class="n">replaces</span> <span class="ow">or</span> <span class="p">[]:</span>  <span class="c1"># type: str</span>
+                <span class="n">output_repl</span><span class="p">[</span><span class="n">repl_qname</span><span class="p">]</span> <span class="o">=</span> <span class="n">odesc</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">replacements_channels</span><span class="p">[</span><span class="n">desc</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_repl</span><span class="p">,</span> <span class="n">output_repl</span><span class="p">)</span>
+
+    <span class="c1"># replace the nodes</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">scheme_desc</span><span class="o">.</span><span class="n">nodes</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">registry</span><span class="o">.</span><span class="n">has_widget</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="n">node</span><span class="o">.</span><span class="n">qualified_name</span> <span class="ow">in</span> <span class="n">replacements</span><span class="p">:</span>
+            <span class="n">qname</span> <span class="o">=</span> <span class="n">replacements</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">]</span>
+            <span class="n">desc</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">widget</span><span class="p">(</span><span class="n">qname</span><span class="p">)</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">qualified_name</span><span class="o">=</span><span class="n">desc</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">,</span>
+                                     <span class="n">project_name</span><span class="o">=</span><span class="n">desc</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="c1"># replace links</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="n">scheme_desc</span><span class="o">.</span><span class="n">links</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">link</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">links</span><span class="p">)):</span>  <span class="c1"># type: _link</span>
+        <span class="n">nsource</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">source_node_id</span><span class="p">]</span>
+        <span class="n">nsink</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node_id</span><span class="p">]</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">source_rep</span> <span class="o">=</span> <span class="n">replacements_channels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">nsource</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">,</span> <span class="p">({},</span> <span class="p">{}))</span>
+        <span class="n">sink_rep</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">replacements_channels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">nsink</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">,</span> <span class="p">({},</span> <span class="p">{}))</span>
+
+        <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span> <span class="ow">in</span> <span class="n">source_rep</span><span class="p">:</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">source_channel</span><span class="o">=</span><span class="n">source_rep</span><span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span> <span class="ow">in</span> <span class="n">sink_rep</span><span class="p">:</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+                <span class="n">sink_channel</span><span class="o">=</span><span class="n">sink_rep</span><span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">])</span>
+        <span class="n">links</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
+
+    <span class="k">return</span> <span class="n">scheme_desc</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">scheme_load</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">error_handler</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">parse_ows_stream</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>  <span class="c1"># type: _scheme</span>
+
+    <span class="k">if</span> <span class="n">registry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">registry</span> <span class="o">=</span> <span class="n">global_registry</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">error_handler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">error_handler</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exc</span>
+
+    <span class="n">desc</span> <span class="o">=</span> <span class="n">resolve_replaced</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">registry</span><span class="p">)</span>
+    <span class="n">nodes_not_found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nodes_by_id</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">annotations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">scheme</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">title</span>
+    <span class="n">scheme</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">description</span>
+
+    <span class="k">for</span> <span class="n">node_d</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">w_desc</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">widget</span><span class="p">(</span><span class="n">node_d</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">error_handler</span><span class="p">(</span><span class="n">UnknownWidgetDefinition</span><span class="p">(</span><span class="o">*</span><span class="n">ex</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+            <span class="n">nodes_not_found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_d</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">SchemeNode</span><span class="p">(</span>
+                <span class="n">w_desc</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">node_d</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">node_d</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">node_d</span><span class="o">.</span><span class="n">data</span>
+
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">properties</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not load properties for </span><span class="si">%r</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                              <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span>
+
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">node_d</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="k">for</span> <span class="n">link_d</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">link_d</span><span class="o">.</span><span class="n">source_node_id</span>
+        <span class="n">sink_id</span> <span class="o">=</span> <span class="n">link_d</span><span class="o">.</span><span class="n">sink_node_id</span>
+
+        <span class="k">if</span> <span class="n">source_id</span> <span class="ow">in</span> <span class="n">nodes_not_found</span> <span class="ow">or</span> <span class="n">sink_id</span> <span class="ow">in</span> <span class="n">nodes_not_found</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">source_id</span><span class="p">]</span>
+        <span class="n">sink</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">sink_id</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">link</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">link_d</span><span class="o">.</span><span class="n">source_channel</span><span class="p">,</span>
+                              <span class="n">sink</span><span class="p">,</span> <span class="n">link_d</span><span class="o">.</span><span class="n">sink_channel</span><span class="p">,</span>
+                              <span class="n">enabled</span><span class="o">=</span><span class="n">link_d</span><span class="o">.</span><span class="n">enabled</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">IncompatibleChannelTypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">error_handler</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">annot_d</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">annot_d</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="n">annot_d</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span>
+            <span class="n">annot</span> <span class="o">=</span> <span class="n">SchemeTextAnnotation</span><span class="p">(</span>
+                <span class="n">params</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">.</span><span class="n">font</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">annot_d</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">geometry</span>
+            <span class="n">annot</span> <span class="o">=</span> <span class="n">SchemeArrowAnnotation</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">color</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring unknown annotation type: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">annot_d</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annot</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">scheme</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+        <span class="n">scheme</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">annot</span> <span class="ow">in</span> <span class="n">annotations</span><span class="p">:</span>
+        <span class="n">scheme</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span><span class="n">annot</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">desc</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">desc</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>  <span class="c1"># type: _window_group</span>
+            <span class="c1"># resolve node_id -&gt; node</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="p">[(</span><span class="n">nodes_by_id</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">state</span> <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">nodes_by_id</span><span class="p">]</span>
+
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Scheme</span><span class="o">.</span><span class="n">WindowGroup</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+        <span class="n">scheme</span><span class="o">.</span><span class="n">set_window_group_presets</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scheme</span>
+
+
+<div class="viewcode-block" id="scheme_to_etree"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.scheme_to_etree">[docs]</a><span class="k">def</span> <span class="nf">scheme_to_etree</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;literal&quot;</span><span class="p">,</span> <span class="n">pickle_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an `xml.etree.ElementTree` representation of the `scheme`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">TreeBuilder</span><span class="p">(</span><span class="n">element_factory</span><span class="o">=</span><span class="n">Element</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;scheme&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+                             <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">scheme</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">scheme</span><span class="o">.</span><span class="n">description</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
+
+    <span class="c1"># Nodes</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">():</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>  <span class="c1"># type: SchemeNode</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">description</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_ids</span><span class="p">[</span><span class="n">node</span><span class="p">]),</span>
+                 <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                 <span class="s2">&quot;qualified_name&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="o">.</span><span class="n">qualified_name</span><span class="p">,</span>
+                 <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="o">.</span><span class="n">project_name</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">desc</span><span class="o">.</span><span class="n">version</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                 <span class="p">}</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">position</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;position&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">SchemeNode</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;scheme_node_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                   <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;node&quot;</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Links</span>
+    <span class="n">link_ids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">():</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span>
+        <span class="n">sink</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">node_ids</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+        <span class="n">sink_id</span> <span class="o">=</span> <span class="n">node_ids</span><span class="p">[</span><span class="n">sink</span><span class="p">]</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">link_ids</span><span class="p">[</span><span class="n">link</span><span class="p">]),</span>
+                 <span class="s2">&quot;source_node_id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">source_id</span><span class="p">),</span>
+                 <span class="s2">&quot;sink_node_id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sink_id</span><span class="p">),</span>
+                 <span class="s2">&quot;source_channel&quot;</span><span class="p">:</span> <span class="n">link</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                 <span class="s2">&quot;sink_channel&quot;</span><span class="p">:</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                 <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">enabled</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>
+                 <span class="p">}</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Annotations</span>
+    <span class="n">annotation_ids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">():</span> <span class="nb">next</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;annotations&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
+        <span class="n">annot_id</span> <span class="o">=</span> <span class="n">annotation_ids</span><span class="p">[</span><span class="n">annotation</span><span class="p">]</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">annot_id</span><span class="p">)}</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">SchemeTextAnnotation</span><span class="p">):</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="s2">&quot;text&quot;</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">annotation</span><span class="o">.</span><span class="n">content_type</span><span class="p">})</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;rect&quot;</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">rect</span><span class="p">)})</span>
+
+            <span class="c1"># Save the font attributes</span>
+            <span class="n">font</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">font</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;font-family&quot;</span><span class="p">:</span> <span class="n">font</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;family&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                          <span class="s2">&quot;font-size&quot;</span><span class="p">:</span> <span class="n">font</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)})</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">content</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">SchemeArrowAnnotation</span><span class="p">):</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="s2">&quot;arrow&quot;</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">start_pos</span><span class="p">),</span>
+                          <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">end_pos</span><span class="p">),</span>
+                          <span class="s2">&quot;fill&quot;</span><span class="p">:</span> <span class="n">annotation</span><span class="o">.</span><span class="n">color</span><span class="p">})</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Can&#39;t save </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">annotation</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;annotations&quot;</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Node properties/settings</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;node_properties&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">properties</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">,</span> <span class="nb">format</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">properties</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
+                                     <span class="n">pickle_fallback</span><span class="o">=</span><span class="n">pickle_fallback</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error serializing properties for node </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                          <span class="n">node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span>
+                              <span class="p">{</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_ids</span><span class="p">[</span><span class="n">node</span><span class="p">]),</span>
+                               <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="nb">format</span><span class="p">})</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">)</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;node_properties&quot;</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;session_state&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;window_groups&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">scheme</span><span class="o">.</span><span class="n">window_group_presets</span><span class="p">():</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span>
+            <span class="s2">&quot;group&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()}</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s2">&quot;window_state&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_ids</span><span class="p">[</span><span class="n">node</span><span class="p">])})</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">encodebytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;window_state&quot;</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;group&quot;</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;window_group&quot;</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;session_state&quot;</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s2">&quot;scheme&quot;</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+
+<div class="viewcode-block" id="scheme_to_ows_stream"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.scheme_to_ows_stream">[docs]</a><span class="k">def</span> <span class="nf">scheme_to_ows_stream</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">pretty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pickle_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write scheme to a a stream in Orange Scheme .ows (v 2.0) format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scheme : :class:`.Scheme`</span>
+<span class="sd">        A :class:`.Scheme` instance to serialize.</span>
+<span class="sd">    stream : file-like object</span>
+<span class="sd">        A file-like object opened for writing.</span>
+<span class="sd">    pretty : bool, optional</span>
+<span class="sd">        If `True` the output xml will be pretty printed (indented).</span>
+<span class="sd">    pickle_fallback : bool, optional</span>
+<span class="sd">        If `True` allow scheme node properties to be saves using pickle</span>
+<span class="sd">        protocol if properties cannot be saved using the default</span>
+<span class="sd">        notation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">scheme_to_etree</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s2">&quot;literal&quot;</span><span class="p">,</span>
+                           <span class="n">pickle_fallback</span><span class="o">=</span><span class="n">pickle_fallback</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pretty</span><span class="p">:</span>
+        <span class="n">indent</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">xml_declaration</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="indent"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.indent">[docs]</a><span class="k">def</span> <span class="nf">indent</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Indent an instance of a :class:`Element`. Based on</span>
+<span class="sd">    (http://effbot.org/zone/element-lib.htm#prettyprint).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">text</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">indent_</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">last</span><span class="p">):</span>
+        <span class="n">child_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">child_count</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">empty</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">text</span><span class="p">):</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indent</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">empty</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">tail</span><span class="p">):</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indent</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">last</span> <span class="k">else</span> <span class="mi">0</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+                <span class="n">indent_</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">==</span> <span class="n">child_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">empty</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">tail</span><span class="p">):</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">indent</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">last</span> <span class="k">else</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">indent_</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dumps"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.dumps">[docs]</a><span class="k">def</span> <span class="nf">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;literal&quot;</span><span class="p">,</span> <span class="n">prettyprint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">pickle_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Serialize `obj` using `format` (&#39;json&#39; or &#39;literal&#39;) and return its</span>
+<span class="sd">    string representation and the used serialization format (&#39;literal&#39;,</span>
+<span class="sd">    &#39;json&#39; or &#39;pickle&#39;).</span>
+
+<span class="sd">    If `pickle_fallback` is True and the serialization with `format`</span>
+<span class="sd">    fails object&#39;s pickle representation will be returned</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;literal&quot;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">literal_dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">prettyprint</span><span class="o">=</span><span class="n">prettyprint</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="s2">&quot;literal&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pickle_fallback</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not serialize to a literal string&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">prettyprint</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pickle_fallback</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not serialize to a json string&quot;</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;pickle&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodebytes</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">),</span> <span class="s2">&quot;pickle&quot;</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported format </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">format</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pickle_fallback</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using pickle fallback&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodebytes</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">),</span> <span class="s2">&quot;pickle&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Something strange happened.&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="nb">format</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;literal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">literal_eval</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;pickle&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">decodebytes</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown format&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># This is a subset of PyON serialization.</span>
+<div class="viewcode-block" id="literal_dumps"><a class="viewcode-back" href="../../../orangecanvas/scheme.readwrite.html#orangecanvas.scheme.readwrite.literal_dumps">[docs]</a><span class="k">def</span> <span class="nf">literal_dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relaxed_types</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write obj into a string as a python literal.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    :class:`set` objects are not supported as the empty set is not</span>
+<span class="sd">    representable as a literal.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obj : Any</span>
+<span class="sd">    indent : Optional[int]</span>
+<span class="sd">        If not None then it is the indent for the pretty printer.</span>
+<span class="sd">    relaxed_types : bool</span>
+<span class="sd">        Relaxed type checking. In addition to exact builtin numberic types,</span>
+<span class="sd">        the numbers.Integer, numbers.Real are checked and alowed if their</span>
+<span class="sd">        repr matches that of the builtin.</span>
+
+<span class="sd">        .. warning:: The exact type of the values will be lost.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    repr : str</span>
+<span class="sd">        String representation of `obj`</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ast.literal_eval</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If obj contains non builtin types that cannot be represented as a</span>
+<span class="sd">        literal value.</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        If obj is a recursive structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">memo</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">NoneType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># non compounds</span>
+    <span class="n">builtins</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">}</span>
+    <span class="c1"># sequences</span>
+    <span class="n">builtins_seq</span> <span class="o">=</span> <span class="p">{</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">}</span>
+    <span class="c1"># mappings</span>
+    <span class="n">builtins_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="nb">dict</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">memo</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> is a recursive structure&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+        <span class="n">memo</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)]</span> <span class="o">=</span> <span class="n">obj</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins_seq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">check</span><span class="p">,</span> <span class="n">obj</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins_mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">check</span><span class="p">,</span> <span class="n">chain</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">obj</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> can not be serialized as a python &quot;</span>
+                            <span class="s2">&quot;literal&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">check_relaxed</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">memo</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> is a recursive structure&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+        <span class="n">memo</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)]</span> <span class="o">=</span> <span class="n">obj</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins_seq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">check_relaxed</span><span class="p">,</span> <span class="n">obj</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">in</span> <span class="n">builtins_mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">check_relaxed</span><span class="p">,</span> <span class="n">chain</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">obj</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+        <span class="c1"># numpy.int, uint, ...</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">repr</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1"># numpy.float, ...</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">repr</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> can not be serialized as a python &quot;</span>
+                        <span class="s2">&quot;literal&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">relaxed_types</span><span class="p">:</span>
+        <span class="n">check_relaxed</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">check</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">indent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">,</span> <span class="n">compact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div>
+
+
+<span class="n">literal_loads</span> <span class="o">=</span> <span class="n">literal_eval</span>
+
+<span class="kn">from</span> <span class="nn">.scheme</span> <span class="k">import</span> <span class="n">Scheme</span>  <span class="c1"># pylint: disable=all</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

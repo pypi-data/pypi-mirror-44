@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.link &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.link</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.link</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">===========</span>
+<span class="sd">Scheme Link</span>
+<span class="sd">===========</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">enum</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">QObject</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span>
+
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="n">name_lookup</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">IncompatibleChannelTypeError</span>
+
+
+<span class="k">def</span> <span class="nf">compatible_channels</span><span class="p">(</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Do the channels in link have compatible types, i.e. can they be</span>
+<span class="sd">    connected based on their type.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_type</span> <span class="o">=</span> <span class="n">name_lookup</span><span class="p">(</span><span class="n">source_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+    <span class="n">sink_type</span> <span class="o">=</span> <span class="n">name_lookup</span><span class="p">(</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">source_type</span><span class="p">,</span> <span class="n">sink_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source_channel</span><span class="o">.</span><span class="n">dynamic</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">sink_type</span><span class="p">,</span> <span class="n">source_type</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">can_connect</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">sink_node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if any output from `source_node` can be connected to</span>
+<span class="sd">    any input of `sink_node`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">possible_links</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">sink_node</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">possible_links</span><span class="p">(</span><span class="n">source_node</span><span class="p">,</span> <span class="n">sink_node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of (OutputSignal, InputSignal) tuples, that</span>
+<span class="sd">    can connect the two nodes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">possible</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">source_node</span><span class="o">.</span><span class="n">output_channels</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">sink</span> <span class="ow">in</span> <span class="n">sink_node</span><span class="o">.</span><span class="n">input_channels</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">compatible_channels</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">sink</span><span class="p">):</span>
+                <span class="n">possible</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">source</span><span class="p">,</span> <span class="n">sink</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">possible</span>
+
+
+<div class="viewcode-block" id="SchemeLink"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink">[docs]</a><span class="k">class</span> <span class="nc">SchemeLink</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A instantiation of a link between two :class:`.SchemeNode` instances</span>
+<span class="sd">    in a :class:`.Scheme`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source_node : :class:`.SchemeNode`</span>
+<span class="sd">        Source node.</span>
+<span class="sd">    source_channel : :class:`OutputSignal`</span>
+<span class="sd">        The source widget&#39;s signal.</span>
+<span class="sd">    sink_node : :class:`.SchemeNode`</span>
+<span class="sd">        The sink node.</span>
+<span class="sd">    sink_channel : :class:`InputSignal`</span>
+<span class="sd">        The sink widget&#39;s input signal.</span>
+<span class="sd">    properties : `dict`</span>
+<span class="sd">        Additional link properties.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: The link enabled state has changed</span>
+    <span class="n">enabled_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="c1">#: The link dynamic enabled state has changed.</span>
+    <span class="n">dynamic_enabled_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="c1">#: Runtime link state has changed</span>
+    <span class="n">state_changed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SchemeLink.State"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.State">[docs]</a>    <span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flags indicating the runtime state of a link</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#: The link has no associated state.</span>
+        <span class="n">NoState</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#: A link is empty when it has no value on it</span>
+        <span class="n">Empty</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1">#: A link is active when the source node provides a value on output</span>
+        <span class="n">Active</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c1">#: A link is pending when it&#39;s sink node has not yet been notified</span>
+        <span class="c1">#: of a change (note that Empty|Pending is a valid state)</span>
+        <span class="n">Pending</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+    <span class="n">NoState</span><span class="p">,</span> <span class="n">Empty</span><span class="p">,</span> <span class="n">Active</span><span class="p">,</span> <span class="n">Pending</span> <span class="o">=</span> <span class="n">State</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_node</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span>
+                 <span class="n">sink_node</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_node</span> <span class="o">=</span> <span class="n">source_node</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_channel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">source_channel</span> <span class="o">=</span> <span class="n">source_node</span><span class="o">.</span><span class="n">output_channel</span><span class="p">(</span><span class="n">source_channel</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">source_channel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">source_node</span><span class="o">.</span><span class="n">output_channels</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> not in in nodes output channels.&quot;</span> \
+                             <span class="o">%</span> <span class="n">source_channel</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_channel</span> <span class="o">=</span> <span class="n">source_channel</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink_node</span> <span class="o">=</span> <span class="n">sink_node</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sink_channel</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">sink_channel</span> <span class="o">=</span> <span class="n">sink_node</span><span class="o">.</span><span class="n">input_channel</span><span class="p">(</span><span class="n">sink_channel</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">sink_channel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sink_node</span><span class="o">.</span><span class="n">input_channels</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> not in in nodes input channels.&quot;</span> \
+                             <span class="o">%</span> <span class="n">source_channel</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink_channel</span> <span class="o">=</span> <span class="n">sink_channel</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">compatible_channels</span><span class="p">(</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">sink_channel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">IncompatibleChannelTypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot connect </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%r</span><span class="s2">&quot;</span> \
+                    <span class="o">%</span> <span class="p">(</span><span class="n">source_channel</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">sink_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic_enabled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">SchemeLink</span><span class="o">.</span><span class="n">NoState</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tool_tip</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span> <span class="ow">or</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="SchemeLink.source_type"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.source_type">[docs]</a>    <span class="k">def</span> <span class="nf">source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the type of the source channel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">name_lookup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SchemeLink.sink_type"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.sink_type">[docs]</a>    <span class="k">def</span> <span class="nf">sink_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the type of the sink channel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">name_lookup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SchemeLink.is_dynamic"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.is_dynamic">[docs]</a>    <span class="k">def</span> <span class="nf">is_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is this link dynamic.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">dynamic</span> <span class="ow">and</span> \
+            <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_type</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span><span class="p">())</span> <span class="ow">and</span> \
+            <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_type</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SchemeLink.set_enabled"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.set_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">set_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable/disable the link.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span> <span class="o">!=</span> <span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enabled_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is this link enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__enabled</span>
+
+    <span class="n">enabled</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">enabled</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">set_enabled</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SchemeLink.set_dynamic_enabled"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.set_dynamic_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">set_dynamic_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable/disable the dynamic link. Has no effect if the link</span>
+<span class="sd">        is not dynamic.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic_enabled</span> <span class="o">!=</span> <span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic_enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynamic_enabled_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">enabled</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">dynamic_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is this a dynamic link and is `dynamic_enabled` set to `True`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dynamic</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dynamic_enabled</span>
+
+    <span class="n">dynamic_enabled</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">dynamic_enabled</span><span class="p">,</span>
+                               <span class="n">fset</span><span class="o">=</span><span class="n">set_dynamic_enabled</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SchemeLink.set_runtime_state"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.set_runtime_state">[docs]</a>    <span class="k">def</span> <span class="nf">set_runtime_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the link&#39;s runtime state.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : SchemeLink.State</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_changed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SchemeLink.runtime_state"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.runtime_state">[docs]</a>    <span class="k">def</span> <span class="nf">runtime_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        state : SchemeLink.State</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span></div>
+
+<div class="viewcode-block" id="SchemeLink.set_tool_tip"><a class="viewcode-back" href="../../../orangecanvas/scheme.link.html#orangecanvas.canvas.items.linkitem.SchemeLink.set_tool_tip">[docs]</a>    <span class="k">def</span> <span class="nf">set_tool_tip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_tip</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the link tool tip.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tool_tip</span> <span class="o">!=</span> <span class="n">tool_tip</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__tool_tip</span> <span class="o">=</span> <span class="n">tool_tip</span></div>
+
+    <span class="k">def</span> <span class="nf">tool_tip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Link tool tip.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tool_tip</span>
+
+    <span class="n">tool_tip</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">tool_tip</span><span class="p">,</span>
+                        <span class="n">fset</span><span class="o">=</span><span class="n">set_tool_tip</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">((</span><span class="si">{1}</span><span class="s2">, </span><span class="si">{2}</span><span class="s2">) -&gt; (</span><span class="si">{3}</span><span class="s2">, </span><span class="si">{4}</span><span class="s2">))&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_channel</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sink_node</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sink_channel</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

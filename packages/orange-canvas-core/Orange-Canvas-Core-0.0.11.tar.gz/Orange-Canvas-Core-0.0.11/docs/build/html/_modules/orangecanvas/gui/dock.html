@@ -1,0 +1,490 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.gui.dock &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.gui.dock</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.gui.dock</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=======================</span>
+<span class="sd">Collapsible Dock Widget</span>
+<span class="sd">=======================</span>
+
+<span class="sd">A dock widget that can be a collapsed/expanded.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QDockWidget</span><span class="p">,</span> <span class="n">QAbstractButton</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="p">,</span> <span class="n">QStyle</span><span class="p">,</span> <span class="n">QWIDGETSIZE_MAX</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QIcon</span><span class="p">,</span> <span class="n">QTransform</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QEvent</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span><span class="p">,</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span>
+
+<span class="kn">from</span> <span class="nn">.stackedwidget</span> <span class="k">import</span> <span class="n">AnimatedStackedWidget</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CollapsibleDockWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget">[docs]</a><span class="k">class</span> <span class="nc">CollapsibleDockWidget</span><span class="p">(</span><span class="n">QDockWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This :class:`QDockWidget` subclass overrides the `close` header</span>
+<span class="sd">    button to instead collapse to a smaller size. The contents contents</span>
+<span class="sd">    to show when in each state can be set using the ``setExpandedWidget``</span>
+<span class="sd">    and ``setCollapsedWidget``.</span>
+
+<span class="sd">    .. note:: Do  not use the base class ``QDockWidget.setWidget`` method</span>
+<span class="sd">              to set the docks contents. Use set[Expanded|Collapsed]Widget</span>
+<span class="sd">              instead.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Emitted when the dock widget&#39;s expanded state changes.</span>
+    <span class="n">expandedChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__trueMinimumWidth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFeatures</span><span class="p">(</span><span class="n">QDockWidget</span><span class="o">.</span><span class="n">DockWidgetClosable</span> <span class="o">|</span> \
+                         <span class="n">QDockWidget</span><span class="o">.</span><span class="n">DockWidgetMovable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAllowedAreas</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">LeftDockWidgetArea</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">RightDockWidgetArea</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">featuresChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onFeaturesChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dockLocationChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onDockLocationChanged</span><span class="p">)</span>
+
+        <span class="c1"># Use the toolbar horizontal extension button icon as the default</span>
+        <span class="c1"># for the expand/collapse button</span>
+        <span class="n">icon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">()</span><span class="o">.</span><span class="n">standardIcon</span><span class="p">(</span>
+            <span class="n">QStyle</span><span class="o">.</span><span class="n">SP_ToolBarHorizontalExtensionButton</span><span class="p">)</span>
+
+        <span class="c1"># Mirror the icon</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">QTransform</span><span class="p">()</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">icon_rev</span> <span class="o">=</span> <span class="n">QIcon</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">64</span><span class="p">):</span>
+            <span class="n">pm</span> <span class="o">=</span> <span class="n">icon</span><span class="o">.</span><span class="n">pixmap</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">icon_rev</span><span class="o">.</span><span class="n">addPixmap</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">transformed</span><span class="p">(</span><span class="n">transform</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__iconRight</span> <span class="o">=</span> <span class="n">QIcon</span><span class="p">(</span><span class="n">icon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__iconLeft</span> <span class="o">=</span> <span class="n">QIcon</span><span class="p">(</span><span class="n">icon_rev</span><span class="p">)</span>
+
+        <span class="n">close</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findChild</span><span class="p">(</span><span class="n">QAbstractButton</span><span class="p">,</span>
+                               <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qt_dockwidget_closebutton&quot;</span><span class="p">)</span>
+
+        <span class="n">close</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__closeButton</span> <span class="o">=</span> <span class="n">close</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span> <span class="o">=</span> <span class="n">AnimatedStackedWidget</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">,</span>
+                                   <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">transitionStarted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onTransitionStarted</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">transitionFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onTransitionFinished</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__closeButton</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__iconLeft</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.setExpanded"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.setExpanded">[docs]</a>    <span class="k">def</span> <span class="nf">setExpanded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widgets `expanded` state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dock expanding.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">state</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dock collapsing.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__fixIcon</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">expandedChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.expanded"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.expanded">[docs]</a>    <span class="k">def</span> <span class="nf">expanded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the dock widget in expanded state. If `True` the</span>
+<span class="sd">        ``expandedWidget`` will be shown, and ``collapsedWidget`` otherwise.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span></div>
+
+    <span class="n">expanded_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">setExpanded</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">expanded</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.setWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.setWidget">[docs]</a>    <span class="k">def</span> <span class="nf">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Please use the &#39;setExpandedWidget&#39;/&#39;setCollapsedWidget&#39; &quot;</span>
+                <span class="s2">&quot;methods to set the contents of the dock widget.&quot;</span>
+              <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.setExpandedWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.setExpandedWidget">[docs]</a>    <span class="k">def</span> <span class="nf">setExpandedWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widget with contents to show while expanded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">widget</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span> <span class="o">=</span> <span class="n">widget</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.expandedWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.expandedWidget">[docs]</a>    <span class="k">def</span> <span class="nf">expandedWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget previously set with ``setExpandedWidget``,</span>
+<span class="sd">        or ``None`` if no widget has been set.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.setCollapsedWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.setCollapsedWidget">[docs]</a>    <span class="k">def</span> <span class="nf">setCollapsedWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widget with contents to show while collapsed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">widget</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span> <span class="o">=</span> <span class="n">widget</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.collapsedWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.collapsedWidget">[docs]</a>    <span class="k">def</span> <span class="nf">collapsedWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget previously set with ``setCollapsedWidget``,</span>
+<span class="sd">        or ``None`` if no widget has been set.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.setAnimationEnabled"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.setAnimationEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setAnimationEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">animationEnabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable/disable the transition animation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setAnimationEnabled</span><span class="p">(</span><span class="n">animationEnabled</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.animationEnabled"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.animationEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">animationEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is transition animation enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">animationEnabled</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.currentWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.currentWidget">[docs]</a>    <span class="k">def</span> <span class="nf">currentWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current shown widget depending on the `expanded` state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expandedWidget</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__collapsedWidget</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.expand"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.expand">[docs]</a>    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Expand the dock (same as ``setExpanded(True)``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setExpanded</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.collapse"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.collapse">[docs]</a>    <span class="k">def</span> <span class="nf">collapse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collapse the dock (same as ``setExpanded(False)``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setExpanded</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.eventFilter"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__closeButton</span><span class="p">:</span>
+            <span class="n">etype</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">MouseButtonPress</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setExpanded</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">MouseButtonDblClick</span> <span class="ow">or</span> \
+                    <span class="n">etype</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">MouseButtonRelease</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="c1"># TODO: which other events can trigger the button (is the button</span>
+            <span class="c1"># focusable).</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">eventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CollapsibleDockWidget.event"><a class="viewcode-back" href="../../../orangecanvas/gui.dock.html#orangecanvas.gui.dock.CollapsibleDockWidget.event">[docs]</a>    <span class="k">def</span> <span class="nf">event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">LayoutRequest</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__fixMinimumWidth</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__onFeaturesChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__onDockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">area</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">area</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftDockWidgetArea</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setLayoutDirection</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">LeftToRight</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setLayoutDirection</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">RightToLeft</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">setLayoutDirection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentWidget</span><span class="p">()</span><span class="o">.</span><span class="n">layoutDirection</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__fixIcon</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__onTransitionStarted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dock transition started.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__onTransitionFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dock transition finished (new width </span><span class="si">%i</span><span class="s2">)&quot;</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__fixMinimumWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># A workaround for forcing the QDockWidget layout to disregard the</span>
+        <span class="c1"># default minimumSize which can be to wide for us (overriding the</span>
+        <span class="c1"># minimumSizeHint or setting the minimum size directly does not</span>
+        <span class="c1"># seem to have an effect (Qt 4.8.3).</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__stack</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">size</span><span class="o">.</span><span class="n">isValid</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">size</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="n">left</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getContentsMargins</span><span class="p">()</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">+</span> <span class="n">left</span> <span class="o">+</span> <span class="n">right</span>
+
+            <span class="k">if</span> <span class="n">width</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimumSizeHint</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hasFixedWidth</span><span class="p">():</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Overriding default minimum size &quot;</span>
+                              <span class="s2">&quot;(setFixedWidth(</span><span class="si">%i</span><span class="s2">))&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__trueMinimumWidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimumSizeHint</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hasFixedWidth</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">width</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trueMinimumWidth</span><span class="p">:</span>
+                        <span class="c1"># Unset the fixed size.</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Restoring default minimum size &quot;</span>
+                                  <span class="s2">&quot;(setFixedWidth(</span><span class="si">%i</span><span class="s2">))&quot;</span><span class="p">,</span> <span class="n">QWIDGETSIZE_MAX</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__trueMinimumWidth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="n">QWIDGETSIZE_MAX</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hasFixedWidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__trueMinimumWidth</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__fixIcon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fix the dock close icon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layoutDirection</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">LeftToRight</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">:</span>
+                <span class="n">icon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconLeft</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">icon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconRight</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__expanded</span><span class="p">:</span>
+                <span class="n">icon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconRight</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">icon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iconLeft</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__closeButton</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">icon</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

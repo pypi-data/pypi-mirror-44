@@ -1,0 +1,770 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.scheme.widgetmanager &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.scheme.widgetmanager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.scheme.widgetmanager</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">xml.sax.saxutils</span> <span class="k">import</span> <span class="n">escape</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Deque</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QEvent</span><span class="p">,</span> <span class="n">QTimer</span><span class="p">,</span> <span class="n">QCoreApplication</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Slot</span><span class="p">,</span> <span class="n">Signal</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QKeySequence</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QShortcut</span><span class="p">,</span> <span class="n">QAction</span>
+
+<span class="kn">from</span> <span class="nn">orangecanvas.scheme</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">SchemeNode</span><span class="p">,</span> <span class="n">Scheme</span><span class="p">,</span> <span class="n">NodeEvent</span><span class="p">,</span> <span class="n">SchemeLink</span><span class="p">,</span> <span class="n">LinkEvent</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">orangecanvas.scheme.events</span> <span class="k">import</span> <span class="n">WorkflowEvent</span><span class="p">,</span> <span class="n">WorkflowEnvChanged</span>
+<span class="kn">from</span> <span class="nn">orangecanvas.scheme.node</span> <span class="k">import</span> <span class="n">UserMessage</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;WidgetManager&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Item</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">activation_order</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">errorwidget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, Optional[QWidget], int, Optional[QWidget]) -&gt; None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation_order</span> <span class="o">=</span> <span class="n">activation_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errorwidget</span> <span class="o">=</span> <span class="n">errorwidget</span>
+
+
+<div class="viewcode-block" id="WidgetManager"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager">[docs]</a><span class="k">class</span> <span class="nc">WidgetManager</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    WidgetManager class is responsible for creation, tracking and deletion</span>
+<span class="sd">    of UI elements constituting an interactive workflow.</span>
+
+<span class="sd">    It does so by reacting to changes in the underlying workflow model,</span>
+<span class="sd">    creating and destroying the components when needed.</span>
+
+<span class="sd">    This is an abstract class, subclassed MUST reimplement at least</span>
+<span class="sd">    :func:`create_widget_for_node` and :func:`delete_widget_for_node`.</span>
+
+<span class="sd">    The widgets created with `create_widget_for_node` will automatically</span>
+<span class="sd">    receive dispatched events:</span>
+
+<span class="sd">        * :data:`WorkflowEvent.InputLinkAdded` - when a new input link is added to</span>
+<span class="sd">          the workflow.</span>
+<span class="sd">        * :data:`LinkEvent.InputLinkRemoved` - when a input link is removed</span>
+<span class="sd">        * :data:`LinkEvent.OutputLinkAdded` - when a new output link is added to</span>
+<span class="sd">          the workflow</span>
+<span class="sd">        * :data:`LinkEvent.InputLinkRemoved` - when a output link is removed</span>
+<span class="sd">        * :data:`WorkflowEnvEvent.WorkflowEnvironmentChanged` - when the</span>
+<span class="sd">          workflow environment changes.</span>
+
+<span class="sd">    .. seealso:: :func:`.Scheme.add_link()`, :func:`Scheme.remove_link`,</span>
+<span class="sd">                 :func:`.Scheme.runtime_env`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#: A new QWidget was created and added by the manager.</span>
+    <span class="n">widget_for_node_added</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeNode</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">)</span>
+
+    <span class="c1">#: A QWidget was removed, hidden and will be deleted when appropriate.</span>
+    <span class="n">widget_for_node_removed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SchemeNode</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.CreationPolicy"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.CreationPolicy">[docs]</a>    <span class="k">class</span> <span class="nc">CreationPolicy</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Widget Creation Policy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#: Widgets are scheduled to be created from the event loop, or when</span>
+        <span class="c1">#: first accessed with `widget_for_node`</span>
+        <span class="n">Normal</span> <span class="o">=</span> <span class="s2">&quot;Normal&quot;</span>
+        <span class="c1">#: Widgets are created immediately when a node is added to the</span>
+        <span class="c1">#: workflow model.</span>
+        <span class="n">Immediate</span> <span class="o">=</span> <span class="s2">&quot;Immediate&quot;</span>
+        <span class="c1">#: Widgets are created only when first accessed with `widget_for_node`</span>
+        <span class="c1">#: (e.g. when activated in the view).</span>
+        <span class="n">OnDemand</span> <span class="o">=</span> <span class="s2">&quot;OnDemand&quot;</span></div>
+
+    <span class="n">Normal</span> <span class="o">=</span> <span class="n">CreationPolicy</span><span class="o">.</span><span class="n">Normal</span>
+    <span class="n">Immediate</span> <span class="o">=</span> <span class="n">CreationPolicy</span><span class="o">.</span><span class="n">Immediate</span>
+    <span class="n">OnDemand</span> <span class="o">=</span> <span class="n">CreationPolicy</span><span class="o">.</span><span class="n">OnDemand</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[Scheme]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">=</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">Normal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__float_widgets_on_top</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[SchemeNode, Item]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[QWidget, Item]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>  <span class="c1"># type: Deque[SchemeNode]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span> <span class="o">=</span> <span class="n">QTimer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">singleShot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__process_init_queue</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__activation_monitor</span> <span class="o">=</span> <span class="n">ActivationMonitor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__activation_counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__activation_monitor</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__mark_activated</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.set_workflow"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.set_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">set_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow</span><span class="p">):</span>
+        <span class="c1"># type: (Scheme) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the workflow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">workflow</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># cleanup</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_node_added</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_node_removed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_link_added</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_link_removed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">runtime_env_changed</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_env_changed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="o">=</span> <span class="n">workflow</span>
+
+        <span class="n">workflow</span><span class="o">.</span><span class="n">node_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_node_added</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">UniqueConnection</span><span class="p">)</span>
+        <span class="n">workflow</span><span class="o">.</span><span class="n">node_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_node_removed</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">UniqueConnection</span><span class="p">)</span>
+        <span class="n">workflow</span><span class="o">.</span><span class="n">link_added</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_link_added</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">UniqueConnection</span><span class="p">)</span>
+        <span class="n">workflow</span><span class="o">.</span><span class="n">link_removed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_link_removed</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">UniqueConnection</span><span class="p">)</span>
+        <span class="n">workflow</span><span class="o">.</span><span class="n">runtime_env_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__on_env_changed</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">UniqueConnection</span><span class="p">)</span>
+        <span class="n">workflow</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>
+
+    <span class="n">scheme</span> <span class="o">=</span> <span class="n">workflow</span>
+    <span class="n">set_scheme</span> <span class="o">=</span> <span class="n">set_workflow</span>
+
+<div class="viewcode-block" id="WidgetManager.set_creation_policy"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.set_creation_policy">[docs]</a>    <span class="k">def</span> <span class="nf">set_creation_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">policy</span><span class="p">):</span>
+        <span class="c1"># type: (CreationPolicy) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the widget creation policy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">!=</span> <span class="n">policy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">=</span> <span class="n">policy</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">==</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">Immediate</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                <span class="c1"># create all</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_created</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">==</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">Normal</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">isActive</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">==</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">OnDemand</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="WidgetManager.creation_policy"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.creation_policy">[docs]</a>    <span class="k">def</span> <span class="nf">creation_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current widget creation policy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span></div>
+
+<div class="viewcode-block" id="WidgetManager.create_widget_for_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.create_widget_for_node">[docs]</a>    <span class="k">def</span> <span class="nf">create_widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; QWidget</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create and initialize a widget for node.</span>
+
+<span class="sd">        This is an abstract method. Subclasses must reimplemented it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WidgetManager.delete_widget_for_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.delete_widget_for_node">[docs]</a>    <span class="k">def</span> <span class="nf">delete_widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove and delete widget for node.</span>
+
+<span class="sd">        This is an abstract method. Subclasses must reimplemented it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WidgetManager.node_for_widget"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.node_for_widget">[docs]</a>    <span class="k">def</span> <span class="nf">node_for_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="c1"># type: (QWidget) -&gt; Optional[SchemeNode]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the node for widget.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">node</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="WidgetManager.widget_for_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.widget_for_node">[docs]</a>    <span class="k">def</span> <span class="nf">widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; Optional[QWidget]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget for node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_created</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">__add_widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Insert on the node -&gt; item mapping.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating widget for node </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_widget_for_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">())</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">errorwidget</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span>
+                <span class="n">textInteractionFlags</span><span class="o">=</span><span class="n">Qt</span><span class="o">.</span><span class="n">TextSelectableByMouse</span><span class="p">,</span> <span class="n">wordWrap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">objectName</span><span class="o">=</span><span class="s2">&quot;widgetmanager-error-placeholder&quot;</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;pre&gt;&quot;</span> <span class="o">+</span> <span class="n">escape</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/pre&gt;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span> <span class="o">=</span> <span class="n">errorwidget</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">set_state_message</span><span class="p">(</span><span class="n">UserMessage</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">UserMessage</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">w</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_float_on_top_flag</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="n">w</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__activation_monitor</span><span class="p">)</span>
+        <span class="c1"># Up shortcut (activate/open parent)</span>
+        <span class="n">up_shortcut</span> <span class="o">=</span> <span class="n">QShortcut</span><span class="p">(</span>
+            <span class="n">QKeySequence</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ControlModifier</span> <span class="o">+</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Key_Up</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">up_shortcut</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__on_activate_parent</span><span class="p">)</span>
+
+        <span class="c1"># send all the post creation notification events</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>
+        <span class="k">assert</span> <span class="n">workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">sink_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">InputLinkAdded</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">find_links</span><span class="p">(</span><span class="n">source_node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">OutputLinkAdded</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget_for_node_added</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.ensure_created"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.ensure_created">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure that the widget for node is created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__add_widget_for_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__on_node_added</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>  <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">assert</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span> <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="c1"># add node for tracking</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">installEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">==</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">Immediate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensure_created</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__creation_policy</span> <span class="o">==</span> <span class="n">WidgetManager</span><span class="o">.</span><span class="n">Normal</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init_timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__on_node_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>  <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>  <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="c1"># remove the node and its widget from tracking.</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">widget</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span>
+            <span class="k">assert</span> <span class="n">widget</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="p">[</span><span class="n">widget</span><span class="p">]</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">removeEventFilter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__activation_monitor</span><span class="p">)</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">widget_for_node_removed</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_widget_for_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+    <span class="nd">@Slot</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__process_init_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;__process_init_queue&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__init_queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensure_created</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__on_link_added</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>  <span class="c1"># type: (SchemeLink) -&gt; None</span>
+        <span class="k">assert</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">assert</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">)</span>
+        <span class="n">sink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">)</span>
+        <span class="c1"># notify the node gui of an added link</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">OutputLinkAdded</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">widget</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sink</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">InputLinkAdded</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">sink</span><span class="o">.</span><span class="n">widget</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__on_link_removed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>  <span class="c1"># type: (SchemeLink) -&gt; None</span>
+        <span class="k">assert</span> <span class="n">link</span><span class="o">.</span><span class="n">source_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">assert</span> <span class="n">link</span><span class="o">.</span><span class="n">sink_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">source_node</span><span class="p">)</span>
+        <span class="n">sink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">sink_node</span><span class="p">)</span>
+        <span class="c1"># notify the node gui of an removed link</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">OutputLinkRemoved</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">widget</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sink</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">LinkEvent</span><span class="p">(</span><span class="n">LinkEvent</span><span class="o">.</span><span class="n">InputLinkRemoved</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+            <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">sink</span><span class="o">.</span><span class="n">widget</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mark_activated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>  <span class="c1"># type: (QWidget) -&gt;  None</span>
+        <span class="c1"># Update the tracked stacking order for `widget`</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_widget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">activation_order</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__activation_counter</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.activate_widget_for_node"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.activate_widget_for_node">[docs]</a>    <span class="k">def</span> <span class="nf">activate_widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, QWidget) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate the widget for node (show and raise above other)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">widget</span><span class="o">.</span><span class="n">windowState</span><span class="p">()</span> <span class="o">==</span> <span class="n">Qt</span><span class="o">.</span><span class="n">WindowMinimized</span><span class="p">:</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">showNormal</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">raise_</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">activate_window_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="c1"># type: (Scheme.WindowGroup) -&gt; None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">restore_window_state</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.raise_widgets_to_front"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.raise_widgets_to_front">[docs]</a>    <span class="k">def</span> <span class="nf">raise_widgets_to_front</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise all current visible widgets to the front.</span>
+
+<span class="sd">        The widgets will be stacked by activation order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>
+        <span class="k">if</span> <span class="n">workflow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">isVisible</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="p">,</span>
+            <span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__raise_and_activate</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WidgetManager.set_float_widgets_on_top"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.set_float_widgets_on_top">[docs]</a>    <span class="k">def</span> <span class="nf">set_float_widgets_on_top</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">float_on_top</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set `Float Widgets on Top` flag on all widgets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__float_widgets_on_top</span> <span class="o">=</span> <span class="n">float_on_top</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__set_float_on_top_flag</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WidgetManager.save_window_state"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.save_window_state">[docs]</a>    <span class="k">def</span> <span class="nf">save_window_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: () -&gt; List[Tuple[SchemeNode, bytes]]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save current open window arrangement.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>  <span class="c1"># type: Scheme</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>  <span class="c1"># type: SchemeNode</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">stackorder</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">activation_order</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">isHidden</span><span class="p">():</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_widget_geometry</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">stackorder</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="p">[(</span><span class="n">node</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">return</span> <span class="n">state</span></div>
+
+<div class="viewcode-block" id="WidgetManager.restore_window_state"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.restore_window_state">[docs]</a>    <span class="k">def</span> <span class="nf">restore_window_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="c1"># type: (List[Tuple[SchemeNode, bytes]]) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore the window state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__workflow</span>  <span class="c1"># type: Scheme</span>
+        <span class="n">visible</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">state</span><span class="p">}</span>
+        <span class="c1"># first hide all other widgets</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visible</span><span class="p">:</span>
+                <span class="c1"># avoid creating widgets if not needed</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="n">allnodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="c1"># restore state for visible group; windows are stacked as they appear</span>
+        <span class="c1"># in the state list.</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">allnodes</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget_for_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>  <span class="c1"># also create it if needed</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">restore_widget_geometry</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">raise_</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__mark_activated</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="c1"># activate (give focus to) the last window</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="WidgetManager.save_widget_geometry"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.save_widget_geometry">[docs]</a>    <span class="k">def</span> <span class="nf">save_widget_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, QWidget) -&gt; bytes</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save and return the current geometry and state for node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="WidgetManager.restore_widget_geometry"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.restore_widget_geometry">[docs]</a>    <span class="k">def</span> <span class="nf">restore_widget_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode, QWidget, bytes) -&gt; bool</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore the widget geometry and state for node.</span>
+
+<span class="sd">        Return True if the geometry was restored successfully.</span>
+
+<span class="sd">        The default implementation does nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">__raise_and_activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+        <span class="c1"># type: (Iterable[Item]) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;Show and raise a set of widgets.&quot;&quot;&quot;</span>
+        <span class="c1"># preserve the tracked stacking order</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">activation_order</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">raise_</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># give focus to the last activated top window</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__activate_widget_for_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>  <span class="c1"># type: (SchemeNode) -&gt; None</span>
+        <span class="c1"># activate the widget for the node.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_created</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activate_widget_for_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span><span class="o">.</span><span class="n">raise_</span><span class="p">()</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">errorwidget</span><span class="o">.</span><span class="n">activateWindow</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__on_activate_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">WorkflowEvent</span><span class="p">(</span><span class="n">WorkflowEvent</span><span class="o">.</span><span class="n">ActivateParentRequest</span><span class="p">)</span>
+        <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">(),</span> <span class="n">event</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.eventFilter"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.eventFilter">[docs]</a>    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recv</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1"># type: (QObject, QEvent) -&gt; bool</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">NodeEvent</span><span class="o">.</span><span class="n">NodeActivateRequest</span> \
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recv</span><span class="p">,</span> <span class="n">SchemeNode</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__activate_widget_for_node</span><span class="p">(</span><span class="n">recv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="nf">__set_float_on_top_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set or unset widget&#39;s float on top flag&quot;&quot;&quot;</span>
+        <span class="n">should_float_on_top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__float_widgets_on_top</span>
+        <span class="n">float_on_top</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">widget</span><span class="o">.</span><span class="n">windowFlags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">WindowStaysOnTopHint</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">float_on_top</span> <span class="o">==</span> <span class="n">should_float_on_top</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">widget_was_visible</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">isVisible</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">should_float_on_top</span><span class="p">:</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setWindowFlags</span><span class="p">(</span>
+                <span class="n">widget</span><span class="o">.</span><span class="n">windowFlags</span><span class="p">()</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">WindowStaysOnTopHint</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">setWindowFlags</span><span class="p">(</span>
+                <span class="n">widget</span><span class="o">.</span><span class="n">windowFlags</span><span class="p">()</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Qt</span><span class="o">.</span><span class="n">WindowStaysOnTopHint</span><span class="p">)</span>
+
+        <span class="c1"># Changing window flags hid the widget</span>
+        <span class="k">if</span> <span class="n">widget_was_visible</span><span class="p">:</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__on_env_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">newvalue</span><span class="p">,</span> <span class="n">oldvalue</span><span class="p">):</span>
+        <span class="c1"># Notify widgets of a runtime environment change</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__item_for_node</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="n">WorkflowEnvChanged</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">newvalue</span><span class="p">,</span> <span class="n">oldvalue</span><span class="p">)</span>
+                <span class="n">QCoreApplication</span><span class="o">.</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WidgetManager.actions_for_context_menu"><a class="viewcode-back" href="../../../orangecanvas/scheme.widgetmanager.html#orangecanvas.scheme.widgetmanager.WidgetManager.actions_for_context_menu">[docs]</a>    <span class="k">def</span> <span class="nf">actions_for_context_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c1"># type: (SchemeNode) -&gt; List[QAction]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of extra actions that can be inserted into context</span>
+<span class="sd">        menu in the workflow editor.</span>
+
+<span class="sd">        Subclasses can reimplement this method to extend the default context</span>
+<span class="sd">        menu.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node: SchemeNode</span>
+<span class="sd">            The node for which the context menu is requested.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        actions: List[QAction]</span>
+<span class="sd">            Actions that are appended to the default menu.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span></div></div>
+
+
+<span class="c1"># Utility class used to preserve window stacking order.</span>
+<span class="k">class</span> <span class="nc">ActivationMonitor</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An event filter for monitoring QWidgets for `WindowActivation` events.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#: Signal emitted with the `QWidget` instance that was activated.</span>
+    <span class="n">activated</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">QWidget</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="c1"># type: (QObject, QEvent) -&gt; bool</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">WindowActivate</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

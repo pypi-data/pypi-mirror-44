@@ -1,0 +1,836 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.gui.toolbox &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.gui.toolbox</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.gui.toolbox</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">===============</span>
+<span class="sd">Tool Box Widget</span>
+<span class="sd">===============</span>
+
+<span class="sd">A reimplementation of the :class:`QToolBox` widget that keeps all the tabs</span>
+<span class="sd">in a single :class:`QScrollArea` instance and can keep multiple open tabs.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">eq</span><span class="p">,</span> <span class="n">attrgetter</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QWidget</span><span class="p">,</span> <span class="n">QFrame</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="p">,</span> <span class="n">QStyle</span><span class="p">,</span> <span class="n">QStyleOptionToolButton</span><span class="p">,</span>
+    <span class="n">QStyleOptionToolBox</span><span class="p">,</span> <span class="n">QScrollArea</span><span class="p">,</span> <span class="n">QVBoxLayout</span><span class="p">,</span> <span class="n">QToolButton</span><span class="p">,</span>
+    <span class="n">QAction</span><span class="p">,</span> <span class="n">QActionGroup</span><span class="p">,</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QWIDGETSIZE_MAX</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">QIcon</span><span class="p">,</span> <span class="n">QFontMetrics</span><span class="p">,</span> <span class="n">QPainter</span><span class="p">,</span> <span class="n">QPalette</span><span class="p">,</span> <span class="n">QBrush</span><span class="p">,</span> <span class="n">QPen</span><span class="p">,</span> <span class="n">QColor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Qt</span><span class="p">,</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QSize</span><span class="p">,</span> <span class="n">QRect</span><span class="p">,</span> <span class="n">QPoint</span><span class="p">,</span> <span class="n">QSignalMapper</span><span class="p">,</span> <span class="n">QEvent</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">brush_darker</span>
+
+<span class="n">_ToolBoxPage</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s2">&quot;_ToolBoxPage&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;widget&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;action&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;button&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="n">FOCUS_OUTLINE_COLOR</span> <span class="o">=</span> <span class="s2">&quot;#609ED7&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">ToolBoxTabButton</span><span class="p">(</span><span class="n">QToolButton</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A tab button for an item in a :class:`ToolBox`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">setNativeStyling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Render tab buttons as native (or css styled) :class:`QToolButtons`.</span>
+<span class="sd">        If set to `False` (default) the button is pained using a custom</span>
+<span class="sd">        paint routine.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nativeStyling</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">nativeStyling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use :class:`QStyle`&#39;s to paint the class:`QToolButton` look.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nativeStyling</span>
+
+    <span class="n">nativeStyling_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span>
+                              <span class="n">fget</span><span class="o">=</span><span class="n">nativeStyling</span><span class="p">,</span>
+                              <span class="n">fset</span><span class="o">=</span><span class="n">setNativeStyling</span><span class="p">,</span>
+                              <span class="n">designable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nativeStyling</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">OnlyOneTab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">NotAdjacent</span>
+        <span class="n">font</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;font&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;palette&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">font</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">QApplication</span><span class="o">.</span><span class="n">font</span><span class="p">(</span><span class="s2">&quot;QAbstractButton&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_SetFont</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">font</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">palette</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setPalette</span><span class="p">(</span><span class="n">QApplication</span><span class="o">.</span><span class="n">palette</span><span class="p">(</span><span class="s2">&quot;QAbstractButton&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_SetPalette</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setPalette</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">enterEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">enterEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">leaveEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">leaveEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nativeStyling</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">paintEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__paintEventNoStyle</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__paintEventNoStyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">QPainter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">QStyleOptionToolButton</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initStyleOption</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+
+        <span class="n">fm</span> <span class="o">=</span> <span class="n">QFontMetrics</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+        <span class="n">palette</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">palette</span>
+
+        <span class="c1"># highlight brush is used as the background for the icon and background</span>
+        <span class="c1"># when the tab is expanded and as mouse hover color (lighter).</span>
+        <span class="n">brush_highlight</span> <span class="o">=</span> <span class="n">palette</span><span class="o">.</span><span class="n">highlight</span><span class="p">()</span>
+        <span class="n">foregroundrole</span> <span class="o">=</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">ButtonText</span>
+        <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_Sunken</span><span class="p">:</span>
+            <span class="c1"># State &#39;down&#39; pressed during a mouse press (slightly darker).</span>
+            <span class="n">background_brush</span> <span class="o">=</span> <span class="n">brush_darker</span><span class="p">(</span><span class="n">brush_highlight</span><span class="p">,</span> <span class="mi">110</span><span class="p">)</span>
+            <span class="n">foregroundrole</span> <span class="o">=</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">HighlightedText</span>
+        <span class="k">elif</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_MouseOver</span><span class="p">:</span>
+            <span class="n">background_brush</span> <span class="o">=</span> <span class="n">brush_darker</span><span class="p">(</span><span class="n">brush_highlight</span><span class="p">,</span> <span class="mi">95</span><span class="p">)</span>
+            <span class="n">foregroundrole</span> <span class="o">=</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">HighlightedText</span>
+        <span class="k">elif</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_On</span><span class="p">:</span>
+            <span class="n">background_brush</span> <span class="o">=</span> <span class="n">brush_highlight</span>
+            <span class="n">foregroundrole</span> <span class="o">=</span> <span class="n">QPalette</span><span class="o">.</span><span class="n">HighlightedText</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The default button brush.</span>
+            <span class="n">background_brush</span> <span class="o">=</span> <span class="n">palette</span><span class="o">.</span><span class="n">button</span><span class="p">()</span>
+
+        <span class="n">rect</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">rect</span>
+
+        <span class="n">icon_area_rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="n">icon_area_rect</span><span class="o">.</span><span class="n">setRight</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">icon_area_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.26</span><span class="p">))</span>
+
+        <span class="n">text_rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+        <span class="n">text_rect</span><span class="o">.</span><span class="n">setLeft</span><span class="p">(</span><span class="n">icon_area_rect</span><span class="o">.</span><span class="n">right</span><span class="p">()</span> <span class="o">+</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="c1"># Background  (TODO: Should the tab button have native</span>
+        <span class="c1"># toolbutton shape, drawn using PE_PanelButtonTool or even</span>
+        <span class="c1"># QToolBox tab shape)</span>
+
+        <span class="c1"># Default outline pen</span>
+        <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">palette</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">QPalette</span><span class="o">.</span><span class="n">Mid</span><span class="p">))</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoPen</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">QBrush</span><span class="p">(</span><span class="n">background_brush</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="c1"># Draw the background behind the icon if the background_brush</span>
+        <span class="c1"># is different.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_On</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">brush_highlight</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="n">icon_area_rect</span><span class="p">)</span>
+            <span class="c1"># Line between the icon and text</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">drawLine</span><span class="p">(</span><span class="n">icon_area_rect</span><span class="o">.</span><span class="n">topRight</span><span class="p">(),</span>
+                       <span class="n">icon_area_rect</span><span class="o">.</span><span class="n">bottomRight</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_HasFocus</span><span class="p">:</span>
+            <span class="c1"># Set the focus frame pen and draw the border</span>
+            <span class="n">pen</span> <span class="o">=</span> <span class="n">QPen</span><span class="p">(</span><span class="n">QColor</span><span class="p">(</span><span class="n">FOCUS_OUTLINE_COLOR</span><span class="p">))</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setBrush</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">NoBrush</span><span class="p">)</span>
+            <span class="c1"># Adjust for pen</span>
+            <span class="n">rect</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">adjusted</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">drawRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">pen</span><span class="p">)</span>
+            <span class="c1"># Draw the top/bottom border</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">OnlyOneTab</span> <span class="ow">or</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">==</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">Beginning</span> <span class="ow">or</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">selected</span> <span class="o">&amp;</span> \
+                        <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">PreviousIsSelected</span><span class="p">:</span>
+
+                <span class="n">p</span><span class="o">.</span><span class="n">drawLine</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">topLeft</span><span class="p">(),</span> <span class="n">rect</span><span class="o">.</span><span class="n">topRight</span><span class="p">())</span>
+
+            <span class="n">p</span><span class="o">.</span><span class="n">drawLine</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">bottomLeft</span><span class="p">(),</span> <span class="n">rect</span><span class="o">.</span><span class="n">bottomRight</span><span class="p">())</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">restore</span><span class="p">()</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">elidedText</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">ElideRight</span><span class="p">,</span> <span class="n">text_rect</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">setPen</span><span class="p">(</span><span class="n">QPen</span><span class="p">(</span><span class="n">palette</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">foregroundrole</span><span class="p">)))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">drawText</span><span class="p">(</span><span class="n">text_rect</span><span class="p">,</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignVCenter</span> <span class="o">|</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span><span class="p">)</span> <span class="o">|</span> \
+                   <span class="nb">int</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">TextSingleLine</span><span class="p">),</span>
+                   <span class="n">text</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">opt</span><span class="o">.</span><span class="n">icon</span><span class="o">.</span><span class="n">isNull</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_Enabled</span><span class="p">:</span>
+                <span class="n">mode</span> <span class="o">=</span> <span class="n">QIcon</span><span class="o">.</span><span class="n">Normal</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mode</span> <span class="o">=</span> <span class="n">QIcon</span><span class="o">.</span><span class="n">Disabled</span>
+            <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">state</span> <span class="o">&amp;</span> <span class="n">QStyle</span><span class="o">.</span><span class="n">State_On</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">QIcon</span><span class="o">.</span><span class="n">On</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">QIcon</span><span class="o">.</span><span class="n">Off</span>
+            <span class="n">icon_area_rect</span> <span class="o">=</span> <span class="n">icon_area_rect</span>
+            <span class="n">icon_rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">QPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">opt</span><span class="o">.</span><span class="n">iconSize</span><span class="p">)</span>
+            <span class="n">icon_rect</span><span class="o">.</span><span class="n">moveCenter</span><span class="p">(</span><span class="n">icon_area_rect</span><span class="o">.</span><span class="n">center</span><span class="p">())</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">icon</span><span class="o">.</span><span class="n">paint</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">icon_rect</span><span class="p">,</span> <span class="n">Qt</span><span class="o">.</span><span class="n">AlignCenter</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">restore</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">_ToolBoxScrollArea</span><span class="p">(</span><span class="n">QScrollArea</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">eventFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">()</span> <span class="o">==</span> <span class="n">QEvent</span><span class="o">.</span><span class="n">Resize</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="n">event</span><span class="o">.</span><span class="n">oldSize</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">widgetResizable</span><span class="p">():</span>
+                <span class="c1"># This is driving me insane. This should not have happened.</span>
+                <span class="c1"># Before the event is sent QWidget specifically makes sure the</span>
+                <span class="c1"># sizes are different, but somehow I still get this, and enter</span>
+                <span class="c1"># an infinite recursion if I enter QScrollArea.eventFilter.</span>
+                <span class="c1"># I can only duplicate this on one development machine a</span>
+                <span class="c1"># Mac OSX using fink and Qt 4.7.3</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">eventFilter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_ToolBoxLayout</span><span class="p">(</span><span class="n">QVBoxLayout</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__minimumSize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__maximumSize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">minimumSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reimplemented from `QBoxLayout.minimimSize`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__minimumSize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msize</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">minimumSize</span><span class="p">()</span>
+            <span class="c1"># Extend the minimum size by including the minimum width of</span>
+            <span class="c1"># hidden widgets (which QBoxLayout ignores), so the minimum</span>
+            <span class="c1"># width does not depend on the tab open/close state.</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">msize</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">minimumWidth</span><span class="p">(),</span>
+                                       <span class="n">msize</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__minimumSize</span> <span class="o">=</span> <span class="n">msize</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__minimumSize</span>
+
+    <span class="k">def</span> <span class="nf">maximumSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reimplemented from `QBoxLayout.maximumSize`.&quot;&quot;&quot;</span>
+        <span class="n">msize</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">maximumSize</span><span class="p">()</span>
+        <span class="c1"># Allow the contents to grow horizontally (expand within the</span>
+        <span class="c1"># containing scroll area - joining the tab buttons to the</span>
+        <span class="c1"># right edge), but have a suitable maximum height (displaying an</span>
+        <span class="c1"># empty area on the bottom if the contents are smaller then the</span>
+        <span class="c1"># viewport).</span>
+        <span class="n">msize</span><span class="o">.</span><span class="n">setWidth</span><span class="p">(</span><span class="n">QWIDGETSIZE_MAX</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">msize</span>
+
+    <span class="k">def</span> <span class="nf">invalidate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reimplemented from `QVBoxLayout.invalidate`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__minimumSize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__maximumSize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ToolBox"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox">[docs]</a><span class="k">class</span> <span class="nc">ToolBox</span><span class="p">(</span><span class="n">QFrame</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A tool box widget.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Emitted when a tab is toggled.</span>
+    <span class="n">tabToogled</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ToolBox.setExclusive"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.setExclusive">[docs]</a>    <span class="k">def</span> <span class="nf">setExclusive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclusive</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set exclusive tabs (only one tab can be open at a time).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exclusive</span> <span class="o">!=</span> <span class="n">exclusive</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__exclusive</span> <span class="o">=</span> <span class="n">exclusive</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__tabActionGroup</span><span class="o">.</span><span class="n">setExclusive</span><span class="p">(</span><span class="n">exclusive</span><span class="p">)</span>
+            <span class="n">checked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabActionGroup</span><span class="o">.</span><span class="n">checkedAction</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">checked</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># The action group can be out of sync with the actions state</span>
+                <span class="c1"># when switching between exclusive states.</span>
+                <span class="n">actions_checked</span> <span class="o">=</span> <span class="p">[</span><span class="n">page</span><span class="o">.</span><span class="n">action</span> <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span>
+                                   <span class="k">if</span> <span class="n">page</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()]</span>
+                <span class="k">if</span> <span class="n">actions_checked</span><span class="p">:</span>
+                    <span class="n">checked</span> <span class="o">=</span> <span class="n">actions_checked</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># Trigger/toggle remaining open pages</span>
+            <span class="k">if</span> <span class="n">exclusive</span> <span class="ow">and</span> <span class="n">checked</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">checked</span> <span class="o">!=</span> <span class="n">page</span><span class="o">.</span><span class="n">action</span> <span class="ow">and</span> <span class="n">page</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                        <span class="n">page</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ToolBox.exclusive"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.exclusive">[docs]</a>    <span class="k">def</span> <span class="nf">exclusive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Are the tabs in the toolbox exclusive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exclusive</span></div>
+
+    <span class="n">exclusive_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span>
+                          <span class="n">fget</span><span class="o">=</span><span class="n">exclusive</span><span class="p">,</span>
+                          <span class="n">fset</span><span class="o">=</span><span class="n">setExclusive</span><span class="p">,</span>
+                          <span class="n">designable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Exclusive tabs&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__exclusive</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__setupUi</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">setContentsMargins</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Scroll area for the contents.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span> <span class="o">=</span> \
+                <span class="n">_ToolBoxScrollArea</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objectName</span><span class="o">=</span><span class="s2">&quot;toolbox-scroll-area&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setVerticalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setHorizontalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">MinimumExpanding</span><span class="p">,</span>
+                                        <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">MinimumExpanding</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setFrameStyle</span><span class="p">(</span><span class="n">QScrollArea</span><span class="o">.</span><span class="n">NoFrame</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setWidgetResizable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># A widget with all of the contents.</span>
+        <span class="c1"># The tabs/contents are placed in the layout inside this widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contents</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="p">,</span>
+                                  <span class="n">objectName</span><span class="o">=</span><span class="s2">&quot;toolbox-contents&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span> <span class="o">=</span> <span class="n">_ToolBoxLayout</span><span class="p">(</span>
+            <span class="n">sizeConstraint</span><span class="o">=</span><span class="n">_ToolBoxLayout</span><span class="o">.</span><span class="n">SetMinAndMaxSize</span><span class="p">,</span>
+            <span class="n">spacing</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">setContentsMargins</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contents</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__contents</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">,</span>
+                           <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">MinimumExpanding</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tabActionGroup</span> <span class="o">=</span> \
+                <span class="n">QActionGroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objectName</span><span class="o">=</span><span class="s2">&quot;toolbox-tab-action-group&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tabActionGroup</span><span class="o">.</span><span class="n">setExclusive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__exclusive</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__actionMapper</span> <span class="o">=</span> <span class="n">QSignalMapper</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__actionMapper</span><span class="o">.</span><span class="n">mapped</span><span class="p">[</span><span class="n">QObject</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onTabActionToogled</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ToolBox.setTabButtonHeight"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.setTabButtonHeight">[docs]</a>    <span class="k">def</span> <span class="nf">setTabButtonHeight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the tab button height.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span> <span class="o">!=</span> <span class="n">height</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span> <span class="o">=</span> <span class="n">height</span>
+            <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">:</span>
+                <span class="n">page</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">setFixedHeight</span><span class="p">(</span><span class="n">height</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolBox.tabButtonHeight"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.tabButtonHeight">[docs]</a>    <span class="k">def</span> <span class="nf">tabButtonHeight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the tab button height.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span></div>
+
+<div class="viewcode-block" id="ToolBox.setTabIconSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.setTabIconSize">[docs]</a>    <span class="k">def</span> <span class="nf">setTabIconSize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the tab button icon size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">:</span>
+                <span class="n">page</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">setIconSize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolBox.tabIconSize"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.tabIconSize">[docs]</a>    <span class="k">def</span> <span class="nf">tabIconSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the tab icon size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span></div>
+
+<div class="viewcode-block" id="ToolBox.tabButton"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.tabButton">[docs]</a>    <span class="k">def</span> <span class="nf">tabButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the tab button at `index`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">button</span></div>
+
+<div class="viewcode-block" id="ToolBox.tabAction"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.tabAction">[docs]</a>    <span class="k">def</span> <span class="nf">tabAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return open/close action for the tab at `index`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">action</span></div>
+
+<div class="viewcode-block" id="ToolBox.addItem"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.addItem">[docs]</a>    <span class="k">def</span> <span class="nf">addItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">toolTip</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append the `widget` in a new tab and return its index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        widget : :class:`QWidget`</span>
+<span class="sd">            A widget to be inserted. The toolbox takes ownership</span>
+<span class="sd">            of the widget.</span>
+
+<span class="sd">        text : str</span>
+<span class="sd">            Name/title of the new tab.</span>
+
+<span class="sd">        icon : :class:`QIcon`, optional</span>
+<span class="sd">            An icon for the tab button.</span>
+
+<span class="sd">        toolTip : str, optional</span>
+<span class="sd">            Tool tip for the tab button.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insertItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">icon</span><span class="p">,</span> <span class="n">toolTip</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolBox.insertItem"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.insertItem">[docs]</a>    <span class="k">def</span> <span class="nf">insertItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">toolTip</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert the `widget` in a new tab at position `index`.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        ToolBox.addItem</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">button</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createTabButton</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">icon</span><span class="p">,</span> <span class="n">toolTip</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="n">index</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">button</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="n">index</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+
+        <span class="n">widget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+
+        <span class="n">page</span> <span class="o">=</span> <span class="n">_ToolBoxPage</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">button</span><span class="o">.</span><span class="n">defaultAction</span><span class="p">(),</span> <span class="n">button</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatePositions</span><span class="p">()</span>
+
+        <span class="c1"># Show (open) the first tab.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">trigger</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateSelected</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">index</span></div>
+
+<div class="viewcode-block" id="ToolBox.removeItem"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.removeItem">[docs]</a>    <span class="k">def</span> <span class="nf">removeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove the widget at `index`.</span>
+
+<span class="sd">        .. note:: The widget hidden but is is not deleted.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">takeAt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">takeAt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">index</span><span class="p">)</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># Update the page indexes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">page</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+
+        <span class="c1"># Hide the widget and reparent to self</span>
+        <span class="c1"># This follows QToolBox.removeItem</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">setParent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updatePositions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__updateSelected</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ToolBox.count"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of widgets inserted in the toolbox.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolBox.widget"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.widget">[docs]</a>    <span class="k">def</span> <span class="nf">widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget at `index`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">widget</span></div>
+
+<div class="viewcode-block" id="ToolBox.createTabButton"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.createTabButton">[docs]</a>    <span class="k">def</span> <span class="nf">createTabButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">toolTip</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the tab button for `widget`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">action</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">icon</span><span class="p">:</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">icon</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">toolTip</span><span class="p">:</span>
+            <span class="n">action</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="n">toolTip</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tabActionGroup</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__actionMapper</span><span class="o">.</span><span class="n">setMapping</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+        <span class="n">action</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__actionMapper</span><span class="o">.</span><span class="n">map</span><span class="p">)</span>
+
+        <span class="n">button</span> <span class="o">=</span> <span class="n">ToolBoxTabButton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objectName</span><span class="o">=</span><span class="s2">&quot;toolbox-tab-button&quot;</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">setDefaultAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">setToolButtonStyle</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ToolButtonTextBesideIcon</span><span class="p">)</span>
+        <span class="n">button</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Ignored</span><span class="p">,</span>
+                             <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span><span class="o">.</span><span class="n">isValid</span><span class="p">():</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setIconSize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__tabIconSize</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">setFixedHeight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__tabButtonHeight</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">button</span></div>
+
+<div class="viewcode-block" id="ToolBox.ensureWidgetVisible"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.ensureWidgetVisible">[docs]</a>    <span class="k">def</span> <span class="nf">ensureWidgetVisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">xmargin</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">ymargin</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scroll the contents so child widget instance is visible inside</span>
+<span class="sd">        the viewport.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span><span class="o">.</span><span class="n">ensureWidgetVisible</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">xmargin</span><span class="p">,</span> <span class="n">ymargin</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ToolBox.sizeHint"><a class="viewcode-back" href="../../../orangecanvas/gui.toolbox.html#orangecanvas.gui.toolbox.ToolBox.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">():</span>
+            <span class="c1"># Compute max width of hidden widgets also.</span>
+            <span class="n">scroll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scrollArea</span>
+            <span class="n">scroll_w</span> <span class="o">=</span> <span class="n">scroll</span><span class="o">.</span><span class="n">verticalScrollBar</span><span class="p">()</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+            <span class="n">frame_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frameWidth</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">scroll</span><span class="o">.</span><span class="n">frameWidth</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span>
+            <span class="n">max_w</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">])</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">max_w</span><span class="p">,</span> <span class="n">hint</span><span class="o">.</span><span class="n">width</span><span class="p">())</span> <span class="o">+</span> <span class="n">scroll_w</span> <span class="o">+</span> <span class="n">frame_w</span><span class="p">,</span>
+                         <span class="n">hint</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span><span class="o">.</span><span class="n">expandedTo</span><span class="p">(</span><span class="n">hint</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__onTabActionToogled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">))</span>
+        <span class="n">on</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">on</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Update the `previous` tab buttons style hints</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">NextIsSelected</span>
+            <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
+                <span class="n">previous</span><span class="o">.</span><span class="n">selected</span> <span class="o">|=</span> <span class="n">flag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">previous</span><span class="o">.</span><span class="n">selected</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">flag</span>
+
+            <span class="n">previous</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">PreviousIsSelected</span>
+            <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
+                <span class="nb">next</span><span class="o">.</span><span class="n">selected</span> <span class="o">|=</span> <span class="n">flag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">next</span><span class="o">.</span><span class="n">selected</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">flag</span>
+
+            <span class="nb">next</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabToogled</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__contentsLayout</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__updateSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the tab buttons selected style flags.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span>
+
+        <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="n">next_sel</span><span class="p">,</span> <span class="n">prev_sel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">next_sel</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">selected</span> <span class="o">|=</span> <span class="n">opt</span><span class="o">.</span><span class="n">NextIsSelected</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">selected</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">opt</span><span class="o">.</span><span class="n">NextIsSelected</span>
+
+            <span class="k">if</span> <span class="n">prev_sel</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">selected</span> <span class="o">|=</span> <span class="n">opt</span><span class="o">.</span><span class="n">PreviousIsSelected</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">button</span><span class="o">.</span><span class="n">selected</span> <span class="o">&amp;=</span> <span class="o">~</span> <span class="n">opt</span><span class="o">.</span><span class="n">PreviousIsSelected</span>
+
+            <span class="n">button</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">pages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">update</span><span class="p">(</span><span class="n">pages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="p">,</span>
+                       <span class="n">pages</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span>
+                       <span class="n">pages</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">isChecked</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__updatePositions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the tab buttons position style flags.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">OnlyOneTab</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">Beginning</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">End</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">QStyleOptionToolBox</span><span class="o">.</span><span class="n">Middle</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pages</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">button</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">arg</span>
+
+
+<span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="o">*</span><span class="n">what</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    find(iterable, [what, [key=None, [predicate=operator.eq]]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">what</span><span class="p">:</span>
+        <span class="n">what</span> <span class="o">=</span> <span class="n">what</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">predicate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">identity</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;predicate&quot;</span><span class="p">,</span> <span class="n">eq</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+        <span class="n">item_key</span> <span class="o">=</span> <span class="n">key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">item_key</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">item</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">what</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

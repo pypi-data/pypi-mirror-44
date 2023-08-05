@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orangecanvas.gui.stackedwidget &mdash; Orange Canvas Core 0.0.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.11',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orange Canvas Core
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../orangecanvas/index.html">Orange Canvas Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orange Canvas Core</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orangecanvas.gui.stackedwidget</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orangecanvas.gui.stackedwidget</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=====================</span>
+<span class="sd">AnimatedStackedWidget</span>
+<span class="sd">=====================</span>
+
+<span class="sd">A widget similar to :class:`QStackedWidget` supporting animated</span>
+<span class="sd">transitions between widgets.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">AnyQt.QtWidgets</span> <span class="k">import</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QFrame</span><span class="p">,</span> <span class="n">QStackedLayout</span><span class="p">,</span> <span class="n">QSizePolicy</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtGui</span> <span class="k">import</span> <span class="n">QPixmap</span><span class="p">,</span> <span class="n">QPainter</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">QPoint</span><span class="p">,</span> <span class="n">QRect</span><span class="p">,</span> <span class="n">QSize</span><span class="p">,</span> <span class="n">QPropertyAnimation</span>
+<span class="kn">from</span> <span class="nn">AnyQt.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span> <span class="k">as</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">pyqtProperty</span> <span class="k">as</span> <span class="n">Property</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">updates_disabled</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">clipMinMax</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">minSize</span><span class="p">,</span> <span class="n">maxSize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clip the size so it is bigger then minSize but smaller than maxSize.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">size</span><span class="o">.</span><span class="n">expandedTo</span><span class="p">(</span><span class="n">minSize</span><span class="p">)</span><span class="o">.</span><span class="n">boundedTo</span><span class="p">(</span><span class="n">maxSize</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">fixSizePolicy</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">hint</span><span class="p">,</span> <span class="n">policy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fix size so it conforms to the size policy and the given size hint.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">hint</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">hint</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+    <span class="n">expanding</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">expandingDirections</span><span class="p">()</span>
+    <span class="n">hpolicy</span><span class="p">,</span> <span class="n">vpolicy</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">horizontalPolicy</span><span class="p">(),</span> <span class="n">policy</span><span class="o">.</span><span class="n">verticalPolicy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">expanding</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Horizontal</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">hpolicy</span> <span class="o">==</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Maximum</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">expanding</span> <span class="o">&amp;</span> <span class="n">Qt</span><span class="o">.</span><span class="n">Vertical</span><span class="p">:</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">vpolicy</span> <span class="o">==</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Maximum</span><span class="p">:</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">hint</span><span class="o">.</span><span class="n">height</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">QSize</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span><span class="o">.</span><span class="n">boundedTo</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="StackLayout"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout">[docs]</a><span class="k">class</span> <span class="nc">StackLayout</span><span class="p">(</span><span class="n">QStackedLayout</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A stacked layout with ``sizeHint`` always the same as that of the</span>
+<span class="sd">    `current` widget.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currentChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_onCurrentChanged</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StackLayout.sizeHint"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">current</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+            <span class="c1"># Clip the hint with min/max sizes.</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">clipMinMax</span><span class="p">(</span><span class="n">hint</span><span class="p">,</span> <span class="n">current</span><span class="o">.</span><span class="n">minimumSize</span><span class="p">(),</span>
+                              <span class="n">current</span><span class="o">.</span><span class="n">maximumSize</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">hint</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StackLayout.minimumSize"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout.minimumSize">[docs]</a>    <span class="k">def</span> <span class="nf">minimumSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">current</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current</span><span class="o">.</span><span class="n">minimumSize</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">minimumSize</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StackLayout.maximumSize"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout.maximumSize">[docs]</a>    <span class="k">def</span> <span class="nf">maximumSize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentWidget</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">current</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current</span><span class="o">.</span><span class="n">maximumSize</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">maximumSize</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="StackLayout.geometry"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout.geometry">[docs]</a>    <span class="k">def</span> <span class="nf">geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Reimplemented due to QTBUG-47107.</span>
+        <span class="k">return</span> <span class="n">QRect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__rect</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StackLayout.setGeometry"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.StackLayout.setGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">setGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rect</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="n">QRect</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;QRect required&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rect</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rect</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__rect</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">QRect</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">clipMinMax</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">w</span><span class="o">.</span><span class="n">minimumSize</span><span class="p">(),</span> <span class="n">w</span><span class="o">.</span><span class="n">maximumSize</span><span class="p">())</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">fixSizePolicy</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">hint</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">sizePolicy</span><span class="p">())</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">setSize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">geom</span> <span class="o">!=</span> <span class="n">w</span><span class="o">.</span><span class="n">geometry</span><span class="p">():</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_onCurrentChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Current widget changed, invalidate the layout.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AnimatedStackedWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget">[docs]</a><span class="k">class</span> <span class="nc">AnimatedStackedWidget</span><span class="p">(</span><span class="n">QFrame</span><span class="p">):</span>
+    <span class="c1"># Current widget has changed</span>
+    <span class="n">currentChanged</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># Transition animation has started</span>
+    <span class="n">transitionStarted</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="c1"># Transition animation has finished</span>
+    <span class="n">transitionFinished</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">animationEnabled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__animationEnabled</span> <span class="o">=</span> <span class="n">animationEnabled</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">StackLayout</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span> <span class="o">=</span> <span class="n">CrossFadePixmapWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span> <span class="o">=</span> \
+            <span class="n">QPropertyAnimation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;blendingFactor_&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">setStartValue</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">setEndValue</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">setDuration</span><span class="p">(</span><span class="mi">100</span> <span class="k">if</span> <span class="n">animationEnabled</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">finished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__onTransitionFinished</span>
+        <span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">currentChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__onLayoutCurrentChanged</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__nextCurrentIndex</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.setAnimationEnabled"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.setAnimationEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">setAnimationEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">animationEnabled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable/disable transition animations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__animationEnabled</span> <span class="o">!=</span> <span class="n">animationEnabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__animationEnabled</span> <span class="o">=</span> <span class="n">animationEnabled</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">setDuration</span><span class="p">(</span>
+                <span class="mi">100</span> <span class="k">if</span> <span class="n">animationEnabled</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.animationEnabled"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.animationEnabled">[docs]</a>    <span class="k">def</span> <span class="nf">animationEnabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the transition animation enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__animationEnabled</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.addWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.addWidget">[docs]</a>    <span class="k">def</span> <span class="nf">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append the widget to the stack and return its index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="n">widget</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.insertWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.insertWidget">[docs]</a>    <span class="k">def</span> <span class="nf">insertWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert `widget` into the stack at `index`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">insertWidget</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">widget</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.removeWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.removeWidget">[docs]</a>    <span class="k">def</span> <span class="nf">removeWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove `widget` from the stack.</span>
+
+<span class="sd">        .. note:: The widget is hidden but is not deleted.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">removeWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.widget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.widget">[docs]</a>    <span class="k">def</span> <span class="nf">widget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the widget at `index`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.indexOf"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.indexOf">[docs]</a>    <span class="k">def</span> <span class="nf">indexOf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the index of `widget` in the stack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.count"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of widgets in the stack.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.setCurrentWidget"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.setCurrentWidget">[docs]</a>    <span class="k">def</span> <span class="nf">setCurrentWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the current shown widget.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.setCurrentIndex"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.setCurrentIndex">[docs]</a>    <span class="k">def</span> <span class="nf">setCurrentIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the current shown widget index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="k">return</span>
+
+<span class="c1">#        if not self.animationEnabled():</span>
+<span class="c1">#            self.layout().setCurrentIndex(index)</span>
+<span class="c1">#            self.__currentIndex = index</span>
+<span class="c1">#            return</span>
+
+        <span class="c1"># else start the animation</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span><span class="p">]</span>
+        <span class="n">next_widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widgets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">has_pending_resize</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">widget</span><span class="o">.</span><span class="n">testAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_PendingResizeEvent</span><span class="p">)</span> <span class="ow">or</span> \
+                   <span class="ow">not</span> <span class="n">widget</span><span class="o">.</span><span class="n">testAttribute</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">WA_WState_Created</span><span class="p">)</span>
+        <span class="n">current_pix</span> <span class="o">=</span> <span class="n">next_pix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_pending_resize</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">current_pix</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">grab</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_pending_resize</span><span class="p">(</span><span class="n">next_widget</span><span class="p">):</span>
+            <span class="n">next_pix</span> <span class="o">=</span> <span class="n">next_widget</span><span class="o">.</span><span class="n">grab</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">updates_disabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">current_pix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="o">.</span><span class="n">setPixmap2</span><span class="p">(</span><span class="n">next_pix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__nextCurrentIndex</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__transitionStart</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.currentIndex"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.currentIndex">[docs]</a>    <span class="k">def</span> <span class="nf">currentIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current shown widget index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span></div>
+
+<div class="viewcode-block" id="AnimatedStackedWidget.sizeHint"><a class="viewcode-back" href="../../../orangecanvas/gui.stackedwidget.html#orangecanvas.gui.stackedwidget.AnimatedStackedWidget.sizeHint">[docs]</a>    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hint</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">hint</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="n">QSize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hint</span></div>
+
+    <span class="k">def</span> <span class="nf">__transitionStart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the transition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stack transition start (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objectName</span><span class="p">()))</span>
+        <span class="c1"># Set the fade widget as the current widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="o">.</span><span class="n">blendingFactor_</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">setCurrentWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionAnimation</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionStarted</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__onTransitionFinished</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transition has finished.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stack transition finished (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objectName</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__fadeWidget</span><span class="o">.</span><span class="n">blendingFactor_</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__nextCurrentIndex</span>
+        <span class="k">with</span> <span class="n">updates_disabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__currentIndex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transitionFinished</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__onLayoutCurrentChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="c1"># Suppress transitional __fadeWidget current widget</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currentChanged</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">CrossFadePixmapWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget for cross fading between two pixmaps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixmap1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixmap2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPixmap</span><span class="p">(</span><span class="n">pixmap1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setPixmap2</span><span class="p">(</span><span class="n">pixmap2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blendingFactor_</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setPixmap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixmap</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set pixmap 1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixmap1</span> <span class="o">=</span> <span class="n">pixmap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setPixmap2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pixmap</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set pixmap 2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pixmap2</span> <span class="o">=</span> <span class="n">pixmap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">setBlendingFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the blending factor between the two pixmaps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__blendingFactor</span> <span class="o">=</span> <span class="n">factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">blendingFactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pixmap blending factor between 0.0 and 1.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__blendingFactor</span>
+
+    <span class="n">blendingFactor_</span> <span class="o">=</span> <span class="n">Property</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">fget</span><span class="o">=</span><span class="n">blendingFactor</span><span class="p">,</span>
+                               <span class="n">fset</span><span class="o">=</span><span class="n">setBlendingFactor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sizeHint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an interpolated size between pixmap1.size()</span>
+<span class="sd">        and pixmap2.size()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap2</span><span class="p">:</span>
+            <span class="n">size1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap1</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="n">size2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap2</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">size1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">blendingFactor_</span> <span class="o">*</span> <span class="p">(</span><span class="n">size2</span> <span class="o">-</span> <span class="n">size1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sizeHint</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">paintEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Paint the interpolated pixmap image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">QPainter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">setClipRect</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">rect</span><span class="p">())</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blendingFactor_</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap1</span> <span class="ow">and</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">factor</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">factor</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">drawPixmap</span><span class="p">(</span><span class="n">QPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap2</span> <span class="ow">and</span> <span class="n">factor</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">setOpacity</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">drawPixmap</span><span class="p">(</span><span class="n">QPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixmap2</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Bioinformatics Laboratory, FRI UL
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
