@@ -1,0 +1,49 @@
+#!/bin/python3
+
+import argparse
+import giig
+from shutil import get_terminal_size
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Download .gitignore files from gitignore.io")
+    parser.add_argument("languages", metavar="lang", type=str, nargs='*',
+                        help="language, IDE or OS to include in the .gitignore file")
+    parser.add_argument("--list", "-l", action="store_true",
+                        help="list all language, IDE or OS options")
+    parser.add_argument("--search", "-s", type=str,
+                        help="search list of options and print matches")
+    parser.add_argument("--file", "-f", type=str, nargs='?', const='.gitignore', default=None,
+                        help="specify which file to write to")
+    args = parser.parse_args()
+
+    if args.list:
+        gitignore_list = giig.get_list()
+        term_width = get_terminal_size()[0]
+        col_width = max([len(x) for x in gitignore_list]) + 2
+        elems_per_row = int(term_width / col_width)
+        for (i, elem) in enumerate(gitignore_list):
+            if i > 0 and (i % elems_per_row) == 0:
+                print()
+            print(elem.ljust(col_width), end='')
+        print()
+
+    elif args.search:
+        print("\n".join(giig.search(args.search.lower())))
+
+    elif args.languages:
+        content = giig.get_gitignore(
+                    [lang.lower() for lang in args.languages])
+        if args.file is not None:
+            with open(args.file, "w+") as gitignore:
+                gitignore.write(content)
+        else:
+            print(content)
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
