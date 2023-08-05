@@ -1,0 +1,18 @@
+#!/bin/sh
+# Copyright 2018, 2019 Felix Krull
+# Licensed under the MIT license, see LICENSE for details.
+set -eu
+
+mkdir -p $1/etc/network/interfaces.d
+
+cat > $1/etc/network/interfaces.d/lo <<EOF
+auto lo
+iface lo inet loopback
+EOF
+
+DEFAULT_IFACE=$(sed -n 2p /proc/net/route | cut -f1)
+IFACE=${DEPLOY_OSTREE_interface:-${DEFAULT_IFACE}}
+cat > $1/etc/network/interfaces.d/${IFACE} <<EOF
+allow-hotplug $IFACE
+iface $IFACE inet dhcp
+EOF
