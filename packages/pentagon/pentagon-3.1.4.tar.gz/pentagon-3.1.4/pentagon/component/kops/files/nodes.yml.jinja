@@ -1,0 +1,22 @@
+{% for az in availability_zones -%}
+---
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: {{ cluster_name }}
+  name: nodes-{{ az }}
+spec:
+  machineType: {{ worker_node_type }}
+  image: {{ worker_node_image }}
+  maxSize: {{ ig_max_size if ig_max_size else node_count }}
+  minSize: {{ ig_min_size if ig_min_size else node_count }}
+  role: Node
+  subnets:
+  - {{ az }}
+  rootVolumeSize: {{ node_root_volume_size }}
+  rootVolumeType: gp2
+  cloudLabels:
+    k8s.io/cluster-autoscaler/enabled: ''
+    kubernetes.io/cluster/{{ cluster_name }}: ''
+{% endfor -%}
