@@ -1,0 +1,32 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Running out of memory'
+tags: [hardware, '${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 300
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+escalation_message: ''
+query: avg(last_15m):avg:system.mem.pct_usable{kubernetescluster:${cluster}} by {host} < ${cluster_memory_critical_threshold}
+message: |
+  {{#is_alert}}
+  Running out of free memory on {{host.name}}
+  {{/is_alert}}
+  {{#is_alert_to_warning}}
+  Memory usage has decreased. There is about 30% free
+  {{/is_alert_to_warning}}
+  {{#is_alert_recovery}}
+  Memory is below treshold again
+  {{/is_alert_recovery}}
+  ${notifications}
+type: query alert
+thresholds:
+  critical: ${cluster_memory_critical_threshold}
+  warning: ${cluster_memory_critical_warning}
+timeout_h: 0
+definition_defaults:
+  cluster_memory_critical_threshold: 0.1
+  cluster_memory_critical_warning: 0.15

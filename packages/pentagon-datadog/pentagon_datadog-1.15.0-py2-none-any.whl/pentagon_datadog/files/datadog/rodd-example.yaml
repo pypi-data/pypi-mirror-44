@@ -1,0 +1,23 @@
+definitions:
+    # declare definitions here that can be use throughout the monitors as ${key}
+    environment: prod
+    notifications: '@slack @pagerduty'
+    namespace: prod
+dashboards:
+  - source: kubernetes.resources
+monitors:
+  - source: kubernetes
+  - source: kubernetes.deploy_replica_alert
+    definitions:
+      namespace: ['infra', 'kube-system', 'rbac-manager']
+downtimes:
+  - name: Weekly Maintenance Window
+    scope: "*"
+    start: 1614285704
+    end: 1645821704
+    recurrence_type: days
+    recurrence_period: 1
+exceptions:
+  # the full path of the monitor or dashboard to exclude.
+  # this will prevent this monitor from being created
+  - kubernetes.cluster_bytes_received

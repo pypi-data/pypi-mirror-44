@@ -1,0 +1,22 @@
+notify_audit: false
+locked: false
+name: '[${environment}] HPA Errors'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: 120
+silenced: {}
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+type: event alert
+query: "events('sources:kubernetes priority:all tags:kubernetescluster:${cluster} \"unable to fetch metrics from resource metrics API:\"').by('hpa').rollup('count').last('1h') > ${hpa_failure_critical_threshold}"
+message: |
+  {{#is_alert}}
+  A high number of hpa failures (> {{threshold}} ) are occurring.  Can HPAs get metrics?
+  {{/is_alert}}
+  {{#is_alert_recovery}}
+  HPA Metric Retrieval Failure has recovered.
+  {{/is_alert_recovery}}
+  ${notifications}
+definition_defaults:
+  hpa_failure_critical_threshold: 200

@@ -1,0 +1,25 @@
+notify_audit: false
+locked: false
+name: 'Internal Address Quota'
+tags: ['${environment}', reactiveops]
+include_tags: false
+no_data_timeframe: null
+silenced: {}
+new_host_delay: 600
+require_full_window: true
+notify_no_data: false
+renotify_interval: 0
+evaluation_delay: 900
+escalation_message: ''
+query: min(last_1h):( max:gcp.gce.project.global_internal_addresses.usage{*} by {project} / max:gcp.gce.project.quota.global_internal_addresses.limit{*} by {project} ) * 100 > 50
+message: |
+  {{#is_alert}}
+  Internal Address Quota usage is {{value}}% on project {{project.name}}.
+  {{/is_alert}}
+  {{#is_alert_recovery}}
+  Internal Address Quota Usage on project {{project.name}} has recovered.  Current value is {{value}}%.
+  {{/is_alert_recovery}}
+  ${notifications}
+type: metric alert
+thresholds: {critical: 50}
+timeout_h: 0
