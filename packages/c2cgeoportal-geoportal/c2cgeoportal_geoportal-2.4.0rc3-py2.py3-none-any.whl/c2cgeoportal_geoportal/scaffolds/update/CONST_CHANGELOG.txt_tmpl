@@ -1,0 +1,95 @@
+This file includes migration steps for each release of c2cgeoportal.
+
+
+Version 2.4.0
+=============
+
+Information
+-----------
+
+1. The `docker-service` section in the vars files is removed, and the `docker-compose.yaml.mako`.
+   Now we have a `docker-compose-lib.yaml` file with a base of the services,
+   a `docker-compose.yaml` where we can customise the services,
+   a `.env.mako` file where we have the environment variables used in the Docker compose files,
+   `COMPOSE_PROJECT_NAME` contains the default name of the project.
+
+2. A page containing services useful for an administrator is now available here:
+   <application base URL>/c2c.
+
+3. The checker organisation will be updated, see the checker documentation for more information.
+
+Changes to apply
+----------------
+
+1. The ngeo modules import has changed. The major change that will concern you is that we directly
+   export the module, therefore, in the angular module declaration, you should replace
+   `<module>.module.name` by `<module>.name`.
+
+2. We have migrated from Bootstrap 3 to 4 (https://getbootstrap.com/docs/4.0/migration/). This implies
+   using Sass in place of Less. The major change is that the variables will be prefixed by '$'
+   instead of '@' and we will use rem as recommended unit.
+
+
+Version 2.3.6
+=============
+
+1. Rename full-text search path from /fulltextsearch to /search for backward compatibility with the version 2.2
+
+
+Version 2.3.0
+=============
+
+Information
+-----------
+
+1. The structure of the project change:
+   * The package name becomes `{{package}}_geoportal`.
+   * The package is in the folder `geoportal`.
+
+2. All the images will be moved from `geoportal/{{package}}_geoportal/static-ngeo/images`
+   to `geoportal/{{package}}_geoportal/static-ngeo/js/apps/image`, this is required for the apps.
+   If some images are used directly by the apps (e.g. the theme icons) they should be moved back to their
+   original folder.
+
+3. The `shortener.email_body` in the vars files now uses the template syntax.
+
+4. Update access control list (ACL) in root context to allow users with role 'role_admin' to access views
+   requiring 'admin' permission.
+
+   edit 'geoportal/{{package}}_geoportal/resources.py' file, Root class __acl__ attribute should look like:
+
+   '''...
+   from pyramid.security import Allow, ALL_PERMISSIONS
+   ...
+
+   class Root:
+       __acl__ = [
+           (Allow, 'role_admin', ALL_PERMISSIONS),
+       ]
+   ...'''
+
+5. To update the po files you should now run a specific target each time you change or add a new layer
+   (mapfile, layer item in admin interface, etc.) or add a new feature:
+
+   '''
+   ./docker-run make --makefile=<package>.mk update-po
+   '''
+
+6. Now we needs the `pg_trgm` Postgres extension, use `CREATE EXTENSION pg_trgm;` to install it.
+
+Changes to apply
+----------------
+
+1. Rename your l10n files with e.-g.:
+
+   mv geoportal/{{package}}_geoportal/locale/fr/LC_MESSAGES/{{package}}{,_geoportal}-client.po
+   mv geoportal/{{package}}_geoportal/locale/fr/LC_MESSAGES/{{package}}{,_geoportal}-server.po
+
+2. Move all your components from `geoportal/{{package}}_geoportal/static-ngeo/components/<name>`
+   to `geoportal/{{package}}_geoportal/static-ngeo/js/<name>`.
+
+
+Changes to apply on Docker version
+----------------------------------
+
+1. Move all yours `mapserver/*.map.mako` files to `mapserver/*.map.tmpl.mako`.
