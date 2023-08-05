@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+import argparse
+import json
+import pandas as pd
+from dativa.tools.pandas import CSVHandler
+
+
+def _find_getch():
+    try:
+        import termios
+    except ImportError:
+        # Non-POSIX. Return msvcrt's (Windows') getch.
+        import msvcrt
+        return msvcrt.getch
+
+    # POSIX system. Create and return a getch that manipulates the tty.
+    import sys, tty
+
+    def _getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+    return _getch
+
+
+if __name__ == "__main__":
+    from dativa.analyzer import AutoConfig
+
+    parser = argparse.ArgumentParser(
+        description="""Dativa File Analyser...\n
+        Analyse a CSV file and create a Dativa API config.\n
+        Throw it anything that pandas.read_csv() can load""",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('csv_file', type=str, help='the file to parse')
+    parser.add_argument('--csv_delimiter', type=str, default=",", help='the csv delimiter')
+    parser.add_argument('--maxium_string_length', type=int, default=1024, help='the maximum length of string allowed')
+    parser.add_argument('--large_sample_size', type=int, default=10000, help='the number of rows to sample')
+    parser.add_argument('--small_sample_size', type=int, default=1000,
+                        help='the number of rows to sample for memory intensive operations')
+    parser.add_argument('--clean_threshold', type=int, default=0.95, help='the %% of rows that must meet the criteria')
+    parser.add_argument('--outlier_threshold', type=int, default=2,
+                        help='the number of standard deviations for an outlier to be ignored')
+    parser.add_argument('--min_occurences', type=int, default=5,
+                        help='the minimum number of times an item must appear to be considered a lookup item')
+    parser.add_argument('--min_references', type=int, default=20,
+                        help='the minimum number of items to be classified as a lookup, lower than this will be treated using a regex')
+    parser.add_argument('--max_references', type=int, default=1000,
+                        help='the maxmimum number of items to be classified as a lookup')
+    args = parser.parse_args()
+
+    csv = CSVHandler(detect_parameters=True, csv_delimiter=args.csv_delimiter)
+    df = csv.get_dataframe(args.csv_file, force_dtype=pd.np.str)
+
+    ac = AutoConfig()
+    auto_config, df_dict = ac.create_config(df=df,
+                                            csv_delimiter=args.csv_delimiter,
+                                            maximum_string_length=args.maxium_string_length,
+                                            large_sample_size=args.large_sample_size,
+                                            small_sample_size=args.small_sample_size,
+                                            clean_threshold=args.clean_threshold,
+                                            outlier_threshold=args.outlier_threshold,
+                                            min_occurences=args.min_occurences,
+                                            min_references=args.min_references,
+                                            max_references=args.max_references)
+
+    print("Dativa File Analyser... throw it anything that pandas.read_csv() can load")
+    print("===========================================================================")
+    print("Analysing {file}".format(file=args.csv_file))
+    print("{columns} columns and {rows} rows".format(columns=df.shape[1], rows=df.shape[0]))
+    print()
+    print(ac.describe_dataframe(auto_config, df_dict))
+
+    print('Create a Dativa Scrubber config [y/n]?', end="", flush=True)
+    a = _find_getch()().lower()
+    if a in "y ":
+        print("...YES")
+        print(json.dumps(auto_config, indent=4, separators=(',', ': ')))
+        for key in df_dict:
+            csv.save_df(df_dict[key], key)
+    else:
+        print("...NO")
