@@ -1,0 +1,41 @@
+#! /bin/bash
+#
+# Helper to launch the service with activated virtualenv
+# and populated environment.
+#
+# For manual launching use:
+#
+#   su -s /bin/sh -c /usr/sbin/jupyterhub-launcher jupyterhub
+
+# Set up runtime environment
+. "/etc/default/jupyterhub"
+. "/opt/venvs/jupyterhub/bin/activate"
+builtin cd /var/opt/jupyterhub
+OPTS=( )
+${JUPYTERHUB_AUTO_MIGRATION:-false} && OPTS+=( --upgrade-db ) || :
+
+# Bokeh: Use inline resources (no use of the CDN)
+export BOKEH_RESOURCES=inline
+
+# Make PhantomJS visible to Bokeh
+export BOKEH_PHANTOMJS_PATH=$(/opt/venvs/jupyterhub/bin/python 2>/dev/null -c \
+                              "from phantomjs_bin import executable_path as _; print(_)")
+test -z "$BOKEH_PHANTOMJS_PATH" || chmod a+rx "$BOKEH_PHANTOMJS_PATH"
+
+# PySpark / JVM settings
+default_java_home=$(readlink /etc/alternatives/java 2>/dev/null)
+default_java_home=${default_java_home%%/bin/*}
+default_java_home=${default_java_home%%/jre}
+export JAVA_HOME=${JUPYTERHUB_JAVA_HOME:-$default_java_home}
+echo "$0: JAVA_HOME is '$JAVA_HOME'"
+
+# Launch the server
+test ! -w /run/jupyterhub || \
+    OPTS+=( --pid-file=/run/jupyterhub/jupyterhub.pid )
+exec /usr/sbin/jupyterhub \
+    --url=${JUPYTERHUB_BIND_URL:-"http://:8000"} \
+    --log-level=${JUPYTERHUB_LOGLEVEL:-"INFO"} \
+    --config=${JUPYTERHUB_CONFDIR:-"/etc/jupyterhub"}/jupyterhub_config.py \
+    "${OPTS[@]}"
+#    --ssl-key my_ssl.key \
+#    --ssl-cert my_ssl.cert \

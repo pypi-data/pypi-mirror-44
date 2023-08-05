@@ -1,0 +1,33 @@
+[Unit]
+Description=JupyterHub Service
+Documentation=https://jupyterhub.readthedocs.io/en/stable/
+Documentation=https://github.com/1and1/debianized-jupyterhub#jupyterhub-debian-packaging
+After=network.target
+#Requires=jupyterhub-worker.service
+#Requires=jupyterhub-cron.service
+
+[Service]
+Type=simple
+User=jupyterhub
+Group=daemon
+RuntimeDirectory=jupyterhub
+RuntimeDirectoryMode=0755
+WorkingDirectory=/var/opt/jupyterhub
+EnvironmentFile=/etc/default/jupyterhub
+ExecStart=/usr/sbin/jupyterhub-launcher
+ExecStop=/usr/sbin/jupyterhub-backup "systemd service stop"
+
+UMask=0027
+ProtectSystem=full
+ProtectControlGroups=true
+PrivateTmp=true
+LimitNOFILE=8192
+
+# These might interfere with sudospawner or other hub components
+#ProtectKernelTunables=true
+#ProtectKernelModules=true
+#PrivateDevices=true
+#ProtectHome=tmpfs – only when using systemd-spawner!?
+
+[Install]
+WantedBy=multi-user.target

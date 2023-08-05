@@ -1,0 +1,59 @@
+#!/usr/bin/make -f
+#
+# Build Debian package using https://github.com/spotify/dh-virtualenv
+
+export DH_VIRTUALENV_INSTALL_ROOT=/opt/venvs
+NODEENV_VERSION=1.3.1
+EXTRA_REQUIREMENTS=--upgrade-pip --preinstall "setuptools>=17.1" --preinstall "wheel" \
+    --preinstall "Cython==0.29.6"
+EXTRAS=--extras base --extras docker --extras ml --extras nlp \
+       --extras utils --extras viz --extras vizjs
+#      --extras arrow --extras nltk --extras parquet --extras spark
+
+ifeq (1,$(shell grep -iscm1 xenial /etc/os-release))
+    # On Xenial, install "python3.6 python3.6-tk" from Deadsnakes PPA
+    SNAKE=/usr/bin/python3.6
+else
+    SNAKE=/usr/bin/python3
+endif
+
+PACKAGE=$(shell dh_listpackages)
+VERSION=$(shell parsechangelog | grep ^Version: | sed -re 's/[^0-9]+([^-]+).*/\1/')
+DH_VENV_ARGS=--setuptools --builtin-venv --python $(SNAKE) $(EXTRA_REQUIREMENTS) $(EXTRAS) \
+           --extra-pip-arg=--progress-bar=pretty
+           # --extra-pip-arg "--no-binary=psycopg2" \
+           # -v
+DH_VENV_DIR=debian/$(PACKAGE)$(DH_VIRTUALENV_INSTALL_ROOT)/$(PACKAGE)
+
+ifeq (,$(wildcard $(CURDIR)/.npmrc))
+    NPM_CONFIG=~/.npmrc
+else
+    NPM_CONFIG=$(CURDIR)/.npmrc
+endif
+
+
+%:
+	dh $@ --with python-virtualenv
+
+.PHONY: override_dh_virtualenv override_dh_strip override_dh_shlibdeps
+
+override_dh_virtualenv:
+	dh_virtualenv $(DH_VENV_ARGS)
+	$(DH_VENV_DIR)/bin/python $(DH_VENV_DIR)/bin/pip install nodeenv==$(NODEENV_VERSION)
+	$(DH_VENV_DIR)/bin/nodeenv -C '' -p -n system
+	. $(DH_VENV_DIR)/bin/activate && node /usr/bin/npm install --userconfig=$(NPM_CONFIG) -g configurable-http-proxy
+	-PJS=$$(find $(DH_VENV_DIR)/lib -iname 'phantomjs_bin' -type d) && test -n "$$PJS" && \
+		chmod a+x "$$PJS/bin/linux/phantomjs" && \
+		rm "$$PJS/bin/macosx/phantomjs" "$$PJS/bin/windows/phantomjs.exe"
+	date -Iseconds >$(DH_VENV_DIR)/dpkg-stamp
+
+override_dh_strip:
+	dh_strip --exclude=cffi --exclude=_imaging --exclude=libtiff
+	date -Iseconds >$(DH_VENV_DIR)/dpkg-stamp
+
+override_dh_shlibdeps:
+	dh_shlibdeps -X/x86/ \
+        -X/chromedriver_binary/ -X/Cython/ -X/kiwisolver -X/markupsafe/ \
+        -X/matplotlib/ -X/numpy/ -X/pandas/ -X/PIL/ -X/psutil/ -X/pvectorc -X/pycurl \
+        -X/scipy/ -X/selenium/ -X/sqlalchemy/ -X/tornado/ -X/_yaml -X/zmq/
+	date -Iseconds >$(DH_VENV_DIR)/dpkg-stamp
