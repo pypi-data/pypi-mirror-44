@@ -1,0 +1,713 @@
+#!/usr/bin/env python
+
+from __future__ import print_function, division, unicode_literals
+
+import io
+import multiprocessing.dummy as mp
+import platform
+import os
+import subprocess
+import sys
+import tarfile
+import time
+
+from dfs_sdk import scaffold
+
+SLEEP = 10
+DISK_BY_PATH = "/dev/disk/by-path"
+SYS_BLOCK = "/sys/block"
+VER = "1.3.0"
+
+SUCCESS = 0
+FAILURE = 1
+
+API = None
+
+
+def version(args):
+    print("dhutil version:", VER)
+    print("API version:", args.api_version)
+    sys.exit(0)
+
+
+#
+# Create Volume within a storage instance.
+# Takes storage_instance as input parameter
+#
+def si_vol_create(si, name, args):
+    tenant = scaffold.get_config()['tenant']
+    numreplicas = args.numreplicas
+    vol = si.volumes.create(name=name, size=int(
+        args.size), replica_count=int(numreplicas), tenant=tenant)
+    if args.snappol:
+        vol.snapshot_policies.create(name=name, retention_count=int(
+            args.snappol[0]), interval=args.snappol[1], tenant=tenant)
+    if args.volperf:
+        vol.performance_policy.create(total_iops_max=int(
+            args.volperf[0]), total_bandwidth_max=int(args.volperf[1]),
+            tenant=tenant)
+    return vol['uuid']
+
+
+def initiator_create(name, init):
+    print(API.context.tenant)
+    iis = API.initiators.list()
+    for i in iis:
+        if i['id'] == init:
+            print("Initiator: (%s) %s,  already exists" % (i['name'], id))
+            return i
+    print("Creating Initiator: (%s) %s" % (name, init))
+    return API.initiators.create(name=name, id=init)
+
+
+def run_cmd(cmd, fail_ok=False):
+    print("Running: ", cmd)
+    result = None
+    try:
+        result = subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        print("Error:", e)
+        if not fail_ok:
+            raise
+    return result
+
+
+def target_logout_and_node_cleanup(args, node, basename):
+    for ai in API.app_instances.list():
+        for si in ai.storage_instances.list():
+            if ai['name'].startswith(basename):
+                if 'iqn' in si['access']:
+                    run_cmd("sudo iscsiadm -m node -u -T %s" %
+                            si['access']['iqn'], fail_ok=True)
+                    run_cmd("sudo iscsiadm -m node -T %s --op=delete" %
+                            si['access']['iqn'], fail_ok=True)
+                for ip in si['access']['ips']:
+                    run_cmd(
+                        "sudo iscsiadm -m discoverydb -t st -p %s:3260"
+                        "--op=delete" % ip, fail_ok=True)
+
+    # Ubuntu and debian
+    if platform.dist()[0] == 'Ubuntu':
+        run_cmd("sudo iscsiadm -m session --rescan")
+        run_cmd("sudo service multipath-tools reload")
+    # rhel, centos, sles
+    else:
+        run_cmd("sudo iscsiadm -m session --rescan")
+        run_cmd("sudo service multipathd reload")
+
+
+def _login(ip, iqn):
+    print("IP ADDRS = ", ip)
+    cmd = "sudo iscsiadm -m node -T {} --portal {} --op=new".format(
+        iqn, ip)
+    cmd = cmd + " > /dev/null 2>&1"
+    run_cmd(cmd)
+    cmd = "sudo iscsiadm -m node -T {} --portal {} -l"
+    run_cmd(cmd.format(iqn, ip))
+
+
+def target_login(args, node, si, initiator, sleep=SLEEP):
+    # Wait a bit ...
+    if sleep != 0:
+        print("Wait %s for storage to come online " % sleep)
+        time.sleep(sleep)
+    iqn = si['access']['iqn']
+    print("IQN: " + iqn)
+    if not args.single_link:
+        for ip in si['access']['ips']:
+            _login(ip, iqn)
+    else:
+        ip = si['access']['ips'][0]
+        _login(ip, iqn)
+
+
+def clean_all(args):
+    # Deleting app instances
+    for app_instance in API.app_instances.list():
+        if not app_instance["name"].startswith(args.basename):
+            continue
+        print("Delete app instance " + app_instance['name'])
+        app_instance.set(admin_state="offline", force=True)
+        app_instance.delete()
+
+    # Deleting initators
+    for initiator in API.initiators.list():
+        if not initiator["name"].startswith(args.basename):
+            continue
+        print("Delete initiator " + initiator['name'])
+        initiator.delete()
+
+
+def sn_to_hostname(sn):
+    uuid = ""
+    try:
+        uuid = sn['path'].split("/")[2]
+    except KeyError:
+        uuid = sn.split("/")[2]
+    sn = API.storage_nodes.get(uuid)
+    return sn['name']
+
+
+def si_to_hostname(si):
+    sn_name = 'undef'
+    for sn in si['active_storage_nodes']:
+        try:
+            uuid = sn['path'].split("/")[2]
+        except KeyError:
+            uuid = sn.split("/")[2]
+        sn = API.storage_nodes.get(uuid)
+        sn_name = 'undef'
+        sn_name = sn['name']
+    # todo, this only returns the last active server in the list
+    return sn_name
+
+
+def show_all():
+    for at in API.app_templates.list():
+        print("App_Template: " + at['name'])
+    for tenant in API.tenants.list():
+        print("Tenant: " + tenant['name'])
+        if tenant["name"] != "root":
+            tenant = "/root/" + tenant["name"]
+        else:
+            tenant = "/" + tenant["name"]
+        for ai in API.app_instances.list(tenant=tenant):
+            print("  App_instance: " + ai['name'])
+            print("    admin_state: ", ai['admin_state'])
+            for si in ai.storage_instances.list(tenant=tenant):
+                print("    -Storage_instance: " + si['name'])
+                for i in si.acl_policy.initiators.list(tenant=tenant):
+                    print("        +Initiators: %s  (%s)" % (
+                        i['id'], i['name']))
+                if 'iqn' in si['access']:
+                    print("        +IQN: " + si['access']['iqn'])
+                for ip in si['access']['ips']:
+                    print("        +ACCESS IP: " + ip)
+                for sn in si['active_storage_nodes']:
+                    print("        +ACTIVE_STORAGE_NODES: ",
+                          sn_to_hostname(sn))
+                for v in si.volumes.list(tenant=tenant):
+                    print("        =Volume: {},   Size : {},   UUID : {}"
+                          "".format(v['name'], v['size'], v['uuid']))
+
+
+def mkfs(args):
+    if args[2].fstype == "ext4":
+        cmd = ("sudo mkfs.ext4 -E lazy_itable_init=1 {} ; mkdir -p /{}; "
+               "mount {} /{}".format(args[0], args[1], args[0], args[1]))
+    else:
+        cmd = "sudo mkfs.xfs {} ; sudo mkdir -p /{}; sudo mount {} /{}".format(
+            args[0], args[1], args[0], args[1])
+    run_cmd(cmd)
+    if args[2].chown:
+        run_cmd("sudo chown -R {} /{}".format(args[2].chown, args[1]))
+
+
+def iqn_to_sd(args, iqn):
+    for f in os.listdir(DISK_BY_PATH):
+        if iqn in f:
+            return os.path.basename(os.readlink(DISK_BY_PATH + "/" + f))
+
+
+def sd_to_dm(sd):
+    for f in os.listdir(SYS_BLOCK):
+        t = SYS_BLOCK + "/" + f + "/" + "slaves" + "/" + sd
+        if os.path.islink(t):
+            return f
+
+
+def dm_to_mapper(dm):
+    fname = "{}/{}/dm/name".format(SYS_BLOCK, dm)
+    with io.open(fname, 'r') as f:
+        mapper = f.read().strip()
+    f.closed
+    return mapper
+
+
+def map_def(args, basename):
+    uuid_map = {}
+    for t in API.tenants.list():
+        t = t.reload()
+        if t["name"] != "root":
+            tenant = "/root/" + t["name"]
+        else:
+            tenant = "/" + t["name"]
+        for ai in API.app_instances.list(tenant=tenant):
+            for si in ai['storage_instances']:
+                for v in si['volumes']:
+                    uuid = v['uuid']
+                    if not basename or basename in ai['name']:
+                        uuid_map[uuid] = {'tname': t['name'],
+                                          'aname': ai['name'],
+                                          'sname': si['name'],
+                                          'vname': v['name'],
+                                          'id': uuid,
+                                          'nodename': si_to_hostname(si)}
+                        if 'iqn' in si['access']:
+                            uuid_map[uuid]['iqn'] = si['access']['iqn']
+    return uuid_map
+
+
+def mpmap(args):
+    mntmap = []
+    basename = args.basename
+
+    uuid_map = map_def(args, basename)
+
+    print("UUID_MAP:", uuid_map)
+    for m in uuid_map:
+        if args.volperf:
+            print("Sleeping 3s for target to be discovered")
+            time.sleep(3)
+        sd = iqn_to_sd(args, uuid_map[m]['iqn'])
+        print("DEVICE:", sd)
+        if sd and not args.single_link:
+            dm = sd_to_dm(sd)
+            if not dm:
+                print("No DM for sd: {}. Please make sure that multipath "
+                      "service is running. Then cleanall and retry".format(sd))
+                sys.exit(FAILURE)
+            mapper = dm_to_mapper(dm)
+            if not mapper:
+                print("No mapper entry for dm: {}. Please make sure that "
+                      "multipath service is running. Then cleanall and "
+                      "retry".format(dm))
+                sys.exit(FAILURE)
+            dmpath = os.path.join("/dev/mapper", mapper)
+
+            print("HOST-DM: ", dm,
+                  "   DATERA: ", uuid_map[m]['tname'], "/", uuid_map[
+                      m]['aname'],
+                  "/", uuid_map[m]['sname'], "/", uuid_map[m]['vname'],
+                  "   IQN: ", uuid_map[m]['iqn'],
+                  "   MAPPER: /dev/mapper/", mapper,
+                  "   NODE:", uuid_map[m]['nodename'])
+
+            if args.mkfs:
+                mntpoint = uuid_map[m]['aname'] + "-" + uuid_map[m]['vname']
+                if args.dirprefix:
+                    mntpoint = args.dirprefix + "/" + mntpoint
+                mntmap.append([dmpath, mntpoint, args])
+        elif sd and args.single_link:
+            if args.mkfs:
+                mntpoint = uuid_map[m]['aname'] + "-" + uuid_map[m]['vname']
+                if args.dirprefix:
+                    mntpoint = args.dirprefix + "/" + mntpoint
+                mntmap.append(["/dev/{}".format(sd), mntpoint, args])
+    print("MOUNTMAP:", mntmap)
+    if args.mkfs:
+        return mntmap
+    else:
+        return uuid_map
+
+
+def create_fio_template():
+    with io.open('fiotemplate.fio', 'w') as f:
+        lines = ["[global]", "randrepeat=0", "ioengine=libaio", "iodepth=16",
+                 "direct=1", "numjobs=4", "runtime=3600", "group_reporting",
+                 "time_based"]
+        for line in lines:
+            f.write(line + '\n')
+
+
+def create_fio_files(args):
+
+    fio = {args.basename + '_randread.fio': {
+        'rw': 'randread', 'blocksize': '4k'},
+        args.basename + '_seqread.fio': {'rw': 'read', 'blocksize': '1m'},
+        args.basename + '_randwrite.fio': {
+        'rw': 'randwrite', 'blocksize': '4k'},
+        args.basename + '_seqwrite.fio': {'rw': 'write', 'blocksize': '1m'},
+        args.basename + '_randreadwrite.fio': {
+        'rw': 'randrw', 'rwmixread': '70', 'blocksize': '4k'}
+    }
+
+    create_fio_template()
+    mntmap = mpmap(args)
+
+    for key, item in list(fio.items()):
+        with io.open('fiotemplate.fio', 'r') as f:
+            with io.open(key, 'w') as key:
+                for line in f:
+                    key.write(line)
+                for param in item:
+                    key.write(param + "=" + item[param] + '\n')
+                if args.mkfs:
+                    for index in range(len(mntmap)):
+                        key.write("[fiofile]" + '\n')
+                        key.write("directory=/" + mntmap[index][1] + '\n')
+                        key.write("size=500M" + '\n')
+                else:
+                    for id in mntmap:
+                        key.write("[fiofile]" + '\n')
+                        sd = iqn_to_sd(args, mntmap[id]['iqn'])
+                        if sd:
+                            dm = sd_to_dm(sd)
+                            key.write("filename=/dev/" + dm + '\n')
+                            key.write("size=500M" + '\n')
+
+
+def chktempl(templ):
+    templs = [at['name'] for at in API.app_templates.list()]
+    if templ in templs:
+        return True
+    return False
+
+
+def unmount(name):
+    cmd = "sudo mount |grep %s | awk '{print $3}'" % name
+    for l in run_cmd(cmd).splitlines():
+        line = l.rstrip()
+        if line == "/":
+            print("skipping unmount of /")
+            return None
+        p = os.path.basename(line)
+        print(p)
+        print(line)
+        run_cmd("sudo umount %s" % line)
+        run_cmd("sudo rm -rf %s" % line)
+    # cleanup fio files
+    run_cmd("sudo rm -rf " + name + "*.fio")
+
+
+def nocreds():
+    print()
+    print("Credentials needed of form 'user:password:IPAddr'")
+    print("supplied in DTSCREDS environment variable")
+    print()
+    sys.exit(FAILURE)
+
+
+def chk_args(args, parser):
+    if args.push_logs and not args.logs_ecosystem:
+        print("ERROR: --push-logs requires --logs-ecosystem")
+        sys.exit(FAILURE)
+    else:
+        return
+
+    if args.logs_ecosystem and not args.logs_ecosystem:
+        print("ERROR: --logs-ecosystem requires --push-logs")
+        sys.exit(FAILURE)
+    else:
+        return
+
+    if args.basename and len(args.basename) < 3:
+        print("Validation Error:  %s : must be at least 3 chars" %
+              args.basename)
+        sys.exit(FAILURE)
+
+    # the only options allowed without basename
+    if not args.basename and not args.showall and not args.mpmap:
+        print("ERROR: most options require basename")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    # need at least one of these
+    if not args.basename and not args.showall and not args.mpmap:
+        print("ERROR:  Need atleast 'basename', 'showall' or 'mpmap'")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    # options required if basename
+    if args.basename and not (args.template or args.count or
+                              args.cleanall or args.mpmap or args.mkfs):
+        print("ERROR: Missing required arguments for 'basename'")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    # options not allowed with cleanall
+    if args.cleanall and (args.showall or args.mkfs or args.mpmap or
+                          args.dirprefix or args.chown or args.template):
+        print("ERROR: 'cleanall' includes extraneous options")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    # option combinations required
+    if args.count and not (args.size or args.template):
+        print("ERROR: 'count' requires 'size' or 'template'")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    if args.template and not args.count:
+        print("ERROR: 'template' requires 'count'")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    if not args.showall and (args.mkfs and not args.fstype):
+        print("ERROR: 'mkfs' requires 'fstype'")
+        parser.print_help()
+        sys.exit(FAILURE)
+
+    # options with specific required values
+    if args.snappol:
+        if args.snappol[0].isdigit() is False:
+            print("ERROR: RETCOUNT must be an integer")
+            parser.print_help()
+            sys.exit(FAILURE)
+        if args.snappol[1] not in (
+                '15min', '1hour', '1day', '1week', '1month', '1year'):
+            print("ERROR: INTERVAL must be '15min' or '1hour' or '1day' or "
+                  "'1week' or '1month' or '1year'")
+            parser.print_help()
+            sys.exit(FAILURE)
+
+
+def iscsiadm_chk():
+    try:
+        run_cmd("sudo iscsiadm --version")
+    except subprocess.CalledProcessError:
+        print()
+        print("sudo iscsiadm not available.")
+        print("Please install :")
+        print("      RH/CentOS: 'yum install iscsi-initiator-utils'")
+        print("      Ubuntu:    'apt-get install open-iscsi'")
+        print()
+        sys.exit(FAILURE)
+
+
+def mpath_chk():
+    try:
+        run_cmd("sudo multipath -v0")
+    except (subprocess.CalledProcessError, OSError):
+        print()
+        print("multipath not available.")
+        print("Please install :")
+        print("      RH/CentOS: 'yum install device-mapper-multipath'")
+        print("      Ubuntu:    'apt-get install multipath-tools'")
+        print()
+        sys.exit(FAILURE)
+
+
+def lsscsi_chk():
+    try:
+        run_cmd("lsscsi -t")
+    except subprocess.CalledProcessError:
+        print()
+        print("lsscsi not available.")
+        print("Please install :")
+        print("      RH/CentOS: 'yum install lsscsi'")
+        print("      Ubuntu:    'apt-get install lsscsi'")
+        print()
+        sys.exit(FAILURE)
+
+
+def dbck():
+    # Check for docker bug: https://github.com/docker/docker/issues/7101"
+    try:
+        run_cmd("grep sysfs /proc/mounts | grep ro")
+        try:
+            run_cmd("mount -o rw,remount sysfs /sys")
+            sys.exit(SUCCESS)
+        except subprocess.CalledProcessError:
+            print("Encountered https://github.com/docker/docker/issues/7101")
+            print("and cannot remount /sys.  Need to be root?")
+            sys.exit(FAILURE)
+    except subprocess.CalledProcessError:
+        # sysfs is not mounted 'ro'
+        pass
+
+
+def op_state_poller(instance):
+    count = 10
+    while count:
+        if instance['op_state'] == 'available':
+            return
+        else:
+            time.sleep(1)
+            count -= 1
+    print(instance['name'] + " did not become available in 10s")
+    sys.exit(FAILURE)
+
+
+def run_mkfs(args):
+    mntmap = mpmap(args)
+    pool = mp.Pool()
+    list(pool.imap_unordered(mkfs, mntmap))
+
+
+def create_with_template(args, host, iscsi_initiator, initiator):
+    if not chktempl(args.template):
+        print(args.template, " : does not exist!")
+        sys.exit(FAILURE)
+    tenant = scaffold.get_config()['tenant']
+    # Create N app_instances from the template
+    for n in range(1, args.count + 1):
+        appname = "%s-%d" % (args.basename, n)
+        tname = {"path": "/app_templates/" + args.template}
+        ai = API.app_instances.create(
+            name=appname, app_template=tname, tenant=tenant)
+        print("Created app_instance: ", ai['name'])
+        for si in ai.storage_instances.list(tenant=tenant):
+            si.acl_policy.initiators.add(initiator, tenant=tenant)
+    # Login to the storage
+    # get app instance status
+    for ai in API.app_instances.list(tenant=tenant):
+        if args.basename in ai['name']:
+            for si in ai.storage_instances.list(tenant=tenant):
+                op_state_poller(si)
+                print(si['name'] + " is online")
+                target_login(args, host, si, iscsi_initiator, sleep=0)
+    run_cmd("lsscsi -t")
+    return tenant
+
+
+def create_no_template(args, host, iscsi_initiator, initiator):
+    #
+    # Create N app_instances, storage_instance, and add initiator
+    #
+    tenant = scaffold.get_config()['tenant']
+    for i in range(1, args.count + 1):
+        bname = "{}_{}".format(args.basename, i)
+        ai = API.app_instances.create(name=bname, tenant=tenant)
+        si = ai.storage_instances.create(name=bname, tenant=tenant)
+        si.acl_policy.initiators.add(initiator, tenant=tenant)
+        volname = "{}_vol".format(bname)
+        uuid = si_vol_create(si, volname, args)
+        print("Created Volume: %s (%s)" % (volname, uuid))
+    for ai in API.app_instances.list(tenant=tenant):
+        if args.basename in ai['name']:
+            # Wait until storage instance is online
+            for si in ai.storage_instances.list(tenant=tenant):
+                op_state_poller(si)
+                print(si['name'] + " is online")
+                target_login(args, host, si, iscsi_initiator, sleep=0)
+    run_cmd("lsscsi -t")
+
+
+def push_logs(args):
+    # TODO (_alastor_): remove separate strict=False get_api call when
+    # logs_upload is added to API schema
+    api = scaffold.get_api(strict=False)
+    archive_name = 'archive-{}.tar.gz'.format(time.time())
+    with tarfile.open(archive_name, mode='w:gz') as archive:
+        for logfile in args.push_logs:
+            archive.add(logfile)
+    fname = os.path.abspath(archive_name)
+    files = {'file': (archive_name, io.open(fname, 'rb'))}
+    print("Uploading File:", fname)
+    api.logs_upload.upload(files=files, ecosystem=args.logs_ecosystem)
+    print("Finished Upload of file:", fname)
+
+
+def main(args):
+    global API
+
+    if (len(sys.argv) < 2):
+        sys.exit(FAILURE)
+
+    host = os.uname()[1].split('.')[0]
+    API = scaffold.get_api()
+
+    if args.push_logs:
+        push_logs(args)
+        sys.exit(SUCCESS)
+
+    if not args.disable_checks:
+        dbck()
+        iscsiadm_chk()
+        mpath_chk()
+        lsscsi_chk()
+
+    if args.showall:
+        show_all()
+        if args.mpmap:
+            mpmap(args)
+        sys.exit(SUCCESS)
+
+    if args.cleanall:
+        unmount(args.basename)
+        target_logout_and_node_cleanup(args, host, args.basename)
+        clean_all(args)
+        sys.exit(SUCCESS)
+
+    if args.mpmap and not args.count:
+        mpmap(args)
+        sys.exit(SUCCESS)
+
+    cmd = "sudo grep '^InitiatorName' /etc/iscsi/initiatorname.iscsi"
+    cmd = cmd + " | sed -e 's/InitiatorName=//'"
+    iscsi_initiator = run_cmd(cmd).strip()
+    ii = initiator_create(host, iscsi_initiator)
+
+    #
+    # Semantics:  If a template exists, create args.count instances
+    #             from that template.
+    #             If a template does not exist, create args.count instances
+    #             Assumes 1:1:1 ratio of AppInstance:StorageInstance:Volume
+    # TODO:       Allow non-singleton configurations
+
+    # Make sure template exists
+    if args.template:
+        create_with_template(args, host, iscsi_initiator, ii)
+    elif args.count:
+        create_no_template(args, host, iscsi_initiator, ii)
+
+    if args.createfio:
+        create_fio_files(args)
+
+    if args.mkfs:
+        run_mkfs(args)
+    return 0
+
+
+if __name__ == '__main__':
+    parser = scaffold.get_argparser()
+    parser.add_argument('--basename', action="store",
+                        help='The app_instance prefix')
+    parser.add_argument('--template', action="store",
+                        help='The template to use, must be existing')
+    parser.add_argument('--createfio', action="store_true",
+                        help='creates sample fio files for each volume')
+    parser.add_argument('--count', action="store", type=int, default=2,
+                        help='Number of app_instances to create')
+    parser.add_argument('--size', action="store", default=5,
+                        help='Size in GB of volumes during creation')
+    parser.add_argument('--numreplicas', action="store", type=int, default=3,
+                        help='Number of replicas for volumes during creation')
+    parser.add_argument('--cleanall', action="store_true",
+                        help='Clean all app_instances with --basename prefix')
+    parser.add_argument('--showall', action="store_true",
+                        help='Shows current cluster state')
+    parser.add_argument('--mkfs', action="store_true",
+                        help='will create a file system on the created '
+                             'volumes, filesystem can be specified with '
+                             '--fstype')
+    parser.add_argument('--mpmap', action="store_true",
+                        help='Show host-side multipath mapping')
+    parser.add_argument('--dirprefix', action="store",
+                        help='Directory under which to place mounts')
+    parser.add_argument('--chown', action="store",
+                        help='The chown:chgrp for mounts')
+    parser.add_argument('--fstype', action="store", choices=('xfs', 'ext4'),
+                        default='xfs',
+                        help='Filesystem to use when formatting mount, '
+                             'currently xfs (default) or ext4')
+    parser.add_argument('--snappol', action="store", dest="snappol", nargs=2,
+                        metavar=('RETCOUNT', 'INTERVAL'),
+                        help='volume-level snapshot retention count and '
+                             'interval')
+    parser.add_argument('--volperf', action="store", dest="volperf", nargs=2,
+                        metavar=('TOTAL_IOPS_MAX',
+                                 'TOTAL_BANDWIDTH_MAX[KBps]'),
+                        type=int,
+                        help='volume-level iops and bandwidth policies')
+    parser.add_argument('--version', action="store_true",
+                        help='Specifies the current dhutil version and '
+                             'supported API version')
+    parser.add_argument('--disable-checks', action="store_true",
+                        help='Disable requirements checks before running')
+    parser.add_argument('--single-link', action="store_true",
+                        help="Only log into the first iscsi portal")
+    parser.add_argument('--push-logs', nargs='+',
+                        help='Takes a path to the logfiles to push')
+    parser.add_argument('--logs-ecosystem', choices=('openstack', 'docker',
+                        'vcp'),
+                        help='The ecosystem logs are being collected for.  '
+                             'Must be provided with "--push-logs"')
+    args = parser.parse_args()
+    # Make sure args make sense
+    if args.version:
+        version(args)
+        sys.exit(SUCCESS)
+    chk_args(args, parser)
+    sys.exit(main(args))
