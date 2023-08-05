@@ -1,0 +1,40 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.21.1/babel.min.js"></script>
+<script src="https://unpkg.com/react-jsonschema-form/dist/react-jsonschema-form.js"></script>
+
+<!--This is a script tag because the js needs to be of type "text/babel" and web_fragments don't support custom types.-->
+<script type="text/babel">
+    const Form = JSONSchemaForm.default;
+    const $checkList = $("#xb-field-edit-check_list");
+    $checkList.attr("readonly", "");
+
+    const formListItemHtml = '<li className="field comp-setting-entry metadata_entry " data-field-name="check_list_form" >'
+    $checkList.before(formListItemHtml);
+
+    const $form = $('li[data-field-name="check_list_form"]');
+
+    $(function ($) {
+        const json = $.getJSON("{{ check_list_form }}", (schema) => loadForm(schema));
+    });
+    function loadForm(schema){
+
+        const log = (type) => console.log.bind(console, type);
+
+
+
+
+
+        ReactDOM.render((
+            <Form schema={schema}
+                  onChange={onFormChange}
+                  onSubmit={log("submitted")}
+                  onError={log("errors")}/>
+        ), $form[0]);
+    }
+    function onFormChange(data){
+        $checkList.text(JSON.stringify(data.formData.this_array));
+    }
+
+
+</script>
