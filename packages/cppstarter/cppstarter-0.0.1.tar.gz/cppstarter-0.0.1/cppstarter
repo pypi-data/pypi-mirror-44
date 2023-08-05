@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""
+A tool to generate simple yet extensable cmake based cpp project.
+"""
+import argparse
+import re
+import os
+import subprocess
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate cmake based cpp project')
+    parser.add_argument(
+        'name',
+        help='Name of the lib for which you are creating a project.\
+        File/dir name will be in snake case. Class name is in camel case.'
+    )
+    args = parser.parse_args()
+    target_name = args.name
+    name_info = parse_name(target_name)
+    try:
+        dir_name = name_info['snake_case']
+        os.mkdir(dir_name)
+    except FileExistsError:
+        print('file %s already exists, remove it and retry' % dir_name)
+    try:
+        os.chdir(dir_name)
+    except:
+        print('failed to chdir to: %s, maybe permission not right?' % dir_name)
+
+    if subprocess.run(['git', 'init']).returncode != 0:
+        raise ChildProcessError()
+    process(get_root_cmake(), name_info)
+    process(get_test_cmake(), name_info)
+    process(get_test_main(), name_info)
+    process(get_googletest(), name_info)
+    process(get_test_source(), name_info)
+    process(get_lib_cmake(), name_info)
+    process(get_lib_source(), name_info)
+    process(get_lib_header(), name_info)
+    subprocess.run(['git', 'add', '.'])
+
+def parse_name(name):
+    name = re.sub(r'-', '_', name)
+    def replace_upper(match_obj):
+        match_str = match_obj.group(1)
+        return '_%s' % match_str.lower()
+    def replace_ul_lower(match_obj):
+        raw = match_obj.group(1)
+        match_str = raw.split('_')[1] if len(raw) > 1 else raw
+        return match_str.upper()
+    snake_case = re.sub(r'([A-Z])', replace_upper, name)
+    camel_case = re.sub(r'((?:^|_)[a-z])', replace_ul_lower, name)
+    upper_case = snake_case.upper()
+    return {
+        'raw': name,
+        'snake_case': snake_case,
+        'camel_case': camel_case,
+        'upper_case': upper_case}
+
+
+def process(info, ctx):
+    def replace_mark(match_obj):
+        name_type = match_obj.group(2)
+        return ctx[name_type]
+    def build(txt):
+        return re.sub(r'#([a-z_]+)\.([a-z_]+)#', replace_mark, txt)
+    if info['type'] == 'file':
+        info['content'] = build(info['content'])
+        info['path'] = build(info['path'])
+        process_file(info)
+    elif info['type'] == 'git':
+        process_git_repo(info)
+    else:
+        raise ValueError('no process for type: %s' % info['type'])
+
+
+def process_file(info):
+    realpath = info['path']
+    mkdir_for_file(realpath)
+    with open(realpath, 'w+') as fp:
+        fp.write(info['content'])
+
+
+def process_git_repo(info):
+    realpath = info['path']
+    mkdir_for_file(realpath)
+    if info['rel'] == 'submodule':
+        if subprocess.run(['git', 'submodule', 'add', info['url'], realpath]).returncode != 0:
+            raise ChildProcessError()
+        if subprocess.run(['git', 'submodule', 'update', '--init']).returncode != 0:
+            raise ChildProcessError
+    else:
+        if subprocess.run(['git', 'clone', info['url'], realpath]).returncode != 0:
+            raise ChildProcessError()
+
+
+def mkdir_for_file(f):
+    try:
+        d = os.path.dirname(f)
+        if len(d) <= 0:
+            return
+        os.makedirs(d)
+    except FileExistsError:
+        pass
+
+
+# things to generate
+def get_root_cmake():
+    txt = '''cmake_minimum_required(VERSION 3.2)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
+include(GNUInstallDirs)
+ 
+add_subdirectory(src/#target_name.snake_case#)
+add_subdirectory(test)
+'''
+    return {'type': 'file', 'path': 'CMakeLists.txt', 'content': txt}
+
+def get_test_cmake():
+    txt = '''cmake_minimum_required(VERSION 3.2)
+
+add_subdirectory(lib/googletest)
+
+set(SOURCE_FILES main.cc src/#target_name.snake_case#_tests.cc)
+
+add_executable(#target_name.snake_case#_tests ${SOURCE_FILES})
+target_link_libraries(#target_name.snake_case#_tests #target_name.snake_case# gtest)
+install(
+  TARGETS #target_name.snake_case#_tests
+  RUNTIME DESTINATION bin
+  )
+'''
+    return {'type': 'file', 'path': 'test/CMakeLists.txt', 'content': txt}
+
+def get_test_main():
+    txt = '''#include <gtest/gtest.h>
+
+int main(int argc, char *argv[]) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+'''
+    return {'type': 'file', 'path': 'test/main.cc', 'content': txt}
+
+def get_test_source():
+    txt = '''#include <#target_name.snake_case#.h>
+#include <gtest/gtest.h>
+
+using namespace std;
+
+
+class #target_name.camel_case#Test : public ::testing::Test {
+
+protected:
+
+  virtual void SetUp() {
+  };
+
+  virtual void TearDown() {
+  };
+
+  virtual void do_it() {
+    say_hi();
+    EXPECT_EQ(1 + 1, 2);
+  }
+};
+
+TEST_F(#target_name.camel_case#Test, if_catch_fire) {
+  // Do sth with the cool lib to see if it catches fire.
+  do_it();
+}
+'''
+    return {'type': 'file', 'path': 'test/src/#target_name.snake_case#_tests.cc', 'content': txt}
+
+
+def get_googletest():
+    url = r'https://github.com/google/googletest.git'
+    return {
+        'type': 'git',
+        'rel': 'submodule',
+        'url': url,
+        'path': 'test/lib/googletest'}
+
+
+def get_lib_cmake():
+    txt = '''cmake_minimum_required(VERSION 3.2)
+
+set(SOURCE_HEADERS #target_name.snake_case#.h)
+set(SOURCE_FILES #target_name.snake_case#.cc)
+
+add_library(#target_name.snake_case#
+  SHARED
+  STATIC
+  ${SOURCE_FILES}
+  ${SOURCE_HEADERS}
+)
+
+target_include_directories(
+  #target_name.snake_case# PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+set_target_properties(#target_name.snake_case#
+  PROPERTIES
+  PUBLIC_HEADER "${SOURCE_HEADERS}"
+)
+
+install(
+  TARGETS #target_name.snake_case#
+  PUBLIC_HEADER DESTINATION include
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+'''
+    return {'type': 'file', 'path': 'src/#target_name.snake_case#/CMakeLists.txt', 'content': txt}
+
+
+def get_lib_source():
+    txt = '''#include<iostream>
+#include <#target_name.snake_case#.h>
+int say_hi() {
+  std::cout << "Hi, " << "#target_name.snake_case#" << std::endl;
+}
+'''
+    return {
+        'type': 'file',
+        'path': 'src/#target_name.snake_case#/#target_name.snake_case#.cc',
+        'content': txt
+        }
+
+
+def get_lib_header():
+    txt = '''#ifndef CMAKE_#target_name.upper_case#_H
+#define CMAKE_#target_name.upper_case#_H
+int say_hi(void);
+#endif //CMAKE_#target_name.upper_case#_H
+'''
+    return {
+        'type': 'file',
+        'path': 'src/#target_name.snake_case#/#target_name.snake_case#.h',
+        'content': txt
+        }
+# end: things to generate
+
+
+main()
