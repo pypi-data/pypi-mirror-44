@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Constructing and analyzing a climate network &#8212; pyunicorn 0.5.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Recurrence network analysis of the logistic map" href="recurrence_network_1.html" />
+    <link rel="prev" title="Tutorials" href="../tutorials.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="recurrence_network_1.html" title="Recurrence network analysis of the logistic map"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../tutorials.html" title="Tutorials"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../tutorials.html" accesskey="U">Tutorials</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../sitemap.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../sitemap.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../download.html">Download</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Constructing and analyzing a climate network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="recurrence_network_1.html">Recurrence network analysis of the logistic map</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../methods.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_doc.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="constructing-and-analyzing-a-climate-network">
+<h1>Constructing and analyzing a climate network<a class="headerlink" href="#constructing-and-analyzing-a-climate-network" title="Permalink to this headline">¶</a></h1>
+<p>This tutorials illustrates the use of <code class="docutils literal"><span class="pre">climate</span></code> for constructing a
+climate network from given data in a commonly used format, performing a
+statistical analysis of the network and finally plotting the results on a map.</p>
+<p>For example, our software can handle data from the NCEP/NCAR reanalysis 1
+project like this monthly surface air temperature data set (a NetCDF file):
+<a class="reference external" href="ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/surface/air.mon.mean.nc">ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/surface/air.mon.mean.nc</a></p>
+<p>You can use <code class="docutils literal"><span class="pre">PyNgl</span></code> for plotting the results on maps
+(<a class="reference external" href="http://www.pyngl.ucar.edu/Download/">http://www.pyngl.ucar.edu/Download/</a>). Alternatively, the tutorial saves the
+results as well as the grid information in text files which can be used for
+plotting in your favorite software.</p>
+<p>This tutorial is also available as an ipython notebook.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tutorial on analyzing climate networks using Python.</span>
+
+<span class="sd">Uses the Python packages ``core`` and ``climate`` providing all kinds of tools</span>
+<span class="sd">related to climate networks. Written as part of a diploma / phd thesis in</span>
+<span class="sd">Physics by Jonathan F. Donges (donges@pik-potsdam.de) at University of Potsdam</span>
+<span class="sd">/ Humboldt University Berlin and Potsdam Institute of Climate Impact Research</span>
+<span class="sd">(PIK),</span>
+
+<span class="sd">Copyright 2008-2019.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">pyunicorn</span> <span class="k">import</span> <span class="n">climate</span>
+
+
+<span class="c1">#</span>
+<span class="c1">#  Settings</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Related to data</span>
+
+<span class="c1">#  Path and filename of NetCDF file containing climate data</span>
+<span class="n">DATA_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;../../../Daten/Reanalysis/NCEP-NCAR/air.mon.mean.nc&quot;</span>
+
+<span class="c1">#  Type of data file (&quot;NetCDF&quot; indicates a NetCDF file with data on a regular</span>
+<span class="c1">#  lat-lon grid, &quot;iNetCDF&quot; allows for arbitrary grids - &gt; see documentation).</span>
+<span class="c1">#  For example, the &quot;NetCDF&quot; FILE_TYPE is compatible with data from the IPCC</span>
+<span class="c1">#  AR4 model ensemble or the reanalysis data provided by NCEP/NCAR.</span>
+<span class="n">FILE_TYPE</span> <span class="o">=</span> <span class="s2">&quot;NetCDF&quot;</span>
+
+<span class="c1">#  Indicate data source (optional)</span>
+<span class="n">DATA_SOURCE</span> <span class="o">=</span> <span class="s2">&quot;ncep_ncar_reanalysis&quot;</span>
+
+<span class="c1">#  Name of observable in NetCDF file (&quot;air&quot; indicates surface air temperature</span>
+<span class="c1">#  in NCEP/NCAR reanalysis data)</span>
+<span class="n">OBSERVABLE_NAME</span> <span class="o">=</span> <span class="s2">&quot;air&quot;</span>
+
+<span class="c1">#  Select a subset in time and space from the data (e.g., a particular region</span>
+<span class="c1">#  or a particular time window, or both)</span>
+<span class="n">WINDOW</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;time_min&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;time_max&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;lat_min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;lon_min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+          <span class="s2">&quot;lat_max&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&quot;lon_max&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>  <span class="c1"># selects the whole data set</span>
+
+<span class="c1">#  Indicate the length of the annual cycle in the data (e.g., 12 for monthly</span>
+<span class="c1">#  data). This is used for calculating climatological anomaly values</span>
+<span class="c1">#  correctly.</span>
+<span class="n">TIME_CYCLE</span> <span class="o">=</span> <span class="mi">12</span>
+
+<span class="c1">#  Related to climate network construction</span>
+
+<span class="c1">#  For setting fixed threshold</span>
+<span class="n">THRESHOLD</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+<span class="c1">#  For setting fixed link density</span>
+<span class="n">LINK_DENSITY</span> <span class="o">=</span> <span class="mf">0.005</span>
+
+<span class="c1">#  Indicates whether to use only data from winter months (DJF) for calculating</span>
+<span class="c1">#  correlations</span>
+<span class="n">WINTER_ONLY</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Print script title</span>
+<span class="c1">#</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tutorial on how to use climate&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-------------------------------&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Create a ClimateData object containing the data and print information</span>
+<span class="c1">#</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">climate</span><span class="o">.</span><span class="n">ClimateData</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span>
+    <span class="n">file_name</span><span class="o">=</span><span class="n">DATA_FILENAME</span><span class="p">,</span> <span class="n">observable_name</span><span class="o">=</span><span class="n">OBSERVABLE_NAME</span><span class="p">,</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="n">DATA_SOURCE</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="n">FILE_TYPE</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">WINDOW</span><span class="p">,</span> <span class="n">time_cycle</span><span class="o">=</span><span class="n">TIME_CYCLE</span><span class="p">)</span>
+
+<span class="c1">#  Print some information on the data set</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Create a MapPlots object to manage 2D-plotting on the sphere</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Comment this if you are not using pyngl for plotting!!!</span>
+<span class="n">map_plots</span> <span class="o">=</span> <span class="n">climate</span><span class="o">.</span><span class="n">MapPlots</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">DATA_SOURCE</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Generate climate network using various procedures</span>
+<span class="c1">#</span>
+
+<span class="c1">#  One of several alternative similarity measures and construction mechanisms</span>
+<span class="c1">#  may be chosen here</span>
+
+<span class="c1">#  Create a climate network based on Pearson correlation without lag and with</span>
+<span class="c1">#  fixed threshold</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">climate</span><span class="o">.</span><span class="n">TsonisClimateNetwork</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">winter_only</span><span class="o">=</span><span class="n">WINTER_ONLY</span><span class="p">)</span>
+
+<span class="c1">#  Create a climate network based on Pearson correlation without lag and with</span>
+<span class="c1">#  fixed link density</span>
+<span class="c1"># net = climate.TsonisClimateNetwork(</span>
+<span class="c1">#     data, link_density=LINK_DENSITY, winter_only=WINTER_ONLY)</span>
+
+<span class="c1">#  Create a climate network based on Spearman&#39;s rank order correlation without</span>
+<span class="c1">#  lag and with fixed threshold</span>
+<span class="c1"># net = climate.SpearmanClimateNetwork(</span>
+<span class="c1">#     data, threshold=THRESHOLD, winter_only=WINTER_ONLY)</span>
+
+<span class="c1">#  Create a climate network based on mutual information without lag and with</span>
+<span class="c1">#  fixed threshold</span>
+<span class="c1"># net = climate.MutualInfoClimateNetwork(</span>
+<span class="c1">#     data, threshold=THRESHOLD, winter_only=WINTER_ONLY)</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Some calculations</span>
+<span class="c1">#</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Link density:&quot;</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">link_density</span><span class="p">)</span>
+
+<span class="c1">#  Get degree</span>
+<span class="n">degree</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+<span class="c1">#  Get closeness</span>
+<span class="n">closeness</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">closeness</span><span class="p">()</span>
+<span class="c1">#  Get betweenness</span>
+<span class="n">betweenness</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">betweenness</span><span class="p">()</span>
+<span class="c1">#  Get local clustering coefficient</span>
+<span class="n">clustering</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">local_clustering</span><span class="p">()</span>
+<span class="c1">#  Get average link distance</span>
+<span class="n">ald</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">average_link_distance</span><span class="p">()</span>
+<span class="c1">#  Get maximum link distance</span>
+<span class="n">mld</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">max_link_distance</span><span class="p">()</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Save results to text file</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Save the grid (mainly vertex coordinates) to text files</span>
+<span class="n">data</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">save_txt</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;grid.txt&quot;</span><span class="p">)</span>
+
+<span class="c1">#  Save the degree sequence. Other measures may be saved similarly.</span>
+<span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;degree.txt&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Plotting</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Comment everything below if you are not using pyngl for plotting!</span>
+
+<span class="c1">#  Add network measures to the plotting queue</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Degree&quot;</span><span class="p">,</span> <span class="n">degree</span><span class="p">)</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Closeness&quot;</span><span class="p">,</span> <span class="n">closeness</span><span class="p">)</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Betweenness (log10)&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">betweenness</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Clustering&quot;</span><span class="p">,</span> <span class="n">clustering</span><span class="p">)</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Average link distance&quot;</span><span class="p">,</span> <span class="n">ald</span><span class="p">)</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="s2">&quot;Maximum link distance&quot;</span><span class="p">,</span> <span class="n">mld</span><span class="p">)</span>
+
+<span class="c1">#  Change the map projection</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">mpProjection</span> <span class="o">=</span> <span class="s2">&quot;Robinson&quot;</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">mpCenterLonF</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1">#  Change the levels of contouring</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">cnLevelSelectionMode</span> <span class="o">=</span> <span class="s2">&quot;EqualSpacedLevels&quot;</span>
+<span class="n">map_plots</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">cnMaxLevelCount</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="c1"># map_plots.resources.cnRasterSmoothingOn = True</span>
+<span class="c1"># map_plots.resources.cnFillMode = &quot;AreaFill&quot;</span>
+
+<span class="n">map_plots</span><span class="o">.</span><span class="n">generate_map_plots</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;climate_network_measures&quot;</span><span class="p">,</span>
+                             <span class="n">title_on</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labels_on</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="recurrence_network_1.html" title="Recurrence network analysis of the logistic map"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../tutorials.html" title="Tutorials"
+             >previous</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../tutorials.html" >Tutorials</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2008-2019, Jonathan F. Donges and pyunicorn authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>

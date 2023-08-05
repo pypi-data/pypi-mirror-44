@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyunicorn.core.netcdf_dictionary &#8212; pyunicorn 0.5.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body role="document">
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../../../index.html"><img src="../../../_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../sitemap.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../../sitemap.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../download.html">Download</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../methods.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_doc.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyunicorn.core.netcdf_dictionary</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of pyunicorn.</span>
+<span class="c1"># Copyright (C) 2008--2019 Jonathan F. Donges and pyunicorn authors</span>
+<span class="c1"># URL: &lt;http://www.pik-potsdam.de/members/donges/software&gt;</span>
+<span class="c1"># License: BSD (3-clause)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides classes for saving and loading NetCDF files from and to</span>
+<span class="sd">appropriate Python dictionaries, allowing NetCDF4 compression methods.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">#</span>
+<span class="c1">#  Imports</span>
+<span class="c1">#</span>
+
+<span class="c1">#  Import NumPy for the array object and fast numerics</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1">#  Import netCDF4 for Dataset class</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">netCDF4</span> <span class="k">import</span> <span class="n">Dataset</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pyunicorn: Package netCDF4 could not be loaded. &quot;</span>
+          <span class="s2">&quot;Some functionality in class NetCDFDictionary might not be &quot;</span>
+          <span class="s2">&quot;available!&quot;</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1">#  Define class NetCDF</span>
+<span class="c1">#</span>
+
+<div class="viewcode-block" id="NetCDFDictionary"><a class="viewcode-back" href="../../../api/core/netcdf_dictionary.html#pyunicorn.core.netcdf_dictionary.NetCDFDictionary">[docs]</a><span class="k">class</span> <span class="nc">NetCDFDictionary</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Encapsulates appropriate dictionary following NetCDF conventions.</span>
+
+<span class="sd">    Also contains methods to load data from NetCDF and NetCDF4 files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: implement silence_level consistently</span>
+<div class="viewcode-block" id="NetCDFDictionary.__init__"><a class="viewcode-back" href="../../../api/core/netcdf_dictionary.html#pyunicorn.core.netcdf_dictionary.NetCDFDictionary.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">silence_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a NetCDF object containing an appropriately structured</span>
+<span class="sd">        dictionary.</span>
+
+<span class="sd">        If no data_dict is given, a default quasi-empty dictionary is created.</span>
+
+<span class="sd">        :type data_dict: dictionary</span>
+<span class="sd">        :arg data_dict: Contains data in a structure following NetCDF</span>
+<span class="sd">            conventions: {&quot;global_attributes&quot;: {}, &quot;dimensions&quot;: {},</span>
+<span class="sd">            &quot;variables&quot;: {&quot;obs&quot;: {&quot;array&quot;: (), &quot;dims&quot;: (), &quot;attributes&quot;: ()}}}</span>
+
+<span class="sd">        :type silence_level: int &gt;= 0</span>
+<span class="sd">        :arg silence_level: The higher, the less progress info is output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;global_attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Quasi-empty default dictionary&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;array&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">1</span><span class="p">,)),</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,),</span>
+                            <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;observable&quot;</span><span class="p">}}}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="n">data_dict</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">silence_level</span> <span class="o">=</span> <span class="n">silence_level</span>
+        <span class="sd">&quot;&quot;&quot;(int &gt;= 0)</span>
+<span class="sd">        The higher, the less progress info is output.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="NetCDFDictionary.__str__"><a class="viewcode-back" href="../../../api/core/netcdf_dictionary.html#pyunicorn.core.netcdf_dictionary.NetCDFDictionary.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;NetCDFDictionary:</span><span class="se">\n</span><span class="s1">Global attributes:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s1">Variables:&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;global_attributes&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="si">%s</span><span class="se">\t</span><span class="s1">-&gt; array shape </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">text</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1">#  Define methods for NetCDF4 files via NetCDF4 module</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="NetCDFDictionary.from_file"><a class="viewcode-back" href="../../../api/core/netcdf_dictionary.html#pyunicorn.core.netcdf_dictionary.NetCDFDictionary.from_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">with_array</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load NetCDF4 file into a dictionary.</span>
+
+<span class="sd">        Supported file types ``file_type`` are:</span>
+<span class="sd">          - &quot;NetCDF&quot;</span>
+<span class="sd">          - &quot;NetCDF4&quot;</span>
+
+<span class="sd">        :arg str file_name: The name of the data file.</span>
+<span class="sd">        :arg [str] with_array: Names of data arrays to be loaded completely.</span>
+<span class="sd">        :rtype: NetCDF instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#  Open NetCDF4 file</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cdf</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: File </span><span class="si">%s</span><span class="s2"> opened.&quot;</span> <span class="o">%</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: File </span><span class="si">%s</span><span class="s2"> couldn&#39;t be opened.&quot;</span> <span class="o">%</span> <span class="n">file_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1">#  Create empty dictionary structure</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;global_attributes&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;dimensions&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="c1">#  Copy all global attributes and all dimensions</span>
+        <span class="n">content</span><span class="p">[</span><span class="s2">&quot;global_attributes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="k">for</span> <span class="n">dim_name</span><span class="p">,</span> <span class="n">dim_obj</span> <span class="ow">in</span> <span class="n">cdf</span><span class="o">.</span><span class="n">dimensions</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">content</span><span class="p">[</span><span class="s2">&quot;dimensions&quot;</span><span class="p">][</span><span class="n">dim_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cdf</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">dim_name</span><span class="p">])</span>
+
+        <span class="c1">#  Loop over variables</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1">#  Create empty dictionary for variable var</span>
+            <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;array&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="p">{},</span>
+                                         <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+            <span class="c1">#  Copy type, dimensions and variable attributes</span>
+            <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">char</span>
+            <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;dims&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">dimensions</span>
+            <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="vm">__dict__</span>
+
+            <span class="c1">#  Load data if wanted</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">with_array</span> <span class="ow">or</span> <span class="s1">&#39;all&#39;</span> <span class="ow">in</span> <span class="n">with_array</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">][:]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Array </span><span class="si">%s</span><span class="s2"> loaded to dictionary.&quot;</span> <span class="o">%</span> <span class="n">var</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">MemoryError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Memory Error during loading of array </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">var</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Other Error during loading of array </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">var</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Array </span><span class="si">%s</span><span class="s2"> converted to &#39;float32&#39;.&quot;</span> <span class="o">%</span> <span class="n">var</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">MemoryError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Memory Error during conversion of &quot;</span>
+                          <span class="n">f</span><span class="s2">&quot;array </span><span class="si">{var}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Other Error during conversion of &quot;</span>
+                          <span class="n">f</span><span class="s2">&quot;array </span><span class="si">{var}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="c1">#  If a scale_factor is given in the variable, rescale array</span>
+                <span class="k">if</span> <span class="s2">&quot;scale_factor&quot;</span> <span class="ow">in</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">]:</span>
+                    <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span> <span class="o">*=</span> \
+                        <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">scale_factor</span>
+                    <span class="k">del</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">][</span><span class="s2">&quot;scale_factor&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s2">&quot;add_offset&quot;</span> <span class="ow">in</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">]:</span>
+                    <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span> <span class="o">+=</span> \
+                        <span class="n">cdf</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">add_offset</span>
+                    <span class="k">del</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">][</span><span class="s2">&quot;add_offset&quot;</span><span class="p">]</span>
+                <span class="c1">#  Recalculate actual_range</span>
+                <span class="n">ar_max</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="n">ar_min</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">content</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">][</span><span class="s2">&quot;actual_range&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ar_min</span><span class="p">,</span> <span class="n">ar_max</span><span class="p">])</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Dictionary loaded from NetCDF file.&quot;</span><span class="p">)</span>
+        <span class="n">cdf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">NetCDFDictionary</span><span class="p">(</span><span class="n">content</span><span class="p">)</span></div>
+
+    <span class="c1">#  FIXME: createDimension - length of time variable should be &quot;unlimited&quot;</span>
+    <span class="c1">#  TODO: Change file_name automatically if file already exists</span>
+<div class="viewcode-block" id="NetCDFDictionary.to_file"><a class="viewcode-back" href="../../../api/core/netcdf_dictionary.html#pyunicorn.core.netcdf_dictionary.NetCDFDictionary.to_file">[docs]</a>    <span class="k">def</span> <span class="nf">to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">comp_level</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">least_significant_digit</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write NetCDF4 file by using appropriate dictionary.</span>
+
+<span class="sd">        :arg str file_name: The name of the data file.</span>
+<span class="sd">        :arg bool compress: Determines whether the data should be compressed.</span>
+<span class="sd">        :arg int comp_level: Level of compression, between 0 (no compression,</span>
+<span class="sd">            fastest) and 9 (strongest compression, slowest).</span>
+<span class="sd">        :arg int least_significant_digit: Last precise digit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#  Check dictionary for empty entries</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="n">val</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Entry </span><span class="si">%s</span><span class="s2"> is empty.&quot;</span> <span class="o">%</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;MODULE: If </span><span class="si">{file_name}</span><span class="s2"> already existed, old file will be &quot;</span>
+              <span class="s2">&quot;overwritten.&quot;</span><span class="p">)</span>
+        <span class="c1">#  Format can be:</span>
+        <span class="c1">#  NETCDF3_CLASSIC, NETCDF3_64BIT, NETCDF4_CLASSIC, NETCDF4</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;NETCDF4&quot;</span><span class="p">)</span>
+
+        <span class="c1">#  Write global attributes</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;global_attributes&quot;</span><span class="p">]:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">cdf</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;global_attributes&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">])</span>
+
+        <span class="c1">#  Write dimensions with given lengths</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;dimensions&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span>
+                <span class="n">cdf</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;dimensions&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cdf</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;dimensions&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">])</span>
+
+        <span class="c1">#  Write variables</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]:</span>
+            <span class="c1">#  Check variable dictionary for empty entries</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;MODULE: Entry </span><span class="si">{key}</span><span class="s2"> in variable </span><span class="si">{var}</span><span class="s2"> is empty.&quot;</span><span class="p">)</span>
+
+            <span class="n">var_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">char</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">var_</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span>
+                    <span class="n">var</span><span class="p">,</span> <span class="n">var_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;dims&quot;</span><span class="p">],</span>
+                    <span class="n">zlib</span><span class="o">=</span><span class="n">compress</span><span class="p">,</span> <span class="n">complevel</span><span class="o">=</span><span class="n">comp_level</span><span class="p">,</span>
+                    <span class="n">least_significant_digit</span><span class="o">=</span><span class="n">least_significant_digit</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;MODULE: Couldn&#39;t create variable </span><span class="si">{var}</span><span class="s2"> &quot;</span>
+                      <span class="s2">&quot;in NetCDF file.&quot;</span><span class="p">)</span>
+
+            <span class="c1">#  Copy the array</span>
+            <span class="n">var_</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span>
+
+            <span class="c1">#  Calculate actual_range for variables</span>
+            <span class="n">ar_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">ar_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;array&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">][</span><span class="s2">&quot;actual_range&quot;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ar_min</span><span class="p">,</span> <span class="n">ar_max</span><span class="p">])</span>
+
+            <span class="c1">#  Write all variable attributes to dictionary</span>
+            <span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">]:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">var_</span><span class="p">,</span> <span class="n">att</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">][</span><span class="n">var</span><span class="p">][</span><span class="s2">&quot;attributes&quot;</span><span class="p">][</span><span class="n">att</span><span class="p">])</span>
+
+        <span class="n">cdf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MODULE: Dictionary saved as NetCDF file </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">file_name</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2008-2019, Jonathan F. Donges and pyunicorn authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>
