@@ -1,0 +1,390 @@
+= Django-ForRunners
+
+{{https://raw.githubusercontent.com/jedie/django-for-runners/master/for_runners/static/Django-ForRunners128.png|Logo}} Store your GPX tracks of your running (or other sports activity) in django.
+
+| {{https://travis-ci.org/jedie/django-for-runners.svg|Build Status on travis-ci.org}} | [[https://travis-ci.org/jedie/django-for-runners/|travis-ci.org/jedie/django-for-runners]] |
+| {{https://codecov.io/gh/jedie/django-for-runners/branch/master/graph/badge.svg|Coverage Status on codecov.io}} | [[https://codecov.io/gh/jedie/django-for-runners|codecov.io/gh/jedie/django-for-runners]] |
+| {{https://coveralls.io/repos/jedie/django-for-runners/badge.svg|Coverage Status on coveralls.io}} | [[https://coveralls.io/r/jedie/django-for-runners|coveralls.io/r/jedie/django-for-runners]] |
+| {{https://landscape.io/github/jedie/django-for-runners/master/landscape.svg|Status on landscape.io}} | [[https://landscape.io/github/jedie/django-for-runners/master|landscape.io/github/jedie/django-for-runners/master]] |
+
+(The name **Django-ForRunners** has the origin from the great Android tracking app **ForRunners** by Benoît Hervier: http://rvier.fr/#forrunners )
+
+== Features:
+
+* GPX track management:
+** Upload GPX tracks
+** Import GPX tracks from commandline
+** Track analysis:
+*** basics: Track length / Duration / Pace / Hart rate Up-/Downhill
+*** Display route on OpenStreetMap map
+*** Graphs with elevation / heart rate / cadence (if available in GPX data)
+** Data that is automatically extracted from the web:
+*** Start/finish Address from OpenStreetMap
+*** Start/finish weather information from metaweather.com
+** Store additional data:
+*** Ideal track distance (for easier grouping/filtering tracks)
+* sports competitions Management:
+** Create a List of Sport Events
+*** Add participation to a event
+*** link GPX track with a event participation
+*** Store you event participation:
+**** official track length
+**** measured finisher time
+**** Number of participants who have finished in your discipline
+*** Add links to webpages relatet to this event
+*** Record costs (entry fee, T-shirt etc.)
+* common
+** Multiple user support (However: no rights management and currently only suitable for a handful of users)
+
+
+== try-out
+
+
+=== Linux
+
+ # Download the file [[https://raw.githubusercontent.com/jedie/django-for-runners/master/boot_django_for_runners.sh|boot_django_for_runners.sh]] (right click and use "save under...")
+ # run {{{boot_django_for_runners.sh}}}
+ # double click on {{{~/Django-ForRunners/Django-ForRunners}}}
+ # insert user name/password in terminal
+
+All in one step, e.g.:
+
+{{{
+~$ bash <(curl -s https://raw.githubusercontent.com/jedie/django-for-runners/master/boot_django_for_runners.sh)
+}}}
+
+Just double click on {{{~/Django-ForRunners/Django-ForRunners}}} in your file manager ;)
+
+Or start by hand, e.g.:
+{{{
+~$ cd ~/Django-ForRunners/bin
+~/Django-ForRunners/bin$ ./for_runners run-server
+}}}
+
+More details:
+
+The shell script creates a python virtual environment and install all needed requirements into:
+
+ * {{{~/Django-ForRunners}}}
+
+The setup routine will install two commands:
+
+* {{{ ~/Django-ForRunners/bin/for_runners }}} - CLI to start the web server to use Django-ForRunners
+* {{{ ~/Django-ForRunners/bin/manage }}} - Run django manage commands with Django-ForRunners project settings
+
+e.g.:
+{{{
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+(Django-ForRunners) ~/Django-ForRunners$ for_runners --help
+...
+(Django-ForRunners) ~/Django-ForRunners$ manage --help
+...
+}}}
+
+
+=== Windows
+
+TODO: Create shortcut (via pywin32?)
+
+ # Download the file [[https://raw.githubusercontent.com/jedie/django-for-runners/master/boot_django_for_runners.cmd|boot_django_for_runners.cmd]] (right click and use "save under...")
+ # run {{{boot_django_for_runners.cmd}}}
+ 
+The batch file creates a python virtual environment and install all needed requirements into:
+
+ * {{{C:\Program Files\Django-ForRunners}}}
+
+Start the development server with the test project by double click on:
+
+{{{
+"C:\Program Files\Django-ForRunners\Scripts\for_runners.exe"
+}}}
+
+
+== update existing installation
+
+Just run {{{for_runners update}}} e.g.:
+
+{{{
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+(Django-ForRunners) ~/Django-ForRunners$ for_runners update
+}}}
+
+
+=== import GPX files
+
+e.g.:
+
+{{{
+~$ ~/Django-ForRunners/bin/manage import_gpx --username <django_username> ~/backups/gpx_files
+}}}
+
+**Note:** It is no problem to start **import_gpx** with the same GPX files: Duplicate entries are avoided. The start/finish (time/latitude/longitude) are compared.
+
+
+=== backup
+
+Create a backup into {{{DjangoForRunnersEnv/backups/<timestamp>/}}} e.g.:
+{{{
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+(Django-ForRunners) ~/Django-ForRunners$ for_runners backup
+}}}
+
+The backup does:
+
+ * backup the database
+ * export all GPX tracks
+ * generate .csv files:
+    * a complete file with all running tracks
+    * one file for every user
+
+
+=== regenerate all SVG files
+
+{{{
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+(Django-ForRunners) ~/Django-ForRunners$ for_runners recreate-svg
+}}}
+
+
+== Screenshots
+
+
+(All screenshots are here: [[https://github.com/jedie/jedie.github.io/tree/master/screenshots/django-for-runners|github.com/jedie/jedie.github.io/tree/master/screenshots/django-for-runners]])
+
+
+== for-runers v0.6.0 2018-07-31 GPX Track.png ==
+{{https://raw.githubusercontent.com/jedie/jedie.github.io/master/screenshots/django-for-runners/for-runers v0.6.0 2018-07-31 GPX Track.png|for-runers v0.6.0 2018-07-31 GPX Track.png}}
+
+
+== for-runners v0.4.0 2018-6-26 GPX info.png ==
+{{https://raw.githubusercontent.com/jedie/jedie.github.io/master/screenshots/django-for-runners/for-runners v0.4.0 2018-6-26 GPX info.png|for-runners v0.4.0 2018-6-26 GPX info.png}}
+
+
+== for-runners v0.6.0 2018-07-19 Event Costs.png ==
+{{https://raw.githubusercontent.com/jedie/jedie.github.io/master/screenshots/django-for-runners/for-runners v0.6.0 2018-07-19 Event Costs.png|for-runners v0.6.0 2018-07-19 Event Costs.png}}
+
+
+
+== run tests
+
+{{{
+# activate the virtualenv:
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+
+# run the tests:
+(Django-ForRunners) ~/Django-ForRunners$ cd src/django-for-runners/
+(Django-ForRunners) ~/Django-ForRunners/src/django-for-runners$ ./setup.py test
+
+# run text via tox:
+(Django-ForRunners) ~/Django-ForRunners/src/django-for-runners$ ./setup.py tox
+}}}
+
+
+**Note:**
+
+To run all tests, you need:
+
+* **Chromium Browser WebDriver** e.g.: {{{apt install chromium-chromedriver}}}
+* **Firefox Browser WebDriver** aka **geckodriver**
+
+install **geckodriver** e.g.:
+{{{
+~$ cd /tmp
+/tmp$ wget https://github.com/mozilla/geckodriver/releases/download/v0.20.1/geckodriver-v0.20.1-linux64.tar.gz -O geckodriver.tar.gz
+/tmp$ sudo sh -c 'tar -x geckodriver -zf geckodriver.tar.gz -O > /usr/bin/geckodriver'
+/tmp$ sudo chmod +x /usr/bin/geckodriver
+/tmp$ rm geckodriver.tar.gz
+/tmp$ geckodriver --version
+geckodriver 0.20.1
+...
+}}}
+
+
+
+== some notes
+
+
+=== GPX storage
+
+Currently we store the unchanged GPX data in a TextField.
+
+
+=== static files
+
+We collect some JavaScript files, for easier startup. These files are:
+
+|= Project Homepage |= License |= storage directory
+| [[http://leafletjs.com|leafletjs.com]] | [[https://github.com/Leaflet/Leaflet/blob/master/LICENSE|Leaflet licensed under BSD]] | [[https://github.com/jedie/django-for-runners/tree/master/for_runners/static/leaflet|for_runners/static/leaflet/]]
+| [[http://dygraphs.com|dygraphs.com]] | [[https://github.com/danvk/dygraphs/blob/master/LICENSE.txt|dygraphs licensed under MIT]] | [[https://github.com/jedie/django-for-runners/tree/master/for_runners/static/dygraphs|for_runners/static/dygraphs/]]
+| [[http://www.chartjs.org|chartjs.org]] | [[https://github.com/chartjs/Chart.js/blob/master/LICENSE.md|Chart.js licensed under MIT]] | [[https://github.com/jedie/django-for-runners/tree/master/for_runners/static/chartjs|for_runners/static/chartjs/]]
+
+
+=== Precision of coordinates
+
+GPX files from Garmin (can) contain:
+
+* latitude with 29 decimal places
+* longitude with 28 decimal places
+* elevation with 19 decimal places
+
+The route on OpenStreetMap does not look more detailed, with more than 5 decimal places.
+
+See also: https://wiki.openstreetmap.org/wiki/Precision_of_coordinates
+
+
+== Django compatibility
+
+|= django-for-runners |= django version |= python         |
+| >=v0.7.1            | 2.1             | 3.5, 3.6, 3.7   |
+| v0.5.x              | 2.0             | 3.5, 3.6, 3.7   |
+
+(See also combinations in [[https://github.com/jedie/django-for-runners/blob/master/.travis.yml|.travis.yml]] and [[https://github.com/jedie/django-for-runners/blob/master/tox.ini|tox.ini]])
+
+
+
+== Backwards-incompatible changes
+
+
+=== v0.9
+
+==== How to update:
+
+{{{
+~$ cd Django-ForRunners/
+~/Django-ForRunners$ source bin/activate
+(Django-ForRunners) ~/Django-ForRunners$ cd src/django-for-runners/
+(Django-ForRunners) ~/Django-ForRunners/src/django-for-runners$ git pull origin master
+(Django-ForRunners) ~/Django-ForRunners/src/django-for-runners$ for_runners update
+}}}
+
+
+==== How to migrate
+
+* The SQlite database was moved.
+
+If you would like to migrate, move/rename this file
+
+{{{~/Django-ForRunners/src/django-for-runners/test_project_db.sqlite3}}}
+
+to:
+
+{{{~/Django-ForRunners/Django-ForRunners-database.sqlite3}}}
+
+* cli arguments changed with click v7.0: {{{"_" -> "-"}}}, e.g.: {{{"run_server" -> "run-server"}}}
+
+
+== history
+
+* [[https://github.com/jedie/django-for-runners/compare/v0.8.1...master|compare v0.8.1...master]] **dev**
+** tbc
+* [[https://github.com/jedie/django-for-runners/compare/v0.8.1...v0.9.0|02.04.2019 - v0.9.0]]:
+** NEW: Update complete environment installation with: {{{for_runners update}}}
+** Move the SQlite database to virtualenv root dir, e.g.: {{{~/Django-ForRunners/Django-ForRunners-database.sqlite3}}}
+** NEW: save every gpx track to disk
+** NEW: Backup/export via cli: {{{$ for_runners backup}}}
+** NEW: export GPX Data via {{{django-import-export}}}
+** Create xdg-open desktop starter under linux here: {{{~/Django-ForRunners/Django-ForRunners}}}
+** refactor the startup process:
+*** auto loop the server process
+*** open web browser on first start
+*** enable autotask
+** rename {{{for_runners_test_project}}} to {{{for_runners_project}}}
+* [[https://github.com/jedie/django-for-runners/compare/v0.8.0...v0.8.1|03.09.2018 - v0.8.1]]:
+** Fix "try-out" section in README, again ;(
+* [[https://github.com/jedie/django-for-runners/compare/v0.7.1...v0.8.0|03.09.2018 - v0.8.0]]:
+** NEW: shell script for easier boot/install, see above
+* [[https://github.com/jedie/django-for-runners/compare/v0.7.0...v0.7.1|02.09.2018 - v0.7.1]]:
+** Update to Django 2.1
+** Bugfix Tests
+* [[https://github.com/jedie/django-for-runners/compare/v0.6.0...v0.7.0|02.09.2018 - v0.7.0]]:
+** Use dygraphs in GPX Track change admin view
+** Sync mouse over from Elevation/Headrate/Cadence dygraphs to leaflet open streep map
+** Fix "try-out" section in README ([[https://github.com/jedie/django-for-runners/pull/1|Thanks adsworth for reporting]])
+** Add links from gpx tracks to other admin change view
+** Bugfixes
+** internals:
+*** refactor stuff around track duration/length
+*** move manipluation of list_display and list_filter [[https://github.com/jedie/django-for-runners/pull/2|contributed by adsworth]]
+* [[https://github.com/jedie/django-for-runners/compare/v0.5.0...v0.6.0|19.07.2018 - v0.6.0]]:
+** NEW: event participation
+** NEW: costs of event participation (e.g.: entry fee for the competition, cost of a T-Shirt etc.)
+** NEW: Display statistics of events/costs per user and total
+* [[https://github.com/jedie/django-for-runners/compare/v0.4.0...v0.5.0|04.07.2018 - v0.5.0]]:
+** remove Django-CMS
+** update to Django v2.0
+** NOTE: The migrations are simply replaced! So you must delete your database, e.g.: {{{src/django-for-runners$ rm test_project_db.sqlite3}}}
+** Add 'net duration' field, for the officially measured time and use it for calculations if available.
+** Create django manage command to fill some base data: {{{$ ./manage.py fill_basedata}}}
+** speedup by deactivating some django debug toolbar panels
+* [[https://github.com/jedie/django-for-runners/compare/v0.3.0...v0.4.0|26.06.2018 - v0.4.0]]:
+** combine track filters with statistic views
+** NEW: GPX info (See length, point count and Average distance in meters between the points)
+** NEW: Display GPX metadata
+** Add 'creator' to every track and use it as changelist filter
+** remove Streetmap image generated via [[https://pypi.org/project/geotiler/|geotiler]]
+** Speedup by using a cache for gpxpy instances
+* [[https://github.com/jedie/django-for-runners/compare/v0.2.0...v0.3.0|23.06.2018 - v0.3.0]]:
+** Start adding statistics (See screenshot above)
+** add weather information from [[https://www.metaweather.com/|metaweather.com]] to every track
+* [[https://github.com/jedie/django-for-runners/compare/v0.1.1...v0.2.0|21.06.2018 - v0.2.0]]:
+** Display elevations, heart_rates and cadence_values if available
+** Add kilometer markers to OpenStreetMap
+* [[https://github.com/jedie/django-for-runners/compare/v0.1.0...v0.1.1|15.06.2018 - v0.1.1]]:
+** a few bugfixes
+* [[https://github.com/jedie/django-for-runners/compare/v0.0.4...v0.1.0|15.06.2018 - v0.1.0]]:
+** Render interactive OpenStreetMap track map with Leaflet JS
+* [[https://github.com/jedie/django-for-runners/compare/v0.0.3...v0.0.4|12.06.2018 - v0.0.4]]:
+** Better Events model
+** GPX error handling
+** more tests
+** Bugfix for Python 3.5 (Geotiler needs Python 3.6 or later)
+* [[https://github.com/jedie/django-for-runners/compare/v0.0.2...v0.0.3|12.06.2018 - v0.0.3]]:
+** display min/average/max heart rate
+** use autotask to generate the MAP in background
+* [[https://github.com/jedie/django-for-runners/compare/v0.0.1...v0.0.2|31.05.2018 - v0.0.2]]:
+** generate SVG 'icon' from GPX track
+* v0.0.1 - 30.05.2018
+** Just create a pre-alpha release to save the PyPi package name ;)
+
+
+== links ==
+
+| Homepage   | http://github.com/jedie/django-for-runners
+| PyPi       | https://pypi.org/project/django-for-runners/
+
+
+=== alternatives (OpenSource only) ==
+
+* https://github.com/pytrainer/pytrainer (Desktop Program)
+* https://github.com/GoldenCheetah/GoldenCheetah/ (Desktop Program)
+
+Online tools:
+
+* https://www.gpsies.com
+* https://www.j-berkemeier.de/ShowGPX.html (de)
+
+
+== credits ==
+
+The whole thing is based on many excellent projects. Especially the following:
+
+* [[https://pypi.org/project/gpxpy/|gpxpy]] GPX file parser
+* [[https://leafletjs.com|Leaflet JS]] A JS library for interactive maps used to render the track on [[https://openstreetmap.org/|OpenStreetMap]]
+* [[http://dygraphs.com|dygraphs]] open source JavaScript charting library
+* [[https://www.chartjs.org|Chart.js]] HTML5 Charts
+* [[https://pypi.org/project/geopy/|geopy]] Get geo location names of the GPX track start/end point
+* [[https://pypi.org/project/matplotlib/|matplotlib]] plotting 2D graphics
+* [[https://pypi.org/project/autotask/|autotask]] schedule background jobs
+* [[https://pypi.org/project/svgwrite/|svgwrite]] Generating SVG file
+
+
+== donation ==
+
+* [[https://www.paypal.me/JensDiemer|paypal.me/JensDiemer]]
+* [[https://flattr.com/submit/auto?uid=jedie&url=https%3A%2F%2Fgithub.com%2Fjedie%2Fdjango-for-runners%2F|Flattr This!]]
+* Send [[http://www.bitcoin.org/|Bitcoins]] to [[https://blockexplorer.com/address/1823RZ5Md1Q2X5aSXRC5LRPcYdveCiVX6F|1823RZ5Md1Q2X5aSXRC5LRPcYdveCiVX6F]]
