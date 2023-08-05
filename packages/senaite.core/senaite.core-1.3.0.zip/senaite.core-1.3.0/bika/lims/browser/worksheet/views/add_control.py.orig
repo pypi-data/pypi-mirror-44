@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of SENAITE.CORE
+#
+# Copyright 2018 by it's authors.
+# Some rights reserved. See LICENSE.rst, CONTRIBUTORS.rst.
+
+from bika.lims import bikaMessageFactory as _
+from referencesamples import ReferenceSamplesView
+
+
+<<<<<<< HEAD
+        form = self.request.form
+        if 'submitted' in form:
+            rc = getToolByName(self.context, REFERENCE_CATALOG)
+            # parse request
+            service_uids = form['selected_service_uids']
+            if type(form['selected_service_uids']) not in (list, tuple):
+                service_uids = str(form['selected_service_uids']).split(",")
+            position = form['position']
+            reference_uid = form['reference_uid']
+            reference = rc.lookupObject(reference_uid)
+            self.request['context_uid'] = self.context.UID()
+            self.context.addReferenceAnalyses(reference, service_uids, position)
+            self.request.response.redirect(self.context.absolute_url() + "/manage_results")
+        else:
+            self.Services = ServicesView(self.context, self.request)
+            self.Services.view_url = self.Services.base_url + "/add_control"
+            return self.template()
+=======
+class AddControlView(ReferenceSamplesView):
+    """Displays reference control samples
+    """
+>>>>>>> senaite/master
+
+    def __init__(self, context, request):
+        super(AddControlView, self).__init__(context, request)
+
+        self.contentFilter = {
+            "portal_type": "ReferenceSample",
+            "getSupportedServices": self.get_assigned_services_uids(),
+            "isValid": True,
+            "getBlank": False,
+            "review_state": "current",
+            "inactive_state": "active",
+            "sort_on": "sortable_title",
+            "sort_order": "ascending",
+        }
+        self.title = _("Add Control Reference")
