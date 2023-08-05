@@ -1,0 +1,14 @@
+#!/bin/sh
+if [ -e "./controller/virtv/lib/" ]; then
+  source ./controller/virtv/bin/activate
+  python ./controller/webplatform-cli.py $@
+else
+  echo "Building Virtual Environment"
+  # setup controller
+  virtualenv -p /usr/bin/python3 ./controller/virtv/
+  source ./controller/virtv/bin/activate
+  pip install -r ./controller/virtv/requirements.txt
+
+  echo "Done setting up Controller"
+  python ./controller/webplatform-cli.py $@
+fi
