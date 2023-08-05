@@ -1,0 +1,47 @@
+# ingi-cli
+A CLI tool for gists like no other. Run, download and help build a searchable gist API
+
+
+[![Build Status](https://api.travis-ci.com/ianloubser/ingi-cli.svg?branch=master)](https://travis-ci.com/ianloubser/ingi-cli)
+![Python version](https://img.shields.io/badge/python-3.6-blue.svg)
+[![Coverage Status](https://coveralls.io/repos/github/ianloubser/ingi-cli/badge.svg?branch=master)](https://coveralls.io/github/ianloubser/ingi-cli?branch=master)
+
+## Features
+- Run gists directly from your bash. Multiple language support (python, ruby, shell, node)
+- Offline cache for gists
+
+
+## Installation
+**ingi** assumes that any required binaries for executing gists are installed on your system, if not then it will fail.
+
+Install the cli tool through pip:
+```
+pip install ingi-cli
+```
+
+## Usage
+
+Invoking a gist
+```
+ingi get https://api.github.com/gists/ac5a0fb49370e7cff3bee93ecc40b9a8
+```
+or use the gist ID
+```
+ingi get --use_id ac5a0fb49370e7cff3bee93ecc40b9a8
+```
+
+You can also just cache the gist to use later
+```
+ingi get --save_only --use_id ac5a0fb49370e7cff3bee93ecc40b9a8
+```
+
+## TODO & Improvements
+- Implementing a gist index to search gists programmatically. Any gists executed locally get automatically inserted and indexed on API to be used. 
+This will provide us with a rest API to search for gists &#x1F600;.
+
+- Configurable invoke queue, like an `invoke.yaml` which lists a bunch of gists to execute in order.
+
+- arguments to be passed to scripts, for e.g:
+```
+ingi get --use_id ac5a0fb49370e7cff3bee93ecc40b9a8 first_arg second_arg
+```
