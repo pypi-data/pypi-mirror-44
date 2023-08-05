@@ -1,0 +1,264 @@
+#!/usr/bin/env python
+"""
+    CIJOE Test Linter
+
+    * Verifies that testplans can be parsed from Yaml to dict
+    * Verifies that testplans contains required content
+    * Verifies that testcases and hooks used exists
+    * Verifies that testcases that exists are used
+
+    And possibly more... e.g. the test linter runs through CIJOE testplans,
+    testsuites and testcases looking for common mistakes
+"""
+from __future__ import print_function
+import argparse
+import sys
+import os
+import yaml
+import cij
+
+
+def _load_tplans(ident, roots, fnames):
+    """Returns a list of successfully loadable testplans and a lost of
+    violations for those that failed"""
+
+    tplans = {}
+    violations = []
+
+    for tp_fname in fnames["TPLANS"]:
+        tp_fpath = os.sep.join([roots["TPLANS"], tp_fname])
+
+        tplan = None
+        try:
+            with open(tp_fpath) as tp_fd:
+                tplan = yaml.safe_load(tp_fd)
+        except yaml.YAMLError:
+            violations.append(MESSAGES[ident] % (tp_fname, "invalid YAML"))
+            continue
+        except IOError:
+            violations.append(MESSAGES[ident] % (tp_fname, "IO error"))
+            continue
+
+        if not isinstance(tplan, dict):
+            violations.append(MESSAGES[ident] % (
+                tp_fname,
+                "could not be parsed as dictionary"
+            ))
+            continue
+
+        tplans[tp_fname] = tplan
+
+    return tplans, violations
+
+
+def tsuitefile_testcases_exists(ident, roots, fnames):
+    """
+    @returns list of violation messages for this check
+    """
+
+    violations = []
+
+    for ts_fname in fnames["TSUITES"]:    # Search .suite files
+        ts_fpath = os.sep.join([roots["TSUITES"], ts_fname])
+        ts_lines_all = (l.strip() for l in open(ts_fpath).read().splitlines())
+        ts_lines = (l for l in ts_lines_all if len(l) > 1 and l[0] != "#")
+
+        for tc_fname in ts_lines:
+            if tc_fname in fnames["TCASES"]:
+                continue
+
+            violations.append(MESSAGES[ident] % (tc_fname, ts_fpath))
+
+    return violations
+
+
+def testcase_unused(ident, roots, fnames):
+    """
+    @returns list of violation messages for this check
+    """
+
+    violations = []
+
+    tcases_in_use = set([])
+
+    for ts_fname in fnames["TSUITES"]:  # Testcases from suite-files
+        ts_fpath = os.sep.join([roots["TSUITES"], ts_fname])
+        ts_lines_all = (l.strip() for l in open(ts_fpath).read().splitlines())
+        ts_lines = (l for l in ts_lines_all if len(l) > 1 and l[0] != "#")
+
+        for tc_fname in ts_lines:
+            tcases_in_use.add(tc_fname)
+
+    tplans, _ = _load_tplans(ident, roots, fnames)  # testcases inline
+    for _, tplan in tplans.items():
+        for testsuite in tplan.get("testsuites", []):
+            tcases_in_use.update(testsuite.get("testcases", []))
+
+    for tc_fname in sorted(list(fnames["TCASES"] - tcases_in_use)):
+        violations.append(MESSAGES[ident] % (tc_fname, ""))
+
+    return violations
+
+
+def tplans_format(ident, roots, fnames):
+    """
+    @returns list of violation messages for this check
+    """
+
+    _, violations = _load_tplans(ident, roots, fnames)
+
+    return violations
+
+
+def tplans_content(ident, roots, fnames):
+    """
+    @returns list of violations messages for this check
+    """
+
+    violations = []
+
+    struct = {
+        "root": [
+            ("descr", True),
+            ("descr_long", False),
+            ("hooks", False),
+            ("evars", False),
+            ("testsuites", True)
+        ],
+        "suites": [
+            ("name", True),
+            ("alias", False),
+            ("hooks", False),
+            ("hooks_pr_tcase", False),
+            ("evars", False),
+            ("evars_pr_tcase", False),
+            ("testcases", False),
+        ]
+    }
+
+    tplans, _ = _load_tplans(ident, roots, fnames)
+    for tp_fname, tplan in tplans.items():
+
+        for k in set(tplan.keys()) - set(k for k, _ in struct["root"]):
+            violations.append(MESSAGES[ident] % (
+                tp_fname,
+                "invalid key: %r" % k
+            ))
+
+        for k in (k for k, req in struct["root"] if req):
+            if k not in tplan.keys():
+                violations.append(MESSAGES[ident] % (
+                    tp_fname,
+                    "missing required key: %r" % k
+                ))
+
+        hooks = tplan.get("hooks", [])
+
+        if "testsuites" not in tplan:
+            violations.append(MESSAGES[ident] % (
+                tp_fname,
+                "missing key 'testsuites'"
+            ))
+            continue
+
+        for suite in tplan["testsuites"]:
+            for k in set(suite.keys()) - set(k for k, _ in struct["suites"]):
+                violations.append(MESSAGES[ident] % (
+                    tp_fname,
+                    "invalid key: %r" % k
+                ))
+
+            for k in (k for k, req in struct["suites"] if req):
+                if k not in suite.keys():
+                    violations.append(MESSAGES[ident] % (
+                        tp_fname,
+                        "missing required key: %r" % k
+                    ))
+
+            hooks.extend(suite.get("hooks", []))
+            hooks.extend(suite.get("hooks_pr_tcase", []))
+
+            # A file is only required when 'testcases' are not defined inline
+            if "testcases" not in suite and \
+                "%s.suite" % suite.get("name", "jank") not in fnames["TSUITES"]:
+                violations.append(MESSAGES[ident] % (
+                    tp_fname,
+                    "testsuite: no testcases defined" % suite["name"]
+                ))
+
+        for hname in set(hooks):        # Check for existence of hooks
+            if not sum(tmpl % hname in fnames["HOOKS"] for tmpl in [
+                    "%s.sh", "%s_enter.sh", "%s_exit.sh"
+                ]):
+                violations.append(MESSAGES[ident] % (
+                    tp_fname,
+                    "hook: %r, does not exist" % hname
+                ))
+
+    return violations
+
+
+MESSAGES = {
+    "E0100": "Use of non-existent testcase(%s) in testsuite(%s)",
+    "E0200": "Invalid testplan(%s) msg: %r",
+    "E0210": "Invalid testplan(%s) content: %r",
+    "W0100": "Unused testcase(%s) msg: %r",
+
+}
+
+CHECKERS = {
+    "E0100": tsuitefile_testcases_exists,
+    "E0200": tplans_format,
+    "E0210": tplans_content,
+    "W0100": testcase_unused
+}
+
+IDENTS = sorted(CHECKERS.keys())
+
+def main(roots):
+    """."""
+
+    fnames = {ext: cij.index(roots[ext], ext) for ext in cij.EXTS}
+
+    report = []
+    for ident in IDENTS:
+        res = CHECKERS[ident](ident, roots, fnames)
+        report += zip([ident] * len(res), res)
+
+    errors = 0
+    warnings = 0
+    for ident, violation in report:
+        msg = "%s: %s" % (ident, violation)
+
+        if ident.startswith("E"):
+            errors += 1
+            cij.err(msg)
+        elif ident.startswith("W"):
+            warnings += 1
+            cij.warn(msg)
+        else:
+            cij.emph(msg)
+
+    return errors
+
+if __name__ == "__main__":
+
+    CIJ_ROOT = os.environ.get("CIJ_ROOT")
+    if not (CIJ_ROOT and os.path.exists(CIJ_ROOT)):
+        print("Please set ENV. VAR. CIJ_ROOT, correctly")
+        sys.exit(1)
+
+    PRSR = argparse.ArgumentParser(
+        description="cij_tlint - CIJOE Test Linter",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    ARGS = PRSR.parse_args()
+
+    ROOTS = {
+        "TPLANS": os.sep.join([CIJ_ROOT, "testplans"]),
+        "TSUITES": os.sep.join([CIJ_ROOT, "testsuites"]),
+        "TCASES": os.sep.join([CIJ_ROOT, "testcases"]),
+        "HOOKS": os.sep.join([CIJ_ROOT, "hooks"])
+    }
+
+    sys.exit(main(ROOTS))

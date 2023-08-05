@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<!-- Highlight JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/solarized-dark.min.css">
+<title>Report</title>
+
+<style>
+.jumbotron-fluid {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.jumbotron:last-of-type {
+  margin-bottom: 0;
+}
+
+.jumbotron:last-of-type p {
+  margin-bottom: 0;
+}
+
+.jumbotron .btn-group {
+  top: 1.5rem;
+}
+
+.btn-primary {
+  border-color: #0062cc;
+}
+
+.ansi2html-content { display: inline; white-space: pre-wrap; word-wrap: break-word; }
+
+.list-testcases .list-group-item {
+  padding: 0.1rem;
+}
+
+.runlog pre {
+  background-color: white;
+  background-opacity: 0.9;
+}
+
+.nav-item > a.nav-link {
+  border: 1px solid transparent;
+  border-color: #e9ecef #e9ecef #dee2e6;
+}
+
+.nav-item > a.nav-link:hover {
+  background-color: white;
+  background-opacity: 0.5;
+}
+
+</style>
+</head>
+<body>
+
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">Report</h1>
+  </div>
+</div>
+
+<div class="container">
+  {% set tcases_count = dset.progress.UNKN + dset.progress.PASS + dset.progress.FAIL %}
+  {% set tcases_completed = dset.progress.PASS + dset.progress.FAIL %}
+
+  {% set trun_bg_color = "secondary" %}
+  {% set trun_bg_color = "success" if dset.status == "PASS" else trun_bg_color %}
+  {% set trun_bg_color = "danger" if dset.status == "FAIL" else trun_bg_color %}
+  {% set trun_color = "white" %}
+  {% set trun_color = "black" if dset.status == "PASS" else trun_color %}
+  {% set trun_color = "black" if dset.status == "FAIL" else trun_color %}
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <ul class="nav nav-pills nav-fill card-header-pills no-gutters">
+        <li class="nav-item no-gutters">
+          <a class="nav-link bg-{{ trun_bg_color }} text-{{ trun_color }}">TESTRUN <b>{{ dset.status }}</b></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-header">
+
+      <ul class="nav nav-tabs card-header-tabs">
+        <li class="nav-item">
+          <a class="nav-link active show" href="#SUMMARY" data-toggle="tab">Summary</a>
+        </li>
+        <li class="nav-item ml-auto">
+          <a class="nav-link" href="#RUNNER" data-toggle="tab">
+            Runner Conf ({{ dset.conf | length }})
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#EVARS" data-toggle="tab">
+            Evars ({{ dset.evars | length }})
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#HOOKS" data-toggle="tab">
+            Hooks ({{ dset.hnames | length }})
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#AUX" data-toggle="tab">
+            Aux ({{ dset.aux_list | length }})
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#LOG" data-toggle="tab">
+            Log ({{ dset.log_content.splitlines() | length }})
+          </a>
+        </li>
+      </ul>
+
+    </div>
+
+    <div class="tab-content">
+
+      <div class="tab-pane active" id="SUMMARY">
+        <div class="card-body">
+          <p class="card-text">
+          A total of <b>{{ tcases_count }}</b> testcases across <b>{{ dset.testsuites | length }}</b> testsuite(s).
+          </p>
+          <p class="card-text">
+          Test execution is {{ ((tcases_completed / tcases_count) * 100)|int }}% complete
+          {% if dset.stamp and dset.stamp.begin %}
+          , started {{ dset.stamp.begin | stamp_to_datetime | strftime("%b. %d %Y") }}
+          {% endif %}
+          {% if dset.stamp and dset.stamp.end %}
+          , ended {{ dset.stamp.end  | stamp_to_datetime | strftime("%b. %d %Y") }}
+          , spanning a wall-clock period of {{ "{0:0.2f}".format(((dset.stamp.end - dset.stamp.begin) / 60.0)/60.0) }} hours
+          {% endif %}
+          </p>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Testcase Status</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-success">
+              <td>PASS</td>
+              <td>{{ dset.progress.PASS }}</td>
+            </tr>
+            <tr class="table-danger">
+              <td>FAIL</td>
+              <td>{{ dset.progress.FAIL }}</td>
+            </tr>
+            <tr class="table-secondary">
+              <td>UNKN</td>
+              <td>{{ dset.progress.UNKN }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+      <div class="tab-pane" id="RUNNER">
+
+        <div class="card-body">
+          <h5 class="card-title">
+          Input given to the runner in the form <b>command-line arguments</b> and <b>environment variables</b>
+          </h5>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, value in dset.conf|dictsort  %}
+            <tr>
+              <td>{{ key }}</td>
+              <td>{{ value }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+      <!-- TRUN: EVARS-SNIPPET -->
+      <div class="tab-pane" id="EVARS">
+        <div class="card-body">
+          <p class="card-text">
+          A total of <b>{{ dset.evars | length }}</b> environment variables are defined.
+          Testsuites inherit testrun environment variables and testcases inherit testsuite
+          environment variables.
+          These environment variables and then defined before executing hooks and testcases, prior
+          to sourcing in the environment definition.
+          </p>
+        </div>
+
+        <ul class="list-group">
+        {% for evar in dset.evars %}
+        <li class="list-group-item">{{ evar }}: {{ dset.evars[evar] }}</li>
+        {% endfor %}
+        </ul>
+
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+      <!-- TRUN: HOOKS-SNIPPET -->
+      <div class="tab-pane" id="HOOKS">
+        <div class="card-body">
+          <p class="card-text">
+          A total of <b>{{ dset.hnames | length }}</b> hooks are used per testrun.
+          </p>
+        </div>
+
+        <ul class="list-group list-files">
+        {% for hname in dset.hnames %}
+        <li class="list-group-item">{{ hname }}</li>
+        {% endfor %}
+        </ul>
+
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+      <!-- TRUN: AUX-SNIPPET -->
+      <div class="tab-pane" id="AUX">
+        <div class="card-body">
+          <p class="card-text">
+          A total of <b>{{ dset.aux_list | length }}</b> auxilary files, produced by
+          testplan hooks, are listed below
+          </p>
+        </div>
+
+        <ul class="list-group list-files">
+        {% for aux in dset.aux_list %}
+        <li class="list-group-item"><a href="./{{ dset.aux_root[dset.conf.OUTPUT|length:] }}/{{ aux }}">{{ aux }}</a></li>
+        {% endfor %}
+        </ul>
+
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+      <!-- TRUN: LOG-SNIPPET -->
+      <div class="tab-pane runlog" id="LOG">
+        <div class="card-body">
+          <p class="card-text">
+          Output produced by executing testplan hooks is provided below
+          </p>
+        </div>
+
+        <pre><code class="runlog nohighlight">{{ dset.log_content | ansi_to_html | safe }}</code></pre>
+        <div class="card-footer text-muted">&nbsp;</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">Results</h1>
+  </div>
+</div>
+
+<div class="container" id="results">
+{% for tsuite in dset.testsuites %}
+
+{% set tsuite_bg_color = "secondary" %}
+{% set tsuite_bg_color = "success" if tsuite.status == "PASS" else tsuite_bg_color %}
+{% set tsuite_bg_color = "danger" if tsuite.status == "FAIL" else tsuite_bg_color %}
+{% set tsuite_color = "white" %}
+{% set tsuite_color = "black" if tsuite.status == "PASS" else tsuite_color %}
+{% set tsuite_color = "black" if tsuite.status == "FAIL" else tsuite_color %}
+
+<div class="card mb-3" id="{{ tsuite.ident }}">
+  <div class="card-header">
+    <ul class="nav nav-pills  nav-fill card-header-pills row.no-gutters">
+      <li class="nav-item">
+        <a class="nav-link bg-{{ tsuite_bg_color }} text-{{ tsuite_color }} text-left">
+          TESTSUITE: <b>{{ tsuite.alias if tsuite.alias else tsuite.name }}</b> ({{ tsuite.name }}.suite)
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs">
+      <li class="nav-item">
+        <a class="nav-link active show" href="#TESTCASES_{{ tsuite.ident }}"
+          data-toggle="tab">Testcases ({{ tsuite.testcases | length }})</a>
+      </li>
+      <li class="nav-item ml-auto">
+        <a class="nav-link" href="#EVARS_{{ tsuite.ident }}" data-toggle="tab">
+          Evars ({{ tsuite.evars | length }})
+        </a>
+      </li>
+      <li class="nav-item ml">
+        <a class="nav-link" href="#HOOKS_{{ tsuite.ident }}" data-toggle="tab">
+          Hooks ({{ tsuite.hnames | length }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#AUX_{{ tsuite.ident }}" data-toggle="tab">
+          Aux ({{ tsuite.aux_list | length }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#LOG_{{ tsuite.ident }}" data-toggle="tab">
+          Log ({{ tsuite.log_content.splitlines() | length }})
+        </a>
+      </li>
+    </ul>
+
+  </div>
+
+  <div class="tab-content">
+
+    <!-- TESTCASES-BGN -->
+    <div class="tab-pane active" id="TESTCASES_{{ tsuite.ident }}">
+      <div class="card-body">
+        <p class="card-text">
+        The <b>{{ tsuite.name }}</b> testsuite contains {{ tsuite.testcases | length }} testcases.
+        </p>
+        <p class="card-text">
+        The testcases are listed below along with testcase status
+        <span class="badge badge-secondary">UNKN</span>/<span class="badge badge-success">PASS</span>/<span class="badge badge-danger">FAIL</span>, descr, source
+             definition, auxilary files, and run log.
+        </p>
+      </div>
+
+      <ul class="list-group list-testcases">
+        <!-- TCASE-BGN -->
+        {% for tcase in tsuite.testcases %}
+        {% set ident = tcase.ident %}
+        {% set tcase_color = "secondary" %}
+        {% set tcase_color = "success" if tcase.status == "PASS" else tcase_color %}
+        {% set tcase_color = "danger" if tcase.status == "FAIL" else tcase_color %}
+        <li class="list-group-item list-group-item-{{ tcase_color }}">
+          <button class="btn btn-{{ tcase_color }}" type="button" disabled="disabled">
+            <span style="font-family: monospace;">{{ tcase.status }}:</span>
+            <span style="font-family: monospace; font-weight: bold;"> {{ tcase.name }}</span>
+          </button>
+          <div class="btn-group float-right" role="group">
+
+            {% if tcase.wallc %}
+            <button class="btn btn-info" type="button" disabled="disabled">
+              <span style="font-family: monospace;"
+                    title="Elapsed Wall-Clock time in seconds"
+                    data-original-title="Tooltip on right">
+                {{ tcase.wallc | round }} sec
+              </span>
+            </button>
+            {% endif %}
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#DESCR_{{ ident }}"
+                                                          aria-controls="DESCR_{{ ident }}"
+                                                          aria-expanded="false" >DESCR</button>
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#SRC_{{ ident }}"
+                                                          aria-controls="SRC_{{ ident }}"
+                                                          aria-expanded="false" >SRC</button>
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#EVARS_{{ ident }}"
+                                                          aria-controls="EVARS_{{ ident }}"
+                                                          aria-expanded="false">EVARS</button>
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#HOOKS_{{ ident }}"
+                                                          aria-controls="HOOKS_{{ ident }}"
+                                                          aria-expanded="false">HOOKS</button>
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#AUX_{{ ident }}"
+                                                          aria-controls="AUX_{{ ident }}"
+                                                          aria-expanded="false">AUX</button>
+
+            <button class="btn btn-primary" type="button" data-toggle="collapse"
+                                                          data-target="#LOG_{{ ident }}"
+                                                          aria-controls="LOG_{{ ident }}"
+                                                          aria-expanded="false" >LOG</button>
+          </div>
+
+          <div class="collapse" id="DESCR_{{ ident }}" data-parent="#results">
+            <h5 class="m-2">{{ tcase.descr_short if tcase.descr_short else "UNDOCUMENTED" }}</h5>
+            <pre><code class="nohighlight">{{ tcase.descr_long if tcase.descr_long else "UNDOCUMENTED" }}</code></pre>
+          </div>
+
+          <div class="collapse" id="SRC_{{ ident }}" data-parent="#results">
+            <p class="m-2">Source code for the testcase definition</p>
+            <pre><code class="bash">{{ tcase.src_content }}</code></pre>
+          </div>
+
+          <!-- TCASE: EVARS-SNIPPET -->
+          <div class="collapse" id="EVARS_{{ ident }}" data-parent="#results">
+            <p class="m-2">A total of <b>{{ tcase.evars | length }}</b> evars are defined for the
+            testcase before sourcing environment definition</p>
+
+            <ul class="list-group">
+            {% for evar in tcase.evars %}
+            <li class="list-group-item">{{ evar }}: {{ tcase.evars[evar] }}</li>
+            {% endfor %}
+            </ul>
+
+          </div>
+
+          <!-- TCASE: HOOKS-SNIPPET -->
+          <div class="collapse" id="HOOKS_{{ ident }}" data-parent="#results">
+            <p class="m-2">A total of <b>{{ tcase.hnames | length }}</b> evars are defined for the
+            testcase before sourcing environment definition</p>
+
+            <ul class="list-group">
+            {% for hname in tcase.hnames %}
+            <li class="list-group-item">{{ hname }}</li>
+            {% endfor %}
+            </ul>
+          </div>
+
+          <!-- TCASE: AUX-SNIPPET -->
+          <div class="collapse" id="AUX_{{ ident }}" data-parent="#results">
+            <p class="m-2">A total of <b>{{ tcase.aux_list | length }}</b> auxilary files produced by
+            testcase hooks are listed below</p>
+
+            <ul class="list-group">
+            {% for aux in tcase.aux_list %}
+            <li class="list-group-item"><a href="./{{ tcase.aux_root[dset.conf.OUTPUT|length:] }}/{{ aux }}">{{ aux }}</a></li>
+            {% endfor %}
+            </ul>
+
+          </div>
+
+          <div class="collapse runlog" id="LOG_{{ ident }}" data-parent="#results">
+            <p class="m-2">Log of output from testcase and hooks executed before and/or after the
+            testcase</p>
+            <pre><code class="nohighlight">{{ tcase.log_content | ansi_to_html | safe }}</code></pre>
+          </div>
+
+        </li>
+        {% endfor %}
+        <!-- TCASE-END -->
+      </ul>
+    </div>
+    <!-- TESTCASES-END -->
+
+    <!-- TSUITE: EVAR-SNIPPET -->
+    <div class="collapse" id="EVARS_{{ tsuite.ident }}" data-parent="#{{ tsuite.ident }}">
+      <div class="card-body">
+        <p class="card-text">
+          A total of <b>{{ tsuite.evars | length }}</b> environment vars are defined for this
+          testsuite, the testcases will define these prior to sourcing the environment definition
+        </p>
+      </div>
+
+      <ul class="list-group">
+        {% for evar in tsuite.evars %}
+        <li class="list-group-item">{{ evar }}: {{ tsuite.evars[evar] }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- TSUITE: HOOKS-SNIPPET -->
+    <div class="collapse" id="HOOKS_{{ tsuite.ident }}" data-parent="#{{ tsuite.ident }}">
+      <div class="card-body">
+        <p class="card-text">
+          A total of <b>{{ tsuite.hnames | length }}</b> hooks per test suite. That is, these hooks
+          are run before and after all the testcases have run.
+        </p>
+      </div>
+
+      <ul class="list-group">
+      {% for hname in tsuite.hnames %}
+      <li class="list-group-item">{{ hname }}</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+
+    <!-- TSUITE: AUX-SNIPPET -->
+    <div class="collapse" id="AUX_{{ tsuite.ident }}" data-parent="#{{ tsuite.ident }}">
+      <div class="card-body">
+        <p class="card-text">
+          A total of <b>{{ tsuite.aux_list | length }}</b> auxilary files produced by testsuite
+          hooks are listed below
+        </p>
+      </div>
+
+      <ul class="list-group">
+      {% for aux in tsuite.aux_list %}
+      <li class="list-group-item"><a href="./{{ tsuite.aux_root[dset.conf.OUTPUT|length:] }}/{{ aux }}">{{ aux }}</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+
+    <!-- TSUITE: RUN-LOG -->
+    <div class="collapse runlog" id="LOG_{{ tsuite.ident }}" data-parent="#{{ tsuite.ident }}">
+      <div class="card-body">
+        <p class="card-text">
+        Output produced by executing testsuite hooks is provided below
+        </p>
+      </div>
+
+      <pre><code class="nohighlight">{{ tsuite.log_content | ansi_to_html | safe }}</code></pre>
+    </div>
+
+  </div>
+
+  <div class="card-footer text-muted">&nbsp;</div>
+</div>
+<hr>
+
+{% endfor %}
+</div>
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">EOL</h1>
+    <p class="lead">In the presence of failure, recall, this too shall pass</p>
+  </div>
+</div>
+<!-- jQuery first, then Popper.js, then Bootstrap JS, then highlight.js -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"
+        integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/bash.min.js"
+        integrity="sha256-fTZir3QtRzPrhH5KyHm/0hsQqTDswmqYFhXOPN05ulw="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/python.min.js"
+        integrity="sha256-MRn7pN9LOBMrkp+8F2t5xb/92V1irzXp/dl5tUTwEgE="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/markdown.min.js"
+        integrity="sha256-QisUfMmh1ba2V0Kn8uxkMS1ShgsY1LyhrVNmit2llf4="
+        crossorigin="anonymous"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
