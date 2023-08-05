@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project version="6">
+    <Python hostinterpreter="$PYTHON_DIR\python.exe" major="{{python_version['major']}}" minor="{{python_version['minor']}}" patch="{{python_version['patch']}}" platformpython="win32" sourcedir="$SYSROOT/src/Python-{{python_version['major']}}.{{python_version['minor']}}.{{python_version['patch']}}" ssl="0" targetincludedir="$PYTHON_DIR\Include" targetlibrary="$PYTHON_DIR\libs\python36.lib" targetstdlibdir="$PYTHON_DIR\Lib" />
+    <Application entrypoint="" isbundle="1" isconsole="{{win_console}}" ispyqt5="1" name="{{project_name}}" script="{{package}}\__main__.py" syspath="">
+        <QMakeConfiguration>VERSION = {{app_version}}
+RESOURCES += app_resources/app_resources.qrc
+CONFIG += qtquickcompiler
+{%- if app_icon %}
+RC_ICONS = release/{{app_icon}}
+{%- endif %}
+TRANSLATIONS = {% for t in translation_files %}{{t}}\
+        {% endfor %}</QMakeConfiguration>
+        {%- for p in py_packages recursive %}
+        {%- if loop.depth == 1 %}
+        <Package name="{{p['name']}}">
+        {%- else %}
+            <PackageContent included="1" isdirectory="1" name="{{p['name']}}">
+        {%- endif %}
+            {%- set package_loop = loop %}
+            {%- for m in p['modules'] %}
+            <PackageContent included="1" isdirectory="0" name="{{m}}"/>
+            {%- endfor %}
+            {{ package_loop(p['packages']) }}
+        {%- if loop.depth == 1 %}
+        </Package>
+        {%- else %}
+            </PackageContent>
+
+        {%- endif %}
+        {%- endfor %}
+    </Application>
+    {%- for m in qt_modules %}
+    <PyQtModule name="{{m}}" />
+    {%- endfor %}
+    {%- for l in stdlib_modules %}
+    <StdlibModule name="{{l}}" />
+    {%- endfor %}
+    {%- for p in compiled_packages recursive %}
+    {%- if loop.depth == 1 %}
+    <Package name="{{p['name']}}">
+    {%- else %}
+        <PackageContent included="1" isdirectory="1" name="{{p['name']}}">
+    {%- endif %}
+        {%- set package_loop = loop %}
+        {%- for m in p['modules'] %}
+        <PackageContent included="1" isdirectory="0" name="{{m}}"/>
+        {%- endfor %}
+        {{ package_loop(p['packages']) }}
+    {%- if loop.depth == 1 %}
+    </Package>
+    {%- else %}
+        </PackageContent>
+
+    {%- endif %}
+    {%- endfor %}<Others builddir="{{build_dir}}" qmake="" />
+</Project>
