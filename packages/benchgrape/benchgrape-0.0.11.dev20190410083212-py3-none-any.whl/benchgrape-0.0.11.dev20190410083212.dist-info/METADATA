@@ -1,0 +1,115 @@
+Metadata-Version: 2.1
+Name: benchgrape
+Version: 0.0.11.dev20190410083212
+Summary: This is how you'd Bench a Grape!
+Home-page: https://gitlab.chatgrape.com/salzamt/benchgrape
+Author: Riccardo Salzer
+Author-email: beschwerden@salzamt.xyz
+License: MIT
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
+Requires-Dist: cement (==3.0.2)
+Requires-Dist: locustio
+Requires-Dist: websocket-client
+Requires-Dist: jinja2
+Requires-Dist: pyyaml
+Requires-Dist: colorlog
+
+# This is how you'd Bench a Grape!
+
+## Installation
+
+```
+$ pip install -r requirements.txt
+
+$ python setup.py install
+
+```
+
+## package installation on a linux machine (in virtualenv) for running the benchmark
+```
+mkdir benchgrape
+cd benchgrape
+virtualenv -p python3 benchgrape
+source benchgrape/bin/activate
+cd benchgrape
+pip install --upgrade virtualenv
+pip install benchgrape
+benchgrape --help
+```
+
+## Development
+
+This project includes a number of helpers in the `Makefile` to streamline common development tasks.
+
+Revert an installed package to continue development
+```
+$ python setup.py develop
+```
+
+### Environment Setup
+
+The following demonstrates setting up and working with a development environment:
+
+```
+### create a virtualenv for development
+
+$ make virtualenv
+
+$ source env/bin/activate
+
+
+### run benchgrape cli application
+
+$ benchgrape --help
+
+
+### run pytest / coverage
+
+$ make test
+```
+
+
+### Releasing to PyPi
+
+Before releasing to PyPi, you must configure your login credentials:
+
+**~/.pypirc**:
+
+```
+[pypi]
+username = YOUR_USERNAME
+password = YOUR_PASSWORD
+```
+
+Then use the included helper function via the `Makefile`:
+
+```
+$ make dist
+
+$ make dist-upload
+```
+
+## Deployments
+
+### Docker
+
+Included is a basic `Dockerfile` for building and distributing `Bench Grape`,
+and can be built with the included `make` helper:
+
+```
+$ make docker
+
+$ docker run -it benchgrape --help
+```
+
+## Examples
+### Test Websocket Stability
+connect 10 websockets to staging.chatgrape.com and record 1 hour activity
+`benchgrape websocket test -n 10 -t 3600 --url https://staging.chatgrape.com --username chat@grape.com --password 'quote-if-special-chars'`
+
+### Load Test data for Benchmark
+Test data can be exported on the grape server.
+`benchgrape test-data load localhost.json`
+
+
