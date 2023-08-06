@@ -1,0 +1,163 @@
+common:
+  output_dir: &output_dir
+    /tmp/satnfs/polar_out/pps2018/direct_readout/
+  publish_topic: /NWC-CF/L3
+  subscribe_topics:
+    - /foo/bar
+    - /bar/foo
+  use_extern_calib: false
+  # Scene creation settings
+  reader: nwcsaf-pps_nc
+  fname_pattern: &fname
+    "{platform_name}_{start_time:%Y%m%d_%H%M}_{areaname}_{productname}.{format}"
+  formats: &formats
+    - format: tif
+      writer: geotiff
+    - format: nc
+      writer: cf
+  #resolution: 1000
+  #metadata_aliases:
+  #  platform_name:
+  #    j01: NOAA-20
+  #    noaa15: NOAA-15
+  #    noaa18: NOAA-18
+  #    noaa19: NOAA-19
+  #  sensor:
+  #    avhrr/3: avhrr-3
+  #sunzen_check_lon: 25.0
+  #sunzen_check_lat: 60.0
+  # Set delay_composites to `False` to create composites before resampling.
+  #   Default is to create them after resampling (`True`), which is much
+  #   faster in most cases
+  # delay_composites: False
+  # Send emails about crashes using sendmail
+  # Check area coverage by `collection_area_id` in the input metadata.
+  #   Default: False
+  # coverage_by_collection_area: True
+
+product_list: &product_list
+  omerc_bb:
+    # Resampler settings can be global (in common section above) or per area
+    #radius_of_influence: 5000
+    #resampler: bilinear
+    #reduce_data: False
+    areaname: omerc_bb
+    # Set high priority (small value) for this area
+    # priority: 1
+    # Use "null" for default priority, or don't define priority at all
+    # priority: null
+    products:
+      ct:
+        productname: ct
+        output_dir: *output_dir
+        formats:
+          - format: nc
+            writer: cf
+        # Remove product if SZA is more than this
+        #sunzen_maximum_angle: 90.0
+        # Remove product if sunligth coverage is less that this
+        #min_sunlight_coverage: 10.0
+      ctth_alti:
+        productname: ctth_alti
+        output_dir: *output_dir
+        formats:
+          - format: nc
+            writer: cf
+        # Remove product if SZA is less than this
+        #sunzen_minimum_angle: 90.0
+      cloudtype:
+        productname: cloudtype
+        output_dir: *output_dir
+        formats:
+          - format: tif
+            writer: geotiff
+      cloud_top_height:
+        productname: cloud_top_height
+        output_dir: *output_dir
+        formats:
+          - format: tif
+            writer: geotiff
+            # Add small scale embedded images to the file
+            # To use add `add_overviews` to workers after `save_datasets`
+            # overviews: [4, 8, 16, 32, 64, 128, 256]
+  # null:  # satellite projection
+  #   areaname: satellite_projection
+  #   products:
+  #     cloudtype:
+  #       productname: cloudtype
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+  #         - format: jpg
+  #           writer: simple_image
+  #           fill_value: 0
+  #     cloudmask:
+  #       productname: cloudmask
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+  #         - format: jpg
+  #           writer: simple_image
+  #           fill_value: 0
+  #     cloud_top_height:
+  #       productname: cloud_top_height
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+  #         - format: jpg
+  #           writer: simple_image
+  #           fill_value: 0
+  #       fname_pattern: "{platform_name:s}_{time:%Y%m%d_%H%M}_{areaname:s}_ctth.{format}"
+  #     cloud_top_phase:
+  #       productname: cloud_top_phase
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+  #         - format: jpg
+  #           writer: simple_image
+  #           fill_value: 0
+  #       fname_pattern: "{platform_name:s}_{time:%Y%m%d_%H%M}_{areaname:s}_cpp-cph.{format}"
+  #     cloud_drop_effective_radius:
+  #       productname: cloud_drop_effective_radius
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+  #         - format: jpg
+  #           writer: simple_image
+  #           fill_value: 0
+  #       fname_pattern: "{platform_name:s}_{time:%Y%m%d_%H%M}_{areaname:s}_cpp-reff.{format}"
+  #
+  # germ:
+  #   areaname: germ
+  #   products:
+  #     cloudtype:
+  #       productname: cloudtype
+  #       output_dir: /satdmz/pps/www/latest_2018/
+  #       formats:
+  #         - format: png
+  #           writer: simple_image
+
+
+workers:
+  - fun: !!python/name:trollflow2.create_scene
+  - fun: !!python/name:trollflow2.load_composites
+  - fun: !!python/name:trollflow2.resample
+  - fun: !!python/name:trollflow2.save_datasets
+  - fun: !!python/object:trollflow2.FilePublisher {}
+
+# Things to run in case of a crash
+#crash_handlers:
+#  config:
+#    sendmail:
+#      from: "user@server"
+#        to: "user@institute"
+#        subject: "Crash report"
+#        header: "Header text before the error message"
+#        sendmail: "/usr/sbin/sendmail"
+#  handlers:
+#    - fun: !!python/name:trollflow2.launcher.sendmail
