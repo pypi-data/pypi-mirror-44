@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: zonar-ds-env-arg-parser
+Version: 1.0.0
+Summary: An argument helper used to validate environment variables
+Home-page: https://github.com/evcallia/zonar_ds_env_arg_parser.git
+Author: Zonar Systems - Data Services Pod
+Author-email: DSPod@zonarsystems.com
+License: UNKNOWN
+Description: zonar_ds_env_arg_parser
+        ======
+        
+        Overview
+        ------
+        This is a simple helper that is meant to enforce and validate that environment variables are set correctly
+        
+        Usage
+        ------
+        ```python3
+        from zonar_ds_env_arg_parser.env_arg_parser import env_arg_parser as parser
+        
+        parser.add_argument(env_var="SOME_EVN_VAR",
+                            required=True,
+                            type=int,
+                            help="Message to display about the variable")
+                            
+        parser.add_argument(env_var="SOMETHING_ELSE",
+                            required=False,
+                            default="TEST",
+                            validation=lambda x: x.lower() == "test" or
+                                                 x.lower() == "something" or
+                                                 x.lower() == "something_else",
+                            help="Some message about this variable")
+        
+        parser.initialize()
+        options = parser.get_options()
+        
+        # This var doesn't have a default so 'SOME_EVN_VAR' needs to be set or it'll throw an exception
+        print("This is the type of SOME_EVN_VAR " + type(options.SOME_EVN_VAR))  # Should be int becasue we specified type
+        print("This is the value of SOMETHING_ELSE " + options.ENVIRONMENT)  # Should be 'TEST' since that's the default
+        ```
+        
+        Arguments
+        ------
+        Parameters that can be passed into env_arg_parser.add_argument are as follows:
+        
+        env_var: The environment variable to look for. This will also be the name of the attribute when retrieving it.
+        
+        required: can be true or false, if required=False a default must be provided.
+        
+        default: The default value. Must be set if required=False, cannot be set if required=True.
+        
+        help: This message is displayed if an argument doesnt exist or fails validation.
+                It should explain to the user what the argument is for to assist them in defining it.
+        
+        validation: Optional, a function should be provided that takes a single value and should return True, False or raise
+                        an Exception. False or an exception will prevent the program from launching.
+        
+        type: Optional, if the value needs to be something other than a string, specify what it should be converted to.
+        
+Keywords: zonar_ds_env_arg_parser
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
