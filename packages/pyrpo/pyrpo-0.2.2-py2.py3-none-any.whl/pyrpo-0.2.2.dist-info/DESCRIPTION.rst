@@ -1,0 +1,164 @@
+===============================
+pyrpo
+===============================
+
+
+`GitHub`_ |
+`PyPI`_ |
+`Documentation`_ |
+`Travis-CI`_
+
+
+.. image:: http://img.shields.io/pypi/v/pyrpo.svg
+        :target: https://pypi.python.org/pypi/pyrpo
+
+.. image:: http://img.shields.io/pypi/dm/pyrpo.svg
+        :target: https://warehouse.python.org/project/pyrpo/
+
+.. image:: http://img.shields.io/github/release/westurner/pyrpo.svg
+        :target: https://github.com/westurner/pyrpo/releases
+
+.. .. image:: https://travis-ci.org/westurner/pyrpo.png?branch=master
+..       :target: https://travis-ci.org/westurner/pyrpo
+
+.. image:: http://img.shields.io/travis/westurner/pyrpo/master.svg
+        :target: https://travis-ci.org/westurner/pyrpo
+
+
+.. _GitHub: https://github.com/westurner/pyrpo
+.. _PyPI: https://pypi.org/project/pyrpo
+.. _Warehouse: https://warehouse.python.org/project/pyrpo
+.. _Documentation:  https://pyrpo.readthedocs.org/en/latest
+.. _Travis-CI:  https://travis-ci.org/westurner/pyrpo
+
+pyrpo: a shell command wrapper for hg, git, bzr, svn
+
+
+Features
+==========
+
+* Wrap and parse shell commands (largely as a reference)
+* Walk for repository directories
+* Generate reports for one or more repositories
+* Call ``hg status``, ``git status``, etc. 
+* Generate mercurial ``.hgsubs``
+* Generate git ``.gitsubmodule``
+* Generate pip ``requirements.txt``
+* Generate shell script (to rebuild environment)
+
+  * TODO: replicate branches/tags/revisions
+
+* Functional `namedtuples`_, `iterators`_ ``yield`` -ing `generators`_
+* `optparse`_ argument parsing (``-h``, ``--help``)
+* `cookiecutter-pypackage`_ project templating  
+
+
+.. _namedtuples: https://docs.python.org/2/library/collections.html#collections.namedtuple 
+.. _iterators: https://docs.python.org/2/howto/functional.html#iterators
+.. _generators: https://docs.python.org/2/howto/functional.html#generators    
+.. _optparse: https://docs.python.org/2/library/optparse.html 
+.. _cookiecutter-pypackage: https://github.com/audreyr/cookiecutter-pypackage 
+
+
+
+Installing
+============
+Install from `PyPi`_::
+
+    pip install pyrpo
+
+Install from `GitHub`_ as editable (add a ``pyrpo.pth`` in ``site-packages``)::
+
+    pip install -e git+https://github.com/westurner/pyrpo#egg=pyrpo
+
+
+Usage
+=========
+
+Print help::
+
+    pyrpo --help
+
+Scan for files::
+
+    # Scan and print a shell report
+    pyrpo -s . -r sh
+    pyrpo
+
+Generate a TortoiseHG ``thg-reporegistry.xml`` file::
+
+    pyrpo -s . --thg
+
+Generate a pip report::
+
+    pyrpo -r pip
+
+Generate a status report::
+
+    pyrpo -r status
+
+Generate an `.hgsubs` file::
+
+    pyrpo -r hgsub
+
+Generate a ``.gitmodules`` file::
+
+    pyrpo -r gitmodule
+
+Generate an origin report::
+
+    pyrpo -r origin
+
+Generate a string report::
+
+    pyrpo -r str
+
+
+
+License
+========
+`BSD Software License
+<https://github.com/westurner/pyrpo/blob/master/LICENSE>`_
+
+
+.
+
+History
+=========
+
+0.2.2 (2019-04-15)
++++++++++++++++++++
+* Python 3.7 Support
+* Minimal tests for each report type
+
+::
+
+    git log --format='* %s [%h]' master..develop
+    # [ ... ]
+
+0.2.1 (2015-05-24)
++++++++++++++++++++
+* BUG: pyrpo.py: sh_full report: ``cat > %r << EOF`` [91d5fb7]
+* BUG,CLN: pyrpo.py: logname='pyrpo' [e029abe]
+* BLD: Makefile: pull, push, BROWSERCMD lookups [59cbc66]
+* BLD: Makefile: twine [d636e15]
+
+0.2.0 (2015-04-25)
++++++++++++++++++++
+* Development: https://github.com/westurner/pyrpo/commits/develop
+* Master: https://github.com/westurner/pyrpo/commits/master
+
+0.1.0 (2014-05-12)
+++++++++++++++++++
+* First release on PyPI.
+* Re-packaged from https://github.com/westurner/dotfiles/blob/2813e4ad/scripts/repos.py
+
+
+=======
+Credits
+=======
+
+* Wes Turner -- https://github.com/westurner
+
+
+
