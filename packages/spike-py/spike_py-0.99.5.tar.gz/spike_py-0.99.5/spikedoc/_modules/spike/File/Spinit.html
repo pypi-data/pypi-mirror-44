@@ -1,0 +1,292 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>spike.File.Spinit &#8212; spike 0.99.5-403 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.99.5-403',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for spike.File.Spinit</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python </span>
+<span class="c1"># encoding: utf-8</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility to Handle NMR Spinit files</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Marc Andre&#39; Delsuc&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;August 2017&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">ET</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..NPKData</span> <span class="k">import</span> <span class="n">NPKData</span>
+
+<span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>   <span class="c1"># change this for verbose importers</span>
+
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="load_header"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.load_header">[docs]</a><span class="k">def</span> <span class="nf">load_header</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;header.xml&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    loads a header.xml as an ET.tree, and keep it in memory</span>
+
+<span class="sd">    returns headertree</span>
+<span class="sd">    xml parameters are found in headertree.getroot()</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+<div class="viewcode-block" id="read_param"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.read_param">[docs]</a><span class="k">def</span> <span class="nf">read_param</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;header.xml&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    loads a header.xml as a dictionnary key:value</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">headertree</span> <span class="o">=</span> <span class="n">load_header</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">xroot</span> <span class="o">=</span> <span class="n">headertree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">xparams</span> <span class="o">=</span> <span class="n">xroot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">xparams</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">xv</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">xv</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+<span class="c1"># debug code</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="s2">&quot; = &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">params</span></div>
+
+<div class="viewcode-block" id="modify_val"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.modify_val">[docs]</a><span class="k">def</span> <span class="nf">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    modify an entry from a headertree loaded with load_header()</span>
+<span class="sd">    key should be present in headertree</span>
+<span class="sd">    key and val are both strings</span>
+
+<span class="sd">    headertree can then written back to disk with</span>
+<span class="sd">        headertree.write(&#39;header.xml&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">headertree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>                  <span class="c1"># match</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="n">bef</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">vals</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;Before:&#39;</span><span class="p">,</span> <span class="n">bef</span><span class="p">,</span> <span class="s1">&#39;After:&#39;</span><span class="p">,</span> <span class="n">vals</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="read_1D"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.read_1D">[docs]</a><span class="k">def</span> <span class="nf">read_1D</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;data.dat&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads in a Spinit 1D fid as a numpy float array</span>
+<span class="sd">    </span>
+<span class="sd">    size is the number of data-points in the fid</span>
+<span class="sd">    uses struct</span>
+<span class="sd">    does not check endianess</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;size is &quot;</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;&gt;</span><span class="si">%d</span><span class="s2">f&quot;</span>
+    <span class="n">si</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="n">rl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">si</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">si</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;****** bits number is  </span><span class="si">{0}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">si</span><span class="p">))</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;&gt;f&quot;</span><span class="p">)</span>
+    <span class="n">ibuf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="c1"># with open(filename,&quot;rb&quot;) as F:</span>
+    <span class="c1">#     buf = F.read(8*si)</span>
+    <span class="c1"># ibuf = struct.unpack(fmt%(2*si), buf)  # unpack the string as pairs of float</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;passing in complex&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rl.size &quot;</span><span class="p">,</span><span class="n">rl</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;im.size &quot;</span><span class="p">,</span><span class="n">im</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ibuf.size &quot;</span><span class="p">,</span><span class="n">ibuf</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">rl</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">ibuf</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">im</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">ibuf</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">npkbuf</span> <span class="o">=</span> <span class="n">rl</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">im</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;complex is OK&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">npkbuf</span></div>
+    
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="read_2D"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.read_2D">[docs]</a><span class="k">def</span> <span class="nf">read_2D</span><span class="p">(</span><span class="n">sizeF1</span><span class="p">,</span> <span class="n">sizeF2</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;data.dat&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">npkbuf</span></div>
+
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="zerotime"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.zerotime">[docs]</a><span class="k">def</span> <span class="nf">zerotime</span><span class="p">(</span><span class="n">acqu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;get digital filter parameters, if any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">zerotimeposition</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;DIGITAL_FILTER_SHIFT&#39;</span><span class="p">]</span> <span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">zerotimeposition</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">zerotimeposition</span><span class="p">)</span></div>
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="offset"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.offset">[docs]</a><span class="k">def</span> <span class="nf">offset</span><span class="p">(</span><span class="n">acqu</span><span class="p">,</span> <span class="n">proc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    computes the offset from spinit to spike</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ppmPointUn</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">proc</span><span class="p">[</span><span class="s1">&#39;$OFFSET&#39;</span><span class="p">])</span>
+        <span class="n">ppmWidth</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;$SW_h&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;$SFO1&#39;</span><span class="p">])</span>
+        <span class="n">calibrationOffset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ppmPointUn</span> <span class="o">-</span> <span class="n">ppmWidth</span><span class="p">)</span><span class="o">*</span>  <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;$SFO1&#39;</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">calibrationOffset</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">calibrationOffset</span><span class="p">)</span></div>
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="Import_1D"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.Import_1D">[docs]</a><span class="k">def</span> <span class="nf">Import_1D</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;data.dat&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports a 1D spinit fid as a NPKData</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s2">&quot; : file not found&quot;</span><span class="p">)</span>
+    <span class="n">dire</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">acqu</span> <span class="o">=</span> <span class="n">read_param</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dire</span><span class="p">,</span><span class="s1">&#39;header.xml&#39;</span><span class="p">))</span>
+    <span class="n">size</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;ACQUISITION_MATRIX_DIMENSION_1D&#39;</span><span class="p">])</span>  <span class="c1"># get size</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;importing 1D FID, size =&quot;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_1D</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After read_1D, size is : &quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">NPKData</span><span class="p">(</span><span class="n">buffer</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+<span class="c1">#    d.revf()</span>
+<span class="c1"># then set parameters</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">specwidth</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;SPECTRAL_WIDTH&#39;</span><span class="p">])</span>           <span class="c1"># in Hz</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;OBSERVED_FREQUENCY&#39;</span><span class="p">])</span><span class="o">/</span><span class="mf">1E6</span>   <span class="c1"># in MHz</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">itype</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c1"># always complex</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">acqu</span><span class="p">[</span><span class="s1">&#39;SR&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">specwidth</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">zerotime</span> <span class="o">=</span> <span class="n">zerotime</span><span class="p">(</span><span class="n">acqu</span><span class="p">)</span>
+    <span class="n">pardic</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;header&quot;</span><span class="p">:</span> <span class="n">acqu</span><span class="p">}</span> <span class="c1"># create ad-hoc parameters</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">pardic</span>   <span class="c1"># add the parameters to the data-set</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+<span class="c1">################################################################</span>
+<div class="viewcode-block" id="Export_1D"><a class="viewcode-back" href="../../../spike.File.html#spike.File.Spinit.Export_1D">[docs]</a><span class="k">def</span> <span class="nf">Export_1D</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;data.dat&quot;</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="s2">&quot;header.xml&quot;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    export a 1D NPKData as a spinit</span>
+<span class="sd">    kind: 1DFID, 1DSPEC</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">dim</span> <span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;not implemented yet for Dim&gt;1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">itype</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>     <span class="c1"># complex</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get_buffer</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>                   <span class="c1"># real</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get_buffer</span><span class="p">()</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>   <span class="c1"># add a zero imaginary part</span>
+
+    <span class="n">dirname</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="c1"># array.astype(&quot;&gt;f&quot;).tofile(filename)</span>
+    <span class="n">array</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;&gt;f&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+<span class="c1"># then set parameters</span>
+    <span class="n">headertree</span> <span class="o">=</span> <span class="n">load_header</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;MODALITY&#39;</span><span class="p">,</span> <span class="s2">&quot;NMR&quot;</span> <span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;ACCU_DIM&#39;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span> <span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;ACQUISITION_MATRIX_DIMENSION_1D&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">cpxsize</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;SPECTRAL_WIDTH&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">specwidth</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;OBSERVED_FREQUENCY&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">frequency</span><span class="o">*</span><span class="mf">1E6</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;SR&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">offset</span><span class="o">+</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">specwidth</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;    **SR is wrong ! to-be-changed**&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">STATE</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">state</span><span class="p">),</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">STATE</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">][</span><span class="s1">&#39;STATE&#39;</span><span class="p">]</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;STATE&#39;</span><span class="p">,</span>  <span class="n">STATE</span><span class="p">)</span>
+    <span class="n">modify_val</span><span class="p">(</span><span class="n">headertree</span><span class="p">,</span> <span class="s1">&#39;DIGITAL_FILTER_SHIFT&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">axis1</span><span class="o">.</span><span class="n">zerotime</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">headerfile</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">dirname</span><span class="p">,</span> <span class="s2">&quot;header.xml&quot;</span><span class="p">)</span>
+    <span class="n">headertree</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">headerfile</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../File.html">spike.File</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2010-2019, IGBMC and others.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
