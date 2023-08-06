@@ -1,0 +1,94 @@
+Revolt SDK
+==========
+
+Revolt analytics sdk for Python 3.6+
+
+Install
+-------
+
+Revolt is registered in pypi so just use pip.
+
+.. code-block:: bash
+
+    pip install revolt-sdk
+
+
+Usage
+-----
+
+To create Revolt client you have to provide:
+
+- tracking_id - Your unique client tracking ID
+
+- secret_key - Client authorization secret for your tracking ID
+
+- app_code - Your application name/identifier i.e. 'com.company.myapp'
+
+- app_version - Your application version i.e. '1.12.4'
+
+
+If you don't have tracking_id or secret_key, please contact `Revolt Team <https://www.miquido.com/contact>`_ for assistance.
+
+
+.. code-block:: python
+
+    import revoltsdk
+
+    client = revoltsdk.Revolt(
+
+        tracking_id='your_tracking_id',
+
+        secret_key='your_secret_key',
+
+        app_code='com.company.myapp',
+
+        app_version='2.1.11',
+
+    )
+
+
+You may also pass any of additional options:
+
+- app_instance_id - Unique application instance ID. It will be randomly generated each time if None provided. It should be reused for same device/application instance.
+
+- timezone - Timezone used to send events. Default is current timezone provided by system.
+
+- revolt_host - Host name of Revolt server
+
+- batch_size - Maximum size of event batches sent to server. Events will be sent automatically when queue reaches batch*size. Default is 20.
+
+- auto_flush_delay - Delay in miliseconds before automatically sending events batch if batch_size was not reached. Calling ``send_event`` will reset the timer. Auto flush will be disabled if you pass None instead. If auto flush is disabled events will be flushed only if queue reaches batch_size or manually. Default is 5 seconds (5000).
+
+
+Revolt client has one public method called `send*event` used to send analytics events. Events will be queued and sent when flush occours. It might happen if queue size reaches batch_size, if you use auto flush and there was no new event for at least auto_flush_delay time or when explicitly call ``send_event`` with flush parameter set to True. 
+
+.. code-block:: python
+
+    client.send_event(type='some.info', data={'info': 'works in python'})
+
+    client.send_event('some.empty')
+
+    client.send_event(type='some.flushed', flush=True)
+
+
+Event type name has to have no more than 32 characters. It should use dots for separating domain, object, event (example: ui.activity.started), last element of name should be a verb expressing what happened e.g. signedIn, started, deleted etc. Type of event determines format of event data.
+
+Data associated with event might be any json serializable object (including arrays and nested objects) or None.
+
+
+Debug
+-----
+
+If you wish to debug or examine what and when data is sent to Revolt you can enable debug logs. SDK uses default python logging system. It is required to run application in debug mode (without python optimization) to have access to logs. Logs are omitted in optimized run.
+
+
+License
+-------
+
+Copyright 2019 Miquido
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
