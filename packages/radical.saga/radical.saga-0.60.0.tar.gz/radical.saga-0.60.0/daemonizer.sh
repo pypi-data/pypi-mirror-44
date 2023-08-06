@@ -1,0 +1,8 @@
+
+( 
+ ( 
+  sh daemonized.sh 
+ ) &
+)
+
+
