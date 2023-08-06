@@ -1,0 +1,214 @@
+Macro to join a list of terms with Oxford commas, as in "one, two, and three."
+
+{% macro oxford_commas(seq, conjunction='and') %}
+{% for item in seq %}
+{% if caller %}{{caller(item)}}{% else %}{{item}}{% endif -%}
+{% if loop.length > 2 and not loop.last %},{% endif %}
+{% if loop.length > 1 and not loop.last %} {% endif %}
+{% if loop.length > 1 and loop.revindex == 2 %}{{conjunction}} {% endif %}
+{% endfor %}
+{%- endmacro %}
+
+
+Macro to translate a probability between 0 and 100. These thresholds are
+roughly derived by assuming that we have a binary classification problem,
+calculating the odds ratio as K=P/(1-P), and using thresholds based on the
+table of Kass and Raftery (1995, https://doi.org/10.2307%2F2291091).
+
+{% macro evidence_for(value) %}
+{% if 95 <= value %}
+strong evidence for
+{%- elif 75 <= value < 95 %}
+evidence for
+{%- elif 25 <= value < 75 %}
+indeterminate evidence for
+{%- elif 5 <= value < 25 %}
+evidence against
+{%- else %}
+strong evidence against
+{%- endif %}
+{%- endmacro %}
+
+
+Macro to render a percentage between 0 and 100, capping at <1% and >99%.
+
+{% macro probability(value) %}
+{% if value > 99 %}
+>99
+{%- elif value < 1 %}
+<1
+{%- else %}
+{{value|round|int}}
+{%- endif %}
+%
+{%- endmacro %}
+
+
+Macro to transform a list like ['H1', 'L1', 'V1'] to natural-language list like
+"H1 (LIGO Hanford Observatory), L1 (LIGO Livingston Observatory), and V1 (Virgo
+Observatory)".
+
+{% macro naturalinstruments(instruments) %}
+{% set long_instruments = {'H1': 'LIGO Hanford Observatory',
+                           'L1': 'LIGO Livingston Observatory',
+                           'V1': 'Virgo Observatory'} %}
+{% call(instrument) oxford_commas(instruments) %}
+{% if instrument in long_instruments %}
+{{long_instruments[instrument]}} ({{instrument}})
+{%- else %}
+{{instrument}}
+{%- endif %}
+{%- endcall %}
+{%- endmacro %}
+
+
+{% set skymapcitationnumber = namespace(count=0) %}
+
+Macro to cite skymaps. Since citations are enumerated, the citation number must start with
+number of all GW analysis pipelines + 1.
+
+{% macro citeskymap(skymappipeline, all_pipelines, skymaps) %}
+{% set skymapcitationnumber.count = 0 %}
+{% for skymap in skymaps %}
+{% if skymap.pipeline|lower in skymapcitations %}{% set skymapcitationnumber.count = skymapcitationnumber.count + 1 %}{% endif %}
+{% if skymap.pipeline == skymappipeline %}{% break %}{% endif %}
+{% endfor %}
+{{skymappipeline}}{% if skymappipeline|lower in skymapcitations %} [{{ all_pipelines|length + skymapcitationnumber.count }}]
+{%- endif -%}
+{%- endmacro %}
+
+
+Macro to transform a list of other GW analysis pipelines like ['gstlal', 'mbtaonline', 'pycbc']
+to a natural-language list like "gstlal [2], mbtaonline [3], and pycbc [4]".
+
+{% macro naturalotherpipelines(preferred_pipeline, other_pipelines, conjunction='and') %}
+{% for pipeline in [preferred_pipeline] + other_pipelines %}
+{% if 'pycbc' == pipeline|lower %}PyCBC Live{% elif 'gstlal' == pipeline|lower %}GstLAL{% else %}{{pipeline}}{% endif %} [{{loop.index}}]
+{%- if loop.length > 2 and not loop.last %},{% endif %}
+{%- if loop.length > 1 and not loop.last %} {% endif %}
+{%- if loop.length > 1 and loop.revindex == 2 %}{{conjunction}} {% endif %}
+{% endfor %}
+{%- endmacro %}
+
+
+Macro to enumerate and cite all GW analysis pipelines involved for the superevent; including the
+skymap pipelines.
+
+{%- macro citenumberedpipelines(all_pipelines, skymaps) -%}
+{% for pipeline in all_pipelines %}
+{% if pipeline == 'Burst'%}
+ [{{loop.index}}] {{citations['xpipeline']}}
+{% elif pipeline == 'CBC'%}
+ [{{loop.index}}] {{citations['pygrb']}}
+{% else %}
+ [{{loop.index}}] {{citations[pipeline|lower]}}
+{% endif %}
+{% endfor %}
+{% set skymapcitationnumber.count = 0 %}
+{% for skymap in skymaps %}
+{% if skymap.pipeline|lower in skymapcitations %} {% set skymapcitationnumber.count = skymapcitationnumber.count + 1 %}
+[{{ all_pipelines|length + skymapcitationnumber.count }}] {{skymapcitations[skymap.pipeline|lower]}}
+{% endif %}
+{% endfor %}
+{%- endmacro -%}
+
+
+Macro to transform a list of GRB-GW exclusions/detections like ['CBC', 'Burst'] to a natural-language
+list like "triggered CBC pipeline (PyGRB) [1] and triggered Burst pipeline (X-Pipeline) [2]".
+
+{%- macro naturalgrbmediumlatencypipelines(somelist) -%}
+{% for item in somelist %}
+{% if item == 'Burst' %}X-Pipeline GRB-unmodeled transient analysis{% else %}PyGRB binary merger analysis{% endif %} [{{loop.index}}]
+{%- if loop.length > 1 and not loop.last %} {% endif %}
+{%- if loop.length > 1 and loop.revindex == 2 %}and {% endif %}
+{% endfor %}
+{%- endmacro %}
+
+
+Macro to round FAPs to single decimal place
+
+{% macro naturalfap(fap) %}
+{{'%.1e'|format(fap)}}
+{%- endmacro %}
+
+
+Macro to format FARs using natural-language time, capped at 1/100 years.
+
+{% macro naturalfar(far) %}
+{% set max_ifar = 365 * 86400 * 100 %}
+{% if far * max_ifar < 1 %}
+less than one in {{max_ifar|naturaldelta}}
+{%- else %}
+{{'%.3g'|format(far)}} Hz, or about one in {{(1 / far)|naturaldelta}}
+{%- endif %}
+{%- endmacro %}
+
+
+Macro to format a dictionary of source classifications as a natural-language
+list, sorted by descending probability.
+
+{% macro naturalclassifications(classifications) %}
+{% set items = classifications|dictsort(by='value', reverse=True) %}
+{% call(item) oxford_commas(items, 'or') %}
+{% if item[0] == 'Terr' %}
+terrestrial
+{%- else %}
+{{item[0]}}
+{%- endif %} ({{probability(item[1])}})
+{%- endcall %}
+{%- endmacro %}
+
+
+Macro to replace jargon terms CBC and Burst.
+
+{%- macro renamegroup(group) -%}
+{%- if group|lower == 'cbc' -%}
+compact binary merger
+{%- elif group|lower == 'burst' -%}
+unmodeled transient
+{%- else -%}
+{{group}}
+{%- endif -%}
+{%- endmacro -%}
+
+
+Macro to include which mission reported the GRB.
+
+{%- macro grbmission(external_pipeline) -%}
+{%- if external_pipeline|lower == 'fermi' -%}
+Fermi GBM
+{%- elif external_pipeline|lower == 'swift' -%}
+Swift BAT
+{%- else -%}
+{{external_pipeline}}
+{%- endif -%}
+{%- endmacro -%}
+
+
+Macro to include the word `trigger' or not when referring to external_trigger.
+
+{%- macro propername(external_trigger) -%}
+{%- if 'grb' in external_trigger|lower -%}
+{{external_trigger}}
+{%- else -%}
+trigger with ID {{external_trigger}}
+{%- endif -%}
+{%- endmacro -%}
+
+
+Dictionary of common citations.
+
+{% set citations = {'pycbc': 'Nitz et al. PRD 98, 024050 (2018)',
+                    'mbtaonline': 'Adams et al. CQG 33, 175012 (2016)',
+                    'gstlal': 'Messick et al. PRD 95, 042001 (2017)',
+                    'spiir': 'Hooper et al. PRD 86, 024012 (2012)',
+                    'cwb': 'Klimenko et al. PRD 93, 042004 (2016)',
+                    'olib': 'Lynch et al. PRD 95, 104046 (2017)',
+                    'pygrb': 'Williamson et al. PRD 90, 122004 (2014)',
+                    'xpipeline': 'Was et al. PRD 86, 022003 (2012)'} %}
+
+
+Dictionary of skymap citations.
+
+{% set skymapcitations = {'bayestar': 'Singer & Price PRD 93, 024013 (2016)',
+                          'lalinference': 'Veitch et al. PRD 91, 042003 (2015)'} %}
