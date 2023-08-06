@@ -1,0 +1,128 @@
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.envvar
+tag: '!envvar'
+
+--- !tag:devconfig:extend/with/object
+handler: !!python/name:logging.config.dictConfig
+tag: '!tag:devconfig:extend/with/logconfig'
+name: LogConfigYAMLObject
+attributes:
+  - config
+
+--- !tag:devconfig:extend/with/logconfig
+config:
+  version: 1
+  formatters:
+    json:
+      format: '%(levelname)s%(filename)s%(funcName)s%(created)s%(message)slineno%(lineno)d%(module)s%(name)s%(pathname)s%(process)d%(thread)d'
+      (): 'pythonjsonlogger.jsonlogger.JsonFormatter'
+      json_indent: !envvar:DEVCONFIG_JSON_LOGGING_INDENT
+        default: null
+        constructor: !!python/name:devconfig.helper.int_or_none
+  handlers:
+    default:
+      level: NOTSET
+      formatter: json
+      class: logging.StreamHandler
+  loggers:
+    devconfig:
+      level: !envvar:DEVCONFIG_LOGLEVEL
+        default: INFO
+      handlers:
+        - default
+      propagate: false
+
+--- !tag:devconfig:extend/with/object
+handler: !!python/name:devconfig.construct.yaml_file_finder
+tag: '!tag:devconfig:extend/with/import-file-finder'
+name: YamlModuleFileLoaderYAMLObject
+attributes:
+  - cls
+  - extensions
+
+--- !tag:devconfig:extend/with/import-file-finder
+cls: !!python/name:devconfig.module.YAMLFileLoader
+extensions:
+  - .yaml
+  - .yml
+  - .json
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.module_extend
+tag: '!tag:devconfig:module/extends:'
+
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.implicit_resolver
+tag: '!tag:devconfig:extend/resolver/implicit:'
+attributes:
+  - name
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.set_path_resolver
+tag: '!tag:devconfig:extend/resolver/path:'
+attributes:
+  - name
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.get_path_resolver
+tag: '!resolver:'
+attributes:
+  - name
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.strjoin
+tag: '!strjoin'
+
+--- !tag:devconfig:extend/with/constructor/single
+handler: !!python/name:devconfig.construct.file_contents
+tag: '!file-contents'
+
+--- !tag:devconfig:extend/with/constructor/single
+handler: !!python/name:devconfig.construct.asset
+tag: '!asset'
+
+--- !tag:devconfig:extend/with/constructor/single
+handler: !!python/name:devconfig.construct.partial
+tag: '!partial'
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.path
+tag: '!path'
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.dir
+tag: '!dir'
+
+--- !tag:devconfig:extend/with/constructor/single
+handler: !!python/name:devconfig.construct.merged
+tag: '!merged'
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.getattribute
+tag: '!getattribute'
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.fstring_callable
+tag: '!f:'
+attributes:
+  - namespace
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.fstring_rendered
+tag: '!$:'
+attributes:
+  - namespace
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.class_
+tag: '!class:'
+attributes:
+  - name
+  - base
+
+--- !tag:devconfig:extend/with/constructor/multi
+handler: !!python/name:devconfig.construct.attributed_object
+tag: '!attributed:'
+attributes:
+  - classname

@@ -1,0 +1,38 @@
+stages:
+  - test
+  - upload
+before_script:
+  - apk add --update alpine-sdk gcc musl-dev libffi-dev openssl-dev
+
+dev:tests-3.7:
+  image: library/python:3.7-alpine3.7
+  stage: test
+  script:
+    - apk add python3-dev
+    - python3 -m pip install tox
+    - tox -e py37
+  except:
+    - master
+    - tags
+  artifacts:
+    paths:
+    - report
+
+dev:upload:
+  image: library/python:3.7-alpine3.7
+  stage: upload
+  only:
+    - tags
+  script:
+    - make release
+
+pages:
+  image: library/python:3.7-alpine3.7
+  stage: upload
+  only:
+    - master
+  script:
+    - make public
+  artifacts:
+    paths:
+    - public
