@@ -1,0 +1,41 @@
+#!/bin/bash
+#SBATCH --time=__time;time;Wallclock Time __
+#SBATCH -n __nb_tasks;select;# procs;1,2,4,8,16,32,64,128,512,1024__
+#SBATCH -J jupyterhub-singleuser
+#SBATCH -o /home/kortass/JUPYTER/jobs/sk.%j.out
+#SBATCH -e /home/kortass/JUPYTER/jobs/sk.%j.err
+#
+echo ##################### env #############################
+env
+echo #######################################################
+
+export PATH=/home/kortass/APPS/miniconda3/bin:$PATH
+export MANPATH=/home/kortass/APPS/miniconda3/share/man:$MANPATH
+export LD_LIBRARY_PATH=/home/kortass/APPS/miniconda3/lib:$LD_LIBRARY_PATH
+export INCLUDE=/home/kortass/APPS/miniconda3/include:$INCLUDE
+
+
+
+export CONDA_DEFAULT_ENV=/home/kortass/APPS/miniconda3
+export CONDA_PREFIX=/home/kortass/APPS/miniconda3
+
+export DATASET_DIR=/home/kortass/DATASET_DIR
+export PYTHONPATH=/home/kortass/JUPYTER/ksl_lib/jupyterhub:$PYTHONPATH
+export PYTHONPATH=/home/kortass/JUPYTER/ksl_lib/batchspawner:$PYTHONPATH
+export PYTHONPATH=/home/kortass/JUPYTER/ksl_lib/jhub_ssh_user_authenticator:$PYTHONPATH
+
+
+export JUPYTERHUB_BASE_URL=/
+export JUPYTERHUB_CLIENT_ID=jupyterhub-user-sk
+export JUPYTERHUB_API_TOKEN=76c61970f4294e2482c01597befe339d
+export JUPYTERHUB_API_URL=http://10.68.58.171:9081/hub/api
+export JUPYTERHUB_USER=sk
+export JUPYTERHUB_OAUTH_CALLBACK_URL=/user/sk/oauth_callback
+export JUPYTERHUB_HOST=
+export JUPYTERHUB_SERVICE_PREFIX=/user/sk/
+export CONFIGPROXY_AUTH_TOKEN=sha512:16384:a77a904d2421bac6:babb559cb7c37f9ded7964d570338e6731491b5636b0d126eaceb5e15ff8226be7f7429e53e3f3d4967cc46b5281759d041ba93ddc31c62da380f6883acf3f4e
+
+echo RUNNING on __nb_tasks__
+
+which jupyterhub-singleuser
+jupyter-labhub --ip="0.0.0.0" --port=55689 --notebook-dir="~/NOTEBOOKS" --debug
