@@ -1,0 +1,38 @@
+---
+- job:
+    name: kolla-ansible-base
+    pre-run: tests/pre.yml
+    run: tests/run.yml
+    post-run: tests/post.yml
+    attempts: 1
+    timeout: 7200
+    required-projects:
+      - openstack/kolla
+      - openstack/kolla-ansible
+      - openstack/requirements
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*
+      - ^lower-constraints.txt$
+      - ^releasenotes/.*$
+      - ^test-requirements.txt$
+    vars:
+      scenario: aio
+      enable_core_openstack: yes
+    roles:
+      - zuul: openstack-infra/zuul-jobs
+
+- job:
+    name: kolla-ansible-upgrade-base
+    parent: kolla-ansible-base
+    vars:
+      previous_release: rocky
+      scenario: upgrade
+
+- job:
+    name: kolla-ansible-bifrost-base
+    parent: kolla-ansible-base
+    vars:
+      scenario: bifrost
+      install_type: source
+      enable_core_openstack: no

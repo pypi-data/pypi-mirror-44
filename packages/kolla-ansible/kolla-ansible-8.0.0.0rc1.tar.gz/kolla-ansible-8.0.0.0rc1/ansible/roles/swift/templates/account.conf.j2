@@ -1,0 +1,34 @@
+{% set interface = swift_replication_interface if 'replicat' in service_name else swift_storage_interface %}
+[DEFAULT]
+bind_ip = {{ hostvars[inventory_hostname]['ansible_' + interface]['ipv4']['address'] }}
+bind_port = {{ swift_account_server_port }}
+devices = {{ swift_devices_mount_point }}
+mount_check = false
+log_udp_host = {{ syslog_server }}
+log_udp_port = {{ syslog_udp_port }}
+log_name = {{ service_name }}
+log_facility = {{ syslog_swift_facility }}
+log_level = {{ swift_log_level }}
+workers = {{ openstack_service_workers }}
+
+[pipeline:main]
+pipeline = account-server
+
+[app:account-server]
+use = egg:swift#account
+{% if swift_has_replication_network %}
+replication_server = {{ service_name == 'swift-account-replication-server' }}
+{% endif %}
+
+{% if service_name == 'swift-account-auditor' %}
+[account-auditor]
+{% endif %}
+
+{% if service_name == 'swift-account-replicator' %}
+[account-replicator]
+rsync_module = {replication_ip}:{meta}:account
+{% endif %}
+
+{% if service_name == 'swift-account-reaper' %}
+[account-reaper]
+{% endif %}
