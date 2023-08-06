@@ -1,0 +1,2 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[56],{2328:function(n,e,t){"use strict";t.r(e);var i=t(11),c=t.n(i),r=t(13),a=t.n(r),o=t(0),s=t.n(o),u=t(382),l=t(374),w=t(750);e.default=Object(u.a)(function(n){var e=n.selection,t=a()(n,["selection"]),i=l.a.getActive().filter(function(n){return e.environments.includes(n.name)});return s.a.createElement(w.a,c()({},t,{environments:i}))})}}]);
+//# sourceMappingURL=OrganizationGroupEventDetails.js.map
