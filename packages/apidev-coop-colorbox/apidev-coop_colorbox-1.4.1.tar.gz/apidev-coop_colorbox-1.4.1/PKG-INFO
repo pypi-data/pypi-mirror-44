@@ -1,0 +1,107 @@
+Metadata-Version: 1.1
+Name: apidev-coop_colorbox
+Version: 1.4.1
+Summary: Manage colorbox popup for django
+Home-page: https://github.com/ljean/coop-colorbox/
+Author: Luc Jean
+Author-email: ljean@apidev.fr
+License: BSD
+Download-URL: https://github.com/ljean/coop-colorbox/tarball/master
+Description: coop-colorbox, make easy to use jquery.colorbox in a django app
+        ===============================================
+        
+        
+        Install
+        =======
+        
+        
+             pip install apidev_coop-colorbox
+        
+        
+        Settings
+        =======
+        
+            INSTALLED_APPS = (
+                '...',
+                'colorbox',
+            )
+        
+        
+        Views
+        =======
+        
+        
+             from django.utils.decorators import method_decorator
+             from django.http import HttpResponseRedirect, Http404
+        
+             from colorbox.decorators import popup_redirect
+             class MyView(FormView):
+                 """edit the profile of the current user"""
+                 template_name = "form_popup_template.html"
+        
+                 @method_decorator(popup_redirect)
+                 def dispatch(self, request, *args, **kwargs):
+                     """Manage close of the colorbox popup"""
+                     self.user = request.user
+                     return super(EditProfileView, self).dispatch(request, *args, **kwargs)
+        
+                 def get_form_class(self):
+                     """returns the form class to use"""
+                     return MyForm
+        
+                 def form_valid(self, form):
+                     form.save()
+                     return HttpResponseRedirect(reverse(’next_step'))
+        
+        form_popup_template
+        =======
+        
+             {% extends "colorbox/popup_form_base.html" %}
+             {% load i18n %}
+             {% block title %}{% trans "Edit" %}{% endblock %}
+             {% block form_url %}{% url 'my_view' %}{% endblock %}
+        
+        
+        You can also overrides or extends `{% block form_intro %}` {% block form_fields %}` `{% block popup_buttons %}`
+        or `{% block extra_head %}`
+        
+        main template
+        =======
+        
+             {% load static i18n %}
+             <script type="text/javascript" charset="utf-8" src="{% static 'js/jquery.colorbox-min.js' %}"></script>
+             <script type="text/javascript" charset="utf-8" src="{% static 'js/jquery.form.js' %}"></script>
+             <script type="text/javascript" src="{% static 'js/colorbox.coop.js' %}"></script>
+             <link rel="stylesheet" href="{% static 'css/colorbox.css' %}" type="text/css" />
+             <script>
+               $(function () {
+                 // activate popups
+                 $("a.colorbox-form").colorboxify();
+               });
+             </script>
+             <a class="colorbox-form" href="{% url 'my_view' %}">{% trans "Edit" %}</a>
+        
+        
+        In tests
+        =======
+        
+             from colorbox.utils import assert_popup_redirects
+             assert_popup_redirects(response, reverse('my_view'))
+        
+        License
+        =======
+        
+        coop-colorbox uses the BSD license see license.txt
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Framework :: Django
+Classifier: Natural Language :: English
+Classifier: Natural Language :: French
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
