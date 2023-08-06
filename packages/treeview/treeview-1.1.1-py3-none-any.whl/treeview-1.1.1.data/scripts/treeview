@@ -1,0 +1,104 @@
+#!python
+
+from anytree import Node, RenderTree
+from graphviz import Digraph
+from collections import OrderedDict
+from string import ascii_uppercase, digits
+from random import choice
+from json import loads
+from sys import argv
+from os import remove, path, chdir
+
+def rand(n):
+    return ''.join(choice(ascii_uppercase+digits) for _ in range(n))
+
+def parse_json(json_file):
+    try:
+        json_object=loads(open(json_file).read(),object_pairs_hook=OrderedDict)
+        return json_object
+    except:
+        return False
+
+def build_tree(obj, prnt):
+    root = Node(prnt)
+    for i in obj:
+        t = rand(6)
+        if len(obj[i]) != 0:
+            tr = build_tree(obj[i], i)
+            tr.parent = root
+        else:
+            locals()[rand(4)] = Node(i, parent=root)
+    return root
+
+def show_tree(obj, prnt):
+    st = ""
+    for pre, fill, node in RenderTree(build_tree(obj, prnt)):
+            st += (pre + node.name + "\n")
+    return st
+
+def build_graph(obj, prnt, randv, fnm):
+    dot = Digraph(node_attr={"shape": "box"}, format="svg", filename=fnm)
+    if randv == None:
+        dot.node(prnt, prnt)
+    else:
+        dot.node(prnt + randv, prnt)
+    for i in obj:
+        t = rand(6)
+        dot.node(i + t, i)
+        if randv == None:
+            dot.edge(prnt, i + t)
+        else:
+            dot.edge(prnt + randv, i + t)
+        if len(obj[i]) != 0:
+            dt = build_graph(obj[i], i, t, fnm)
+            dot.subgraph(dt)
+    return dot
+
+def show_graph(obj, prnt, randv):
+    t = rand(10)
+    build_graph(obj, prnt, randv, t).render()
+    remove(t)
+
+def g_print(message):
+    if message != "help":
+        print("error: " + message + "\n")
+    print("usage: treeview [TYPE] [PATH TO JSON] [NAME OF TREE] [OUTPUT FOLDER]\n")
+
+def main():
+    if len(argv) == 2:
+        if argv[1] == "help":
+            g_print("help")
+            exit()
+        else:
+            g_print("Insufficient arguments!")
+            exit()
+    if len(argv) != 5:
+        g_print("Insufficient arguments!")
+        exit()
+    if (argv[1] != "t" and argv[1] != "g"):
+        g_print("Invalid type!")
+        exit()
+    if not path.isdir(argv[4]):
+        g_print("Output folder not accessible!")
+        exit()
+    json_object = parse_json(argv[2])
+    if json_object == False:
+        g_print("Unable to load JSON file!")
+        exit()
+    else:
+        chdir(argv[4])
+        if argv[1] == "t":
+            try:
+                print(show_tree(json_object, argv[3]), file=open(rand(10) + ".txt", "a"))
+            except:
+                g_print("Tree error!")
+                exit()
+        if argv[1] == "g":
+            try:
+                show_graph(json_object, argv[3], None)
+            except:
+                g_print("Graph error!")
+                exit()
+
+if __name__== "__main__":
+    main()
