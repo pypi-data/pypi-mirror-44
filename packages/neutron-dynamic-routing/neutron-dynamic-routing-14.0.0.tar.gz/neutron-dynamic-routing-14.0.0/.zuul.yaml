@@ -1,0 +1,129 @@
+- job:
+    name: neutron-dynamic-routing-dsvm-functional
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-functional/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-functional/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+
+
+- job:
+    name: neutron-dynamic-routing-dsvm-tempest-api
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-tempest-api/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-tempest-api/post.yaml
+    timeout: 7500
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+      - openstack/neutron-tempest-plugin
+      - openstack/tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-dynamic-routing-dsvm-tempest-scenario-basic
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-basic/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-basic/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+      - openstack/neutron-tempest-plugin
+      - openstack/tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-dynamic-routing-dsvm-tempest-scenario-ipv4
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-ipv4/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-ipv4/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+      - openstack/neutron-tempest-plugin
+      - openstack/tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-dynamic-routing-dsvm-tempest-scenario-ipv6
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-ipv6/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-tempest-scenario-ipv6/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+      - openstack/neutron-tempest-plugin
+      - openstack/tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-dynamic-routing-dsvm-tempest-with-os-ken-master-scenario-ipv4
+    parent: legacy-dsvm-base
+    run: playbooks/neutron-dynamic-routing-dsvm-tempest-with-os-ken-master-scenario-ipv4/run.yaml
+    post-run: playbooks/neutron-dynamic-routing-dsvm-tempest-with-os-ken-master-scenario-ipv4/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-dynamic-routing
+      - openstack/neutron-tempest-plugin
+      - openstack/tempest
+
+- project:
+    templates:
+      - check-requirements
+      - openstack-cover-jobs-neutron
+      - openstack-lower-constraints-jobs-neutron
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - openstack-python36-jobs-neutron
+      - openstack-python37-jobs-neutron
+      - publish-openstack-docs-pti
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - neutron-dynamic-routing-dsvm-functional
+        - neutron-dynamic-routing-dsvm-tempest-api
+        - neutron-dynamic-routing-dsvm-tempest-scenario-basic:
+            voting: false
+        - neutron-dynamic-routing-dsvm-tempest-scenario-ipv4:
+            voting: false
+        - neutron-dynamic-routing-dsvm-tempest-scenario-ipv6:
+            voting: false
+    gate:
+      jobs:
+        - neutron-dynamic-routing-dsvm-functional
+        - neutron-dynamic-routing-dsvm-tempest-api
+    experimental:
+      jobs:
+        - neutron-dynamic-routing-dsvm-tempest-with-os-ken-master-scenario-ipv4
+    periodic:
+      jobs:
+        - neutron-dynamic-routing-dsvm-tempest-with-os-ken-master-scenario-ipv4
+        - legacy-periodic-neutron-dynamic-routing-dsvm-tempest-with-ryu-master-scenario-ipv4
