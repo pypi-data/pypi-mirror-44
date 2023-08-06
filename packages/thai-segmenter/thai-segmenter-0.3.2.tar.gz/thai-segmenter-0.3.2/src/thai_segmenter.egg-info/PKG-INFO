@@ -1,0 +1,245 @@
+Metadata-Version: 2.1
+Name: thai-segmenter
+Version: 0.3.2
+Summary: Thai tokenizer, POS-tagger and sentence segmenter.
+Home-page: https://github.com/Querela/thai-segmenter
+Author: Erik Körner
+Author-email: koerner@informatik.uni-leipzig.de
+License: MIT license
+Project-URL: Changelog, https://github.com/Querela/thai-segmenter/blob/master/CHANGELOG.rst
+Project-URL: Issue Tracker, https://github.com/Querela/thai-segmenter/issues
+Description: ========
+        Overview
+        ========
+        
+        
+        
+        This package provides utilities for Thai sentence segmentation, word tokenization and POS tagging.
+        Because of how sentence segmentation is performed, prior tokenization and POS tagging is required and therefore also provided with this package.
+        
+        Besides functions for doing sentence segmentation, tokenization, tokenization with POS tagging for single sentence strings,
+        there are also functions for working with large amounts of data in a streaming fashion.
+        They are also accessible with a commandline script ``thai-segmenter`` that accepts file or standard in/output.
+        Options allow working with meta-headers or tabulator separated data files.
+        
+        The main functionality for sentence segmentation was extracted, reformatted and slightly rewritten from another project, 
+        `Question Generation Thai <https://github.com/myscloud/Question-Generation-Thai>`_.
+        
+        **LongLexTo** is used as state-of-the-art word/lexeme tokenizer. An implementation was packaged in the above project but there are also (*original?*) versions `github <https://github.com/telember/lexto>`_ and `homepage <http://www.sansarn.com/lexto/>`_. To better use it for bulk processing in Python, it has been rewritten from Java to pure Python.
+        
+        For POS tagging a Viterbi-Model with the annotated Orchid-Corpus is used, `paper <https://www.researchgate.net/profile/Virach_Sornlertlamvanich/publication/2630580_Building_a_Thai_part-of-speech_tagged_corpus_ORCHID/links/02e7e514db19a98619000000/Building-a-Thai-part-of-speech-tagged-corpus-ORCHID.pdf>`_.
+        
+        * Free software: MIT license
+        
+        Installation
+        ============
+        
+        ::
+        
+            pip install thai-segmenter
+        
+        Documentation
+        =============
+        
+        
+        To use the project:
+        
+        .. code-block:: python
+        
+            sentence = """foo bar 1234"""
+        
+            # [A] Sentence Segmentation
+            from thai_segmenter.tasks import sentence_segment
+            # or even easier:
+            from thai_segmenter import sentence_segment
+            sentences = sentence_segment(sentence)
+        
+            for sentence in sentences:
+                print(str(sentence))
+        
+            # [B] Lexeme Tokenization
+            from thai_segmenter import tokenize
+            tokens = tokenize(sentence)
+            for token in tokens:
+                print(token, end=" ", flush=True)
+        
+            # [C] POS Tagging
+            from thai_segmenter import tokenize_and_postag
+            sentence_info = tokenize_and_postag(sentence)
+            for token, pos in sentence_info.pos:
+                print("{}|{}".format(token, pos), end=" ", flush=True)
+        
+        
+        See more possibilities in ``tasks.py`` or ``cli.py``.
+        
+        Streaming larger sequences can be achieved like this:
+        
+        .. code-block:: python
+        
+            # Streaming
+            sentences = ["sent1\n", "sent2\n", "sent3\n"]  # or any iterable (like File)
+            from thai_segmenter import line_sentence_segmenter
+            sentences_segmented = line_sentence_segmenter(sentences)
+        
+        
+        This project also provides a nifty commandline tool ``thai-segmenter`` that does most of the work for you:
+        
+        .. code-block:: bash
+        
+            usage: thai-segmenter [-h] {clean,sentseg,tokenize,tokpos} ...
+        
+            Thai Segmentation utilities.
+        
+            optional arguments:
+              -h, --help            show this help message and exit
+        
+            Tasks:
+              {clean,sentseg,tokenize,tokpos}
+                clean               Clean input from non-thai and blank lines.
+                sentseg             Sentence segmentize input lines.
+                tokenize            Tokenize input lines.
+                tokpos              Tokenize and POS-tag input lines.
+        
+        
+        You can run sentence segmentation like this::
+        
+            thai-segmenter sentseg -i input.txt -o output.txt
+        
+        or even pipe data::
+        
+            cat input.txt | thai-segmenter sentseg > output.txt
+        
+        Use ``-h``/``--help`` to get more information about possible control flow options.
+        
+        
+        You can run it somewhat interactively with::
+        
+            thai-segmenter tokpos --stats
+        
+        and standard input and output are used. Lines terminated with ``Enter`` are immediatly processed and printed. Stop work with key combination ``Ctrl`` + ``D`` and the ``--stats`` parameter will helpfully output some statistics.
+        
+        
+        Development
+        ===========
+        
+        To install the package for development::
+        
+            git clone https://github.com/Querela/thai-segmenter.git
+            cd thai-segmenter/
+            pip install -e .[dev]
+        
+        
+        After changing the source, run auto code formatting with::
+        
+            black <file>.py
+        
+        And check it afterwards with::
+        
+            flake8 <file>.py
+        
+        The ``setup.py`` also contains the ``flake8`` subcommand as well as an extended ``clean`` command.
+        
+        
+        Tests
+        -----
+        
+        To run the all tests run::
+        
+            tox
+        
+        You can also optionally run ``pytest`` alone::
+        
+            pytest
+        
+        Or with::
+        
+            python setup.py test
+        
+        
+        Note, to combine the coverage data from all the tox environments run:
+        
+        .. list-table::
+            :widths: 10 90
+            :stub-columns: 1
+        
+            - - Windows
+              - ::
+        
+                    set PYTEST_ADDOPTS=--cov-append
+                    tox
+        
+            - - Other
+              - ::
+        
+                    PYTEST_ADDOPTS=--cov-append tox
+        
+        
+        Changelog
+        =========
+        
+        0.3.2 (2019-04-07)
+        ------------------
+        
+        * Add ``twine`` to extras dependencies.
+        * Publish module on **PyPI**. (Only ``sdist``, ``bdist_wheel`` can't be built currently.)
+        * Fix some TravisCI warnings.
+        
+        
+        0.3.1 (2019-04-07)
+        ------------------
+        
+        * Add tasks to ``__init__.py`` for easier access.
+        
+        
+        0.3.0 (2019-04-06)
+        ------------------
+        
+        * Refactor tasks into ``tasks.py`` to enable better import in case of embedding thai-segmenter into other projects.
+        * Have it almost release ready. :-)
+        * Add some more parameters to functions (optional header detection function)
+        * Flesh out ``README.rst`` with examples and descriptions.
+        * Add Changelog items.
+        
+        
+        0.2.1 / 0.2.2 (2019-04-05)
+        --------------------------
+        
+        * Many changes, ``bumpversion`` needs to run where ``.bumpversion.cfg`` is located else it silently fails ...
+        * Strip Typehints and add support for Python3.5 again.
+        * Add CLI tasks for cleaning, sentseg, tokenize, pos-tagging.
+        * Add various params, e. g. for selecting columns, skipping headers.
+        * Fix many bugs for TravisCI (isort, flake8)
+        * Use iterators / streaming approach for file input/output.
+        
+        
+        0.2.0 (2019-04-05)
+        ------------------
+        
+        * Remove support of Python 2.7 and lower equal to Python 3.5 because of Typehints.
+        * Added CLI skeleton.
+        * Add really good ``setup.py``. (with ``black``, ``flake8``)
+        
+        
+        0.1.0 (2019-04-05)
+        ------------------
+        
+        * First release version as package.
+        
+Keywords: thai,nlp,sentence segmentation,tokenize,pos-tag,longlexto,orchid
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Unix
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Utilities
+Requires-Python: >=3.4
+Provides-Extra: dev
