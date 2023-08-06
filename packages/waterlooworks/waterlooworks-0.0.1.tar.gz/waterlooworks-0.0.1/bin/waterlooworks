@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+import os
+
+import click
+from prettytable import PrettyTable
+
+import waterlooworks as ww
+
+columns = ['name', 'year', 'student_id', 'program', 'evaluations', 'averages']
+
+@click.group()
+def cli():
+    """A set of utilities for analyzing and processing WaterlooWorks intern packages"""
+    pass
+
+@cli.command()
+@click.argument('data_dir', type=click.Path(exists=True))
+def score(data_dir: str):
+    """Analyze WaterlooWorks intern packages"""
+    packages = []
+    filenames = os.listdir(data_dir)
+    print(f'{len(filenames)} packages found')
+    for f in filenames:
+        filepath = os.path.join(data_dir, f)
+        print(filepath)
+        packages.append(ww.Package(filepath))
+    
+    table = PrettyTable(ww.Package.columns)
+    s = sorted(packages, key=ww.agg_score, reverse=True)
+    for pkg in s:
+        table.add_row(list(pkg))
+    print(table)
+
+@cli.command()
+@click.argument('data_dir', type=click.Path(exists=True))
+@click.argument('output_dir', type=click.Path(exists=False))
+def anonymize(data_dir: str, output_dir: str):
+    """Anonymize WaterlooWorks intern packages"""
+    os.makedirs(output_dir, exist_ok=True)
+    filenames = os.listdir(data_dir)
+    print(f'{len(filenames)} packages found')
+    for f in filenames:
+        filepath = os.path.join(data_dir, f)
+        print(filepath)
+        package = ww.Package(filepath)
+        ww.anonymize(package, output_dir)
+
+if __name__ == '__main__':
+    cli()
+    
