@@ -1,0 +1,825 @@
+#!python
+# encoding=utf8
+import argparse
+import collections
+import logging
+import os
+import sys
+import time
+import xmltodict
+import yaml
+import vivotool
+
+from logging.config import fileConfig
+
+from vivotool.utils.db import DB
+from vivotool.utils.file_utils import Utils
+from vivotool.utils.photo import Photo
+from vivotool.utils.publicationxmltordf import PublicationXml2Rdf
+from vivotool.utils.relationxmltordf import RelationshipTranslator
+from vivotool.utils.userxmltordf import UserElementXml2Rdf
+from vivotool.harvester.elements import Elements
+from vivotool.vivo.vivo import VIVO
+# from importlib import reload
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--file", "-f", type=str, required=True)
+parser.add_argument(
+    "--optype",
+    "-t",
+    type=str,
+    required=True,
+    help="operation type")
+parser.add_argument("--admin", "-a", type=str)
+parser.add_argument("--db", "-b", type=str)
+parser.add_argument("--day", "-d", type=int)
+parser.add_argument('-o', '--outfile', help="Output file",
+                    default=sys.stdout, type=argparse.FileType('w'))
+args = parser.parse_args()
+
+start_time = time.time()
+config = yaml.safe_load(open(args.file))
+xml_folder = config['folders']['upload']
+localurl = config['folders']['localurl']
+logging_config = config['logging']['file']
+
+# DB params
+host = config["db"]["host"]
+port = config["db"]["port"]
+user = config["db"]["user"]
+password = config["db"]["password"]
+database = config["db"]["database"]
+
+# logger initialization
+fileConfig(logging_config)
+logger = logging.getLogger()
+logger.debug('Logger initialized')
+
+
+file_utils = Utils()
+
+if args.optype == "ingest":
+    logger.debug("Start ingesting......")
+
+    vivouploads = xml_folder
+    extension = '.xml'
+    userxmlpath = vivouploads + "xml/users/"
+    user_xml_files = file_utils.listfiles(userxmlpath, extension)
+    pubxmlpath = vivouploads + "xml/publications/"
+    pub_xml_files = file_utils.listfiles(pubxmlpath, extension)
+    rsxmlpath = vivouploads + "xml/relations/"
+    rs_xml_files = file_utils.listfiles(rsxmlpath, extension)
+    userrdfpath = vivouploads + "rdf/users/"
+    pubrdfpath = vivouploads + "rdf/publications/"
+    rsrdfpath = vivouploads + "rdf/relations/"
+    photordfpath = vivouploads + "rdf/photos/"
+
+    uex2rdf = UserElementXml2Rdf()
+    photo = Photo()
+
+    try:
+        for xmlfile in user_xml_files:
+            logger.debug("Start parsing: " + userxmlpath + xmlfile)
+
+            with open(userxmlpath + xmlfile) as fd:
+                doc = xmltodict.parse(fd.read())
+
+            userfilename = "rdf/users/" + xmlfile.replace(".xml", ".rdf")
+            uex2rdf.convert(doc, vivouploads + userfilename)
+
+            api_obj = doc['feed']['entry']['api:object']
+            pid = api_obj['@username']
+            eid = api_obj["@id"]
+            public = api_obj["api:is-public"]
+
+            if public == 'true':
+                photofilename = "rdf/photos/" + eid + ".rdf"
+                file_utils.save_xml_file(
+                    photo.create_user_photo_graph(
+                        pid, eid), vivouploads + photofilename)
+            os.remove(userxmlpath + xmlfile)
+
+    except IOError:
+        logger.error('Error parsing file:' + xmlfile)
+
+    pub_xml_to_rdf = PublicationXml2Rdf()
+
+    try:
+        for xmlfile in pub_xml_files:
+            logger.debug("Start parsing: " + pubxmlpath + xmlfile)
+
+            pub_xml_to_rdf.parse(
+                pubxmlpath + xmlfile,
+                pubrdfpath)
+            os.remove(pubxmlpath + xmlfile)
+
+    except IOError:
+        logger.error('Error parsing file:' + xmlfile)
+
+    translator = RelationshipTranslator()
+
+    try:
+        for xmlfile in rs_xml_files:
+            logger.debug("Start parsing: " + rsxmlpath + xmlfile)
+
+            translator.parse(
+                rsxmlpath +
+                xmlfile,
+                rsrdfpath)
+            os.remove(rsxmlpath + xmlfile)
+
+    except IOError:
+        logger.error('Error parsing file:' + xmlfile)
+
+    # ingest to VIVO
+
+    extension = '.rdf'
+    user_rdf_files = file_utils.listfiles(userrdfpath, extension)
+    photo_rdf_files = file_utils.listfiles(photordfpath, extension)
+    pub_rdf_files = file_utils.listfiles(pubrdfpath, extension)
+    rs_rdf_files = file_utils.listfiles(rsrdfpath, extension)
+
+    vivousername = config['vivo']['username']
+    vivopassword = config['vivo']['password']
+    vivo_endpoint = config['vivo']['url']
+    rdfurl = config['folders']['localurl']
+
+    headers = {
+        'Accept': "text/turtle",
+    }
+
+    data = {
+        'email': vivousername,
+        'password': vivopassword
+    }
+
+    vivo_endpoint = vivo_endpoint + '/api/sparqlUpdate'
+
+    if not (args.admin == "stopingest"):
+        vivo = VIVO()
+
+        for rdf_file in user_rdf_files:
+            objectns = file_utils.read_file(userrdfpath + rdf_file)
+            logger.debug("Process user rdf file: " + rdf_file)
+            reqcontent = vivo.get_query_content(objectns, "insert")
+            response = vivo.request_vivo(
+                reqcontent, vivo_endpoint, headers, data, "update")
+            logger.debug(response.text)
+            os.remove(userrdfpath + rdf_file)
+        for rdf_file in photo_rdf_files:
+            objectns = file_utils.read_file(photordfpath + rdf_file)
+            logger.debug("Process photo rdf file: " + rdf_file)
+            reqcontent = vivo.get_query_content(objectns, "insert")
+            response = vivo.request_vivo(
+                reqcontent, vivo_endpoint, headers, data, "update")
+            logger.debug(response.text)
+            os.remove(photordfpath + rdf_file)
+        for rdf_file in pub_rdf_files:
+            objectns = file_utils.read_file(pubrdfpath + rdf_file)
+            logger.debug("Process publication rdf file: " + rdf_file)
+            reqcontent = vivo.get_query_content(objectns, "insert")
+            response = vivo.request_vivo(
+                reqcontent, vivo_endpoint, headers, data, "update")
+            logger.debug(response.text)
+            os.remove(pubrdfpath + rdf_file)
+        for rdf_file in rs_rdf_files:
+            objectns = file_utils.read_file(rsrdfpath + rdf_file)
+            logger.debug("Process relations rdf file: " + rdf_file)
+            reqcontent = vivo.get_query_content(objectns, "insert")
+            response = vivo.request_vivo(
+                reqcontent, vivo_endpoint, headers, data, "update")
+            logger.debug(response.text)
+            os.remove(rsrdfpath + rdf_file)
+
+elif args.optype == "harvest":
+    logger.debug("Start harvesting......")
+
+    elements_endpoint = config['elements']['url']
+    authorization = config['elements']['authorization']
+    image_folder = config['folders']['photo']
+
+    headers = {}
+    headers["Authorization"] = "Basic " + authorization
+
+    logger.debug('Stage1: Harvesting all elements users')
+
+    xmlfilename = xml_folder + "xml/temp/alluser.xml"
+
+    elements = Elements()
+
+    if args.day and args.day > 0:
+        day = args.day
+    else:
+        day = 0
+
+    logger.debug('Harvesting from Elements the dey before %s day', str(day))
+
+    elements.harvest_elements_xml(
+        elements_endpoint,
+        headers,
+        "users",
+        25,
+        xmlfilename,
+        day)
+
+    logger.debug('Harvesting individual user from Elements.')
+
+    total_public = 0
+    total_academic = 0
+    total_current_staff = 0
+
+    if not (args.db == "off"):
+        db = DB()
+
+        dbconn = db.db_connection(
+            host=host,
+            user=user,
+            password=password,
+            db=database)
+
+    extension = '.xml'
+
+    all_user_folder = xml_folder + "xml/temp/"
+    all_xml_files = file_utils.listfiles(all_user_folder, extension)
+
+    vivousername = config['vivo']['username']
+    vivopassword = config['vivo']['password']
+    vivo_endpoint = config['vivo']['url']
+    rdfurl = config['folders']['localurl']
+
+    vivoheaders = {
+        'Accept': "text/turtle",
+    }
+
+    data = {
+        'email': vivousername,
+        'password': vivopassword
+    }
+
+    vivo_query_endpoint = vivo_endpoint + '/api/sparqlQuery'
+    vivo_update_endpoint = vivo_endpoint + '/api/sparqlUpdate'
+    vivo_namespace = "http://collab.vt.edu/vivo/individual/"
+    vivo = VIVO()
+
+    # UC1: public user change the publication privacy settings
+    if args.day and args.day > 0:
+        logger.debug("Checking public user's publications from the giving day")
+
+        if not (args.db == "off"):
+            rows = db.select_records(dbconn, "users", "public", "Y")
+
+            for row in rows:
+                xmlfilename = xml_folder + "xml/temp/" + \
+                    row['eid'].strip() + "daypublications.xml"
+                elements.harvest_elements_xml(
+                    elements_endpoint,
+                    headers,
+                    "publications",
+                    row['eid'].strip(),
+                    xmlfilename, day)
+
+    for xmlfile in all_xml_files:
+        with open(all_user_folder + xmlfile) as fd:
+            doc = xmltodict.parse(fd.read())
+
+        if "entry" in doc["feed"]:
+            entries = doc["feed"]["entry"]
+            for e in entries:
+                elementid = e["api:object"]["@id"]
+                username = e["api:object"]["@username"]
+                if "@proprietary-id" in e["api:object"]:
+                    uid = e["api:object"]["@proprietary-id"]
+                else:
+                    uid = ""
+                is_public = e["api:object"]["api:is-public"]
+                is_academic = e["api:object"]["api:is-academic"]
+                is_current_staff = e["api:object"]["api:is-current-staff"]
+
+                if is_public == "true":
+                    total_public += 1
+
+                if is_academic == "true":
+                    total_academic += 1
+
+                if is_current_staff == "true":
+                    total_current_staff += 1
+
+                if args.admin == "publicall":
+                    is_public = "true"
+
+                isExist = False
+                if not (args.db == "off"):
+                    isExist = db.check_exist(dbconn, "users", "pid", username)
+
+                if isExist:
+                    logger.debug(
+                        "Delete user XML file:" +
+                        all_user_folder +
+                        xmlfile)
+                    # remove user from VIVO for new insert/update or delete
+                    uservivourl = vivo_namespace + username
+                    logger.debug(uservivourl)
+                    reqcontent = vivo.get_query_content(
+                        uservivourl, "describe")
+                    response = vivo.request_vivo(
+                        reqcontent, vivo_query_endpoint, vivoheaders, data, "query")
+                    rdfcontent = response.text
+                    logger.debug(rdfcontent)
+                    reqcontent = vivo.get_query_content(rdfcontent, "delete")
+                    response = vivo.request_vivo(
+                        reqcontent, vivo_update_endpoint, vivoheaders, data, "update")
+                    logger.debug(
+                        "Response from VIVO: %s for deleting %s",
+                        response.text,
+                        uservivourl)
+                    logger.debug("The deleted Elements user id: " + elementid)
+                    # fetch the publications xml from elements and mark as
+                    # delete
+                    xmlfilename = xml_folder + "xml/temp/delete" + elementid + "publications.xml"
+                    elements.harvest_elements_xml(
+                        elements_endpoint,
+                        headers,
+                        "publications",
+                        elementid,
+                        xmlfilename)
+
+                db_op = "none"
+                if is_public == "true" and is_academic == "true" and is_current_staff == "true":
+
+                    logger.debug('Harvesting Elements public user id: ' + elementid)
+
+                    filename = xml_folder + "xml/users/" + elementid + ".xml"
+                    elements.harvest_elements_xml(
+                        elements_endpoint, headers, "user", elementid, filename)
+
+                    logger.debug(
+                        'Harvesting Elements user id: ' +
+                        elementid +
+                        '\'s publications')
+
+                    xmlfilename = xml_folder + "xml/temp/" + elementid + "publications.xml"
+                    elements.harvest_elements_xml(
+                        elements_endpoint,
+                        headers,
+                        "publications",
+                        elementid,
+                        xmlfilename)
+
+                    logger.debug(
+                        'Harvesting Elements user id: ' +
+                        elementid +
+                        '\'s photo')
+
+                    elements.harvest_elements_xml(
+                        elements_endpoint, headers, "photo", elementid, image_folder)
+
+                    db_op = "topublic" if isExist else "public"
+
+                elif is_public == "false" and is_academic == "true" and is_current_staff == "true":
+
+                    if not (
+                            args.admin == "publiconly" or args.admin == "publicall"):
+
+                        db_op = "toprivate" if isExist else "private"
+
+                        logger.debug(
+                            'Harvesting Elements private user id: ' + elementid)
+
+                        filename = xml_folder + "xml/users/" + elementid + ".xml"
+                        elements.harvest_elements_xml(
+                            elements_endpoint, headers, "user", elementid, filename)
+
+                elif is_current_staff == "false":
+
+                    if isExist:
+                        db_op = "delete"
+
+                if not (args.db == "off"):
+                    if db_op == "delete":
+                        db.delete_record(dbconn, "users", "pid", username)
+                    elif db_op == "toprivate":
+                        db.update_user_privacy(
+                            dbconn, "users", "N", "pid", username)
+                    elif db_op == "private":
+                        db.insert_user(
+                            dbconn, username, str(elementid), str(uid), "N")
+                    elif db_op == "topublic":
+                        db.update_user_privacy(
+                            dbconn, "users", "Y", "pid", username)
+                    elif db_op == "public":
+                        db.insert_user(
+                            dbconn, username, str(elementid), str(uid), "Y")
+
+        os.remove(all_user_folder + xmlfile)
+
+    pubfolder = xml_folder + "xml/temp/"
+
+    eid = ""
+    pubid = ""
+    # handle delete publication file first
+    logger.debug("Start deleting user's publications for update.")
+    delfiles = file_utils.listdeletefiles(pubfolder, "delete")
+    for delfile in delfiles:
+        with open(pubfolder + delfile) as fd:
+            doc = xmltodict.parse(fd.read())
+
+        if "entry" in doc["feed"]:
+            recid = doc["feed"]["id"]
+            eid = recid.split("/")[-2]
+            entries = doc["feed"]["entry"]
+            logger.debug("Process publication deletion file: " + delfile)
+            records = []
+
+            if isinstance(entries, collections.OrderedDict):
+                records.append(entries)
+            else:
+                records = entries
+
+            for e in records:
+                pubid = e["api:relationship"]["api:related"]["@id"]
+
+                logger.debug(
+                    "Deleting publication id:" + pubid)
+                # remove it from VIVO for new insert or delete
+                pubvivourl = vivo_namespace + "publication" + pubid
+                logger.debug(pubvivourl)
+                reqcontent = vivo.get_query_content(pubvivourl, "describe")
+                response = vivo.request_vivo(
+                    reqcontent, vivo_query_endpoint, vivoheaders, data, "query")
+                rdfcontent = response.text
+                # logger.debug(rdfcontent)
+                reqcontent = vivo.get_query_content(rdfcontent, "delete")
+                response = vivo.request_vivo(
+                    reqcontent, vivo_update_endpoint, vivoheaders, data, "update")
+                logger.debug(
+                    "Delete response from VIVO: %s for deleting %s",
+                    str(response.status_code),
+                    pubvivourl)
+                # fetch the relationship xml from elements and mark as delete
+                logger.debug("Harvesting relationships for deletion......")
+                filename = xml_folder + "xml/temp/delete" + pubid + "relationships.xml"
+                elements.harvest_elements_xml(
+                    elements_endpoint, headers, "pubrelationships", pubid,
+                    filename)
+
+                if not (args.db == "off"):
+                    db.delete_record(dbconn, "publications", "pid", str(pubid))
+
+        os.remove(pubfolder + delfile)
+
+    xmlfiles = file_utils.listfiles(pubfolder, extension)
+
+    eid = ""
+    pubid = ""
+
+    logger.debug("Start processing individual publication file.")
+
+    for xmlfile in xmlfiles:
+        # There are two "delete" files in the folder, publication and
+        # relationships
+        if "delete" not in xmlfile:
+            logger.debug("Start processing publication files in the temp folder: " + xmlfile)
+            with open(pubfolder + xmlfile) as fd:
+                doc = xmltodict.parse(fd.read())
+
+            if "entry" in doc["feed"]:
+                recid = doc["feed"]["id"]
+                eid = recid.split("/")[-2]
+                entries = doc["feed"]["entry"]
+                logger.debug("Processing all the publications in file: " + xmlfile)
+                records = []
+
+                if isinstance(entries, collections.OrderedDict):
+                    records.append(entries)
+                else:
+                    records = entries
+
+                for e in records:
+
+                    authorship = e["api:relationship"]["@type"]
+                    pubid = e["api:relationship"]["api:related"]["@id"]
+                    logger.debug("Parsing publication id: " + pubid)
+                    logger.debug("authorship type: " + authorship)
+
+                    # check if rec is already in db
+                    isExist = False
+                    if not (args.db == "off"):
+                        isExist = db.check_exist(
+                            dbconn, "publications", "pid", str(pubid))
+
+                    if isExist and authorship == "publication-user-authorship":
+                        logger.debug(
+                            "Deleting a publication file:" + pubfolder + xmlfile)
+                        # remove it from VIVO for new insert or delete
+                        pubvivourl = vivo_namespace + "publication" + pubid
+                        # logger.debug(pubvivourl)
+                        reqcontent = vivo.get_query_content(
+                            pubvivourl, "describe")
+                        response = vivo.request_vivo(
+                            reqcontent, vivo_query_endpoint, vivoheaders, data, "query")
+                        rdfcontent = response.text
+                        # logger.debug(rdfcontent)
+                        reqcontent = vivo.get_query_content(
+                            rdfcontent, "delete")
+                        response = vivo.request_vivo(
+                            reqcontent, vivo_update_endpoint, vivoheaders, data, "update")
+                        logger.debug(
+                            "Response from VIVO: %s for deleting publication id: %s",
+                            response.text,
+                            pubid)
+                        # fetch the relationship xml from elements and mark as
+                        # delete
+                        filename = xml_folder + "xml/temp/delete" + pubid + "relationships.xml"
+                        elements.harvest_elements_xml(
+                            elements_endpoint, headers, "pubrelationships", pubid, filename)
+
+                    if "api:is-visible" in e["api:relationship"] and authorship == "publication-user-authorship":
+
+                        visible = e["api:relationship"]["api:is-visible"]
+                        public = e["api:relationship"]["api:related"]["api:object"]["api:is-public"]
+
+                        if args.admin == "publicall":
+                            public = "true"
+                            visible = "true"
+
+                        db_op = "none"
+                        if public == "true" and visible == "true":
+                            logger.debug(
+                                'Harvesting Elements user id: ' +
+                                eid +
+                                '\'s publication id: ' +
+                                pubid)
+
+                            filename = xml_folder + "xml/publications/" + eid + "-" + pubid + ".xml"
+                            elements.harvest_elements_xml(
+                                elements_endpoint, headers, "publication", pubid, filename)
+
+                            if not isExist:
+                                db_op = "insert"
+
+                            logger.debug(
+                                'Harvesting publication id: ' +
+                                pubid +
+                                '\'s relationships')
+
+                            filename = xml_folder + "xml/temp/" + pubid + "relationships.xml"
+                            elements.harvest_elements_xml(
+                                elements_endpoint, headers, "pubrelationships", pubid, filename)
+                        else:
+
+                            if isExist:
+                                db_op = "delete"
+
+                        if not (args.db == "off"):
+
+                            if db_op == "insert":
+                                db.insert_publication(dbconn, pubid, "Y")
+                            elif db_op == "delete":
+                                db.delete_record(
+                                    dbconn, "publications", "pid", str(pubid))
+
+                    else:
+                        logger.debug(
+                            'This publication has no visible attr or not publication-user-authorship')
+
+            os.remove(pubfolder + xmlfile)
+
+    # Process all relationships
+    logger.debug('Start processing individual relationship......')
+
+    rsfolder = xml_folder + "xml/temp/"
+
+    # list files contain delete and delete first
+    logger.debug("Handing relastions deletion files......")
+    delfiles = file_utils.listdeletefiles(rsfolder, "delete")
+    for delfile in delfiles:
+        with open(rsfolder + delfile) as fd:
+            doc = xmltodict.parse(fd.read())
+
+        recid = doc["feed"]["id"]
+        pubid = recid.split("/")[-2]
+
+        if "entry" in doc["feed"]:
+            entries = doc["feed"]["entry"]
+
+            logger.debug(
+                'Processing relationships file to be deleted in xml/temp - ' +
+                delfile)
+
+            records = []
+            if isinstance(entries, collections.OrderedDict):
+                records.append(entries)
+            else:
+                records = entries
+
+            for e in records:
+
+                if "api:relationship" in e:
+                    rsid = e["api:relationship"]["@id"]
+                    rstype = e["api:relationship"]["@type"]
+
+                    for rec in e["link"]:
+                        if "users" in rec["@href"]:
+                            eid = rec["@href"].split("/")[-1]
+
+                    logger.debug(
+                        'Deleting relationship record - rsid: %s, pubid: %s, eid: %s',
+                        rsid,
+                        pubid,
+                        eid)
+
+                    authorship = vivo_namespace + "authorship" + pubid + "-" + eid
+
+                    # remove it from VIVO
+                    reqcontent = vivo.get_query_content(authorship, "describe")
+                    response = vivo.request_vivo(
+                        reqcontent, vivo_query_endpoint, vivoheaders, data, "query")
+                    rdfcontent = response.text
+                    reqcontent = vivo.get_query_content(rdfcontent, "delete")
+                    response = vivo.request_vivo(
+                        reqcontent, vivo_update_endpoint, vivoheaders, data, "update")
+                    logger.debug(
+                        "Response from VIVO: %s for deleting %s",
+                        str(response.status_code),
+                        authorship)
+
+                    if not (args.db == "off"):
+                        db.delete_record(dbconn, "relations", "rid", str(rsid))
+
+        os.remove(rsfolder + delfile)
+
+    xmlfiles = file_utils.listfiles(rsfolder, extension)
+    logger.debug(xmlfiles)
+
+    logger.debug("Start processing relastions files......")
+    for xmlfile in xmlfiles:
+        with open(rsfolder + xmlfile) as fd:
+            doc = xmltodict.parse(fd.read())
+
+        recid = doc["feed"]["id"]
+        pubid = recid.split("/")[-2]
+
+        if "entry" in doc["feed"]:
+            entries = doc["feed"]["entry"]
+
+            logger.debug('Parsing relationship file: ' + xmlfile)
+
+            records = []
+            if isinstance(entries, collections.OrderedDict):
+                records.append(entries)
+            else:
+                records = entries
+
+            for e in records:
+
+                if "api:relationship" in e:
+                    rsid = e["api:relationship"]["@id"]
+                    rstype = e["api:relationship"]["@type"]
+
+                    for rec in e["link"]:
+                        if "users" in rec["@href"]:
+                            eid = rec["@href"].split("/")[-1]
+
+                    logger.debug(
+                        'Process rsid: %s, pubid: %s, eid: %s',
+                        rsid,
+                        pubid,
+                        eid)
+
+                    if rstype == "publication-user-authorship":
+                        visible = e["api:relationship"]["api:is-visible"]
+                        public = e["api:relationship"]["api:related"]["api:object"]["api:is-public"]
+                    else:
+                        visible = "false"
+
+                    if args.admin == "publicall":
+                        visible = "true"
+                        public = "true"
+
+                    # check if rec is already in db
+                    isExist = False
+                    if not (args.db == "off"):
+                        isExist = db.check_exist(
+                            dbconn, "relations", "rid", str(rsid))
+
+                    authorship = vivo_namespace + "authorship" + pubid + "-" + eid
+
+                    if isExist:
+                        # remove it from VIVO for new insert or delete anyway
+                        reqcontent = vivo.get_query_content(
+                            authorship, "describe")
+                        response = vivo.request_vivo(
+                            reqcontent, vivo_query_endpoint, vivoheaders, data, "query")
+                        rdfcontent = response.text
+                        reqcontent = vivo.get_query_content(
+                            rdfcontent, "delete")
+                        response = vivo.request_vivo(
+                            reqcontent, vivo_update_endpoint, vivoheaders, data, "update")
+                        logger.debug(
+                            "Delete response from VIVO: %s for deleting %s",
+                            str(response.status_code),
+                            authorship)
+
+                    db_op = "none"
+                    if visible == "true" and public == "true":
+
+                        logger.debug(
+                            'Harvesting Elements relationship id: ' + rsid)
+
+                        filename = xml_folder + "xml/relations/" + pubid + "-" + rsid + ".xml"
+                        elements.harvest_elements_xml(
+                            elements_endpoint, headers, "relationship", rsid, filename)
+
+                        if not isExist:
+                            db_op = "insert"
+
+                    else:
+
+                        if isExist:
+                            db_op = "delete"
+
+                    if not (args.db == "off"):
+
+                        if db_op == "insert":
+                            db.insert_relation(dbconn, str(rsid), "Y")
+                        elif db_op == "delete":
+                            db.delete_record(
+                                dbconn, "relations", "rid", str(rsid))
+
+        os.remove(rsfolder + xmlfile)
+
+    if not (args.db == "off"):
+        dbconn.close()
+
+    logger.debug("Total public: " + str(total_public))
+    logger.debug("Total academic: " + str(total_academic))
+    logger.debug("Total current staff: " + str(total_current_staff))
+
+
+elif args.optype == "db":
+    logger.debug("Database operation")
+
+    # create database
+    db = DB()
+    dbconn = db.db_connection(host=host, user=user, password=password)
+    db.create_vivo_database(dbconn, database)
+    logger.debug("Database %s is created", database)
+
+    dbconn = db.db_connection(
+        host=host,
+        user=user,
+        password=password,
+        db=database)
+
+    try:
+
+        db.create_vivo_table(dbconn, "users")
+        db.create_vivo_table(dbconn, "publications")
+        db.create_vivo_table(dbconn, "relations")
+
+        sqlQuery = "show tables;"
+        rows = db.execute_query(dbconn, sqlQuery, "select")
+
+        for row in rows:
+            logger.debug("%s is created", row)
+
+    except Exception as e:
+
+        logger.debug("Exeception occured:{}".format(e))
+
+    finally:
+
+        dbconn.close()
+
+elif args.optype == "getuser":
+
+    db = DB()
+
+    dbconn = db.db_connection(
+        host=host,
+        user=user,
+        password=password,
+        db=database)
+
+    rows = db.select_records(dbconn, "users", "public", "Y")
+
+    content = "UID,PID\n"
+    for row in rows:
+        content = content + row['uid'].strip() + \
+            "," + row['pid'].strip() + "\n"
+
+    if args.outfile.name != "<stdout>":
+        args.outfile.write(content)
+        args.outfile.close()
+    else:
+        file_utils.save_xml_file(content, "user_map.csv")
+
+    dbconn.close()
+
+else:
+    logger.debug("Wrong operation type")
+
+logger.debug("--- %s seconds ---" % (time.time() - start_time))
