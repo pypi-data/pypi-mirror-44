@@ -1,0 +1,20 @@
+start:
+    - execute: rm -f archives/*
+    - insert: { gzip: .gz, bzip2: .bz2, xz: .xz }  # comrpess info
+    - reduce: [cmd, ext]    # Maps dict items key, value to cmd, ext
+    - send to segment:
+        - create individual files
+        - create compressed tar
+
+create individual files:
+    # Tag the compressor info because we will ned to reuse it later
+    - tag:
+    - read from file list:  test.*
+    - iterate:  # Iterate over the file list
+    - insert: { filename: $_$ }
+    # Merge with the tag to create a per compressor iteration
+    - merge:
+    - execute: $cmd$ -c $filename$ > archives/$filename$$ext$
+
+create compressed tar:
+    - execute: tar -cf - test.*| $cmd$ -c > archives/test.tar$ext$
