@@ -1,0 +1,83 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "name": "bse_basis_metadata",
+    "version": "0.1",
+    "url": "TODO",
+    "description": "JSON for describing metadata for a single basis set",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "molssi_bse_schema",
+        "names",
+        "flags",
+        "family",
+        "description",
+        "role",
+        "auxiliaries"
+    ],
+    "properties":
+    {
+        "molssi_bse_schema": {
+            "description": "Info about which schema the file follows",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "schema_type",
+                "schema_version"
+            ],
+            "properties": {
+                "schema_type" : {
+                    "description": "What type of BSE JSON file this is",
+                    "type": "string",
+                    "enum": [ "metadata" ]
+                },
+                "schema_version": {
+                    "description": "Version of the BSE table basis set schema being used",
+                    "type": "string"
+                }
+            }
+        },
+        "names": {
+            "description": "Common names/capitalization of the basis set",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string" }
+        },
+        "flags": {
+            "description": "Feature flags (for internal use/marking)",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["RESERVED"]
+            }
+        },
+        "family": {
+            "description": "Broad family that the basis set is from",
+            "type": "string"
+        },
+        "description": {
+            "description": "Brief description of the basis set",
+            "type": "string"
+        },
+        "role": {
+            "description": "Role that this basis plays in a calculation",
+            "type": "string",
+            "enum": [ "orbital", "rifit", "jkfit", "jfit", "admmfit", "dftxfit", "dftjfit"]
+        },
+        "auxiliaries": {
+            "description": "Auxiliary basis sets (fitting, etc) and how their role with this basis",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "jfit" : { "type": "string" },
+                "jkfit" : { "type": "string" },
+                "rifit" : { "type": "string" },
+                "admmfit" : { "type": "string" },
+                "dftxfit": { "type": "string" },
+                "dftjfit": { "type": "string" }
+            }
+        }
+    }
+}
