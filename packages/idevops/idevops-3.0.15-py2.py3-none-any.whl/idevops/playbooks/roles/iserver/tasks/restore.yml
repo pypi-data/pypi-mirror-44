@@ -1,0 +1,24 @@
+- name: Copy storage archive remote-to-remote
+  synchronize:
+    src: "{{ data.tempdir }}/{{ data.archive }}"
+    dest: "{{ data.tempdir }}"
+    delete: yes
+  delegate_to: "{{ from_node }}"
+
+# stop docker
+- import_tasks: stop_docker.yml
+
+- name: Purge data
+  file:
+    state: absent
+    path: "{{ iserver.data }}"
+
+- name: Set up data
+  unarchive:
+    src: "{{ data.tempdir }}/{{ data.archive }}"
+    dest: "{{ iserver.prefix }}"
+    remote_src: yes
+  delegate_to: "{{ inventory_hostname }}"
+
+# start docker
+- import_tasks: start_docker.yml

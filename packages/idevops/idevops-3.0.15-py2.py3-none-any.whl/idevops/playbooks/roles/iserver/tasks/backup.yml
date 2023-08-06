@@ -1,0 +1,18 @@
+# stop docker
+- import_tasks: stop_docker.yml
+
+- name: Backup storage data
+  synchronize:
+    src: "{{ iserver.data }}"
+    dest: "{{ data.tempdir }}"
+    delete: yes
+  delegate_to: "{{ inventory_hostname }}"
+
+# start docker
+- import_tasks: start_docker.yml
+
+- name: Create storage archive
+  archive:
+    path: "{{ data.tempdir }}/storage"
+    dest: "{{ data.tempdir }}/{{ data.archive }}"
+    #remove: yes
