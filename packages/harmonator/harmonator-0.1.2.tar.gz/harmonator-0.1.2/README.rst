@@ -1,0 +1,49 @@
+|black| |codacy_grade| |codacy_coverage| |pypi_python_version| |pypi_status|
+
+Harmonator
+==========
+
+The Harmontown downloader
+
+Running this application will get you up to date with the latest episodes of Harmontown. Filename
+formatting is automatic and complies to the following format::
+
+    harmontown - S01E01 - Episode title.mp3
+
+Installation
+------------
+
+Harmonator can be installed with pip::
+
+    pip install harmonator
+
+Usage
+-----
+
+Harmonator is used from the command line and cen be used to download either a single episode,
+episodes after a date, or all missing episodes.
+
+Download a single episode by episode number::
+
+    harmonate.py --episode=100
+
+Authors:
+--------
+
+Created by Chris Read
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.png
+    :target: https://github.com/ambv/black
+    :alt: Black
+
+.. |codacy_grade| image:: https://api.codacy.com/project/badge/Grade/84ac7eba61ef49448fc7f8fa647927b0
+    :target: https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Centurix/harmonator&amp;utm_campaign=Badge_Grade
+
+.. |codacy_coverage| image:: https://api.codacy.com/project/badge/Coverage/84ac7eba61ef49448fc7f8fa647927b0
+    :target: https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Centurix/harmonator&amp;utm_campaign=Badge_Coverage
+
+.. |pypi_python_version| image:: https://img.shields.io/pypi/pyversions/harmonator.png
+    :alt: PyPI - Python Version
+
+.. |pypi_status| image:: https://img.shields.io/pypi/status/harmonator.png
+    :alt: PyPI - Status
