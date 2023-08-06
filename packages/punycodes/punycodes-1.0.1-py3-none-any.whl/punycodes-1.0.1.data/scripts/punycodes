@@ -1,0 +1,83 @@
+#!python
+# ==================================================================== #
+# -*- coding: utf-8 -*-
+#
+# IDNA domain names codec
+#
+# Copyright 2019, Philippe Grégoire <pg@pgregoire.xyz>
+#
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that the
+# above copyright notice and this permission notice appear in all
+# copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+# WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+# AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+# DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+# PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+# TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+# ==================================================================== #
+
+import getopt
+import sys
+
+from punycodes import decode, encode, isavail
+
+# -------------------------------------------------------------------- #
+
+def main(args):
+    def usage(file=sys.stdout):
+        u = '{} [-adh] domain...'.format(sys.argv[0])
+        print('usage: {}'.format(u), file=file)
+
+
+    try:
+        opts, args = getopt.getopt(args, 'adh')
+    except getopt.GetoptError as e:
+        print(e, file=sys.stderr)
+        usage(file=sys.stderr)
+        return 2
+
+    o_avail = False
+    o_decode = False
+    for k, v in opts:
+        if '-a' == k:
+            o_avail = True
+        elif '-d' == k:
+            o_decode = True
+        elif '-h' == k:
+            usage()
+            return 0
+
+    if 0 == len(args):
+        usage(file=sys.stderr)
+        return 2
+
+    a = ''
+    for d in args:
+        assert(not [c for c in d if ord(c) not in range(127)])
+        if o_decode:
+            print('{0:24}    {1}'.format(d, decode(d)))
+        else:
+            for p in encode(d.lower()):
+                if o_avail:
+                    n = isavail(p[1])
+                    if n:
+                        a = n[0][-1][0]
+                    else:
+                        a = 'available'
+                    a = ' [{}]'.format(a)
+                print('{0:24}    {1}{2}'.format(p[0], p[1], a))
+
+    return 0
+
+# -------------------------------------------------------------------- #
+
+if '__main__' == __name__:
+    sys.exit(main(sys.argv[1:]))
+
+# ==================================================================== #
