@@ -1,0 +1,37 @@
+version: "3.4"
+
+services:
+  mysql:
+    build:
+      context: ""
+      labels:
+        io.theoptimizer.package: "tools"
+    container_name: oly_mysql
+    environment:
+      MYSQL_DATABASE: amember
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: test
+    volumes:
+      - ${HOME}/.oly/volumes/mysql-data:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    networks:
+      - olynet
+
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin:4.7'
+    container_name: oly_phpmyadmin
+    environment:
+      PMA_HOSTS: oly_mysql
+    links:
+      - mysql
+    ports:
+      - '8090:80'
+    networks:
+      - olynet
+
+networks:
+  olynet:
+    external:
+      name: olynet
