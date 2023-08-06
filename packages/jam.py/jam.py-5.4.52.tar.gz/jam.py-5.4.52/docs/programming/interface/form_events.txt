@@ -1,0 +1,91 @@
+===========
+Form events
+===========
+
+After the form is created, and the form's html template have been added to the 
+DOM, the application triggers the following events for view forms:
+
+* ``on_view_form_created`` - the event is triggered when the form has been created but not shown yet
+
+* ``on_view_form_shown`` -the event is triggered when the the form has been shown
+
+* ``on_view_form_close_query`` - the event is triggered when an attempt is made to close the form
+
+* ``on_view_form_closed`` - the event is triggered when the form has been closed
+
+* ``on_view_form_keydown`` - the event is triggered when the keydown event occurs for the form
+
+* ``on_view_form_keyup`` - the event is triggered when the keyup event occurs for the form
+
+For other form types - edit, filter and param, replace 'view' on the form type, for example
+``on_edit_form_created`` for edit form.
+
+These events are processed by the ``_process_event`` in th *jam.js* module.
+Below we explain how it works.
+
+.. code-block:: js
+
+  _process_event: function(form_type, event_type, e) {
+    var event = 'on_' + form_type + '_form_' + event_type,
+        can_close;
+    if (event_type === 'close_query') {
+        if (this[event]) {
+            can_close = this[event].call(this, this);
+        }
+        if (!this.master && can_close === undefined && this.owner[event]) {
+            can_close = this.owner[event].call(this, this);
+        }
+        if (can_close === undefined && this.task[event]) {
+            can_close = this.task[event].call(this, this);
+        }
+        return can_close;
+    }
+    else if (event_type === 'keyup' || event_type === 'keydown') {
+        if (this[event]) {
+            if (this[event].call(this, this, e)) return;
+        }
+        if (!this.master && this.owner[event]) {
+            if (this.owner[event].call(this, this, e)) return;
+        }
+        if (this.task[event]) {
+            if (this.task[event].call(this, this, e)) return;
+        }
+    }
+    else {
+        if (this.task[event]) {
+            if (this.task[event].call(this, this)) return;
+        }
+        if (!this.master && this.owner[event]) {
+            if (this.owner[event].call(this, this)) return;
+        }
+        if (this[event]) {
+            if (this[event].call(this, this)) return;
+        }
+    }
+  }
+
+Let's start with close query event
+
+Close query event
+=================
+
+This event is triggered when an attempt is made to close the form. 
+
+We will look at this event using the edit form as an example.
+
+If the ``on_edit_form_close_query`` event handler is defined in the item client 
+module, the application executes it and depending on the result of this execution
+it does the following:
+
+* if the event handler returns ``true`` closes the form
+* if the event handler returns ``false`` leaves the form open
+
+
+Video
+=====
+
+`Form events`_ - this video demonstrates the form events, using the Demo 
+application, and shows how to debug the Jam.py application using the browser 
+debugger.
+
+.. _`Form events`: https://youtu.be/DY463lcv0R4
