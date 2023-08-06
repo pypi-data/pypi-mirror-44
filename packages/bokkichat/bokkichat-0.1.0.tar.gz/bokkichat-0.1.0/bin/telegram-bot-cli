@@ -1,0 +1,116 @@
+"""LICENSE
+Copyright 2018 Hermann Krumrey <hermann@krumreyh.com>
+
+This file is part of bokkichat.
+
+bokkichat is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+bokkichat is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with bokkichat.  If not, see <http://www.gnu.org/licenses/>.
+LICENSE"""
+
+import argparse
+from bokkichat.address.Address import Address
+from bokkichat.entities.message.TextMessage import TextMessage
+from bokkichat.entities.message.MediaMessage import MediaMessage
+from bokkichat.entities.message.MediaType import MediaType
+from bokkichat.settings.impl.TelegramBotSettings import TelegramBotSettings
+from bokkichat.connection.impl.TelegramBotConnection import \
+    TelegramBotConnection
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    Parses the command line arguments
+    The program requires an API key, followed by a subcommand, being either
+        send, receive or echo.
+    Each of those provide a subparser.
+    :return: The parsed arguments
+    """
+
+    parser = argparse.ArgumentParser(prog="telegram-cli")
+    parser.add_argument("api_key", help="The Bot's API key")
+
+    subparser = parser.add_subparsers(required=True, dest="mode")
+
+    send_parser = subparser.add_parser("send", help="Allows sending a message")
+    send_parser.add_argument("receiver", help="The receiver of the message")
+    send_parser.add_argument("text", help="The text/caption to send")
+
+    media_options = send_parser.add_mutually_exclusive_group(required=False)
+    media_options.add_argument("--audio", help="Path to an audio file to send")
+    media_options.add_argument("--image", help="Path to an image file to send")
+    media_options.add_argument("--video", help="Path to a video file to send")
+
+    subparser.add_parser("receive",
+                         help="Allows receiving any pending messages")
+    subparser.add_parser("echo", help="Starts an echo bot")
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+
+    args = parse_args()
+
+    settings = TelegramBotSettings(args.api_key)
+    connection = TelegramBotConnection(settings)
+
+    if args.mode == "send":
+
+        receiver = Address(args.receiver)
+
+        if args.audio:
+            media_type = MediaType.AUDIO
+        elif args.video:
+            media_type = MediaType.VIDEO
+        elif args.image:
+            media_type = MediaType.IMAGE
+        else:
+            media_type = "text"
+
+        if media_type == "text":
+            message = TextMessage(connection.address, receiver, args.text)
+        else:
+            media_file = args.audio or args.video or args.image
+            with open(media_file, "rb") as f:
+                data = f.read()
+
+            message = MediaMessage(
+                connection.address,
+                receiver,
+                media_type,
+                data,
+                args.text
+            )
+
+        connection.send(message)
+
+    elif args.mode == "receive":
+        messages = connection.receive()
+
+        for message in messages:
+            print("{}: {}".format(message.sender, message))
+
+    elif args.mode == "echo":
+
+        def echo(con, msg):
+            swap = msg.receiver
+            msg.receiver = msg.sender
+            msg.sender = swap
+            con.send(msg)
+
+        try:
+            connection.loop(echo)
+        except KeyboardInterrupt:
+            pass
+
+    connection.close()
