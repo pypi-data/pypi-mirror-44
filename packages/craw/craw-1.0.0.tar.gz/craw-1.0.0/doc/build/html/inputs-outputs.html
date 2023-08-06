@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inputs / Outputs &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="craw" href="craw.html" />
+    <link rel="prev" title="Quick start" href="quickstart.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="craw.html" title="craw"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quickstart.html" title="Quick start"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="inputs-outputs">
+<span id="id1"></span><h1>Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="craw-coverage">
+<h2>craw_coverage<a class="headerlink" href="#craw-coverage" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="inputs">
+<h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
+<p>craw_coverage* need a file bam or wig to compute coverage and an annotation file
+to specify on which regions to compute these coverages.</p>
+<div class="section" id="bam-file">
+<h4>bam file<a class="headerlink" href="#bam-file" title="Permalink to this headline">¶</a></h4>
+<p><em>craw_coverage</em> can use a file of alignment reads called bam file.
+a bam file is a short DNA sequence read alignments in the Binary Alignment/Map format (.bam).
+<em>craw_coverage</em> needs also the corresponding index file (bai). The index file must be located beside the bam file
+with the same name instead to have the <em>.bam</em> extension it end by <em>.bai</em> extension.
+If you have not  the index file you have to create it.</p>
+<p>To index a bam file you need samtools. The command line is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">samtools</span> <span class="n">index</span> <span class="n">file</span><span class="o">.</span><span class="n">bam</span>
+</pre></div>
+</div>
+<p>For more explanation see <a class="reference external" href="http://www.htslib.org/doc/">http://www.htslib.org/doc/</a> .</p>
+</div>
+<div class="section" id="wig-file">
+<h4>wig file<a class="headerlink" href="#wig-file" title="Permalink to this headline">¶</a></h4>
+<p><em>craw_coverage</em> can compute coverage also from wig file
+see <a class="reference external" href="https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification">https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification</a> and
+<a class="reference external" href="http://genome.ucsc.edu/goldenPath/help/wiggle.html">http://genome.ucsc.edu/goldenPath/help/wiggle.html</a> .
+for format specifications. Compare d to these specifications
+craw support coverages on both strands. the positive coverages scores
+are on the forward strand whereas the negative ones are on the reverse strand.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">track</span> <span class="nb">type</span><span class="o">=</span><span class="n">wiggle_0</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span> <span class="n">color</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">246</span> <span class="n">altColor</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">246</span> <span class="n">autoScale</span><span class="o">=</span><span class="n">on</span>  <span class="n">graphType</span><span class="o">=</span><span class="n">bar</span>
+<span class="n">variableStep</span> <span class="n">chrom</span><span class="o">=</span><span class="n">chrI</span> <span class="n">span</span><span class="o">=</span><span class="mi">1</span>
+<span class="mi">72</span>      <span class="mf">12.0000</span>
+<span class="mi">73</span>      <span class="mf">35.0000</span>
+<span class="mi">74</span>      <span class="mf">70.0000</span>
+<span class="mi">75</span>      <span class="mf">127.0000</span>
+<span class="o">...</span>
+<span class="mi">72</span>      <span class="o">-</span><span class="mf">88.0000</span>
+<span class="mi">73</span>      <span class="o">-</span><span class="mf">42.0000</span>
+<span class="mi">74</span>      <span class="o">-</span><span class="mf">12.0000</span>
+<span class="mi">75</span>      <span class="o">-</span><span class="mf">1.0000</span>
+</pre></div>
+</div>
+<p>In the example above the coverage on the Chromosome I for the positions 72, 73, 74, 75
+are 12, 35, 70, 127 on the forward strand and 88, 42, 12, 1 on the reverse strand.</p>
+</div>
+<div class="section" id="annotation-file">
+<h4>annotation file<a class="headerlink" href="#annotation-file" title="Permalink to this headline">¶</a></h4>
+<p>The annotation file is a <cite>tsv</cite> file by default.
+It’s mean that it is a text file with value separated by tabulation (not spaces) or commas.
+But if a  separator is specified (–sep) it can be a csv file or any columns file.</p>
+<p>The first line of the file must be the name of the columns
+the other lines the values. Each line represent a row.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span>    <span class="n">gene</span>    <span class="n">chromosome</span>      <span class="n">strand</span>  <span class="n">Position</span>
+<span class="n">YEL072W</span> <span class="n">RMD6</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">14415</span>
+<span class="n">YEL071W</span> <span class="n">DLD3</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">17845</span>
+<span class="n">YEL070W</span> <span class="n">DSF1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">21097</span>
+<span class="n">YEL066W</span> <span class="n">HPA3</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">27206</span>
+<span class="n">YEL065W</span> <span class="n">SIT1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">29543</span>
+<span class="n">YEL062W</span> <span class="n">NPR2</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">36254</span>
+<span class="n">YEL058W</span> <span class="n">PCM1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">44925</span>
+<span class="n">YEL056W</span> <span class="n">HAT2</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">48373</span>
+</pre></div>
+</div>
+<p>All lines starting with ‘#’ character will be ignored.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is the annotation file for Wild type</span>
+<span class="c1"># bla bla ...</span>
+<span class="n">name</span>    <span class="n">gene</span>    <span class="n">chromosome</span>      <span class="n">strand</span>  <span class="n">Position</span>
+<span class="n">YEL072W</span> <span class="n">RMD6</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">14415</span>
+<span class="n">YEL071W</span> <span class="n">DLD3</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">17845</span>
+<span class="n">YEL070W</span> <span class="n">DSF1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">21097</span>
+<span class="n">YEL066W</span> <span class="n">HPA3</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">27206</span>
+<span class="n">YEL065W</span> <span class="n">SIT1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">29543</span>
+<span class="n">YEL062W</span> <span class="n">NPR2</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">36254</span>
+<span class="n">YEL058W</span> <span class="n">PCM1</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">44925</span>
+<span class="n">YEL056W</span> <span class="n">HAT2</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">48373</span>
+</pre></div>
+</div>
+<div class="section" id="mandatory-columns">
+<h5>mandatory columns<a class="headerlink" href="#mandatory-columns" title="Permalink to this headline">¶</a></h5>
+<p>There is 3 mandatory columns in the annotation file.</p>
+<div class="section" id="columns-with-fixed-name">
+<h6>columns with fixed name<a class="headerlink" href="#columns-with-fixed-name" title="Permalink to this headline">¶</a></h6>
+<p>two with a fixed name:</p>
+<ul class="simple">
+<li><p><strong>strand</strong> indicate on which strand is located the region of interest. The authorized values for this columns are +/- , 1/-1 or for/rev.</p></li>
+<li><p><strong>chromosome</strong> the chromosome name where is located the region of interest.</p></li>
+</ul>
+</div>
+<div class="section" id="columns-with-variable-name">
+<h6>columns with variable name<a class="headerlink" href="#columns-with-variable-name" title="Permalink to this headline">¶</a></h6>
+<p>In addition of these two columns the column to define the position of reference is mandatory too, but the name of this
+column can be specified by the user. If it’s not craw_coverage will use a column name ‘position’.</p>
+<p>If we want to compute coverage on variable window size, 2 extra columns whose name must be specified by the user by the following option:</p>
+<ul class="simple">
+<li><p>–start-col to define the beginning of the window (this position is included in the window)</p></li>
+<li><p>–stop-col to define the end of the window (this position is included in the window)</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span>    <span class="n">gene</span>    <span class="nb">type</span>    <span class="n">chromosome</span>      <span class="n">strand</span>  <span class="n">annotation_start</span>        <span class="n">annotation_end</span>  <span class="n">has_transcript</span>  <span class="n">transcription_end</span>       <span class="n">transcription_start</span>
+<span class="n">YEL072W</span> <span class="n">RMD6</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">13720</span>   <span class="mi">14415</span>   <span class="mi">1</span>       <span class="mi">14745</span>   <span class="mi">13569</span>
+<span class="n">YEL071W</span> <span class="n">DLD3</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">16355</span>   <span class="mi">17845</span>   <span class="mi">1</span>       <span class="mi">17881</span>   <span class="mi">16177</span>
+<span class="n">YEL070W</span> <span class="n">DSF1</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">19589</span>   <span class="mi">21097</span>   <span class="mi">1</span>       <span class="mi">21197</span>   <span class="mi">19539</span>
+<span class="n">YEL066W</span> <span class="n">HPA3</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">26721</span>   <span class="mi">27206</span>   <span class="mi">1</span>       <span class="mi">27625</span>   <span class="mi">26137</span>
+<span class="n">YEL065W</span> <span class="n">SIT1</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">27657</span>   <span class="mi">29543</span>   <span class="mi">1</span>       <span class="mi">29601</span>   <span class="mi">27625</span>
+<span class="n">YEL062W</span> <span class="n">NPR2</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">34407</span>   <span class="mi">36254</span>   <span class="mi">1</span>       <span class="mi">36401</span>   <span class="mi">34321</span>
+<span class="n">YEL058W</span> <span class="n">PCM1</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">43252</span>   <span class="mi">44925</span>   <span class="mi">1</span>       <span class="mi">44993</span>   <span class="mi">43217</span>
+<span class="n">YEL056W</span> <span class="n">HAT2</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">47168</span>   <span class="mi">48373</span>   <span class="mi">1</span>       <span class="mi">48457</span>   <span class="mi">47105</span>
+<span class="n">YEL052W</span> <span class="n">AFG1</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="mi">1</span>       <span class="mi">56571</span>   <span class="mi">58100</span>   <span class="mi">1</span>       <span class="mi">58105</span>   <span class="mi">56537</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_coverage</span> <span class="o">--</span><span class="n">wig</span> <span class="n">file</span><span class="o">.</span><span class="n">wig</span> <span class="o">--</span><span class="n">annot</span> <span class="n">annot</span><span class="o">.</span><span class="n">txt</span> <span class="o">--</span><span class="n">ref</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_start</span> <span class="o">--</span><span class="n">start</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_start</span> <span class="o">--</span><span class="n">stop</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_end</span>
+</pre></div>
+</div>
+<p>The position of reference must be between start and end.
+The authorized values are positive integers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>the position of reference can be used to define the reference and the start ot the end of the window.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_coverage</span> <span class="o">--</span><span class="n">bam</span> <span class="n">file</span><span class="o">.</span><span class="n">bam</span> <span class="o">--</span><span class="n">annot</span> <span class="n">annot</span><span class="o">.</span><span class="n">txt</span> <span class="o">--</span><span class="n">ref</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_start</span> <span class="o">--</span><span class="n">start</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_start</span> <span class="o">--</span><span class="n">stop</span><span class="o">-</span><span class="n">col</span> <span class="n">annotation_end</span>
+</pre></div>
+</div>
+</div>
+<p>All other columns are not necessary but will be reported as is in the coverage file.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="outputs">
+<span id="cov-out"></span><h3>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="coverage-file">
+<h4>coverage_file<a class="headerlink" href="#coverage-file" title="Permalink to this headline">¶</a></h4>
+<p>It’s a <cite>tsv</cite> file with all columns found in annotation file plus the result of coverage position by position centered
+on the reference position define for each line. for instance</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_coverage</span> <span class="o">--</span><span class="n">wig</span><span class="o">=../</span><span class="n">data</span><span class="o">/</span><span class="n">small</span><span class="o">.</span><span class="n">wig</span> <span class="o">--</span><span class="n">annot</span><span class="o">=../</span><span class="n">data</span><span class="o">/</span><span class="n">annotations</span><span class="o">.</span><span class="n">txt</span>
+<span class="o">--</span><span class="n">ref</span><span class="o">-</span><span class="n">col</span><span class="o">=</span><span class="n">annotation_start</span> <span class="o">--</span><span class="n">before</span><span class="o">=</span><span class="mi">0</span>  <span class="o">--</span><span class="n">after</span><span class="o">=</span><span class="mi">2000</span>
+</pre></div>
+</div>
+<p>In the command line above, the column ‘0’ correspond to the annotation_start position the column ‘1’ to annotation_start + 1
+on so on until ‘2000’ (here we display only the first 3 columns of the coverage).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Running Counter RnAseq Window craw_coverage</span>
+<span class="c1"># Version: craw NOT packaged, it should be a development version | Python 3.4</span>
+<span class="c1"># Using: pysam 0.9.1.4 (samtools 1.3.1)</span>
+<span class="c1">#</span>
+<span class="c1"># craw_coverage run with the following arguments:</span>
+<span class="c1"># --after=3</span>
+<span class="c1"># --annot=../data/annotation_wo_start.txt</span>
+<span class="c1"># --before=5</span>
+<span class="c1"># --chr-col=chromosome</span>
+<span class="c1"># --output=small_wig.cov</span>
+<span class="c1"># --qual-thr=0</span>
+<span class="c1"># --quiet=1</span>
+<span class="c1"># --ref-col=Position</span>
+<span class="c1"># --sense=mixed</span>
+<span class="c1"># --sep=</span>
+<span class="c1"># --strand-col=strand</span>
+<span class="c1"># --suffix=cov</span>
+<span class="c1"># --verbose=0</span>
+<span class="c1"># --wig=../data/small.wig</span>
+<span class="n">sense</span>   <span class="n">name</span>    <span class="n">gene</span>    <span class="nb">type</span>    <span class="n">chromosome</span>      <span class="n">strand</span>  <span class="n">annotation_start</span>        <span class="n">annotation_end</span>  <span class="n">has_transcript</span>  <span class="n">transcription_end</span>       <span class="n">transcription_start</span>     <span class="mi">0</span>       <span class="mi">1</span>       <span class="mi">2</span>
+<span class="n">S</span>       <span class="n">YEL072W</span> <span class="n">RMD6</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">13720</span>   <span class="mi">14415</span>   <span class="mi">1</span>       <span class="mi">14745</span>   <span class="mi">13569</span>   <span class="mi">7</span>       <span class="mi">7</span>       <span class="mi">7</span>
+<span class="n">AS</span>      <span class="n">YEL072W</span> <span class="n">RMD6</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">13720</span>   <span class="mi">14415</span>   <span class="mi">1</span>       <span class="mi">14745</span>   <span class="mi">13569</span>   <span class="mi">0</span>       <span class="mi">0</span>       <span class="mi">0</span>
+<span class="n">S</span>       <span class="n">YEL071W</span> <span class="n">DLD3</span>    <span class="n">gene</span>    <span class="n">chrV</span>    <span class="o">+</span>       <span class="mi">16355</span>   <span class="mi">17845</span>   <span class="mi">1</span>       <span class="mi">17881</span>   <span class="mi">16177</span>   <span class="mi">31</span>      <span class="mi">33</span>      <span class="mi">33</span>
+</pre></div>
+</div>
+<p>The line starting with ‘#’ are comments and will be ignored for further processing.
+But in traceability/reproducibility concern, in the comments <cite>craw_coverage</cite> indicate
+the version of the program and the arguments used for this experiment.</p>
+</div>
+</div>
+</div>
+<div class="section" id="craw-htmp">
+<h2>craw_htmp<a class="headerlink" href="#craw-htmp" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h3>Inputs<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>see <a class="reference internal" href="#cov-out">cov_out</a></p>
+</div>
+<div class="section" id="id3">
+<h3>Outputs<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>The default output of <em>craw_htmp</em> (if –out is omitted) is grapical window on the screen.
+The figure display on the screen can be saved using the window menu.</p>
+<div class="docutils container">
+<a class="reference internal image-reference" href="_images/craw_htmp_sense_on_left.png"><img alt="--sense-on-left" src="_images/craw_htmp_sense_on_left.png" style="width: 30%;" /></a>
+</div>
+<p>It is also possible to generate directly a image file in various format by specifying the –out option.
+The output format will be deduced form the filename extension provide to –out option.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">out</span> <span class="n">foo</span><span class="o">.</span><span class="n">jpeg</span>  <span class="k">for</span> <span class="n">jpeg</span> <span class="n">image</span> <span class="ow">or</span> <span class="o">--</span><span class="n">out</span> <span class="n">foo</span><span class="o">.</span><span class="n">png</span>  <span class="k">for</span> <span class="n">png</span> <span class="n">image</span>
+</pre></div>
+</div>
+<p>The supported format vary in function of the matloblib backend used (see <a class="reference internal" href="installation.html#matplotlibrc"><span class="std std-ref">matplotlib configuration</span></a>).</p>
+<p>If –size raw is used 2 files will be generated one for the sense and the other for the antisense.
+If –out is not specified it will be the name of the coverage file without extension and the format will be png.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_htmp</span> <span class="n">foo_bar</span><span class="o">.</span><span class="n">cov</span> <span class="o">--</span><span class="n">size</span> <span class="n">raw</span>
+</pre></div>
+</div>
+<p>will produce <em>foo_bar.sense.png</em> and <em>foo_bar.antisense.png</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_htmp</span> <span class="n">foo_bar</span><span class="o">.</span><span class="n">cov</span> <span class="o">--</span><span class="n">size</span> <span class="n">raw</span> <span class="o">--</span><span class="n">out</span> <span class="n">Xyzzy</span><span class="o">.</span><span class="n">jpeg</span>
+</pre></div>
+</div>
+<p>will produce <em>Xyzzy.sense.jpeg</em> and <em>Xyzzy.antisense.jpeg</em></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Inputs / Outputs</a><ul>
+<li><a class="reference internal" href="#craw-coverage">craw_coverage</a><ul>
+<li><a class="reference internal" href="#inputs">Inputs</a><ul>
+<li><a class="reference internal" href="#bam-file">bam file</a></li>
+<li><a class="reference internal" href="#wig-file">wig file</a></li>
+<li><a class="reference internal" href="#annotation-file">annotation file</a><ul>
+<li><a class="reference internal" href="#mandatory-columns">mandatory columns</a><ul>
+<li><a class="reference internal" href="#columns-with-fixed-name">columns with fixed name</a></li>
+<li><a class="reference internal" href="#columns-with-variable-name">columns with variable name</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#outputs">Outputs</a><ul>
+<li><a class="reference internal" href="#coverage-file">coverage_file</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#craw-htmp">craw_htmp</a><ul>
+<li><a class="reference internal" href="#id2">Inputs</a></li>
+<li><a class="reference internal" href="#id3">Outputs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quickstart.html"
+                        title="previous chapter">Quick start</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="craw.html"
+                        title="next chapter">craw</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/inputs-outputs.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="craw.html" title="craw"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quickstart.html" title="Quick start"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

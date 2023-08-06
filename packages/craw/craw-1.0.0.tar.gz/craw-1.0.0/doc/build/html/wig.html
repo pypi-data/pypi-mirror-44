@@ -1,0 +1,656 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>wig &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="coverage" href="coverage.html" />
+    <link rel="prev" title="annotation" href="annotation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="coverage.html" title="coverage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="annotation.html" title="annotation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="wig">
+<h1>wig<a class="headerlink" href="#wig" title="Permalink to this headline">¶</a></h1>
+<p>This module allow to parse wig files (wig file specifications are available here:
+<a class="reference external" href="https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification">https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification</a>, <a class="reference external" href="http://genome.ucsc.edu/goldenPath/help/wiggle.html">http://genome.ucsc.edu/goldenPath/help/wiggle.html</a>).
+The wig file handle by this modules slightly differ fom de canonic specifications as
+it allow to specify coverage on forward and reverse strand. If the coverage score is positive
+that mean that it’s on the forward strand if it’s negative, it’s on the reverse strand.</p>
+<div class="section" id="the-wigparser-and-helpers">
+<h2>The WigParser and helpers<a class="headerlink" href="#the-wigparser-and-helpers" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#craw.wig.WigParser" title="craw.wig.WigParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.WigParser</span></code></a> allow to parse the wig file. It read the file line by line,
+test the category of the line trackLine, declarationLine or dataLine and call the right method
+to parse the line and build the genome object.</p>
+<dl class="simple">
+<dt>The classes <a class="reference internal" href="#craw.wig.VariableChunk" title="craw.wig.VariableChunk"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.VariableChunk</span></code></a> and <a class="reference internal" href="#craw.wig.FixedChunk" title="craw.wig.FixedChunk"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.FixedChunk</span></code></a> are not keep in the final data model,</dt><dd><p>they are just used to parsed the data lines and convert the wig file information (step, span) in coverages
+for each positions.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-data-model-to-handle-the-wig-information">
+<h2>The data model to handle the wig information<a class="headerlink" href="#the-data-model-to-handle-the-wig-information" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#craw.wig.Genome" title="craw.wig.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.Genome</span></code></a> objects contains <a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.Chromosome</span></code></a> (each chromosomes ar unique and the names of chromosomes are unique).
+Each chromosomes contains the coverage for the both strands.
+To get the coverage for region or a position just access it with indices or slices as traditional
+python list, tuple, on so on. The slicing return two lists.
+The first list correspond to the coverage on this particular region for the forward strand,
+the second element for the reverse strand.
+By default the chromosomes are initialized with 0.0 as coverage for all positions.</p>
+<p>All information specified in the track line are stored in the <code class="docutils literal notranslate"><span class="pre">infos</span></code> attribute of <a class="reference internal" href="#craw.wig.Genome" title="craw.wig.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.wig.Genome</span></code></a> as a dict.</p>
+</div>
+<div class="section" id="wig-api-reference">
+<h2>wig API reference<a class="headerlink" href="#wig-api-reference" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><span class="target" id="module-craw.wig"></span><dl class="class">
+<dt id="craw.wig.Chromosome">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">Chromosome</code><span class="sig-paren">(</span><em>name</em>, <em>size=1000000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle chromosomes. A chromosome as a name and contains <a class="reference internal" href="#craw.wig.Chunk" title="craw.wig.Chunk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chunk</span></code></a> objects 
+(forward and reverse)</p>
+<dl class="method">
+<dt id="craw.wig.Chromosome.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pos</strong> – a position or a slice (0 based)
+if pos is a slice the left indice is excluded</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the coverage at this position or corresponding to this slice.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>a list of 2 list of float [[float,..],[float, ..]]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>IndexError</strong> – if pos is not in coverage or one bound of slice is out the coverage</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chromosome.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>size=1000000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – </p></li>
+<li><p><strong>size</strong> (<em>the default size of the chromosome. 
+Each time we try to set a value greater than the chromosome the chromosome size is doubled.
+This is to protect the machine against memory swapping if the user 
+provide a wig file with very big chromosomes.</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chromosome.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the actual length of the chromosome</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chromosome.__setitem__">
+<code class="descname">__setitem__</code><span class="sig-paren">(</span><em>pos</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome.__setitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> (int or <code class="xref py py-class docutils literal notranslate"><span class="pre">slice</span></code> object) – the postion (0-based) to set value</p></li>
+<li><p><strong>value</strong> (<em>float</em><em> or </em><em>iterable of float</em>) – value to assign</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – when pos is a slice and value have not the same length of the slice</p></li>
+<li><p><strong>TypeError</strong> – when pos is a slice and value is not iterable</p></li>
+<li><p><strong>IndexError</strong> – if pos is not in coverage or one bound of slice is out the coverage</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.wig.Chromosome.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.wig.Chromosome.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chromosome._estimate_memory">
+<code class="descname">_estimate_memory</code><span class="sig-paren">(</span><em>col_nb</em>, <em>mem_per_col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome._estimate_memory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome._estimate_memory" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col_nb</strong> (<em>int</em>) – the number of column of the new array or the extension</p></li>
+<li><p><strong>mem_per_col</strong> (<em>int</em>) – the memory needed to create or extend an array with one col and 2 rows fill with 0.0</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the estimation of free memory available after creating or extending chromosome</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chromosome._extend">
+<code class="descname">_extend</code><span class="sig-paren">(</span><em>size=1000000</em>, <em>fill=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chromosome._extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chromosome._extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extend this chromosome of the size size and fill with fill.
+:param size: the size (in bp) we want to increase the chromosome.
+:type size: int
+:param fill: the default value to fill the chromosome.
+:type fill: float or nan
+:raise MemoryError: if the chromosome extension could overcome the free memory.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.wig.Chunk">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">Chunk</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represent the data following a declaration line.
+The a Chunk contains sparse data on coverage 
+on a region of one chromosomes on both strand plus data contains on the declaration line.</p>
+<dl class="method">
+<dt id="craw.wig.Chunk.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chunk.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chunk.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>dictionary</em>) – the key,values pairs found on a Declaration line</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.wig.Chunk.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.wig.Chunk.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chunk.is_fixed_step">
+<code class="descname">is_fixed_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chunk.is_fixed_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chunk.is_fixed_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an abstract methods, must be implemented in inherited class
+:return: True if i’s a fixed chunk of data, False otheweise
+:rtype: boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Chunk.parse_data_line">
+<code class="descname">parse_data_line</code><span class="sig-paren">(</span><em>line</em>, <em>chrom</em>, <em>strand_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Chunk.parse_data_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Chunk.parse_data_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse a line of data and append the results in the corresponding strand
+This is an abstract methods, must be implemented in inherited class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>string</em>) – line of data to parse (the white spaces at the end must be strip)</p></li>
+<li><p><strong>chrom</strong> (<a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.) – the chromosome to add coverage data</p></li>
+<li><p><strong>strand_type</strong> (<em>string '+'</em><em> , </em><em>'-'</em><em>, </em><em>'mixed'</em>) – which kind of wig is parsing: forward, reverse, or mixed strand</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.wig.FixedChunk">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">FixedChunk</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#FixedChunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.FixedChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>The FixedChunk objects handle data of ‘fixedStep’ declaration line and it’s coverage data</p>
+<dl class="method">
+<dt id="craw.wig.FixedChunk.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#FixedChunk.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.FixedChunk.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>dictionary</em>) – the key,values pairs found on a Declaration line</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.FixedChunk.is_fixed_step">
+<code class="descname">is_fixed_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#FixedChunk.is_fixed_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.FixedChunk.is_fixed_step" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.FixedChunk.parse_data_line">
+<code class="descname">parse_data_line</code><span class="sig-paren">(</span><em>line</em>, <em>chrom</em>, <em>strand_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#FixedChunk.parse_data_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.FixedChunk.parse_data_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse line of data following a fixedStep Declaration.
+add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
+:param line: line of data to parse (the white spaces at the end must be strip)
+:type line: string
+:param chrom: the chromosome to add coverage data
+:type chrom: <a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.
+:param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand
+:type strand_type: string ‘+’ , ‘-‘, ‘mixed’</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.wig.Genome">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">Genome</code><a class="reference internal" href="_modules/craw/wig.html#Genome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Genome" title="Permalink to this definition">¶</a></dt>
+<dd><p>A genome is made of chromosomes and some metadata, called infos</p>
+<dl class="method">
+<dt id="craw.wig.Genome.__delitem__">
+<code class="descname">__delitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Genome.__delitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Genome.__delitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove a chromosome from this genome</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>string</em>) – the name of the chromosome to remove</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Genome.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Genome.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Genome.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>string</em>) – the name of the chromosome to retrieve</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the chromosome corresponding to the name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Genome.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Genome.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Genome.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.wig.Genome.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.wig.Genome.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.Genome.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>chrom</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#Genome.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.Genome.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a chromosome in to a genome.
+if a chromosome with the same name already exist the previous one is replaced silently by this one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>chrom</strong> (<a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.) – a chromosome to ad to this genome</p>
+</dd>
+<dt class="field-even">Raise</dt>
+<dd class="field-even"><p>TypeError if chrom is not a <a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.wig.VariableChunk">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">VariableChunk</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#VariableChunk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.VariableChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Variable Chunk objects handle data of ‘variableStep’ declaration line and it’s coverage data</p>
+<p>If in data there is negative values this indicate that the coverage match on the reverse strand.
+the chunk start with the smallest position and end to the higest position whatever on wich strand are
+these position. This mean that when the chunk will be convert in Coverage,
+the lacking positions will be filled with 0.0.</p>
+<p>for instance:</p>
+<blockquote>
+<div><p>variableStep chrom=chr3 span=2
+10 11
+20 22
+20 -30
+25 -50</p>
+</div></blockquote>
+<p>will give coverages starting at position 10 and ending at 26 for both strands and with 
+the following coverages values</p>
+<div class="line-block">
+<div class="line">for = [11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.0, 22.0, 0.0, 0.0, 0.0, 0.0, 0.0]</div>
+<div class="line">rev = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 30.0, 0.0, 0.0, 0.0, 50.0, 50.0]</div>
+</div>
+<dl class="method">
+<dt id="craw.wig.VariableChunk.is_fixed_step">
+<code class="descname">is_fixed_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#VariableChunk.is_fixed_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.VariableChunk.is_fixed_step" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>False</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.VariableChunk.parse_data_line">
+<code class="descname">parse_data_line</code><span class="sig-paren">(</span><em>line</em>, <em>chrom</em>, <em>strand_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#VariableChunk.parse_data_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.VariableChunk.parse_data_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse line of data following a variableStep Declaration.
+Add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>string</em>) – line of data to parse (the white spaces at the end must be strip)</p></li>
+<li><p><strong>chrom</strong> (<a class="reference internal" href="#craw.wig.Chromosome" title="craw.wig.Chromosome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chromosome</span></code></a> object.) – the chromosome to add coverage data</p></li>
+<li><p><strong>strand_type</strong> (<em>string '+'</em><em> , </em><em>'-'</em><em>, </em><em>'mixed'</em>) – which kind of wig is parsing: forward, reverse, or mixed strand</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if strand_type is different than ‘mixed’, ‘-‘, ‘+’</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="craw.wig.WigError">
+<em class="property">exception </em><code class="descclassname">craw.wig.</code><code class="descname">WigError</code><a class="reference internal" href="_modules/craw/wig.html#WigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle error related to wig parsing</p>
+<dl class="attribute">
+<dt id="craw.wig.WigError.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.wig.WigError.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.wig.WigParser">
+<em class="property">class </em><code class="descclassname">craw.wig.</code><code class="descname">WigParser</code><span class="sig-paren">(</span><em>mixed_wig=''</em>, <em>for_wig=''</em>, <em>rev_wig=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>class to parse file in wig format.
+at the end of parsing it returns a <a class="reference internal" href="#craw.wig.Genome" title="craw.wig.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a> object.</p>
+<dl class="method">
+<dt id="craw.wig.WigParser.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>mixed_wig=''</em>, <em>for_wig=''</em>, <em>rev_wig=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mixed_wig</strong> (<em>string</em>) – <p>The path of the wig file to parse.
+The wig file code for the 2 strands:</p>
+<blockquote>
+<div><ul>
+<li><p>The positive coverage values for the forward strand</p></li>
+<li><p>The negative coverage values for the reverse strand</p></li>
+</ul>
+</div></blockquote>
+<p>This parameter is incompatible with for_wig and rev_wig parameter.</p>
+</p></li>
+<li><p><strong>for_wig</strong> (<em>string</em>) – The path of the wig file to parse. 
+The wig file code for forward strand only.
+This parameter is incompatible with mixed_wig parameter.</p></li>
+<li><p><strong>rev_wig</strong> (<em>string</em>) – The path of the wig file to parse. 
+The wig file code for reverse strand only.
+This parameter is incompatible with mixed_wig parameter.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.wig.WigParser.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.wig.WigParser.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="craw.wig.WigParser.is_comment_line">
+<em class="property">static </em><code class="descname">is_comment_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.is_comment_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.is_comment_line" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>string</em>) – line to parse.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if line is a comment line. False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.is_data_line">
+<code class="descname">is_data_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.is_data_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.is_data_line" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> – line to parse.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if it’s a data line, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.is_declaration_line">
+<code class="descname">is_declaration_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.is_declaration_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.is_declaration_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single line, beginning with one of the identifiers variableStep or fixedStep, followed by attribute/value pairs
+for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fixedStep</span> <span class="n">chrom</span><span class="o">=</span><span class="n">chrI</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span> <span class="n">step</span><span class="o">=</span><span class="mi">10</span> <span class="n">span</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>string</em>) – line to parse.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if line is a declaration line. False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="craw.wig.WigParser.is_track_line">
+<em class="property">static </em><code class="descname">is_track_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.is_track_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.is_track_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>A track line begins with the identifier track and followed by attribute/value pairs 
+for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">track</span> <span class="nb">type</span><span class="o">=</span><span class="n">wiggle_0</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fixedStep&quot;</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;fixedStep format&quot;</span> <span class="n">visibility</span><span class="o">=</span><span class="n">full</span> <span class="n">autoScale</span><span class="o">=</span><span class="n">off</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>string</em>) – line to parse.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if line is a track line. False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.parse">
+<code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a wig file and parse it.
+read wig file line by line check the type of line
+and call the corresponding method accordingly the type of the line:
+- comment
+- track
+- declaration
+- data
+see
+- <a class="reference external" href="https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification">https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification</a>
+- <a class="reference external" href="http://genome.ucsc.edu/goldenPath/help/wiggle.html">http://genome.ucsc.edu/goldenPath/help/wiggle.html</a>
+for wig specifications.
+This parser does not fully follow these specification. When a score is negative,
+it means that the coverage is on the reverse strand. So some positions can appear twice
+in one block of declaration (what I call a chunk).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a Genome coverage corresponding to the wig files (mixed strand on one wig or two separate wig)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#craw.wig.Genome" title="craw.wig.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a> object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.parse_data_line">
+<code class="descname">parse_data_line</code><span class="sig-paren">(</span><em>line</em>, <em>strand_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.parse_data_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.parse_data_line" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>string</em>) – line to parse. It must not a comment_line, neither a track line nor a declaration line.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if strand_type is different than ‘mixed’, ‘-‘, ‘+’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.parse_declaration_line">
+<code class="descname">parse_declaration_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.parse_declaration_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.parse_declaration_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the corresponding chromosome create one if necessary, 
+and set the current_chunk and current_chromosome.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> – line to parse. The method <a class="reference internal" href="#craw.wig.WigParser.is_declaration_line" title="craw.wig.WigParser.is_declaration_line"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_declaration_line()</span></code></a> must return True with this line.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.wig.WigParser.parse_track_line">
+<code class="descname">parse_track_line</code><span class="sig-paren">(</span><em>line</em>, <em>strand_type=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/wig.html#WigParser.parse_track_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.wig.WigParser.parse_track_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>fill the genome infos with the information found on the track.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>line</strong> – line to parse. The method <a class="reference internal" href="#craw.wig.WigParser.is_track_line" title="craw.wig.WigParser.is_track_line"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_track_line()</span></code></a> must return True with this line.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">wig</a><ul>
+<li><a class="reference internal" href="#the-wigparser-and-helpers">The WigParser and helpers</a></li>
+<li><a class="reference internal" href="#the-data-model-to-handle-the-wig-information">The data model to handle the wig information</a></li>
+<li><a class="reference internal" href="#wig-api-reference">wig API reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="annotation.html"
+                        title="previous chapter">annotation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="coverage.html"
+                        title="next chapter">coverage</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/wig.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="coverage.html" title="coverage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="annotation.html" title="annotation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

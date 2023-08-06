@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.wig &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.wig</h1><div class="highlight"><pre>
+<span></span><span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019  Institut Pasteur (Paris).                   #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">psutil</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WigError"><a class="viewcode-back" href="../../wig.html#craw.wig.WigError">[docs]</a><span class="k">class</span> <span class="nc">WigError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle error related to wig parsing </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Chunk"><a class="viewcode-back" href="../../wig.html#craw.wig.Chunk">[docs]</a><span class="k">class</span> <span class="nc">Chunk</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represent the data following a declaration line.</span>
+<span class="sd">    The a Chunk contains sparse data on coverage </span>
+<span class="sd">    on a region of one chromosomes on both strand plus data contains on the declaration line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Chunk.__init__"><a class="viewcode-back" href="../../wig.html#craw.wig.Chunk.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param kwargs: the key,values pairs found on a Declaration line</span>
+<span class="sd">        :type kwargs: dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">span</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;chrom&#39; field  is not present.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;chrom&#39; field  is not present.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not allowed as span value.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">span</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Chunk.is_fixed_step"><a class="viewcode-back" href="../../wig.html#craw.wig.Chunk.is_fixed_step">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_fixed_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is an abstract methods, must be implemented in inherited class</span>
+<span class="sd">        :return: True if i&#39;s a fixed chunk of data, False otheweise</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+<div class="viewcode-block" id="Chunk.parse_data_line"><a class="viewcode-back" href="../../wig.html#craw.wig.Chunk.parse_data_line">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">parse_data_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        parse a line of data and append the results in the corresponding strand</span>
+<span class="sd">        This is an abstract methods, must be implemented in inherited class.</span>
+<span class="sd">        </span>
+<span class="sd">        :param line: line of data to parse (the white spaces at the end must be strip)</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :param chrom: the chromosome to add coverage data</span>
+<span class="sd">        :type chrom: :class:`Chromosome` object.</span>
+<span class="sd">        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand</span>
+<span class="sd">        :type strand_type: string &#39;+&#39; , &#39;-&#39;, &#39;mixed&#39; </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_convert_cov</span><span class="p">(</span><span class="n">strand_type</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">strand_type</span> <span class="o">==</span> <span class="s1">&#39;mixed&#39;</span><span class="p">:</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">strand_type</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">cov</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">strand_type</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">cov</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value: &#39;</span><span class="si">{}</span><span class="s2">&#39; is not allowed for strand parameter.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">strand_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cov</span></div>
+
+
+<div class="viewcode-block" id="FixedChunk"><a class="viewcode-back" href="../../wig.html#craw.wig.FixedChunk">[docs]</a><span class="k">class</span> <span class="nc">FixedChunk</span><span class="p">(</span><span class="n">Chunk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The FixedChunk objects handle data of &#39;fixedStep&#39; declaration line and it&#39;s coverage data </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FixedChunk.__init__"><a class="viewcode-back" href="../../wig.html#craw.wig.FixedChunk.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;step&#39; must be strictly positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;start&#39; must be defined for &#39;fixedStep&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;&#39;span&#39; cannot be greater than &#39;step&#39;.&quot;</span><span class="p">)</span>
+        <span class="c1"># we switch from 1-based positions in wig into 0-based position in chromosome</span>
+        <span class="c1"># to have the same behavior as in bam</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="FixedChunk.is_fixed_step"><a class="viewcode-back" href="../../wig.html#craw.wig.FixedChunk.is_fixed_step">[docs]</a>    <span class="k">def</span> <span class="nf">is_fixed_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: True</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="FixedChunk.parse_data_line"><a class="viewcode-back" href="../../wig.html#craw.wig.FixedChunk.parse_data_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_data_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        parse line of data following a fixedStep Declaration.</span>
+<span class="sd">        add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)</span>
+<span class="sd">        :param line: line of data to parse (the white spaces at the end must be strip)</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :param chrom: the chromosome to add coverage data</span>
+<span class="sd">        :type chrom: :class:`Chromosome` object.</span>
+<span class="sd">        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand</span>
+<span class="sd">        :type strand_type: string &#39;+&#39; , &#39;-&#39;, &#39;mixed&#39; </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># the line is already striped</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_cov</span><span class="p">(</span><span class="n">strand_type</span><span class="p">,</span> <span class="n">line</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span>
+        <span class="c1"># in FixedChunk we translate the origin to a 0-based position at the __init__</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_pos</span>
+        <span class="n">chrom</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span><span class="p">]</span> <span class="o">=</span> <span class="n">cov</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_pos</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span></div></div>
+
+
+<div class="viewcode-block" id="VariableChunk"><a class="viewcode-back" href="../../wig.html#craw.wig.VariableChunk">[docs]</a><span class="k">class</span> <span class="nc">VariableChunk</span><span class="p">(</span><span class="n">Chunk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Variable Chunk objects handle data of &#39;variableStep&#39; declaration line and it&#39;s coverage data </span>
+<span class="sd">    </span>
+<span class="sd">    If in data there is negative values this indicate that the coverage match on the reverse strand.</span>
+<span class="sd">    the chunk start with the smallest position and end to the higest position whatever on wich strand are</span>
+<span class="sd">    these position. This mean that when the chunk will be convert in Coverage,</span>
+<span class="sd">    the lacking positions will be filled with 0.0.</span>
+<span class="sd">    </span>
+<span class="sd">    for instance: </span>
+<span class="sd">      </span>
+<span class="sd">      variableStep chrom=chr3 span=2</span>
+<span class="sd">      10 11</span>
+<span class="sd">      20 22</span>
+<span class="sd">      20 -30</span>
+<span class="sd">      25 -50</span>
+<span class="sd">      </span>
+<span class="sd">    will give coverages starting at position 10 and ending at 26 for both strands and with </span>
+<span class="sd">    the following coverages values</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    | for = [11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.0, 22.0, 0.0, 0.0, 0.0, 0.0, 0.0]</span>
+<span class="sd">    | rev = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 30.0, 0.0, 0.0, 0.0, 50.0, 50.0]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="VariableChunk.is_fixed_step"><a class="viewcode-back" href="../../wig.html#craw.wig.VariableChunk.is_fixed_step">[docs]</a>    <span class="k">def</span> <span class="nf">is_fixed_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: False</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="VariableChunk.parse_data_line"><a class="viewcode-back" href="../../wig.html#craw.wig.VariableChunk.parse_data_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_data_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse line of data following a variableStep Declaration.</span>
+<span class="sd">        Add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)</span>
+<span class="sd">       </span>
+<span class="sd">        :param line: line of data to parse (the white spaces at the end must be strip)</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :param chrom: the chromosome to add coverage data</span>
+<span class="sd">        :type chrom: :class:`Chromosome` object.</span>
+<span class="sd">        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand</span>
+<span class="sd">        :type strand_type: string &#39;+&#39; , &#39;-&#39;, &#39;mixed&#39;</span>
+<span class="sd">        :raise ValueError: if strand_type is different than &#39;mixed&#39;, &#39;-&#39;, &#39;+&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pos</span><span class="p">,</span> <span class="n">cov</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="c1"># we switch from 1-based positions in wig into 0-based position in chromosome</span>
+        <span class="c1"># to have the same behavior as in bam</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_cov</span><span class="p">(</span><span class="n">strand_type</span><span class="p">,</span> <span class="n">cov</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span>
+        <span class="n">chrom</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span><span class="p">]</span> <span class="o">=</span> <span class="n">cov</span></div></div>
+
+
+<div class="viewcode-block" id="Chromosome"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome">[docs]</a><span class="k">class</span> <span class="nc">Chromosome</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle chromosomes. A chromosome as a name and contains :class:`Chunk` objects </span>
+<span class="sd">    (forward and reverse)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Chromosome.__init__"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        :param name: </span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :param size: </span>
+<span class="sd">        :type size: the default size of the chromosome. </span>
+<span class="sd">            Each time we try to set a value greater than the chromosome the chromosome size is doubled.</span>
+<span class="sd">            This is to protect the machine against memory swapping if the user </span>
+<span class="sd">            provide a wig file with very big chromosomes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
+        <span class="c1"># 30 is the memory used to allocated new array of shape (2,1)</span>
+        <span class="c1"># it was empirically determined</span>
+        <span class="n">est_avail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_memory</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">est_avail</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">MemoryError</span><span class="p">(</span><span class="s2">&quot;Not enough memory to create new chromosome </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="mf">0.</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Chromosome.__len__"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: the actual length of the chromosome</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Chromosome.__setitem__"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome.__setitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param pos: the postion (0-based) to set value</span>
+<span class="sd">        :type pos: int or :class:`slice` object</span>
+<span class="sd">        :param value: value to assign</span>
+<span class="sd">        :type value: float or iterable of float</span>
+<span class="sd">        :raise ValueError: when pos is a slice and value have not the same length of the slice</span>
+<span class="sd">        :raise TypeError: when pos is a slice and value is not iterable</span>
+<span class="sd">        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">pos</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;can assign only iterable of same length of the slice&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;can only assign an iterable&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">strand</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">strand</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">last_pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">stop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">strand</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">strand</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">last_pos</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="k">while</span> <span class="n">last_pos</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extend</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="p">[</span><span class="n">strand</span><span class="p">,</span> <span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="Chromosome.__getitem__"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome.__getitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param pos: a position or a slice (0 based)</span>
+<span class="sd">                   if pos is a slice the left indice is excluded</span>
+<span class="sd">        :return: the coverage at this position or corresponding to this slice.</span>
+<span class="sd">        :rtype: a list of 2 list of float [[float,...],[float, ...]]</span>
+<span class="sd">        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="p">[:,</span> <span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Chromosome._extend"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome._extend">[docs]</a>    <span class="k">def</span> <span class="nf">_extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extend this chromosome of the size size and fill with fill.</span>
+<span class="sd">        :param size: the size (in bp) we want to increase the chromosome.</span>
+<span class="sd">        :type size: int</span>
+<span class="sd">        :param fill: the default value to fill the chromosome.</span>
+<span class="sd">        :type fill: float or nan</span>
+<span class="sd">        :raise MemoryError: if the chromosome extension could overcome the free memory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># 10 is the memory used to horizontally extend an array with one col and 2 rows fill with 0.</span>
+        <span class="c1"># it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2</span>
+        <span class="n">est_avail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_memory</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">tot_k_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span> <span class="o">+</span> <span class="n">size</span>
+        <span class="k">if</span> <span class="n">est_avail</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">tot_k_size</span> <span class="o">&lt;</span> <span class="mf">1000.0</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">tot_k_size</span> <span class="o">/=</span> <span class="mf">1000.0</span>
+            <span class="n">h_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{:.1f}{}</span><span class="s2">bp&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tot_k_size</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">MemoryError</span><span class="p">(</span><span class="s2">&quot;Not enough memory to extend chromosome&quot;</span>
+                              <span class="s2">&quot; </span><span class="si">{}</span><span class="s2"> to </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">h_size</span><span class="p">))</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_coverage</span><span class="p">,</span> <span class="n">chunk</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Chromosome._estimate_memory"><a class="viewcode-back" href="../../wig.html#craw.wig.Chromosome._estimate_memory">[docs]</a>    <span class="k">def</span> <span class="nf">_estimate_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_nb</span><span class="p">,</span> <span class="n">mem_per_col</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param col_nb: the number of column of the new array or the extension </span>
+<span class="sd">        :type col_nb: int</span>
+<span class="sd">        :param mem_per_col: the memory needed to create or extend an array with one col and 2 rows fill with 0.0  </span>
+<span class="sd">        :type mem_per_col: int</span>
+<span class="sd">        :return: the estimation of free memory available after creating or extending chromosome</span>
+<span class="sd">        :rtype: int </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">my_process</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pid</span><span class="p">)</span>
+        <span class="n">est_mem</span> <span class="o">=</span> <span class="p">(</span><span class="n">col_nb</span> <span class="o">*</span> <span class="n">mem_per_col</span><span class="p">)</span> <span class="o">+</span> <span class="n">my_process</span><span class="o">.</span><span class="n">memory_info</span><span class="p">()</span><span class="o">.</span><span class="n">rss</span>
+        <span class="n">est_avail</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span><span class="o">.</span><span class="n">available</span> <span class="o">-</span> <span class="n">est_mem</span>
+        <span class="k">return</span> <span class="n">est_avail</span></div></div>
+
+
+<div class="viewcode-block" id="Genome"><a class="viewcode-back" href="../../wig.html#craw.wig.Genome">[docs]</a><span class="k">class</span> <span class="nc">Genome</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A genome is made of chromosomes and some metadata, called infos</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Genome.__init__"><a class="viewcode-back" href="../../wig.html#craw.wig.Genome.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infos</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="Genome.__getitem__"><a class="viewcode-back" href="../../wig.html#craw.wig.Genome.__getitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param name: the name of the chromosome to retrieve</span>
+<span class="sd">        :type name: string</span>
+<span class="sd">        :return: the chromosome corresponding to the name.</span>
+<span class="sd">        :rtype: :class:`Chromosome` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chrom</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">chrom</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">Chromosome</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;in &lt;Genome&gt;&#39; requires string or Chromosome as left operand, not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">chrom</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="Genome.__delitem__"><a class="viewcode-back" href="../../wig.html#craw.wig.Genome.__delitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        remove a chromosome from this genome</span>
+<span class="sd">        </span>
+<span class="sd">        :param name: the name of the chromosome to remove </span>
+<span class="sd">        :type name: string</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;The chromosome &#39;</span><span class="si">{}</span><span class="s2">&#39; is not in this genome.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chromosomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="Genome.add"><a class="viewcode-back" href="../../wig.html#craw.wig.Genome.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chrom</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add a chromosome in to a genome.</span>
+<span class="sd">        if a chromosome with the same name already exist the previous one is replaced silently by this one.</span>
+
+<span class="sd">        :param chrom: a chromosome to ad to this genome</span>
+<span class="sd">        :type chrom: :class:`Chromosome` object.</span>
+<span class="sd">        :raise: TypeError if chrom is not a :class:`Chromosome` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">Chromosome</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Genome can contains only Chromosome objects&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chromosomes</span><span class="p">[</span><span class="n">chrom</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">chrom</span></div></div>
+
+
+<div class="viewcode-block" id="WigParser"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser">[docs]</a><span class="k">class</span> <span class="nc">WigParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class to parse file in wig format.</span>
+<span class="sd">    at the end of parsing it returns a :class:`Genome` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WigParser.__init__"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mixed_wig</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">for_wig</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">rev_wig</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param mixed_wig: The path of the wig file to parse.</span>
+<span class="sd">                          The wig file code for the 2 strands:</span>
+<span class="sd">                          </span>
+<span class="sd">                             - The positive coverage values for the forward strand</span>
+<span class="sd">                             - The negative coverage values for the reverse strand</span>
+
+<span class="sd">                          This parameter is incompatible with for_wig and rev_wig parameter.</span>
+<span class="sd">        :type mixed_wig: string</span>
+<span class="sd">        :param for_wig: The path of the wig file to parse. </span>
+<span class="sd">                        The wig file code for forward strand only.</span>
+<span class="sd">                        This parameter is incompatible with mixed_wig parameter.</span>
+<span class="sd">        :type for_wig: string</span>
+<span class="sd">        :param rev_wig: The path of the wig file to parse. </span>
+<span class="sd">                        The wig file code for reverse strand only.</span>
+<span class="sd">                        This parameter is incompatible with mixed_wig parameter.</span>
+<span class="sd">        :type rev_wig: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">((</span><span class="n">mixed_wig</span><span class="p">,</span> <span class="n">for_wig</span><span class="p">,</span> <span class="n">rev_wig</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;The path for one or two wig files must be specify&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">mixed_wig</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">((</span><span class="n">for_wig</span><span class="p">,</span> <span class="n">rev_wig</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;Cannot specify the path for mixed wig and forward or reverse wig in same time&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">declaration_type_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;fixedStep|variableStep&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trackline_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;(\w+)=(&quot;.+?&quot;|&#39;.+?&#39;|\S+)&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_line_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^-?\d+(\s+-?\d+(\.\d+)?)?$&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_mixed</span> <span class="o">=</span> <span class="n">mixed_wig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_for</span> <span class="o">=</span> <span class="n">for_wig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_rev</span> <span class="o">=</span> <span class="n">rev_wig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_chrom</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="WigParser.parse"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open a wig file and parse it.</span>
+<span class="sd">        read wig file line by line check the type of line</span>
+<span class="sd">        and call the corresponding method accordingly the type of the line:</span>
+<span class="sd">        - comment</span>
+<span class="sd">        - track</span>
+<span class="sd">        - declaration</span>
+<span class="sd">        - data</span>
+<span class="sd">        see</span>
+<span class="sd">        - https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification</span>
+<span class="sd">        - http://genome.ucsc.edu/goldenPath/help/wiggle.html</span>
+<span class="sd">        for wig specifications.</span>
+<span class="sd">        This parser does not fully follow these specification. When a score is negative,</span>
+<span class="sd">        it means that the coverage is on the reverse strand. So some positions can appear twice</span>
+<span class="sd">        in one block of declaration (what I call a chunk).</span>
+
+<span class="sd">        :return: a Genome coverage corresponding to the wig files (mixed strand on one wig or two separate wig)</span>
+<span class="sd">        :rtype: :class:`Genome` object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_mixed</span><span class="p">:</span>
+            <span class="n">wig_paths</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_mixed</span><span class="p">,</span> <span class="s1">&#39;mixed&#39;</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wig_paths</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_for</span><span class="p">:</span>
+                <span class="n">wig_paths</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_for</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_rev</span><span class="p">:</span>
+                <span class="n">wig_paths</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_rev</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">strand_type</span> <span class="ow">in</span> <span class="n">wig_paths</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wig_file</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">wig_file</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_data_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">parse_data_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_declaration_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">parse_declaration_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_track_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">parse_track_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">strand_type</span><span class="o">=</span><span class="n">strand_type</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_comment_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;the line is malformed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span></div>
+
+
+<div class="viewcode-block" id="WigParser.is_data_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.is_data_line">[docs]</a>    <span class="k">def</span> <span class="nf">is_data_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param line: line to parse.</span>
+<span class="sd">        :return: True if it&#39;s a data line, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_line_pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="WigParser.parse_data_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.parse_data_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_data_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param line: line to parse. It must not a comment_line, neither a track line nor a declaration line.</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :type strand_type: string &#39;+&#39; , &#39;-&#39;, &#39;mixed&#39;</span>
+<span class="sd">        :raise ValueError: if strand_type is different than &#39;mixed&#39;, &#39;-&#39;, &#39;+&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s2">&quot;this data line &#39;</span><span class="si">{}</span><span class="s2">&#39; is not preceded by declaration&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span><span class="o">.</span><span class="n">parse_data_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_chrom</span><span class="p">,</span> <span class="n">strand_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WigParser.is_declaration_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.is_declaration_line">[docs]</a>    <span class="k">def</span> <span class="nf">is_declaration_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A single line, beginning with one of the identifiers variableStep or fixedStep, followed by attribute/value pairs</span>
+<span class="sd">        for instance: ::</span>
+
+<span class="sd">          fixedStep chrom=chrI start=1 step=10 span=5</span>
+<span class="sd">        </span>
+<span class="sd">        :param line: line to parse.</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :return: True if line is a declaration line. False otherwise.</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">declaration_type_pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="WigParser.parse_declaration_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.parse_declaration_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_declaration_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the corresponding chromosome create one if necessary, </span>
+<span class="sd">        and set the current_chunk and current_chromosome.</span>
+
+<span class="sd">        :param line: line to parse. The method :meth:`is_declaration_line` must return True with this line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;parsing : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">attr</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]}</span>
+
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;fixedStep&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span> <span class="o">=</span> <span class="n">FixedChunk</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span> <span class="o">=</span> <span class="n">VariableChunk</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">chrom_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_chunk</span><span class="o">.</span><span class="n">chrom</span>
+        <span class="k">if</span> <span class="n">chrom_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="p">:</span>
+            <span class="n">chrom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="p">[</span><span class="n">chrom_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chrom</span> <span class="o">=</span> <span class="n">Chromosome</span><span class="p">(</span><span class="n">chrom_name</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">750000</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">chrom</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_chrom</span> <span class="o">=</span> <span class="n">chrom</span></div>
+
+
+<div class="viewcode-block" id="WigParser.is_track_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.is_track_line">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_track_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A track line begins with the identifier track and followed by attribute/value pairs </span>
+<span class="sd">        for instance: ::</span>
+
+<span class="sd">          track type=wiggle_0 name=&quot;fixedStep&quot; description=&quot;fixedStep format&quot; visibility=full autoScale=off</span>
+<span class="sd">        </span>
+<span class="sd">        :param line: line to parse.</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :return: True if line is a track line. False otherwise.</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;track&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WigParser.parse_track_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.parse_track_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_track_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">strand_type</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        fill the genome infos with the information found on the track.</span>
+
+<span class="sd">        :param line: line to parse. The method :meth:`is_track_line` must return True with this line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;parsing : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trackline_pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WigError</span><span class="p">(</span><span class="s1">&#39;wiggle type is not present: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">strand_type</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="o">.</span><span class="n">infos</span><span class="p">[</span><span class="s1">&#39;forward&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span>
+            <span class="k">elif</span> <span class="n">strand_type</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="o">.</span><span class="n">infos</span><span class="p">[</span><span class="s1">&#39;reverse&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_genome</span><span class="o">.</span><span class="n">infos</span> <span class="o">=</span> <span class="n">attrs</span></div>
+
+<div class="viewcode-block" id="WigParser.is_comment_line"><a class="viewcode-back" href="../../wig.html#craw.wig.WigParser.is_comment_line">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_comment_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param line: line to parse.</span>
+<span class="sd">        :type line: string</span>
+<span class="sd">        :return: True if line is a comment line. False otherwise.</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span></div></div>
+
+
+
+
+
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>overview &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Welcome to Counter RNAseq Window’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Counter RNAseq Window’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="overview">
+<span id="id1"></span><h1>overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p><strong>C</strong>ounter <strong>R</strong>N<strong>A</strong> seq <strong>W</strong>indow is a package which aim to compute and visualize the coverage
+of RNA seq experiment.</p>
+<p>The craw package contains two scripts <cite>craw_coverage</cite> and <cite>craw_htmp</cite>.
+<cite>craw_coverage</cite> compute the coverage, whereas <cite>craw_htmp</cite> allow to represent graphically the results
+of <cite>craw_coverage</cite> with a heat map.</p>
+<div class="section" id="craw-coverage">
+<h2>craw_coverage<a class="headerlink" href="#craw-coverage" title="Permalink to this headline">¶</a></h2>
+<p><cite>craw_coverage</cite> take as input a bam file or wig file and an annotation file.
+<strong>The annotation file</strong> describe on which gene the craw_coverage must compute the coverage.
+The script compute a coverage for each position of this gene on a specified window
+around a position of reference on both sense and put the results on a matrix.
+The region of interest can be fixed for all genes (specified by the command line)
+or variable. In the this case the annotation file must contains two columns to specify
+beginning and the end of the region to take in account.
+The results in the matrix are centered on the position of reference of each gene.
+In the case of variable length of window the results are padded on left and right if necessary with
+<cite>None</cite> value.
+The results is saved in a file as a tabulated separated value by default with the same name as the bam file
+with the <cite>.cov</cite> extension (see <a class="reference internal" href="inputs-outputs.html#cov-out"><span class="std std-ref">Outputs</span></a> for more details).</p>
+<p>Below an example to illustrate how craw_coverage work.
+If we consider the following genome and we want to analyze 3 gene <em>foo</em>, <em>bar</em>, <em>buz</em></p>
+<a class="reference internal image-reference" href="_images/genome.png"><img alt="genome" src="_images/genome.png" style="width: 40%;" /></a>
+<p>On the figure above</p>
+<ul>
+<li><p>The first line represent the positions on the genome (1-based)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The bold position indicate the boundaries of region we want to analyse.</p></li>
+<li><p>the red highlighted positions indicate, for each region, the position of reference.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>the second line represent the genes and their respective sense.</p></li>
+<li><p>the 2 last lines the coverage at each position of the genome for each strand</p></li>
+</ul>
+<p>So to analyse these genes, we create an annotation file like following.</p>
+<a class="reference internal image-reference" href="_images/annotation_file.png"><img alt="annotation" src="_images/annotation_file.png" style="width: 30%;" /></a>
+<p>the run a command line like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">craw_coverage</span> <span class="o">--</span><span class="n">bam</span> <span class="n">mygenome</span><span class="o">.</span><span class="n">bam</span> <span class="o">--</span><span class="n">annot</span> <span class="n">my_annotation</span> <span class="o">--</span><span class="n">ref</span><span class="o">-</span><span class="n">col</span> <span class="n">ref</span> <span class="o">--</span><span class="n">start</span><span class="o">-</span><span class="n">col</span> <span class="n">start</span> <span class="o">--</span><span class="n">stop</span><span class="o">-</span><span class="n">col</span> <span class="n">stop</span>
+</pre></div>
+</div>
+<p>will produce the following coverage matrix</p>
+<a class="reference internal image-reference" href="_images/coverage_matrix.png"><img alt="coverage matrix" src="_images/coverage_matrix.png" style="width: 30%;" /></a>
+</div>
+<div class="section" id="craw-htmp">
+<h2>craw_htmp<a class="headerlink" href="#craw-htmp" title="Permalink to this headline">¶</a></h2>
+<p><cite>craw_htmp</cite> read coverage file produced by <cite>craw_coverage</cite> and generate a graphical representation.
+It can produce either a file or an interactive graphic. The look and feel of the graphic and the format
+of supported outputs vary in function of the backend of matplotlib used (see <a class="reference internal" href="installation.html#matplotlibrc"><span class="std std-ref">matplotlib configuration</span></a> ).
+It can also produce raw images using pillow where 1 nucleotide is represent by 1 pixel.</p>
+</div>
+<div class="section" id="licensing">
+<h2>Licensing<a class="headerlink" href="#licensing" title="Permalink to this headline">¶</a></h2>
+<p>All files belonging to the <strong>C</strong>ounter <strong>R</strong>N<strong>A</strong>seq<strong>W</strong>indow (craw) package.
+are distributed under the GPLv3 licensing.</p>
+<p>You should have received a copy of the GNU General Public License
+along with the package (see COPYING file).
+If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>craw is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+<p>craw is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.</p>
+<p>Authors: Bertrand Neron
+Copyright © 2017-2019  Institut Pasteur (Paris).
+see COPYRIGHT file for details.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">overview</a><ul>
+<li><a class="reference internal" href="#craw-coverage">craw_coverage</a></li>
+<li><a class="reference internal" href="#craw-htmp">craw_htmp</a></li>
+<li><a class="reference internal" href="#licensing">Licensing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Counter RNAseq Window’s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Counter RNAseq Window’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

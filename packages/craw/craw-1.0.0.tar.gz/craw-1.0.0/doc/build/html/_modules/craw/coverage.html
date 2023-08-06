@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.coverage &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.coverage</h1><div class="highlight"><pre>
+<span></span><span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019  Institut Pasteur (Paris).                   #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.interpolate</span>
+
+<span class="kn">from</span> <span class="nn">pysam</span> <span class="k">import</span> <span class="n">AlignmentFile</span>
+
+<span class="kn">from</span> <span class="nn">.wig</span> <span class="k">import</span> <span class="n">Genome</span>
+
+<span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sum_coverage_maker"><a class="viewcode-back" href="../../coverage.html#craw.coverage.sum_coverage_maker">[docs]</a><span class="k">def</span> <span class="nf">sum_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function return a new function :func:`get_sum_coverage`</span>
+
+<span class="sd">    :param input_data: the input either a samfile (see pysam library) or a genome build from a wig file (see wig module)</span>
+<span class="sd">    :type input_data: :class:`craw.wig.Genome` or :class:`pysam.AlignmentFile` object</span>
+<span class="sd">    :param qual_thr: The quality threshold</span>
+<span class="sd">                    if input data come from wig this parameter is not used,</span>
+<span class="sd">    :type qual_thr: int</span>
+<span class="sd">    :return: :func:`get_sum_coverage`, a function which compute the sum of coverage for a gene on each strand</span>
+<span class="sd">             between position [start, stop[ This function take 3 parameters:</span>
+
+<span class="sd">             - **annot_entry**: an entry of the annotation file.</span>
+<span class="sd">             - **start**: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">             - **stop**: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+
+<span class="sd">             and</span>
+
+<span class="sd">             - **return**: a tuple with 2 tuple of float or int representing the coverage on strand forward and reverse.</span>
+
+<span class="sd">    :rtype: function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">get_raw_coverage</span> <span class="o">=</span> <span class="n">get_raw_coverage_function</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">get_sum_coverage</span><span class="p">(</span><span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># if start is negative</span>
+            <span class="c1"># when start is compute from large window and reads map at the beginning of the reference</span>
+            <span class="c1"># pysam crash see issue #10</span>
+            <span class="c1"># and numpy return empty silce</span>
+            <span class="c1"># So we consider that negative positions (which doe not really exists) have coverage of 0</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">covs</span> <span class="o">=</span> <span class="n">get_raw_coverage</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual_thr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([(</span><span class="nb">sum</span><span class="p">(</span><span class="n">cov</span><span class="p">),)</span> <span class="k">for</span> <span class="n">cov</span> <span class="ow">in</span> <span class="n">covs</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">get_sum_coverage</span></div>
+
+
+<div class="viewcode-block" id="resized_coverage_maker"><a class="viewcode-back" href="../../coverage.html#craw.coverage.resized_coverage_maker">[docs]</a><span class="k">def</span> <span class="nf">resized_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">new_size</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param input_data: the input either a samfile (see pysam library) or a genome build from a wig file (see wig module)</span>
+<span class="sd">    :type input_data: :class:`craw.wig.Genome` or :class:`pysam.AlignmentFile` object</span>
+<span class="sd">    :param new_size: the number of values in the coverage vector.</span>
+<span class="sd">    :type new_size: postive int</span>
+<span class="sd">    :param qual_thr: The quality threshold</span>
+<span class="sd">                    if input data come from wig this parameter is not used,</span>
+<span class="sd">    :type qual_thr: int</span>
+<span class="sd">    :return: a function :func:`get_resized_coverage`, a function which compute the coverage for a gene on each strand</span>
+<span class="sd">             between position [start, stop[ This function take 3 parameters:</span>
+<span class="sd">             the coverage values are generate by linear interpolation from raw values between [start, stop[</span>
+<span class="sd">             using the scipy.</span>
+<span class="sd">             see https://docs.scipy.org/doc/scipy-0.19.0/reference/generated/scipy.interpolate.interp1d.html</span>
+
+<span class="sd">             - **annot_entry**: an entry of the annotation file.</span>
+<span class="sd">             - **start**: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">             - **stop**: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+
+<span class="sd">             and</span>
+
+<span class="sd">             - **return**: a tuple with 2 tuple of float or int representing the coverage on strand forward and reverse.</span>
+
+<span class="sd">    :rtype: function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">get_raw_coverage</span> <span class="o">=</span> <span class="n">get_raw_coverage_function</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_resized_coverage</span><span class="p">(</span><span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param annot_entry: an entry of the annotation file.</span>
+<span class="sd">        :type annot_entry: :class:`annotation.Entry` object.</span>
+<span class="sd">        :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">        :type start: int</span>
+<span class="sd">        :param stop: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+<span class="sd">        :type stop: int</span>
+<span class="sd">        :return: a new serie with new_size length</span>
+<span class="sd">        :rtype: list of float instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># if start is negative</span>
+            <span class="c1"># when start is compute from large window and reads map at the beginning of the reference</span>
+            <span class="c1"># pysam crash see issue #10</span>
+            <span class="c1"># and numpy return empty silce</span>
+            <span class="c1"># So we ommit negative value generate new values using real positions</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">raw_forward_cov</span><span class="p">,</span> <span class="n">raw_reverse_cov</span> <span class="o">=</span> <span class="n">get_raw_coverage</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual_thr</span><span class="p">)</span>
+        <span class="n">coverages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">serie_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_forward_cov</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">serie</span> <span class="ow">in</span> <span class="n">raw_forward_cov</span><span class="p">,</span> <span class="n">raw_reverse_cov</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">interpolate</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">serie_len</span><span class="p">),</span> <span class="n">serie</span><span class="p">)</span>
+            <span class="n">coverages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">serie_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">new_size</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">coverages</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">get_resized_coverage</span></div>
+
+
+<div class="viewcode-block" id="padded_coverage_maker"><a class="viewcode-back" href="../../coverage.html#craw.coverage.padded_coverage_maker">[docs]</a><span class="k">def</span> <span class="nf">padded_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param input_data: the input either a samfile (see pysam library) or a genome build from a wig file (see wig module)</span>
+<span class="sd">    :type input_data: :class:`wig.Genome` or :class:`pysam.AlignmentFile` object</span>
+<span class="sd">    :param max_left: The highest number of base before the reference position to take in account.</span>
+<span class="sd">    :type max_left: int</span>
+<span class="sd">    :param max_right: The highest number of base after  the reference position to take in account.</span>
+<span class="sd">    :type max_right: int</span>
+<span class="sd">    :param qual_thr: The quality threshold</span>
+<span class="sd">                    if input data come from wig this parameter is not used,</span>
+<span class="sd">    :type qual_thr: int</span>
+<span class="sd">    :return: a function :func:`get_padded_coverage`, a function which compute the coverage for a gene on each strand</span>
+<span class="sd">             between position *[start, stop[*</span>
+
+<span class="sd">             The coverage values are centered on the annot_entry.ref position, the matrix is padded by ``None`` value.::</span>
+
+<span class="sd">                [.......[ coverage ref.pos ] .....]</span>
+<span class="sd">                [....[covergae     ref.pos ] .....]</span>
+<span class="sd">                [............[ cov ref.pos       ]]</span>
+
+<span class="sd">             This function take 3 parameters:</span>
+
+<span class="sd">             - **annot_entry**: an entry of the annotation file.</span>
+<span class="sd">             - **start**: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">             - **stop**: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+
+<span class="sd">             and</span>
+
+<span class="sd">             - **return**: a tuple with 2 tuple of float or int representing the coverage on strand forward and reverse.</span>
+<span class="sd">    :rtype: function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">get_raw_coverage</span> <span class="o">=</span> <span class="n">get_raw_coverage_function</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_padded_coverage</span><span class="p">(</span><span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param annot_entry: an entry of the annotation file.</span>
+<span class="sd">        :type annot_entry: :class:`annotation.Entry` object.</span>
+<span class="sd">        :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">        :type start: int</span>
+<span class="sd">        :param stop: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+<span class="sd">        :type stop: int</span>
+<span class="sd">        :return: the coverage for forward and reverse strand padded with ``None``.</span>
+<span class="sd">        :rtype: tuple of 2 list containing int or float (forward coverage, reverse coverage)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="n">pad_neg_start</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># if start is negative</span>
+            <span class="c1"># when start is compute from large window and reads map at the beginning of the reference</span>
+            <span class="c1"># pysam crash see issue #10</span>
+            <span class="c1"># so we ask coverage from 0 and pad with None value for negative positions</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">pad_neg_start</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">real_start</span><span class="p">)</span>
+
+        <span class="n">raw_forward_cov</span><span class="p">,</span> <span class="n">raw_reverse_cov</span> <span class="o">=</span> <span class="n">get_raw_coverage</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual_thr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="c1">#  -1 because the ref must not be take in account in pad</span>
+            <span class="c1"># start and stop are 0 based (see docstring)</span>
+            <span class="n">pad_left</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_left</span> <span class="o">-</span> <span class="p">(</span><span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">real_start</span><span class="p">))</span>
+            <span class="c1"># but stop is excluded in get_bam and included in annot_entry</span>
+            <span class="c1"># so it (stop -1) - ( ref -1) =&gt; stop -1</span>
+            <span class="n">pad_right</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_right</span> <span class="o">-</span> <span class="p">(</span><span class="n">stop</span> <span class="o">-</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+            <span class="n">pad_left</span> <span class="o">+=</span> <span class="n">pad_neg_start</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad_left</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_left</span> <span class="o">-</span> <span class="p">(</span><span class="n">stop</span> <span class="o">-</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+            <span class="n">pad_right</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_right</span> <span class="o">-</span> <span class="p">(</span><span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">real_start</span><span class="p">))</span>
+            <span class="n">pad_right</span> <span class="o">+=</span> <span class="n">pad_neg_start</span>
+        <span class="n">forward_cov</span> <span class="o">=</span> <span class="n">pad_left</span> <span class="o">+</span> <span class="n">raw_forward_cov</span> <span class="o">+</span> <span class="n">pad_right</span>
+        <span class="n">reverse_cov</span> <span class="o">=</span> <span class="n">pad_left</span> <span class="o">+</span> <span class="n">raw_reverse_cov</span> <span class="o">+</span> <span class="n">pad_right</span>
+        <span class="k">return</span> <span class="n">forward_cov</span><span class="p">,</span> <span class="n">reverse_cov</span>
+    <span class="k">return</span> <span class="n">get_padded_coverage</span></div>
+
+
+<div class="viewcode-block" id="get_raw_coverage_function"><a class="viewcode-back" href="../../coverage.html#craw.coverage.get_raw_coverage_function">[docs]</a><span class="k">def</span> <span class="nf">get_raw_coverage_function</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param input: the input either a samfile (see pysam library) or a genome build from a wig file (see wig module)</span>
+<span class="sd">    :type input: :class:`wig.Genome` or :class:`pysam.calignmentfile.AlignmentFile` object</span>
+<span class="sd">    :return: get_wig_coverage or get_bam_coverage according the type of input</span>
+<span class="sd">    :rtype: function</span>
+<span class="sd">    :raise RuntimeError: when input is not instance of :class:`pysam.calignmentfile.AlignmentFile` or :class:`wig.Genome`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">AlignmentFile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_raw_bam_coverage</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Genome</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_raw_wig_coverage</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;get_coverage support only &#39;wig.Genome&#39; or &quot;</span>
+                           <span class="s2">&quot;&#39;pysam.calignmentfile.AlignmentFile&#39; as Input, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_raw_wig_coverage"><a class="viewcode-back" href="../../coverage.html#craw.coverage.get_raw_wig_coverage">[docs]</a><span class="k">def</span> <span class="nf">get_raw_wig_coverage</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param genome: The genome which store all coverages.</span>
+<span class="sd">    :type genome: :class:`craw.wig.Genome` object</span>
+<span class="sd">    :param annot_entry: an entry of the annotation file</span>
+<span class="sd">    :type annot_entry: :class:`annotation.Entry` object</span>
+<span class="sd">    :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">    :type start: int</span>
+<span class="sd">    :param stop: The position to stop to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+<span class="sd">    :type stop: int</span>
+<span class="sd">    :param qual_thr: this parameter is not used, It&#39;s here to have the same api as get_bam_coverage.</span>
+<span class="sd">    :type qual_thr: None</span>
+<span class="sd">    :return: the coverage (all bases)</span>
+<span class="sd">    :rtype: tuple of 2 list containing int or float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chromosome</span> <span class="o">=</span> <span class="n">genome</span><span class="p">[</span><span class="n">annot_entry</span><span class="o">.</span><span class="n">chromosome</span><span class="p">]</span>
+    <span class="n">forward_cov</span><span class="p">,</span> <span class="n">reverse_cov</span> <span class="o">=</span> <span class="n">chromosome</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+        <span class="n">forward_cov</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">reverse_cov</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">forward_cov</span><span class="p">,</span> <span class="n">reverse_cov</span></div>
+
+
+<div class="viewcode-block" id="get_raw_bam_coverage"><a class="viewcode-back" href="../../coverage.html#craw.coverage.get_raw_bam_coverage">[docs]</a><span class="k">def</span> <span class="nf">get_raw_bam_coverage</span><span class="p">(</span><span class="n">sam_file</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="mi">15</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the coverage for a region position by position on each strand</span>
+
+<span class="sd">    :param sam_file: the samfile openend with pysam</span>
+<span class="sd">    :type sam_file: :class:`pysam.AlignmentFile` object.</span>
+<span class="sd">    :param annot_entry: an entry of the annotation file</span>
+<span class="sd">    :type annot_entry: :class:`annotation.Entry` object</span>
+<span class="sd">    :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">    :type start: positive int</span>
+<span class="sd">    :param stop: The position to start to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+<span class="sd">    :type stop: positive int</span>
+<span class="sd">    :param qual_thr: The quality threshold</span>
+<span class="sd">    :type qual_thr: int</span>
+<span class="sd">    :return: the coverage (all bases)</span>
+<span class="sd">    :rtype: tuple of 2 list containing int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">on_forward</span><span class="p">(</span><span class="n">al_seg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)</span>
+<span class="sd">        :type al_seg: :class:`pysam.AlignedSegment`</span>
+<span class="sd">        :return: True if read is mapped to forward strand</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">al_seg</span><span class="o">.</span><span class="n">is_reverse</span>
+
+    <span class="k">def</span> <span class="nf">on_reverse</span><span class="p">(</span><span class="n">al_seg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)</span>
+<span class="sd">        :type al_seg: :class:`pysam.AlignedSegment`</span>
+<span class="sd">        :return: True if read is mapped to reverse strand.</span>
+<span class="sd">        :rtype: boolean</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">al_seg</span><span class="o">.</span><span class="n">is_reverse</span>
+
+    <span class="k">def</span> <span class="nf">coverage_one_strand</span><span class="p">(</span><span class="n">sam_file</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">qual</span><span class="p">,</span> <span class="n">strand</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the coverage for each position between start and stop on the chromosome on the strand.</span>
+
+<span class="sd">        :param sam_file: the sam alignment to use</span>
+<span class="sd">        :type sam_file: a :class:`pysam.AlignmentFile` object</span>
+<span class="sd">        :param chromosome: the name of the chromosome</span>
+<span class="sd">        :type chromosome: basestring</span>
+<span class="sd">        :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).</span>
+<span class="sd">        :type start: int</span>
+<span class="sd">        :param stop:The position to start to compute the coverage (coordinates are 0-based, stop position is excluded).</span>
+<span class="sd">        :type stop: int</span>
+<span class="sd">        :param qual: The quality threshold.</span>
+<span class="sd">        :type qual: int</span>
+<span class="sd">        :param strand: the strand on which the read match</span>
+<span class="sd">        :type strand: string</span>
+<span class="sd">        :return: the coverage on forward then on reverse strand.</span>
+<span class="sd">        The coverage is the sum of all kind bases mapped for each position</span>
+<span class="sd">        :rtype: tuple of 2 list containing int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">call_back</span> <span class="o">=</span> <span class="n">on_forward</span> <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="k">else</span> <span class="n">on_reverse</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coverage</span> <span class="o">=</span> <span class="n">sam_file</span><span class="o">.</span><span class="n">count_coverage</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span>
+                                               <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                                               <span class="n">stop</span><span class="o">=</span><span class="n">stop</span><span class="p">,</span>
+                                               <span class="n">quality_threshold</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span>
+                                               <span class="n">read_callback</span><span class="o">=</span><span class="n">call_back</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">SystemError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">sys</span>
+            <span class="n">_log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;ERROR when call count_coverage with following arguments</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;reference= </span><span class="si">{chromosome}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;start=</span><span class="si">{start}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;end=</span><span class="si">{stop}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;quality_threshold=</span><span class="si">{qual}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;read_callback=</span><span class="si">{call_back}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chromosome</span><span class="o">=</span><span class="n">chromosome</span><span class="p">,</span>
+                                                             <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                                                             <span class="n">stop</span><span class="o">=</span><span class="n">stop</span><span class="p">,</span>
+                                                             <span class="n">qual</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span>
+                                                             <span class="n">call_back</span><span class="o">=</span><span class="n">call_back</span><span class="p">)</span>
+                          <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span>
+
+        <span class="n">coverage</span> <span class="o">=</span> <span class="p">[</span><span class="n">array</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">coverage</span><span class="p">]</span>
+        <span class="n">window_cov</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cov_A</span><span class="p">,</span> <span class="n">cov_T</span><span class="p">,</span> <span class="n">cov_C</span><span class="p">,</span> <span class="n">cov_G</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">coverage</span><span class="p">):</span>
+            <span class="n">window_cov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov_A</span> <span class="o">+</span> <span class="n">cov_T</span> <span class="o">+</span> <span class="n">cov_C</span> <span class="o">+</span> <span class="n">cov_G</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">window_cov</span>
+
+    <span class="n">forward_cov</span> <span class="o">=</span> <span class="n">coverage_one_strand</span><span class="p">(</span><span class="n">sam_file</span><span class="p">,</span>
+                                      <span class="n">annot_entry</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span>
+                                      <span class="n">start</span><span class="p">,</span>
+                                      <span class="n">stop</span><span class="p">,</span>
+                                      <span class="n">qual_thr</span><span class="p">,</span>
+                                      <span class="s1">&#39;+&#39;</span>
+                                      <span class="p">)</span>
+    <span class="n">reverse_cov</span> <span class="o">=</span> <span class="n">coverage_one_strand</span><span class="p">(</span><span class="n">sam_file</span><span class="p">,</span>
+                                      <span class="n">annot_entry</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span>
+                                      <span class="n">start</span><span class="p">,</span>
+                                      <span class="n">stop</span><span class="p">,</span>
+                                      <span class="n">qual_thr</span><span class="p">,</span>
+                                      <span class="s1">&#39;-&#39;</span>
+                                      <span class="p">)</span>
+    <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+        <span class="n">forward_cov</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">reverse_cov</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">forward_cov</span><span class="p">,</span> <span class="n">reverse_cov</span></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

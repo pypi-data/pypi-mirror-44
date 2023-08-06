@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>annotation &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="wig" href="wig.html" />
+    <link rel="prev" title="craw" href="craw.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wig.html" title="wig"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="craw.html" title="craw"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="annotation">
+<span id="id1"></span><h1>annotation<a class="headerlink" href="#annotation" title="Permalink to this headline">¶</a></h1>
+<p>The annotation module contains everything that is needed to parse annotation file and handle it.</p>
+<div class="section" id="annotationparser">
+<h2>AnnotationParser<a class="headerlink" href="#annotationparser" title="Permalink to this headline">¶</a></h2>
+<p>The entry point to parse an annotation file is the <a class="reference internal" href="#craw.annotation.AnnotationParser" title="craw.annotation.AnnotationParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.annotation.AnnotationParser</span></code></a>.
+An annotation parser have two methods:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#craw.annotation.AnnotationParser.get_annotations" title="craw.annotation.AnnotationParser.get_annotations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">craw.annotation.AnnotationParser.get_annotations()</span></code></a> create a new type of Entry and iterate over the annotation file and for each line return a new
+instance of the newly <a class="reference internal" href="#craw.annotation.Entry" title="craw.annotation.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.annotation.Entry</span></code></a> class it just create on the fly.</p></li>
+<li><p>the other more technique give the maximum of nucleotides before and after the reference.
+It is needed to compute the size of the resulting matrix.</p></li>
+</ul>
+</div></blockquote>
+<p>The force of this approach is to generate a new type of entry for each parsing. So it’s very flexible and allow to fit with
+most of annotation file. But for one file, all the parsing use the same <em>Entry</em> class so it ensure the coherence in data.</p>
+</div>
+<div class="section" id="new-entry-type">
+<h2>new_entry_type<a class="headerlink" href="#new-entry-type" title="Permalink to this headline">¶</a></h2>
+<p>Is a factory which generate a new subclass of <a class="reference internal" href="#craw.annotation.Entry" title="craw.annotation.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.annotation.Entry</span></code></a> given the fields gather form the annotation file header
+(first line non starting with #) and the columns semantic given by the user.
+The first role of this factory is to check if all parameter given by user correspond ot header and do some coherence checking.
+If everything seems Ok it generate on the fly a new subclass of <a class="reference internal" href="#craw.annotation.Entry" title="craw.annotation.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">craw.annotation.Entry</span></code></a>.</p>
+</div>
+<div class="section" id="entry-class">
+<h2>Entry Class<a class="headerlink" href="#entry-class" title="Permalink to this headline">¶</a></h2>
+<p>An Entry correspond to one line of the annotation file.</p>
+<p>The Entry convert values if necessary (<em>strand</em> in a internal representation +/-, <em>position</em> in integer …).
+It also expose a generic api to access some fields whatever the named of the columns.</p>
+<div class="section" id="module-craw.annotation">
+<span id="annotation-api-reference"></span><h3>annotation API reference<a class="headerlink" href="#module-craw.annotation" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="craw.annotation.AnnotationParser">
+<em class="property">class </em><code class="descclassname">craw.annotation.</code><code class="descname">AnnotationParser</code><span class="sig-paren">(</span><em>path</em>, <em>ref_col</em>, <em>strand_col='strand'</em>, <em>chr_col='chromosome'</em>, <em>start_col=None</em>, <em>stop_col=None</em>, <em>sep='t'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#AnnotationParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.AnnotationParser" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Parse the annotation file</dt><dd><ul class="simple">
+<li><p>create new type of Entry according to the header</p></li>
+<li><p>create one Entry object for each line of the file</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="craw.annotation.AnnotationParser.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em>, <em>ref_col</em>, <em>strand_col='strand'</em>, <em>chr_col='chromosome'</em>, <em>start_col=None</em>, <em>stop_col=None</em>, <em>sep='\t'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#AnnotationParser.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.AnnotationParser.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em>) – the path to the annotation file to parse.</p></li>
+<li><p><strong>ref_col</strong> (<em>string</em>) – the name of the column for the reference position</p></li>
+<li><p><strong>chr_col</strong> (<em>string</em>) – the name of the column for the chromosome</p></li>
+<li><p><strong>strand_col</strong> (<em>string</em>) – the name of the column for the strand</p></li>
+<li><p><strong>start_col</strong> (<em>string</em>) – the name of the column for start position</p></li>
+<li><p><strong>stop_col</strong> (<em>string</em>) – the name of the column for the stop position</p></li>
+<li><p><strong>sep</strong> (<em>string</em>) – The separator tu use to split fields</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.AnnotationParser.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.annotation.AnnotationParser.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.AnnotationParser.get_annotations">
+<code class="descname">get_annotations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#AnnotationParser.get_annotations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.AnnotationParser.get_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse an annotation file and yield a <a class="reference internal" href="#craw.annotation.Entry" title="craw.annotation.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entry</span></code></a> for each line of the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a generator on a annotation file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.AnnotationParser.max">
+<code class="descname">max</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#AnnotationParser.max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.AnnotationParser.max" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the maximum of bases to take in count before and after the reference position.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple of 2 int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.annotation.Entry">
+<em class="property">class </em><code class="descclassname">craw.annotation.</code><code class="descname">Entry</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle one entry (One line) of annotation file</p>
+<dl class="method">
+<dt id="craw.annotation.Entry.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self==value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Entry.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>values</strong> (<em>list of string</em>) – the values parsed from one line of the annotation file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Entry.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return str(self).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#craw.annotation.Entry.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Entry._convert">
+<code class="descname">_convert</code><span class="sig-paren">(</span><em>field</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry._convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry._convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert field parsed from annotation file in Entry internal value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>string</em>) – the field name associated to the value.</p></li>
+<li><p><strong>value</strong> (<em>string</em>) – the value to convert</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the converted value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+<dt class="field-even">Raise</dt>
+<dd class="field-even"><p>RuntimeError or value Error  if a value cannot be converted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Entry._switch_start_stop">
+<code class="descname">_switch_start_stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#Entry._switch_start_stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.Entry._switch_start_stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch start and stop value if self.start &gt; self.stop
+This situation can occur if annotation regards the reverse strand</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.chromosome">
+<code class="descname">chromosome</code><a class="headerlink" href="#craw.annotation.Entry.chromosome" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the Chromosome</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.header">
+<code class="descname">header</code><a class="headerlink" href="#craw.annotation.Entry.header" title="Permalink to this definition">¶</a></dt>
+<dd><p>The header of the annotation file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.ref">
+<code class="descname">ref</code><a class="headerlink" href="#craw.annotation.Entry.ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>The position of reference</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.start">
+<code class="descname">start</code><a class="headerlink" href="#craw.annotation.Entry.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Position to start the coverage computation</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.stop">
+<code class="descname">stop</code><a class="headerlink" href="#craw.annotation.Entry.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>The position to end the coverage computation (included)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Entry.strand">
+<code class="descname">strand</code><a class="headerlink" href="#craw.annotation.Entry.strand" title="Permalink to this definition">¶</a></dt>
+<dd><p>the strand +/-</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="craw.annotation.Idx">
+<em class="property">class </em><code class="descclassname">craw.annotation.</code><code class="descname">Idx</code><span class="sig-paren">(</span><em>col_name</em>, <em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="craw.annotation.Idx.__getnewargs__">
+<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx.__getnewargs__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="craw.annotation.Idx.__new__">
+<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>col_name</em>, <em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx.__new__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new instance of Idx(col_name, idx)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Idx.__repr__">
+<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nicely formatted representation string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Idx._asdict">
+<code class="descname">_asdict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx._asdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new OrderedDict which maps field names to their values.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="craw.annotation.Idx._make">
+<em class="property">classmethod </em><code class="descname">_make</code><span class="sig-paren">(</span><em>iterable</em><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx._make" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a new Idx object from a sequence or iterable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="craw.annotation.Idx._replace">
+<code class="descname">_replace</code><span class="sig-paren">(</span><em>**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#craw.annotation.Idx._replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new Idx object replacing specified fields with new values</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Idx.col_name">
+<code class="descname">col_name</code><a class="headerlink" href="#craw.annotation.Idx.col_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="craw.annotation.Idx.idx">
+<code class="descname">idx</code><a class="headerlink" href="#craw.annotation.Idx.idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="craw.annotation.new_entry_type">
+<code class="descclassname">craw.annotation.</code><code class="descname">new_entry_type</code><span class="sig-paren">(</span><em>name</em>, <em>fields</em>, <em>ref_col</em>, <em>strand_col='strand'</em>, <em>chr_col='chromosome'</em>, <em>start_col=None</em>, <em>stop_col=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/craw/annotation.html#new_entry_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#craw.annotation.new_entry_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>From the header of the annotation line create a new Entry Class inherited from Entry Class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the new class of entry.</p></li>
+<li><p><strong>fields</strong> (<em>list of string</em>) – The fields constituting the new type of entry.</p></li>
+<li><p><strong>ref_col</strong> (<em>string</em>) – The name of the column representing the position of reference (default is ‘position’).</p></li>
+<li><p><strong>strand_col</strong> (<em>string</em>) – The name of the column representing the strand (default is ‘strand’).</p></li>
+<li><p><strong>chr_col</strong> (<em>string</em>) – The name of the column representing the name of chromosome (default is ‘chromosome’).</p></li>
+<li><p><strong>start_col</strong> (<em>string</em>) – The name of the column representing the position of the first base to compute the coverage (inclusive).</p></li>
+<li><p><strong>stop_col</strong> (<em>string</em>) – The name of the column representing the position of the last base to compute the coverage (inclusive).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new class child of <a class="reference internal" href="#craw.annotation.Entry" title="craw.annotation.Entry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Entry</span></code></a> which is able to store information corresponding to the header.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">annotation</a><ul>
+<li><a class="reference internal" href="#annotationparser">AnnotationParser</a></li>
+<li><a class="reference internal" href="#new-entry-type">new_entry_type</a></li>
+<li><a class="reference internal" href="#entry-class">Entry Class</a><ul>
+<li><a class="reference internal" href="#module-craw.annotation">annotation API reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="craw.html"
+                        title="previous chapter">craw</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="wig.html"
+                        title="next chapter">wig</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/annotation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wig.html" title="wig"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="craw.html" title="craw"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

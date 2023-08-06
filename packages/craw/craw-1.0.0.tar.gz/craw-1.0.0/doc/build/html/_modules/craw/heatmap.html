@@ -1,0 +1,629 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.heatmap &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.heatmap</h1><div class="highlight"><pre>
+<span></span><span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019  Institut Pasteur (Paris).                   #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">isfunction</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span><span class="p">,</span> <span class="n">ImageColor</span>
+
+<span class="n">_log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_data"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.get_data">[docs]</a><span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="n">coverage_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param coverage_file: the path of the coverage file to parse.</span>
+<span class="sd">    :type coverage_file: str</span>
+<span class="sd">    :return: the data as 2 dimension dataframe</span>
+<span class="sd">    :rtype: a :class:`pandas.DataFrame` object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">coverage_file</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">na_values</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="split_data"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.split_data">[docs]</a><span class="k">def</span> <span class="nf">split_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Split the matrix in 2 matrices one for sense the other for antisense.</span>
+
+<span class="sd">    :param data: the coverage data to split</span>
+<span class="sd">    :type data: a 2 dimension :class:`pandas.DataFrame` object</span>
+<span class="sd">    :return: two matrix</span>
+<span class="sd">    :rtype: tuple of two :class:`pandas.DataFrame` object (sense pandas.DataFrame, antisense pandas.DataFrame)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sense&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">grp</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">grp</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="s1">&#39;AS&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="sort"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.sort">[docs]</a><span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort the matrix in function of criteria.</span>
+<span class="sd">    This function act as proxy for several specific sorting functions</span>
+
+<span class="sd">    :param data: the data to sort.</span>
+<span class="sd">    :type data: :class:`pandas.DataFrame`.</span>
+<span class="sd">    :param criteria: which criteria to use to sort the data (by_gene_size, using_col, using_file).</span>
+<span class="sd">    :type criteria: string.</span>
+<span class="sd">    :param kwargs: depending of the criteria</span>
+<span class="sd">     - start_col, stop_col for sort_by_gene_size</span>
+<span class="sd">     - col for using_col</span>
+<span class="sd">     - file for using file</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="n">func_name</span> <span class="o">=</span> <span class="s1">&#39;_sort_&#39;</span> <span class="o">+</span> <span class="n">criteria</span>
+    <span class="n">all_func</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">func_name</span> <span class="ow">in</span> <span class="n">all_func</span> <span class="ow">and</span> <span class="n">isfunction</span><span class="p">(</span><span class="n">all_func</span><span class="p">[</span><span class="n">func_name</span><span class="p">]):</span>
+        <span class="n">s_d</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span><span class="n">func_name</span><span class="p">](</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s_d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The &#39;</span><span class="si">{}</span><span class="s2">&#39; sorting method does not exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">criteria</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="_sort_by_gene_size"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap._sort_by_gene_size">[docs]</a><span class="k">def</span> <span class="nf">_sort_by_gene_size</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">start_col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort the matrix in function of the gene size.</span>
+
+<span class="sd">    :param data: the data to sort.</span>
+<span class="sd">    :type data: :class:`pandas.DataFrame`.</span>
+<span class="sd">    :param start_col: the name of the column representing the beginning of the gene.</span>
+<span class="sd">    :type start_col: string.</span>
+<span class="sd">    :param stop_col: the name of the column representing the end of the gene.</span>
+<span class="sd">    :type stop_col: string</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sorting data by gene size using cols </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">))</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;gene_len&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">stop_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="n">start_col</span><span class="p">])</span>
+    <span class="n">sorted_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;gene_len&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;gene_len&#39;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">sorted_data</span><span class="p">[</span><span class="s1">&#39;gene_len&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">sorted_data</span></div>
+
+
+<div class="viewcode-block" id="_sort_using_col"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap._sort_using_col">[docs]</a><span class="k">def</span> <span class="nf">_sort_using_col</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort the matrix in function of the column col</span>
+
+<span class="sd">    :param data: the data to sort.</span>
+<span class="sd">    :type data: :class:`pandas.DataFrame`.</span>
+<span class="sd">    :param col: the name of the column to use for sorting the data.</span>
+<span class="sd">    :type col: string.</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sorting data using col </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;You must specify the column used to sort.&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="_sort_using_file"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap._sort_using_file">[docs]</a><span class="k">def</span> <span class="nf">_sort_using_file</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort the matrix in function of file.</span>
+<span class="sd">    The file must have the following structure</span>
+<span class="sd">    the first line must be the name of the column</span>
+<span class="sd">    the following lines must be the values, one per line</span>
+<span class="sd">    each line starting by &#39;#&#39; will be ignore.</span>
+
+<span class="sd">    :param data: the data to sort.</span>
+<span class="sd">    :type data: :class:`pandas.DataFrame`.</span>
+<span class="sd">    :param file: The file to use as guide to sort the data.</span>
+<span class="sd">    :type file: a file like object.</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sorting data using file </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">col_name</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># change the index of the data using the col_name</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">col_name</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># reindex the data according the ref dataframe</span>
+    <span class="n">reindexed_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ref</span><span class="p">[</span><span class="n">col_name</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">reindexed_data</span></div>
+
+
+<div class="viewcode-block" id="crop_matrix"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.crop_matrix">[docs]</a><span class="k">def</span> <span class="nf">crop_matrix</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Crop matrix (remove columns). The resulting matrix will be [start_col, stop_col]</span>
+
+<span class="sd">    :param data: the data to sort.</span>
+<span class="sd">    :type data: a 2D :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :param start_col: The name of the first column to keep.</span>
+<span class="sd">    :type start_col: string.</span>
+<span class="sd">    :param stop_col: The name of the last column to keep.</span>
+<span class="sd">    :type stop_col: string.</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">start_col</span><span class="p">:</span><span class="n">stop_col</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="lin_norm"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.lin_norm">[docs]</a><span class="k">def</span> <span class="nf">lin_norm</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize data with linear algorithm.</span>
+<span class="sd">    The formula applied to obtain the results is:</span>
+
+<span class="sd">        zi = xi - min(x) / max(x) - min(x)</span>
+
+<span class="sd">    where x=(x1,...,xn) and zi is now your with normalized data.</span>
+<span class="sd">    Ensure that the resulting values are comprise between 0 and 1.</span>
+<span class="sd">    return None if data is None, return empty :class:`pd.DataFrame` object if data is empty.</span>
+
+<span class="sd">    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).</span>
+<span class="sd">    :type data: a 2D :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :return: a normalize matrix, where  0 &lt;= zi &lt;=1 where z=(z1, ..., zn)</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="c1"># data is a 2D DataFrame</span>
+    <span class="c1"># so min() return a Series of min by columns</span>
+    <span class="c1"># and min.min is the min of the matrix</span>
+    <span class="c1"># idem for max</span>
+    <span class="n">vmin</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">-=</span> <span class="n">vmin</span>
+    <span class="n">data</span> <span class="o">/=</span> <span class="n">vmax</span> <span class="o">-</span> <span class="n">vmin</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="log_norm"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.log_norm">[docs]</a><span class="k">def</span> <span class="nf">log_norm</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base 10 logarithm is compute for all values before</span>
+<span class="sd">    a normalization (see :func:`normalize` ) to ensure</span>
+<span class="sd">    that all values are comprise between 0 and 1 .</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        coverage scores are integers &gt;= 0.</span>
+<span class="sd">        log10(0) = -inf or warning in macos</span>
+<span class="sd">        prior to normalize data the 0 values are replace by 1.</span>
+
+<span class="sd">    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).</span>
+<span class="sd">    :type data: a 2D :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :return: a normalize matrix, where  0 &lt;= zi &lt;=1 where z=(z1, ..., zn)</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="c1"># log10(0) = -inf or warning on macos</span>
+    <span class="c1"># so transform all value below 1 to 1</span>
+    <span class="c1"># normally only 0 because coverage scores are integers &gt;=0</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">lin_norm</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="lin_norm_row_by_row"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.lin_norm_row_by_row">[docs]</a><span class="k">def</span> <span class="nf">lin_norm_row_by_row</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize data with linear algorithm but</span>
+<span class="sd">    instead to normalize all the matrix, the normalization formula</span>
+<span class="sd">    (see :func:`normalize`) is applied row by row.</span>
+<span class="sd">    It ensure that all values are between 0 and 1.</span>
+
+<span class="sd">    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).</span>
+<span class="sd">    :type data: a 2D :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :return: a normalize matrix, where  0 &lt;= zi &lt;=1 where z=(z1, ..., zn)</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="c1"># axis=0 operation on columns</span>
+    <span class="c1"># axis=1 operation on rows</span>
+
+    <span class="c1"># subtract for each value the min of the corresponding row</span>
+    <span class="n">norm_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># compute a series for each row value = max - min</span>
+    <span class="n">amplitude</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># for each value divide this value by the corresponding amplitude of the row</span>
+    <span class="n">norm_data</span> <span class="o">=</span> <span class="n">norm_data</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">norm_data</span></div>
+
+
+<div class="viewcode-block" id="log_norm_row_by_row"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.log_norm_row_by_row">[docs]</a><span class="k">def</span> <span class="nf">log_norm_row_by_row</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    as :func:`normalize_row_by_row` but prior normalisation</span>
+<span class="sd">    a 10 base logarithm is applied.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        coverage scores are integers &gt;= 0.</span>
+<span class="sd">        log10(0) = -inf</span>
+<span class="sd">        to normalize data the -inf value are change in 0.</span>
+
+<span class="sd">    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).</span>
+<span class="sd">    :type data: a 2D :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :return: a normalize matrix, where  0 &lt;= zi &lt;=1 where z=(z1, ..., zn)</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+    <span class="c1"># log10(0) = -inf or warning on macos</span>
+    <span class="c1"># so transform all negative values below 1</span>
+    <span class="c1"># normally only 0 because coverage scores are integers &gt;=0</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">lin_norm_row_by_row</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="remove_metadata"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.remove_metadata">[docs]</a><span class="k">def</span> <span class="nf">remove_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove all information which is not coverage value (as chromosome, strand, name, ...)</span>
+
+<span class="sd">    :param data: the data coming from a coverage file parsing containing coverage information and metadata chromosome,</span>
+<span class="sd">                 gene name , ...</span>
+<span class="sd">    :type data: :class:`pandas.DataFrame`.</span>
+<span class="sd">    :return: sorted data.</span>
+<span class="sd">    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">find_col_2_split</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">prev_col</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">prev_col</span> <span class="o">=</span> <span class="n">col</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">prev_col</span><span class="p">,</span> <span class="n">col</span>
+
+    <span class="n">last_metadata_col</span><span class="p">,</span> <span class="n">first_cov_col</span> <span class="o">=</span> <span class="n">find_col_2_split</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">coverage_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">first_cov_col</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">coverage_data</span></div>
+
+
+<div class="viewcode-block" id="draw_one_matrix"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.draw_one_matrix">[docs]</a><span class="k">def</span> <span class="nf">draw_one_matrix</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span> <span class="n">y_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draw a matrix using matplotlib imshow object</span>
+
+<span class="sd">    :param mat: the data to represent graphically.</span>
+<span class="sd">    :type mat: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :param ax: the axis where to represent the data</span>
+<span class="sd">    :type ax: a :class:`matplotlib.axis` object</span>
+<span class="sd">    :param cmap: the color map to use to represent the data.</span>
+<span class="sd">    :type cmap: a :class:`matplotlib.pyplot.cm` object.</span>
+<span class="sd">    :param y_label: the label for the data draw on y-axis.</span>
+<span class="sd">    :type y_label: string</span>
+<span class="sd">    :param marks: list of vertical marks</span>
+<span class="sd">    :type marks: list of :class:`Mark` object</span>
+<span class="sd">    :return: the mtp image corresponding to data</span>
+<span class="sd">    :rtype: a :class:`matplotlib.image` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">row_num</span><span class="p">,</span> <span class="n">col_num</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Classes that are ‘array-like’ such as pandas data objects and np.matrix may or may not work as intended.</span>
+    <span class="c1"># It is best to convert these to np.array objects prior to plotting.</span>
+    <span class="c1"># http://matplotlib.org/faq/usage_faq.html#types-of-inputs-to-plotting-functions</span>
+    <span class="n">mat_img</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                        <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;upper&#39;</span><span class="p">,</span>
+                        <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                        <span class="n">aspect</span><span class="o">=</span><span class="n">col_num</span> <span class="o">/</span> <span class="n">row_num</span><span class="p">,</span>
+                        <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row_num</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">ylabel_i</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">():</span>
+        <span class="n">ylabel_i</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_yticklines</span><span class="p">():</span>
+        <span class="n">tick</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">y_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">marks</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="n">marks</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">mark</span><span class="o">.</span><span class="n">to_px</span><span class="p">(),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">mark</span><span class="o">.</span><span class="n">rgb_float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mat_img</span></div>
+
+
+<div class="viewcode-block" id="draw_heatmap"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.draw_heatmap">[docs]</a><span class="k">def</span> <span class="nf">draw_heatmap</span><span class="p">(</span><span class="n">sense</span><span class="p">,</span> <span class="n">antisense</span><span class="p">,</span> <span class="n">color_map</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">sense_on</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a figure with subplot to represent the data as heat map.</span>
+
+<span class="sd">    :param sense: the data normalized (xi in [0,1]) representing coverage on sense.</span>
+<span class="sd">    :type sense: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :param antisense: the data normalized (xi in [0,1]) representing coverage on anti sense.</span>
+<span class="sd">    :type sense: a :class:`pandas.DataFrame` object.</span>
+<span class="sd">    :param color_map: the color map to use to represent the data.</span>
+<span class="sd">    :type color_map: a :class:`matplotlib.pyplot.cm` object.</span>
+<span class="sd">    :param title: the figure title (by default the same as the coverage file).</span>
+<span class="sd">    :type title: string.</span>
+<span class="sd">    :param sense_on: specify the lay out. Where to place the heat map representing the sense data.</span>
+<span class="sd">     the available values are: &#39;left&#39;, &#39;right&#39;, &#39;top&#39;, &#39;bottom&#39; (default = &#39;top&#39;).</span>
+<span class="sd">    :type sense_on: string.</span>
+<span class="sd">    :param size: the size of the figure in inches (wide, height).</span>
+<span class="sd">    :type size: tuple of 2 float.</span>
+<span class="sd">    :param marks: list of vertical marks</span>
+<span class="sd">    :type marks: list of :class:`Mark` object</span>
+<span class="sd">    :return: The figure.</span>
+<span class="sd">    :rtype: a :class:`matplotlib.pyplot.Figure` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">draw_sense</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">draw_antisense</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sense</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">draw_sense</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">antisense</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">antisense</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">draw_antisense</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="n">draw_sense</span><span class="p">,</span> <span class="n">draw_antisense</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">sense_on</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="s1">&#39;top&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axes_array</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sense_on</span> <span class="o">==</span> <span class="s1">&#39;top&#39;</span><span class="p">:</span>
+                <span class="n">sense_subplot</span><span class="p">,</span> <span class="n">antisense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">antisense_subplot</span><span class="p">,</span> <span class="n">sense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+        <span class="k">elif</span> <span class="n">sense_on</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="s1">&#39;right&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axes_array</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sense_on</span> <span class="o">==</span> <span class="s1">&#39;left&#39;</span><span class="p">:</span>
+                <span class="n">sense_subplot</span><span class="p">,</span> <span class="n">antisense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">antisense_subplot</span><span class="p">,</span> <span class="n">sense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+
+    <span class="k">elif</span> <span class="nb">any</span><span class="p">((</span><span class="n">draw_sense</span><span class="p">,</span> <span class="n">draw_antisense</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes_array</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">draw_sense</span><span class="p">:</span>
+            <span class="n">sense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">antisense_subplot</span> <span class="o">=</span> <span class="n">axes_array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No matrix to draw&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">draw_sense</span><span class="p">:</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Drawing sense matrix&quot;</span><span class="p">)</span>
+        <span class="n">sense_img</span> <span class="o">=</span> <span class="n">draw_one_matrix</span><span class="p">(</span><span class="n">sense</span><span class="p">,</span> <span class="n">sense_subplot</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">color_map</span><span class="p">,</span> <span class="n">y_label</span><span class="o">=</span><span class="s2">&quot;Sense&quot;</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="n">marks</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">draw_antisense</span><span class="p">:</span>
+        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Drawing antisense matrix&quot;</span><span class="p">)</span>
+        <span class="n">antisense_img</span> <span class="o">=</span> <span class="n">draw_one_matrix</span><span class="p">(</span><span class="n">antisense</span><span class="p">,</span> <span class="n">antisense_subplot</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">color_map</span><span class="p">,</span> <span class="n">y_label</span><span class="o">=</span><span class="s2">&quot;Anti sense&quot;</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="n">marks</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span>
+                 <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                 <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sense_on</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="s1">&#39;bottom&#39;</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">set_window_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="draw_raw_image"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.draw_raw_image">[docs]</a><span class="k">def</span> <span class="nf">draw_raw_image</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">out_name</span><span class="p">,</span> <span class="n">color_map</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;PNG&#39;</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate an image file with one pixel for each values of the data matrix.</span>
+<span class="sd">    the data can be either the coverage on sense or on antisense.</span>
+
+<span class="sd">    :param data: a **Normalized** (where all values are between 0 and 1) matrix.</span>
+<span class="sd">    :type data: 2D :class:`pandas.DataFrame` or :class:`numpy.array` object</span>
+<span class="sd">    :param out_name: The name of the generated graphic file.</span>
+<span class="sd">    :type out_name: string</span>
+<span class="sd">    :param color_map:</span>
+<span class="sd">    :type color_map:</span>
+<span class="sd">    :param format: the format of the result png, jpeg, ... (see pillow supported formats)</span>
+<span class="sd">    :type format: string</span>
+<span class="sd">    :param marks: the marks (vertical rule) to draw on the resulting heat map</span>
+<span class="sd">    :type marks: a sequence (list, tuple or set) of :class:`Mark` objects</span>
+<span class="sd">    :raise: RuntimeError if data are not normalized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># the data was normalized to ensure that values are in [0,1]</span>
+    <span class="c1"># I apply directly a matplotlib.colormap on this values</span>
+    <span class="c1"># then rescale the values to [0, 255]</span>
+    <span class="c1"># and convert them in integer 8 bits</span>
+    <span class="c1"># save it with pillow</span>
+    <span class="c1"># see the whole recipe at</span>
+    <span class="c1"># http://stackoverflow.com/questions/10965417/how-to-convert-numpy-array-to-pil-image-applying-matplotlib-colormap</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;data must be normalized (between [0,1])&quot;</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">color_map</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="mi">255</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">marks</span><span class="p">:</span>
+        <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mark</span> <span class="ow">in</span> <span class="n">marks</span><span class="p">:</span>
+            <span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">([(</span><span class="n">mark</span><span class="o">.</span><span class="n">to_px</span><span class="p">(),</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">mark</span><span class="o">.</span><span class="n">to_px</span><span class="p">(),</span> <span class="n">height</span><span class="p">)],</span> <span class="n">fill</span><span class="o">=</span><span class="n">mark</span><span class="o">.</span><span class="n">rgb_int</span><span class="p">)</span>
+    <span class="n">im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">out_name</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mark"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.Mark">[docs]</a><span class="k">class</span> <span class="nc">Mark</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A mark is a position and a color tight together. </span>
+<span class="sd">    It is used to draw a colored vertical line at the given position on the heatmap&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Mark.__init__"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.Mark.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">color_map</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        :param pos: The position where to draw a mark, the position is relative to the reference position (0)</span>
+<span class="sd">        :type pos: int</span>
+<span class="sd">        :param data: the coverage matrix </span>
+<span class="sd">        :type data: :class:`pandas.DataFrame` object</span>
+<span class="sd">        :param color_map: the color map used to draw the heatmap</span>
+<span class="sd">        :type color_map: class`:matplotlib.pyplot.ColorMap` object</span>
+<span class="sd">        :param color: the color of the line, the supported formats are</span>
+<span class="sd">                        - hexadecimal values as #rgb or #rrggbb, for instance #ff0000 is pure red.</span>
+<span class="sd">                        - common html color names</span>
+<span class="sd">                        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_matrix_bound</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min</span> <span class="o">&lt;=</span> <span class="n">pos</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mark position must be </span><span class="si">{}</span><span class="s2"> &gt;= pos &gt;= </span><span class="si">{}</span><span class="s2">: provide </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span> <span class="o">=</span> <span class="n">color_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color_converter</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rgb_int</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rgb_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">c</span> <span class="o">/</span> <span class="mi">255</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="Mark._color_converter"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.Mark._color_converter">[docs]</a>    <span class="k">def</span> <span class="nf">_color_converter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        :param color: the color of the line, the supported formats are</span>
+<span class="sd">                        - hexadecimal values as #rgb or #rrggbb, for instance #ff0000 is pure red.</span>
+<span class="sd">                        - common html color names</span>
+<span class="sd">        :type color: string</span>
+<span class="sd">        :param data: the matrix coverage</span>
+<span class="sd">        :type data: :class:`pandas.DataFrame` object</span>
+<span class="sd">        :return: rgb color</span>
+<span class="sd">        :rtype: tuple with 3 int between 0 and 255  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">color</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">ImageColor</span><span class="o">.</span><span class="n">getrgb</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a valid color&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="mi">255</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_map</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">color</span></div>
+
+
+<div class="viewcode-block" id="Mark._get_matrix_bound"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.Mark._get_matrix_bound">[docs]</a>    <span class="k">def</span> <span class="nf">_get_matrix_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param data: the matrix coverage</span>
+<span class="sd">        :type data: :class:`pandas.DataFrame` object </span>
+<span class="sd">        :return: the most right and left position of the coverage </span>
+<span class="sd">        :rtype: tuple of 2 int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Mark.to_px"><a class="viewcode-back" href="../../heatmap.html#craw.heatmap.Mark.to_px">[docs]</a>    <span class="k">def</span> <span class="nf">to_px</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        tanslate the position of the mark relative to the reference in pixel.</span>
+<span class="sd">        :return: the position of the mark in pixel.</span>
+<span class="sd">        :rtype: positive int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

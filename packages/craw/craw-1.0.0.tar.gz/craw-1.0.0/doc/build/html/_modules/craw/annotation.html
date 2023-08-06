@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.annotation &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.annotation</h1><div class="highlight"><pre>
+<span></span><span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019  Institut Pasteur (Paris).                   #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+
+
+<div class="viewcode-block" id="Entry"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry">[docs]</a><span class="k">class</span> <span class="nc">Entry</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Handle one entry (One line) of annotation file &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Entry.__init__"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param values: the values parsed from one line of the annotation file</span>
+<span class="sd">        :type values: list of string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;-1&#39;</span><span class="p">,</span> <span class="s1">&#39;rev&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forward_values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;the number of values (</span><span class="si">{}</span><span class="s2">) does not match with number of fields (</span><span class="si">{}</span><span class="s2">): </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span>
+                                                                                                            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">),</span>
+                                                                                                                <span class="n">values</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">,</span> <span class="n">values</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;error in line &#39;</span><span class="si">{line}</span><span class="s2">&#39;: </span><span class="si">{ref_col}</span><span class="s2"> </span><span class="si">{ref}</span><span class="s2"> is not &quot;</span>
+                                   <span class="s2">&quot;between </span><span class="si">{start_col}</span><span class="s2">: </span><span class="si">{start}</span><span class="s2"> and </span><span class="si">{stop_col}</span><span class="s2">: </span><span class="si">{stop}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="n">line</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                    <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                                    <span class="n">start_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">,</span>
+                                    <span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
+                                    <span class="n">ref_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">,</span>
+                                    <span class="n">stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span>
+                                    <span class="n">stop_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">)</span>
+                                    <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_switch_start_stop</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;error in line &#39;</span><span class="si">{line}</span><span class="s2">&#39;: </span><span class="si">{start_col}</span><span class="s2">:</span><span class="si">{start}</span><span class="s2"> &gt; </span><span class="si">{stop_col}</span><span class="s2">: </span><span class="si">{stop}</span><span class="s2">&quot;</span>
+                                   <span class="s2">&quot;on forward strand&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                                              <span class="n">line</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                                              <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                                                              <span class="n">start_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">,</span>
+                                                              <span class="n">stop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span>
+                                                              <span class="n">stop_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span>
+                                                             <span class="p">)</span>
+                                   <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Entry._convert"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry._convert">[docs]</a>    <span class="k">def</span> <span class="nf">_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert field parsed from annotation file in Entry internal value</span>
+
+<span class="sd">        :param field: the field name associated to the value.</span>
+<span class="sd">        :type field: string</span>
+<span class="sd">        :param value: the value to convert</span>
+<span class="sd">        :type value: string</span>
+<span class="sd">        :return: the converted value</span>
+<span class="sd">        :rtype: any</span>
+<span class="sd">        :raise: RuntimeError or value Error  if a value cannot be converted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">field</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_values</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_values</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;strand must be &#39;+/-&#39;, &#39;1/-1&#39; or &#39;for/rev&#39; got &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="s1">&#39;start&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span> <span class="ow">and</span> <span class="n">field</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;stop&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span> <span class="ow">and</span> <span class="n">field</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">col_name</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="Entry._switch_start_stop"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry._switch_start_stop">[docs]</a>    <span class="k">def</span> <span class="nf">_switch_start_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Switch start and stop value if self.start &gt; self.stop</span>
+<span class="sd">        This situation can occur if annotation regards the reverse strand</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">stop</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chromosome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The name of the Chromosome&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The position of reference&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;the strand +/-&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Position to start the coverage computation&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;start&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The position to end the coverage computation (included)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;stop&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The header of the annotation file&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Entry.__str__"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Entry.__eq__"><a class="viewcode-back" href="../../annotation.html#craw.annotation.Entry.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">vo</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_values</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">vo</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+<span class="n">Idx</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Idx&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;col_name&#39;</span><span class="p">,</span> <span class="s1">&#39;idx&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="new_entry_type"><a class="viewcode-back" href="../../annotation.html#craw.annotation.new_entry_type">[docs]</a><span class="k">def</span> <span class="nf">new_entry_type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">ref_col</span><span class="p">,</span>
+                   <span class="n">strand_col</span><span class="o">=</span><span class="s1">&#39;strand&#39;</span><span class="p">,</span>
+                   <span class="n">chr_col</span><span class="o">=</span><span class="s1">&#39;chromosome&#39;</span><span class="p">,</span>
+                   <span class="n">start_col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">stop_col</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    From the header of the annotation line create a new Entry Class inherited from Entry Class</span>
+
+<span class="sd">    :param name: The name of the new class of entry.</span>
+<span class="sd">    :type name: str</span>
+<span class="sd">    :param fields: The fields constituting the new type of entry.</span>
+<span class="sd">    :type fields: list of string</span>
+<span class="sd">    :param ref_col: The name of the column representing the position of reference (default is &#39;position&#39;).</span>
+<span class="sd">    :type ref_col: string</span>
+<span class="sd">    :param strand_col: The name of the column representing the strand (default is &#39;strand&#39;).</span>
+<span class="sd">    :type strand_col: string</span>
+<span class="sd">    :param chr_col: The name of the column representing the name of chromosome (default is &#39;chromosome&#39;).</span>
+<span class="sd">    :type chr_col: string</span>
+<span class="sd">    :param start_col: The name of the column representing the position of the first base to compute the coverage (inclusive).</span>
+<span class="sd">    :type start_col: string</span>
+<span class="sd">    :param stop_col: The name of the column representing the position of the last base to compute the coverage (inclusive).</span>
+<span class="sd">    :type stop_col: string</span>
+<span class="sd">    :return: a new class child of :class:`Entry` which is able to store information corresponding to the header.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields_idx</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">((</span><span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;if start_col is specified stop_col must be specified too and vice versa&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fields_idx</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">ref_col</span><span class="p">,</span> <span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ref_col</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The ref_col &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match any fields: &#39;</span><span class="si">{}</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                           <span class="s2">&quot;You must specify the &#39;--ref-col&#39; option&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ref_col</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fields_idx</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">strand_col</span><span class="p">,</span> <span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">strand_col</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The strand_col &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match any fields: &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">strand_col</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fields_idx</span><span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">chr_col</span><span class="p">,</span> <span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">chr_col</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The chr_col &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match any fields: &#39;</span><span class="si">{}</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                           <span class="s2">&quot;You must specify the &#39;--chr-col&#39; option&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chr_col</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">None</span>
+
+    <span class="k">if</span> <span class="n">start_col</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fields_idx</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start_col</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The start_col &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match any fields: &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_col</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fields_idx</span><span class="p">[</span><span class="s1">&#39;stop&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">stop_col</span><span class="p">,</span> <span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">stop_col</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The stop_col &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match any fields: &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stop_col</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)))</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">Entry</span><span class="p">,),</span> <span class="p">{</span><span class="s1">&#39;_fields_idx&#39;</span><span class="p">:</span> <span class="n">fields_idx</span><span class="p">,</span> <span class="s1">&#39;_fields&#39;</span><span class="p">:</span> <span class="n">fields</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="AnnotationParser"><a class="viewcode-back" href="../../annotation.html#craw.annotation.AnnotationParser">[docs]</a><span class="k">class</span> <span class="nc">AnnotationParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse the annotation file</span>
+<span class="sd">         - create new type of Entry according to the header</span>
+<span class="sd">         - create one Entry object for each line of the file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AnnotationParser.__init__"><a class="viewcode-back" href="../../annotation.html#craw.annotation.AnnotationParser.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">ref_col</span><span class="p">,</span> <span class="n">strand_col</span><span class="o">=</span><span class="s1">&#39;strand&#39;</span><span class="p">,</span> <span class="n">chr_col</span><span class="o">=</span><span class="s1">&#39;chromosome&#39;</span><span class="p">,</span>
+                 <span class="n">start_col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param path: the path to the annotation file to parse.</span>
+<span class="sd">        :type path: string</span>
+<span class="sd">        :param ref_col: the name of the column for the reference position</span>
+<span class="sd">        :type ref_col: string</span>
+<span class="sd">        :param chr_col: the name of the column for the chromosome</span>
+<span class="sd">        :type chr_col: string</span>
+<span class="sd">        :param strand_col: the name of the column for the strand</span>
+<span class="sd">        :type strand_col: string</span>
+<span class="sd">        :param start_col: the name of the column for start position</span>
+<span class="sd">        :type start_col: string</span>
+<span class="sd">        :param stop_col: the name of the column for the stop position</span>
+<span class="sd">        :type stop_col: string</span>
+<span class="sd">        :param sep: The separator tu use to split fields</span>
+<span class="sd">        :type sep: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_col</span> <span class="o">=</span> <span class="n">ref_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chr_col</span> <span class="o">=</span> <span class="n">chr_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strand_col</span> <span class="o">=</span> <span class="n">strand_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_col</span> <span class="o">=</span> <span class="n">start_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_col</span> <span class="o">=</span> <span class="n">stop_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sep</span> <span class="o">=</span> <span class="n">sep</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">annot_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">annot_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sep</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AnnotationParser.get_annotations"><a class="viewcode-back" href="../../annotation.html#craw.annotation.AnnotationParser.get_annotations">[docs]</a>    <span class="k">def</span> <span class="nf">get_annotations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse an annotation file and yield a :class:`Entry` for each line of the file.</span>
+
+<span class="sd">        :return: a generator on a annotation file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">annot_file</span><span class="p">:</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">annot_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="n">MyEntryClass</span> <span class="o">=</span> <span class="n">new_entry_type</span><span class="p">(</span><span class="s1">&#39;MyEntry&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_col</span><span class="p">,</span>
+                                          <span class="n">strand_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">strand_col</span><span class="p">,</span>
+                                          <span class="n">chr_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chr_col</span><span class="p">,</span>
+                                          <span class="n">start_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span>
+                                          <span class="n">stop_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_col</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">annot_file</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">MyEntryClass</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sep</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AnnotationParser.max"><a class="viewcode-back" href="../../annotation.html#craw.annotation.AnnotationParser.max">[docs]</a>    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: the maximum of bases to take in count before and after the reference position.</span>
+<span class="sd">        :rtype: tuple of 2 int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_left</span> <span class="o">=</span> <span class="n">max_right</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_annotations</span><span class="p">():</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">-</span> <span class="n">entry</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">entry</span><span class="o">.</span><span class="n">ref</span>
+                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                    <span class="c1"># for coverages on reverse strand the sense of scores</span>
+                    <span class="c1"># must be reversed, so the computation of padding must be too</span>
+                    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">right</span><span class="p">,</span> <span class="n">left</span>
+                <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;</span> <span class="n">max_left</span><span class="p">:</span>
+                    <span class="n">max_left</span> <span class="o">=</span> <span class="n">left</span>
+                <span class="k">if</span> <span class="n">right</span> <span class="o">&gt;</span> <span class="n">max_right</span><span class="p">:</span>
+                    <span class="n">max_right</span> <span class="o">=</span> <span class="n">right</span>
+            <span class="k">return</span> <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.scripts.craw_htmp &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.scripts.craw_htmp</h1><div class="highlight"><pre>
+<span></span><span class="ch">#! /usr/bin/env python3</span>
+
+<span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019  Institut Pasteur (Paris).                   #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mtp</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">craw</span>
+
+
+<div class="viewcode-block" id="_file_readable"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp._file_readable">[docs]</a><span class="k">def</span> <span class="nf">_file_readable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    check value given by the parser</span>
+
+<span class="sd">    :param str value: the value given by the parser for --sort-using-file option</span>
+<span class="sd">    :return: the normpath of the value</span>
+<span class="sd">    :raises: ArgumentError if the file does not exists, or is not a file, or not readable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;No such file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a regular file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">R_OK</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not readable&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="_gene_size_parser"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp._gene_size_parser">[docs]</a><span class="k">def</span> <span class="nf">_gene_size_parser</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse value given by the parser</span>
+
+<span class="sd">    :param value: the value given by the parser for --sort-by-gene-size option</span>
+<span class="sd">    :type value: string</span>
+<span class="sd">    :return: name of column representing the start of gene, name of the column representing the end of gene</span>
+<span class="sd">    :rtype: tuple of 2 string</span>
+<span class="sd">    :raise: :class:`argparse.ArgumentError` object if value cannot be parsed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># this function is called only if value is provided to sort-by-gene-size option</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;--sort-by-gene-size </span><span class="si">{}</span><span class="s2"> invalid value. &quot;</span>
+                                           <span class="s2">&quot;Must be start_col, stop_col (separated by a comma), &quot;</span>
+                                           <span class="s2">&quot;default= annotation_start,annotation_end&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">return</span> <span class="n">rv</span></div>
+
+
+<div class="viewcode-block" id="_size_fig_parser"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp._size_fig_parser">[docs]</a><span class="k">def</span> <span class="nf">_size_fig_parser</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse value given by the parser for --size option</span>
+<span class="sd">    the value must follow the syntax widexheight[unit]</span>
+<span class="sd">    if the unit is omitted unit is inch</span>
+<span class="sd">    otherwise unit must be</span>
+
+<span class="sd">        * &#39;mm&#39; for millimeters</span>
+<span class="sd">        * &#39;cm&#39; for centimeters</span>
+<span class="sd">        * &#39;in&#39; for inches</span>
+<span class="sd">        * &#39;px&#39; for pixels</span>
+
+<span class="sd">    wide and height must be positive integers.</span>
+
+<span class="sd">    :param value: the size of the figure</span>
+<span class="sd">    :type value: string</span>
+<span class="sd">    :return: the size in inch ask by the user</span>
+<span class="sd">    :rtype: tuple of float</span>
+<span class="sd">    :raise: :class:`argparse.ArgumentError` object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">mm2in</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">25.4</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">cm2in</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mm2in</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">px2in</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="n">dpi</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="n">dpi</span>
+
+    <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;--size </span><span class="si">{}</span><span class="s2"> invalid value.</span>
+<span class="s2">                 The value must be widexheight[unit] or &#39;raw&#39;.</span>
+<span class="s2">                 &#39;wide&#39; and &#39;height&#39; must be positive integers</span>
+<span class="s2">                 By default unit is in inches.</span>
+<span class="s2">                 eg: 7x10 or 7x10in for 7 inches wide by 10 inches height</span>
+<span class="s2">                     70x100mm for 70 mm by 100 mm.</span>
+<span class="s2">                 default=7x10 or 10x7 depending of the figure orientation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;raw&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;raw&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;in&#39;</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span> <span class="s1">&#39;cm&#39;</span><span class="p">,</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">):</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">wide</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">wide</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">wide</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">wide</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">height</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
+            <span class="n">wide</span> <span class="o">=</span> <span class="n">mm2in</span><span class="p">(</span><span class="n">wide</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">mm2in</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">&#39;cm&#39;</span><span class="p">:</span>
+            <span class="n">wide</span> <span class="o">=</span> <span class="n">cm2in</span><span class="p">(</span><span class="n">wide</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">cm2in</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">&#39;px&#39;</span><span class="p">:</span>
+            <span class="n">wide</span> <span class="o">=</span> <span class="n">px2in</span><span class="p">(</span><span class="n">wide</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">px2in</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wide</span><span class="p">,</span> <span class="n">height</span></div>
+
+
+<div class="viewcode-block" id="get_version_message"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp.get_version_message">[docs]</a><span class="k">def</span> <span class="nf">get_version_message</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :return: a human readable of craw_htmp version and it&#39;s main dependencies.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pyplot must be import after the argument parsing</span>
+    <span class="c1"># because in function of the environment ($DYSPLAY and options) the craw_htmp behavior</span>
+    <span class="c1"># is not the same</span>
+    <span class="c1"># so heatmap cannot be import before argument parsing</span>
+    <span class="c1"># so I import the dependencies in get_version_message.</span>
+    <span class="c1"># it&#39;s not very important as get_version_message is called only when --version is set</span>
+    <span class="c1"># so the program quit after displaying this message.</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mtp</span>
+    <span class="kn">import</span> <span class="nn">PIL</span>
+    <span class="n">version_text</span> <span class="o">=</span> <span class="n">craw</span><span class="o">.</span><span class="n">get_version_message</span><span class="p">()</span>
+    <span class="n">version_text</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Using:</span>
+<span class="s2">   - numpy </span><span class="si">{np_ver}</span><span class="s2"></span>
+<span class="s2">   - pandas </span><span class="si">{pd_ver}</span><span class="s2"></span>
+<span class="s2">   - matplotlib </span><span class="si">{mtp_ver}</span><span class="s2"></span>
+<span class="s2">   - pillow </span><span class="si">{pil_ver}</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np_ver</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+           <span class="n">pd_ver</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+           <span class="n">mtp_ver</span><span class="o">=</span><span class="n">mtp</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+           <span class="n">pil_ver</span><span class="o">=</span><span class="n">PIL</span><span class="o">.</span><span class="n">PILLOW_VERSION</span>
+           <span class="p">)</span>
+    <span class="k">return</span> <span class="n">version_text</span></div>
+
+
+<div class="viewcode-block" id="parse_args"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp.parse_args">[docs]</a><span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param args: the arguments and option as provided by sys.argv without the program name</span>
+<span class="sd">    :return: the argument parsed</span>
+<span class="sd">    :rtype: :class:`argparse.Namespace` object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Compute a figure from a file of coverage compute by craw_coverage.py.&quot;</span><span class="p">,</span>
+                                     <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawTextHelpFormatter</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="s2">&quot;cov_file&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;the path to the coverage file.&quot;</span><span class="p">)</span>
+
+    <span class="n">data_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;optional data options&#39;</span><span class="p">)</span>
+    <span class="n">data_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--crop&quot;</span><span class="p">,</span>
+                          <span class="n">nargs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;crop the matrix.</span>
+<span class="s2">    This option need two values the name of the first and last column to keep</span>
+<span class="s2">    [start col, stop col] eg --crop -10 1000 .&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">sort_grp</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">sort_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sort-using-col&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;sort the rows using the column COL.&quot;</span><span class="p">)</span>
+    <span class="n">sort_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sort-using-file&quot;</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="n">_file_readable</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Sort the rows using a file.</span>
+<span class="s2">    The file must have on the first line the name of the column</span>
+<span class="s2">    which will use to sort.</span>
+<span class="s2">    Each following lines must match to a value of this column in the data.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">sort_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sort-by-gene-size&quot;</span><span class="p">,</span>
+                          <span class="nb">type</span><span class="o">=</span><span class="n">_gene_size_parser</span><span class="p">,</span>
+                          <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                          <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;start_col,stop_col&#39;</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The rows will be sorted by gene size</span>
+<span class="s2">    using start-col and stop-col to compute length.</span>
+<span class="s2">    </span>
+<span class="s2">    start-col and stop-col must be a string separated by comma.</span>
+<span class="s2">    If start-col and stop-col are not specified annotation_start and annotation_end</span>
+<span class="s2">    for start-col and stop-col respectively will be used.</span>
+<span class="s2">    (Don&#39;t put this option without value just before the coverage file.)&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">matrix_grp</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">matrix_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense-only&quot;</span><span class="p">,</span>
+                            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Display only sense matrix (default is display both).&quot;</span><span class="p">)</span>
+    <span class="n">matrix_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--antisense-only&quot;</span><span class="p">,</span>
+                            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Display only anti sense matrix (default is display both).&quot;</span><span class="p">)</span>
+
+    <span class="n">fig_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;optional figure options&quot;</span><span class="p">)</span>
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--cmap&quot;</span><span class="p">,</span>
+                         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Blues&quot;</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The color map used to display data.</span>
+<span class="s2">    The allowed values are defined in</span>
+<span class="s2">    http:matplotlib.org/examples/color/colormaps_reference.html</span>
+<span class="s2">    eg: Blues, BuGn, Greens, GnBu, ... (default: Blues).&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--title&quot;</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The figure title.</span>
+<span class="s2">    It will display on the top of the figure.</span>
+<span class="s2">    (default: the name of the coverage file without extension).&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--dpi&quot;</span><span class="p">,</span>
+                         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The resolution of the output .</span>
+<span class="s2">    This option work only if --out option is specified with size not raw.</span>
+<span class="s2">    (default: matplolibrc figure.dpi&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--size&quot;</span><span class="p">,</span>
+                         <span class="nb">type</span><span class="o">=</span><span class="n">_size_fig_parser</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Specify the figure size.</span>
+<span class="s2">    The value must be widexheight[unit] or &#39;raw&#39;.</span>
+<span class="s2">    </span>
+<span class="s2">    If value is raw it will be produce two image files (for sense and antisense) &quot;</span>
+<span class="s2">    with one pixel correspond to one coverage value for one nucleotide.</span>
+<span class="s2">    </span>
+<span class="s2">    Otherwise, &#39;wide&#39; and &#39;height&#39; must be positive integers</span>
+<span class="s2">    By default units are in inches eg:</span>
+<span class="s2">    </span>
+<span class="s2">    * 7x10 or 7x10in for 7 inches wide by 10 inches height</span>
+<span class="s2">    * 70x100mm for 70 mm by 100 mm.</span>
+<span class="s2">    </span>
+<span class="s2">    (default: 7x10 or 10x7 depending of the figure orientation).&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--norm&quot;</span><span class="p">,</span>
+                         <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lin&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="s2">&quot;log+row&quot;</span><span class="p">,</span> <span class="s2">&quot;row+log&quot;</span><span class="p">],</span>
+                         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;lin&quot;</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Which normalization to apply to the data before display them.</span>
+<span class="s2">    </span>
+<span class="s2">     * lin a linear normalization is applied on the whole matrix.</span>
+<span class="s2">     * log a 10 base logarithm will be applied on the data before matrix</span>
+<span class="s2">       normalization.</span>
+<span class="s2">     * row mean that a linear normalisation is compute row by row.</span>
+<span class="s2">     * log+row mean a 10 base logarithm will be applied before a normalisation</span>
+<span class="s2">       row by row. (&#39;row+log&#39; is an alias for &#39;log+row&#39;).</span>
+<span class="s2">       (default: lin&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--mark&quot;</span><span class="p">,</span>
+                         <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span>
+                         <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                         <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;POS [COLOR]&#39;</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;* POS is mandatory and must be a positive integer.</span>
+<span class="s2">    * COLOR is optional</span>
+<span class="s2">      The supported color formats are:</span>
+<span class="s2">      - Hexadecimal color specifiers, given as &#39;#rgb&#39; or &#39;#rrggbb&#39;. For example, &#39;#ff0000&#39; specifies pure red.</span>
+<span class="s2">      - Common HTML color names.</span>
+<span class="s2">    </span>
+<span class="s2">    If COLOR is omitted the color corresponding to the highest value in the color map (--cmap) will be used.</span>
+<span class="s2">    (this option cannot be the last one just before the coverage file, on the command line.)&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">layout</span> <span class="o">=</span> <span class="n">fig_grp</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense-on-left&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Where to display the sense matrix relative to antisense matrix (default is top).&quot;</span><span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense-on-right&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Where to display the sense matrix relative to antisense matrix (default is top).&quot;</span><span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense-on-top&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Where to display the sense matrix relative to antisense matrix (default is top).&quot;</span><span class="p">)</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense-on-bottom&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Where to display the sense matrix relative to antisense matrix (default is top).&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--out&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The name of the file (the format will based on the extension)</span>
+<span class="s2">    to save the figure.</span>
+<span class="s2">    Instead of displaying the figure on the screen, save it directly in this file.</span>
+<span class="s2">    </span>
+<span class="s2">    If this option is used with --size raw 2 files will be produced</span>
+<span class="s2">    for respectively sense and anti sense.</span>
+<span class="s2">    The extension &#39;sense&#39; or &#39;antisense&#39; will be added between the name and the suffix eg:</span>
+<span class="s2">    --size raw --out foo.png give 2 files &#39;foo.sense.png&#39; and &#39;foo.antisense.png&#39;.</span>
+<span class="s2">    </span>
+<span class="s2">    If no format (determine using the suffix) is given &#39;png&#39; will be used.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Increase output verbosity.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Reduce output verbosity.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--version&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span>
+                        <span class="n">version</span><span class="o">=</span><span class="n">get_version_message</span><span class="p">(),</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;display the version information and quit.&quot;</span><span class="p">)</span>
+    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parsed_args</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../craw_htmp.html#craw.scripts.craw_htmp.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger_out</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The entrypoint for craw_html script</span>
+
+<span class="sd">    It will generate a heatmap representing the coverage matrix around the position of interest</span>
+<span class="sd">    it can display the results on the screen or write it on file depending the options</span>
+
+<span class="sd">    :param args: The arguments and option representing the command line</span>
+<span class="sd">    :type args: list of string</span>
+<span class="sd">    :param log_level: the level of verbosity</span>
+<span class="sd">    :param logger_out: True if you want to display logs on stdout, False otherwise</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">args</span>
+    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="o">+</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">quiet</span> <span class="o">-</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">craw</span><span class="o">.</span><span class="n">init_logger</span><span class="p">(</span><span class="n">verbosity</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">logger_out</span><span class="p">)</span>
+
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;craw.htmp&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;args=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parsed_args</span><span class="p">))</span>
+    <span class="c1">###########################</span>
+    <span class="c1"># validating some options #</span>
+    <span class="c1">###########################</span>
+    <span class="c1"># test if DISPlAY</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;DISPLAY&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">out_format</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">out_format</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &#39;DISPLAY&#39; variable is not set (you probably run craw_htmp in non graphic environment)</span>
+<span class="s2">    So you must specify an output format (add ext to the output file option as &#39;my_file.png&#39;)</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="kn">from</span> <span class="nn">craw.util</span> <span class="k">import</span> <span class="n">non_interactive_backends</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">backend</span> <span class="o">=</span> <span class="n">non_interactive_backends</span><span class="p">[</span><span class="n">out_format</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The &#39;</span><span class="si">{}</span><span class="s2">&#39; format is not supported, choose among </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">out_format</span><span class="p">,</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">non_interactive_backends</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="p">))</span>
+            <span class="n">mtp</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &#39;DISPLAY&#39; variable is not set (you probably run craw_htmp in non graphic environment)</span>
+<span class="s2">    So you cannot use interactive output</span>
+<span class="s2">    please specify an output file (--out).</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># the import of pyplot must be done after setting the backend</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">craw</span> <span class="k">import</span> <span class="n">heatmap</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">color_map</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">cmap</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> : http:matplotlib.org/examples/color/colormaps_reference.html for example&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;annotation_start&#39;</span><span class="p">,</span> <span class="s1">&#39;annotation_end&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span><span class="p">:</span>
+        <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;.&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">W_OK</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not writable&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Parsing coverage file&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">cov_file</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">mark_converter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">marks</span><span class="p">):</span>
+        <span class="n">converted_marks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">marks</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">converted_marks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heatmap</span><span class="o">.</span><span class="n">Mark</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">color_map</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">converted_marks</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">mark</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parsed_args</span><span class="o">.</span><span class="n">mark</span> <span class="o">=</span> <span class="n">mark_converter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">mark</span><span class="p">)</span>
+
+    <span class="n">sense_data</span><span class="p">,</span> <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">split_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_only</span><span class="p">:</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">antisense_only</span><span class="p">:</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">################</span>
+    <span class="c1"># sorting data #</span>
+    <span class="c1">################</span>
+    <span class="c1"># if data is empty or data is None sort return data</span>
+    <span class="c1"># so it&#39;s error safe, and not time and space consuming</span>
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span><span class="p">:</span>
+        <span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_by_gene_size</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">sense_data</span><span class="p">,</span> <span class="s1">&#39;by_gene_size&#39;</span><span class="p">,</span> <span class="n">start_col</span><span class="o">=</span><span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="o">=</span><span class="n">stop_col</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">,</span> <span class="s1">&#39;by_gene_size&#39;</span><span class="p">,</span> <span class="n">start_col</span><span class="o">=</span><span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="o">=</span><span class="n">stop_col</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_col</span><span class="p">:</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">sense_data</span><span class="p">,</span> <span class="s1">&#39;using_col&#39;</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_col</span><span class="p">)</span>
+        <span class="n">antisense</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">,</span> <span class="s1">&#39;using_col&#39;</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_col</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_file</span><span class="p">:</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">sense_data</span><span class="p">,</span> <span class="s1">&#39;using_file&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_file</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">,</span> <span class="s1">&#39;using_file&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sort_using_file</span><span class="p">)</span>
+
+    <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">remove_metadata</span><span class="p">(</span><span class="n">sense_data</span><span class="p">)</span>
+    <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">remove_metadata</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">)</span>
+
+    <span class="c1">################</span>
+    <span class="c1"># croping data #</span>
+    <span class="c1">################</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Croping matrix&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">crop</span><span class="p">:</span>
+        <span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">crop</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">crop_matrix</span><span class="p">(</span><span class="n">sense_data</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">crop_matrix</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">stop_col</span><span class="p">)</span>
+
+    <span class="c1">####################</span>
+    <span class="c1"># Normalizing data #</span>
+    <span class="c1">####################</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Normalizing data&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">norm</span> <span class="o">==</span> <span class="s2">&quot;lin&quot;</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Linear normalisation&quot;</span><span class="p">)</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">lin_norm</span><span class="p">(</span><span class="n">sense_data</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">lin_norm</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;10 base logarithm normalisation&quot;</span><span class="p">)</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">log_norm</span><span class="p">(</span><span class="n">sense_data</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">log_norm</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">norm</span> <span class="o">==</span> <span class="s1">&#39;row&#39;</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Linear normalisation by row&quot;</span><span class="p">)</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">lin_norm_row_by_row</span><span class="p">(</span><span class="n">sense_data</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">lin_norm_row_by_row</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># log+row or row+log</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;10 base logarithm and normalisation by row&quot;</span><span class="p">)</span>
+        <span class="n">sense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">log_norm_row_by_row</span><span class="p">(</span><span class="n">sense_data</span><span class="p">)</span>
+        <span class="n">antisense_data</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">log_norm_row_by_row</span><span class="p">(</span><span class="n">antisense_data</span><span class="p">)</span>
+
+    <span class="c1">##################</span>
+    <span class="c1"># Drawing figure #</span>
+    <span class="c1">##################</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Drawing figure&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="s1">&#39;raw&#39;</span><span class="p">:</span>
+        <span class="c1"># pillow backend</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_only</span><span class="p">:</span>
+            <span class="n">sense_to_compute</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;sense&#39;</span><span class="p">,</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">antisense_only</span><span class="p">:</span>
+            <span class="n">sense_to_compute</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;antisense&#39;</span><span class="p">,</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sense_to_compute</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;sense&#39;</span><span class="p">,</span> <span class="s1">&#39;antisense&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+            <span class="n">root_name</span><span class="p">,</span> <span class="n">im_format</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+            <span class="n">im_format</span> <span class="o">=</span> <span class="n">im_format</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">im_format</span><span class="p">:</span>
+                <span class="n">im_format</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">im_format</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span>
+            <span class="n">root_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">cov_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">out_filename</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">sense</span> <span class="ow">in</span> <span class="n">sense_to_compute</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.</span><span class="si">{sense}</span><span class="s2">.</span><span class="si">{format}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">root_name</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">im_format</span><span class="p">)</span>
+            <span class="n">out_filename</span><span class="p">[</span><span class="n">sense</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> already exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">sense</span> <span class="ow">in</span> <span class="n">sense_to_compute</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Drawing </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sense</span><span class="p">))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">sense</span> <span class="o">+</span> <span class="s1">&#39;_data&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">heatmap</span><span class="o">.</span><span class="n">draw_raw_image</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">out_filename</span><span class="p">[</span><span class="n">sense</span><span class="p">],</span> <span class="n">color_map</span><span class="p">,</span> <span class="n">marks</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">mark</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> data are empty: skip drawing.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sense</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># matplotlib backend</span>
+        <span class="c1">##########</span>
+        <span class="c1"># layout #</span>
+        <span class="c1">##########</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_on_left</span><span class="p">:</span>
+            <span class="n">sense_on</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span>
+        <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_on_right</span><span class="p">:</span>
+            <span class="n">sense_on</span> <span class="o">=</span> <span class="s1">&#39;right&#39;</span>
+        <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_on_top</span><span class="p">:</span>
+            <span class="n">sense_on</span> <span class="o">=</span> <span class="s1">&#39;top&#39;</span>
+        <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense_on_bottom</span><span class="p">:</span>
+            <span class="n">sense_on</span> <span class="o">=</span> <span class="s1">&#39;bottom&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sense_on</span> <span class="o">=</span> <span class="s1">&#39;top&#39;</span>
+
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">cov_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">title</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">draw_heatmap</span><span class="p">(</span><span class="n">sense_data</span><span class="p">,</span> <span class="n">antisense_data</span><span class="p">,</span>
+                                   <span class="n">color_map</span><span class="o">=</span><span class="n">color_map</span><span class="p">,</span>
+                                   <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+                                   <span class="n">sense_on</span><span class="o">=</span><span class="n">sense_on</span><span class="p">,</span>
+                                   <span class="n">size</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+                                   <span class="n">marks</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">mark</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The output file: </span><span class="si">{}</span><span class="s2"> already exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">dpi</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">dpi</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__name__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>

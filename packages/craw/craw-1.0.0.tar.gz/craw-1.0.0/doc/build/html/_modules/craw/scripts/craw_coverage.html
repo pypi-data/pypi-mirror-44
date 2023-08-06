@@ -1,0 +1,599 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>craw.scripts.craw_coverage &#8212; Counter RNAseq Window 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../craw.html" accesskey="U">craw</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for craw.scripts.craw_coverage</h1><div class="highlight"><pre>
+<span></span><span class="ch">#! /usr/bin/env python3</span>
+
+<span class="c1">###########################################################################</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1"># This file is part of Counter RNAseq Window (craw) package.              #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    Authors: Bertrand Neron                                              #</span>
+<span class="c1">#    Copyright (c) 2017-2019 Institut Pasteur (Paris).                    #</span>
+<span class="c1">#    see COPYRIGHT file for details.                                      #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is free software: you can redistribute it and/or modify         #</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by #</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or    #</span>
+<span class="c1">#    (at your option) any later version.                                  #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    craw is distributed in the hope that it will be useful,              #</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #</span>
+<span class="c1">#    See the GNU General Public License for more details.                 #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License    #</span>
+<span class="c1">#    along with craw (see COPYING file).                                  #</span>
+<span class="c1">#    If not, see &lt;http://www.gnu.org/licenses/&gt;.                          #</span>
+<span class="c1">#                                                                         #</span>
+<span class="c1">###########################################################################</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pysam</span>
+
+<span class="kn">import</span> <span class="nn">craw</span>
+<span class="kn">from</span> <span class="nn">craw.util</span> <span class="k">import</span> <span class="n">progress</span>
+<span class="kn">from</span> <span class="nn">craw</span> <span class="k">import</span> <span class="n">argparse_util</span>
+<span class="kn">from</span> <span class="nn">craw</span> <span class="k">import</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">coverage</span>
+<span class="kn">from</span> <span class="nn">craw.wig</span> <span class="k">import</span> <span class="n">WigParser</span>
+
+
+<div class="viewcode-block" id="positive_int"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.positive_int">[docs]</a><span class="k">def</span> <span class="nf">positive_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse value given by the parser</span>
+
+<span class="sd">    :param value: the value given by the parser</span>
+<span class="sd">    :type value: string</span>
+<span class="sd">    :return: the integer corresponding to the value</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :raise:  :class:`argparse.ArgumentTypeError`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;must be a positive integer, got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;must be a positive integer, got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="quality_checker"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.quality_checker">[docs]</a><span class="k">def</span> <span class="nf">quality_checker</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse value given by the parser</span>
+
+<span class="sd">    :param value: the value given by the parser</span>
+<span class="sd">    :type value:  string</span>
+<span class="sd">    :return: the integer &gt;=0 and &lt;=42 corresponding to the value</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :raise:  :class:`argparse.ArgumentTypeError` if value does not represent a integer &gt;=0 and &lt;=42</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;must be a integer between 0 and 42, got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">42</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;must be a integer between 0 and 42, got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="get_result_header"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.get_result_header">[docs]</a><span class="k">def</span> <span class="nf">get_result_header</span><span class="p">(</span><span class="n">annot_parser</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the header for the results.</span>
+<span class="sd">    the firts lines start with #</span>
+<span class="sd">    they contains some general information about the craw (version)</span>
+<span class="sd">    and options used (for tracbility)</span>
+<span class="sd">    the last line is the header of columns separated by --sep option</span>
+<span class="sd">    and can be used as header with pandas</span>
+
+<span class="sd">    :param annot_parser: the annotation parser</span>
+<span class="sd">    :type annot_parser: :class:`annotation.AnnotationParser` object</span>
+<span class="sd">    :param parsed_args: the command line argument parsed with argparse</span>
+<span class="sd">    :type parsed_args: :class:`argparse.Namespace`</span>
+<span class="sd">    :return: The header of the result file</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">version_infos</span><span class="p">():</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;# Running Counter RnAseq Window craw_coverage</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">commented_ver</span> <span class="o">=</span> <span class="n">get_version_message</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"># &#39;</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;#</span>
+<span class="s2"># Version: </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">#</span>
+<span class="s2"># craw_coverage run with the following arguments:</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">commented_ver</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">header</span>
+
+    <span class="k">def</span> <span class="nf">options</span><span class="p">():</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">options</span> <span class="o">+=</span> <span class="s2">&quot;# --</span><span class="si">{opt}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">options</span> <span class="o">+=</span> <span class="s2">&quot;# --</span><span class="si">{opt}</span><span class="s2">=</span><span class="si">{val}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">),</span> <span class="n">val</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">options</span>
+
+    <span class="k">def</span> <span class="nf">padded_header</span><span class="p">():</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">header</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">start_col</span><span class="p">:</span>
+            <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span> <span class="o">=</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">-</span> <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span> <span class="o">-</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;sense</span><span class="se">\t</span><span class="si">{metadata}</span><span class="se">\t</span><span class="si">{pos}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">sum_header</span><span class="p">():</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">header</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s2">&quot;sense</span><span class="se">\t</span><span class="si">{metadata}</span><span class="se">\t</span><span class="s2">coverage&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">resized_header</span><span class="p">(</span><span class="n">new_size</span><span class="p">):</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">header</span><span class="p">])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">new_size</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="s2">&quot;sense</span><span class="se">\t</span><span class="si">{metadata}</span><span class="se">\t</span><span class="si">{pos}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">)</span>
+
+    <span class="n">header</span> <span class="o">=</span> <span class="n">version_infos</span><span class="p">()</span>
+    <span class="n">header</span> <span class="o">+=</span> <span class="n">options</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">justify</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="n">resized_header</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">justify</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sum</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="n">sum_header</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">+=</span> <span class="n">padded_header</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">header</span></div>
+
+
+<div class="viewcode-block" id="get_version_message"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.get_version_message">[docs]</a><span class="k">def</span> <span class="nf">get_version_message</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :return: The human readable CRAW version.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version_text</span> <span class="o">=</span> <span class="n">craw</span><span class="o">.</span><span class="n">get_version_message</span><span class="p">()</span>
+    <span class="n">version_text</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Using:</span>
+<span class="s2">   - pysam </span><span class="si">{pysam_ver}</span><span class="s2"> (samtools </span><span class="si">{samtools_ver}</span><span class="s2">)</span>
+<span class="s2">   - scipy </span><span class="si">{sp_ver}</span><span class="s2"> (only for --justify opt)</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pysam_ver</span><span class="o">=</span><span class="n">pysam</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+           <span class="n">samtools_ver</span><span class="o">=</span><span class="n">pysam</span><span class="o">.</span><span class="n">__samtools_version__</span><span class="p">,</span>
+           <span class="n">sp_ver</span><span class="o">=</span><span class="n">craw</span><span class="o">.</span><span class="n">coverage</span><span class="o">.</span><span class="n">scipy</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">version_text</span></div>
+
+
+<div class="viewcode-block" id="get_results_file"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.get_results_file">[docs]</a><span class="k">def</span> <span class="nf">get_results_file</span><span class="p">(</span><span class="n">sense_opt</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param str sense_opt: how to managed the sense and antisense results</span>
+
+<span class="sd">        * **mixed**: sense and antisense are interleaved in same file</span>
+<span class="sd">        * **split**: sense and antisense are in separated files</span>
+<span class="sd">        * **S**: only sense results are write down</span>
+<span class="sd">        * **AS**: only antisense are write down</span>
+
+<span class="sd">    :param str basename: the basename of the results file</span>
+<span class="sd">    :param str suffix: the suffix of the results file</span>
+<span class="sd">    :return: the file objects where to write sense and antisense results</span>
+<span class="sd">    :rtype: tuple (`file object` sense, `file object` antisense)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sense_opt</span> <span class="o">==</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span>
+        <span class="n">sense_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.sense.</span><span class="si">{suffix}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sense_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">antisense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sense_opt</span> <span class="o">==</span> <span class="s1">&#39;AS&#39;</span><span class="p">:</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">antisense_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.antisense.</span><span class="si">{suffix}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="n">antisense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">antisense_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sense_opt</span> <span class="o">==</span> <span class="s1">&#39;split&#39;</span><span class="p">:</span>
+        <span class="n">sense_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.sense.</span><span class="si">{suffix}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sense_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">antisense_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.antisense.</span><span class="si">{suffix}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="n">antisense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">antisense_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{filename}</span><span class="s2">.</span><span class="si">{suffix}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">basename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">antisense</span> <span class="o">=</span> <span class="n">sense</span>
+    <span class="k">return</span> <span class="n">sense</span><span class="p">,</span> <span class="n">antisense</span></div>
+
+
+<div class="viewcode-block" id="parse_args"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.parse_args">[docs]</a><span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param args: The options set on the command line (without the program name)</span>
+<span class="sd">    :type args: list of string</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="n">input_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">()</span>
+    <span class="n">input_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-b&quot;</span><span class="p">,</span> <span class="s2">&quot;--bam&quot;</span><span class="p">,</span>
+                           <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The path of the bam file to analyse. </span>
+<span class="s2">    --bam option is not compatible with any --wig or --wig-for or --wig-rev options.</span>
+<span class="s2">    but at least --bam or any of --wig* options is required.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">input_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-w&quot;</span><span class="p">,</span> <span class="s2">&quot;--wig&quot;</span><span class="p">,</span>
+                           <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The path of the wig file to analyse.</span>
+<span class="s2">    The file encode the coverage for the both strand.</span>
+<span class="s2">    The positive coverage ar on the forward strand whereas the negative coverage a located on the reverse one.</span>
+<span class="s2">    The --wig option is incompatible with both --bam or --wig-for or --wig-reverse options.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">input_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--wig-for&quot;</span><span class="p">,</span>
+                           <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;FORWARD WIG&#39;</span><span class="p">,</span>
+                           <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The path of a wig file to analyse.</span>
+<span class="s2">    This file encode the coverage for the forward strand.</span>
+<span class="s2">    The --wig-for option is incompatible with both --bam or --wig options.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">input_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--wig-rev&quot;</span><span class="p">,</span>
+                           <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;REVERSE WIG&#39;</span><span class="p">,</span>
+                           <span class="n">help</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The path of a wig file to analyse.</span>
+<span class="s2">    This file encode the coverage for the reverse strand.</span>
+<span class="s2">    The --wig-rev option is incompatible with both --bam or --wig options.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="s2">&quot;--annot&quot;</span><span class="p">,</span>
+                        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The path of the annotation file (required).&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--qual-thr&quot;</span><span class="p">,</span>
+                        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;qual_thr&#39;</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="n">quality_checker</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The minimal quality of read mapping to take it in account&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--suffix&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;cov&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of the suffix to use for the output file.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--output&#39;</span><span class="p">,</span>
+                        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The path of the output (default= base name of annotation file with --suffix)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--sep&#39;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;the separator use to delimit the annotation fields&quot;</span><span class="p">)</span>
+    <span class="n">mutually_exclusive_opt</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">mutually_exclusive_opt</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--justify&#39;</span><span class="p">,</span>
+                                        <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;to resize all genes coverage to this new size.&quot;</span><span class="p">)</span>
+    <span class="n">mutually_exclusive_opt</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--sum&#39;</span><span class="p">,</span>
+                                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                                        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;sum all the coverages on the window.&quot;</span><span class="p">)</span>
+
+    <span class="n">region_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;region of interest&quot;</span><span class="p">,</span>
+                                           <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Parameters which define regions to compute.</span>
+
+<span class="s2">    There is 2 way to define regions:</span>
+<span class="s2">        * all regions have same length.</span>
+<span class="s2">        * each region have different lengths.</span>
+
+<span class="s2">    In both case a position of reference must be define (--ref-col).</span>
+
+<span class="s2">    If all regions have same length:</span>
+
+<span class="s2">        --window define the number of nucleotide to take in account before and</span>
+<span class="s2">          after the reference position (the window will be centered on reference)</span>
+<span class="s2">        --before define the number of nucleotide to take in account before the</span>
+<span class="s2">          reference position.</span>
+<span class="s2">        --after define the number of nucleotide to take in account after the</span>
+<span class="s2">          reference position.</span>
+<span class="s2">        --before and --after allow to define non centered window.</span>
+
+<span class="s2">        --after and --before options must be set together and are</span>
+<span class="s2">        incompatible with --window option.</span>
+
+<span class="s2">    If all regions have different lengths:</span>
+
+<span class="s2">        The regions must be specified in the annotation file.</span>
+<span class="s2">        --start-col define the name of the column in annotation file which define</span>
+<span class="s2">          the start position of the region to compute.</span>
+<span class="s2">        --stop-col define the name of the column in annotation file which define</span>
+<span class="s2">          the stop position of the region to compute.</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--ref-col&quot;</span><span class="p">,</span>
+                            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;position&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of the column for the reference position (default: position).&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--before&quot;</span><span class="p">,</span>
+                            <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The number of base to compute after the position of reference.&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--after&quot;</span><span class="p">,</span>
+                            <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The number of base to compute before the position of reference.&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--window&quot;</span><span class="p">,</span>
+                            <span class="nb">type</span><span class="o">=</span><span class="n">positive_int</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The number of base to compute around the position of reference.&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--start-col&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of the column to define the start position.&quot;</span><span class="p">)</span>
+    <span class="n">region_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--stop-col&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The name of the column to define the stop position.&quot;</span><span class="p">)</span>
+    <span class="n">col_name</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;specify the name of columns&quot;</span><span class="p">)</span>
+    <span class="n">col_name</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--strand-col&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="s1">&#39;strand&#39;</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify the name of the column representing the strand (default: strand)&quot;</span><span class="p">)</span>
+    <span class="n">col_name</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--chr-col&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="s1">&#39;chromosome&#39;</span><span class="p">,</span>
+                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify the name of the column representing the chromosome (default: chromosome)&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--sense&quot;</span><span class="p">,</span>
+                        <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;AS&#39;</span><span class="p">,</span> <span class="s1">&#39;split&#39;</span><span class="p">,</span> <span class="s1">&#39;mixed&#39;</span><span class="p">),</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mixed&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;compute result only on: &quot;</span>
+                             <span class="s2">&quot;sense (S), &quot;</span>
+                             <span class="s2">&quot;antisense (AS), &quot;</span>
+                             <span class="s2">&quot;on both senses but produce two separated files (split), &quot;</span>
+                             <span class="s2">&quot;or in one file (mixed).&quot;</span>
+                             <span class="s2">&quot;(default: mixed)&quot;</span>
+                        <span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--version&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="n">argparse_util</span><span class="o">.</span><span class="n">VersionAction</span><span class="p">,</span>
+                        <span class="n">version</span><span class="o">=</span><span class="n">get_version_message</span><span class="p">())</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="s2">&quot;--quiet&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Reduce verbosity.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Increase verbosity.&quot;</span><span class="p">)</span>
+
+    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">input_opt_group</span> <span class="o">=</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_for</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_rev</span><span class="p">)</span>
+    <span class="n">wig_opt_group</span> <span class="o">=</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_for</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_rev</span><span class="p">)</span>
+
+    <span class="c1">#############################</span>
+    <span class="c1"># Check wig and bam options #</span>
+    <span class="c1">#############################</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">input_opt_group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;At least one of these options must be specified&quot;</span>
+                                           <span class="s2">&quot; &#39;--bam&#39;, &#39;--wig&#39; , &#39;--wig-for&#39;, &#39;--wig-rev&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">input_opt_group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span>
+                                     <span class="s2">&quot;&#39;--bam&#39;, &#39;--wig&#39; , &#39;--wig-for&#39;, &#39;--wig-rev&#39; cannot specify at the same time.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">bam</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">wig_opt_group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&#39;--bam&#39; option cannot be specified in the same time as&quot;</span>
+                                           <span class="s2">&quot; &#39;--wig&#39;, &#39;--wig-for&#39; or &#39;--wig-rev&#39; options.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">((</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_for</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_rev</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;&#39;--wig&#39; option cannot be specified in the same time as&quot;</span>
+                                           <span class="s2">&quot; &#39;--wig-for&#39; or &#39;--wig-rev&#39; options.&quot;</span><span class="p">)</span>
+    <span class="c1">###########################</span>
+    <span class="c1"># Checking window options #</span>
+    <span class="c1">###########################</span>
+    <span class="n">group_one</span> <span class="o">=</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">window</span><span class="p">)</span>
+    <span class="n">group_two</span> <span class="o">=</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">stop_col</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">group_one</span><span class="p">,</span> <span class="n">group_two</span><span class="p">)]):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;[--window or [--before, --after] or [--start-col, --stop-col] options&quot;</span>
+                                     <span class="s2">&quot; must be specified&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">any</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group_one</span><span class="p">])</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group_two</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Options [--before, --after, --window] and [--start-col, --stop-col] &quot;</span>
+                                     <span class="s2">&quot;are mutually exclusives.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group_two</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">window</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span><span class="p">)]):</span>
+                <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;The two options --after and --before work together.&quot;</span>
+                                             <span class="s2">&quot; The both options must be specified in same time&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+                <span class="c1"># window is None, before and after are specify</span>
+                <span class="c1"># =&gt; nothing to do</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># parsed_args.window is not None:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span><span class="p">)]):</span>
+                <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;options [--before, --after] and --window are mutually exclusives.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># --before, --after are None</span>
+                <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">window</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">group_two</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;The two options --start-col and --stop-col work together. &quot;</span>
+                                     <span class="s2">&quot;The both options must be specified in same time&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parsed_args</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../craw_coverage.html#craw.scripts.craw_coverage.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The entrypoint for craw_coverage script</span>
+<span class="sd">    It will generate a coverage matrix around the position of interest</span>
+<span class="sd">    and write the results in files</span>
+
+<span class="sd">    :param args: the arguments and options given on the command line</span>
+<span class="sd">    :type args: list of string as given by sys.argv without the program name</span>
+<span class="sd">    :param log_level: the level of logger</span>
+<span class="sd">    :type log_level: positive int or logging flag logging.DEBUG, logging.INFO, logging.ERROR, logging.CRITICAL</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">args</span>
+    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">log_level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">verbosity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="o">+</span> <span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">quiet</span> <span class="o">-</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">verbosity</span> <span class="o">=</span> <span class="n">log_level</span>
+    <span class="n">craw</span><span class="o">.</span><span class="n">init_logger</span><span class="p">(</span><span class="n">verbosity</span><span class="p">)</span>
+
+    <span class="c1">#######################</span>
+    <span class="c1"># Parsing input files #</span>
+    <span class="c1">#######################</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">annot</span><span class="p">)</span> <span class="k">as</span> <span class="n">annot_file</span><span class="p">:</span>
+        <span class="n">annot_line_number</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">annot_file</span><span class="p">)</span>
+    <span class="n">annot_parser</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">AnnotationParser</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">annot</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">ref_col</span><span class="p">,</span>
+                                               <span class="n">chr_col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">chr_col</span><span class="p">,</span>
+                                               <span class="n">strand_col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">strand_col</span><span class="p">,</span>
+                                               <span class="n">start_col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span>
+                                               <span class="n">stop_col</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">stop_col</span><span class="p">,</span>
+                                               <span class="n">sep</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">bam</span><span class="p">:</span>
+        <span class="c1"># input_data is a samfile</span>
+        <span class="n">input_file</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">bam</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="n">pysam</span><span class="o">.</span><span class="n">AlignmentFile</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span><span class="p">:</span>
+        <span class="c1"># input_data is a wig.Genome object</span>
+        <span class="n">input_file</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span>
+        <span class="n">wig_parser</span> <span class="o">=</span> <span class="n">WigParser</span><span class="p">(</span><span class="n">mixed_wig</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">wig</span><span class="p">)</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="n">wig_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># input_data is a wig.Genome object</span>
+        <span class="n">input_file</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_for</span>
+        <span class="n">wig_parser</span> <span class="o">=</span> <span class="n">WigParser</span><span class="p">(</span><span class="n">for_wig</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_for</span><span class="p">,</span> <span class="n">rev_wig</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">wig_rev</span><span class="p">)</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="n">wig_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+
+    <span class="n">annotations</span> <span class="o">=</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">get_annotations</span><span class="p">()</span>
+
+    <span class="c1">############################</span>
+    <span class="c1"># checking outputs options #</span>
+    <span class="c1">############################</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+        <span class="n">parsed_args</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">input_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">out_name</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">output</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">suffix</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_name</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suffix</span><span class="p">:</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">suffix</span>
+
+    <span class="n">sense_file</span><span class="p">,</span> <span class="n">antisense_file</span> <span class="o">=</span> <span class="n">get_results_file</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">sense</span><span class="p">,</span> <span class="n">out_name</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+
+    <span class="c1">###########################</span>
+    <span class="c1"># Computing output matrix #</span>
+    <span class="c1">###########################</span>
+    <span class="k">with</span> <span class="n">sense_file</span><span class="p">,</span> <span class="n">antisense_file</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">get_result_header</span><span class="p">(</span><span class="n">annot_parser</span><span class="p">,</span> <span class="n">parsed_args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;split&#39;</span><span class="p">,</span> <span class="s1">&#39;mixed&#39;</span><span class="p">):</span>
+            <span class="c1"># if parsed_args.sense is mixed the sense_file and antisense_file are the same object</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sense_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sense</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;AS&#39;</span><span class="p">,</span> <span class="s1">&#39;split&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">antisense_file</span><span class="p">)</span>
+
+        <span class="c1"># get the appropriate function according to the input type</span>
+        <span class="c1"># the 2 functions</span>
+        <span class="c1">#  - get_wig_coverage</span>
+        <span class="c1">#  - get_bam_coverage</span>
+        <span class="c1"># have exactly the same api</span>
+        <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">justify</span><span class="p">:</span>
+            <span class="n">get_coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="o">.</span><span class="n">resized_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">justify</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">sum</span><span class="p">:</span>
+            <span class="n">get_coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="o">.</span><span class="n">sum_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">qual_thr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">max_left</span> <span class="o">=</span> <span class="n">max_right</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">window</span>
+            <span class="k">elif</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span> <span class="ow">and</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span><span class="p">:</span>
+                <span class="n">max_left</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span>
+                <span class="n">max_right</span> <span class="o">=</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span> <span class="o">=</span> <span class="n">annot_parser</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">get_coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="o">.</span><span class="n">padded_coverage_maker</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">max_left</span><span class="p">,</span> <span class="n">max_right</span><span class="p">,</span> <span class="n">qual_thr</span><span class="o">=</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">qual_thr</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">annot_num</span><span class="p">,</span> <span class="n">annot_entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">annotations</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&lt;=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span>
+                <span class="n">progress</span><span class="p">(</span><span class="n">annot_num</span><span class="p">,</span> <span class="n">annot_line_number</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">start_col</span><span class="p">:</span>
+                <span class="c1"># pos in get_coverage functions are</span>
+                <span class="c1"># 0 based whereas in annotation they are 1 based</span>
+                <span class="c1"># start is included, stop is excluded</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">stop</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">-</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">stop</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">+</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># if  feature is on reverse strand</span>
+                    <span class="c1"># the before and after are inverted</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">-</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">after</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">stop</span> <span class="o">=</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">ref</span> <span class="o">+</span> <span class="n">parsed_args</span><span class="o">.</span><span class="n">before</span>
+            <span class="n">forward_cov</span><span class="p">,</span> <span class="n">reverse_cov</span> <span class="o">=</span> <span class="n">get_coverage</span><span class="p">(</span><span class="n">annot_entry</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">stop</span><span class="p">)</span>
+
+            <span class="n">sens</span> <span class="o">=</span> <span class="s1">&#39;S&#39;</span> <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="k">else</span> <span class="s1">&#39;AS&#39;</span>
+            <span class="k">if</span> <span class="n">sens</span> <span class="o">==</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sens</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="o">*</span><span class="n">forward_cov</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sense_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sens</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="o">*</span><span class="n">forward_cov</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">antisense_file</span><span class="p">)</span>
+
+            <span class="n">sens</span> <span class="o">=</span> <span class="s1">&#39;S&#39;</span> <span class="k">if</span> <span class="n">annot_entry</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="k">else</span> <span class="s1">&#39;AS&#39;</span>
+            <span class="k">if</span> <span class="n">sens</span> <span class="o">==</span> <span class="s1">&#39;S&#39;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sens</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="o">*</span><span class="n">reverse_cov</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sense_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sens</span><span class="p">,</span> <span class="n">annot_entry</span><span class="p">,</span> <span class="o">*</span><span class="n">reverse_cov</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">antisense_file</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Counter RNAseq Window 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../craw.html" >craw</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2019, Bertrand Néron.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>
