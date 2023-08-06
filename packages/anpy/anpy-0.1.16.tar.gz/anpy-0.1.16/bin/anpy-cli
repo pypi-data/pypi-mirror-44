@@ -1,0 +1,264 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import json
+import sys
+import os
+import bs4
+import datetime
+from urllib.parse import urljoin, urlparse
+
+from pathlib import Path
+
+import attr
+import click
+import slugify
+
+from anpy.dossier import Dossier
+from anpy.dossier_like_senapy import parse as parse_dossier_like_senapy
+from anpy.dossier_from_opendata import download_open_data_doslegs, find_texts_discussed_after
+from anpy.question import parse_question
+from anpy.amendement import Amendement, AmendementSearchService
+from anpy.scrutin import Scrutin
+from anpy.utils import json_dumps
+
+from lawfactory_utils.urls import download, enable_requests_cache, clean_url
+
+
+sys.path.append(str(Path(__file__).absolute().parents[1]))
+
+
+def is_valid_dosleg_resp(resp):
+    if resp.status_code < 300:
+        if "vous prie d'accepter toutes ses excuses pour le" in resp.text:
+            print('[INVALID RESPONSE]', resp.url)
+        else:
+            return True
+    else:
+        print('[INVALID STATUS CODE]', resp.status_code, resp.url)
+    return False
+
+
+def dossier_id(url):
+    scheme, netloc, path, params, query, fragment = urlparse(url)
+    return slugify.slugify(path.replace('dossiers/', '') \
+        .replace('.asp', ''))
+
+
+def _log(*args):
+    print(*args, file=sys.stderr)
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.argument('id-dossier')
+@click.option('--id-examen')
+@click.option('--limit', default=100)
+def show_amendements_order(id_dossier, id_examen, limit):
+    results = AmendementSearchService().get_order(
+        idDossierLegislatif=id_dossier, idExamen=id_examen, rows=limit)
+    print(u'Nombre d\'amendements   : {}'.format(len(results)))
+    print(u'Ordre des ammendements : {}'.format((','.join(results))))
+
+
+@cli.command()
+@click.option('--start-date')
+@click.option('--end-date')
+@click.option('--numero')
+@click.option('--rows', default=100)
+def show_amendements_summary(start_date, end_date, numero, rows):
+    iterator = AmendementSearchService().iterator(rows=rows,
+                                                  dateDebut=start_date,
+                                                  dateFin=end_date,
+                                                  numAmend=numero)
+    for result in iterator:
+        print(json.dumps(attr.asdict(result), indent=4, sort_keys=True,
+                         ensure_ascii=False))
+
+
+@cli.command()
+@click.argument('url')
+def show_amendement(url):
+    print(u'Amendement : {}'.format(url))
+    print(json.dumps(Amendement.download_and_build(url).__dict__,
+                     indent=4, sort_keys=True, ensure_ascii=False))
+
+
+@cli.command()
+@click.argument('url')
+def show_question(url):
+    question_html = download(url + '/vue/xml').content
+    parsed_data = parse_question(url, question_html)
+    print(json.dumps(parsed_data, indent=4, sort_keys=True,
+                     ensure_ascii=False))
+
+
+@cli.command()
+@click.argument('url')
+def show_dossier(url):
+    dossier = Dossier.download_and_build(url)
+    print(json_dumps(dossier.to_dict(), indent=4, sort_keys=True,
+                     ensure_ascii=False))
+
+
+@cli.command()
+@click.argument('url')
+def parse(url):
+    print(json_dumps(parse_dossier_like_senapy(url), indent=4, sort_keys=True,
+                     ensure_ascii=False))
+
+
+@cli.command()
+@click.argument('url')
+def show_scrutin(url):
+    scrutin = Scrutin.download_and_build(url)
+    print(json_dumps(scrutin.to_dict(), indent=4, sort_keys=True,
+                     ensure_ascii=False))
+
+
+@cli.command()
+@click.option('--in-discussion', is_flag=True)
+@click.option('--senate-urls', is_flag=True)
+@click.option('--include-resolutions', is_flag=True)
+def doslegs_urls(in_discussion, senate_urls, include_resolutions):
+    if in_discussion:
+        last_week = datetime.datetime.now() - datetime.timedelta(weeks=2)
+        last_week = last_week.strftime("%Y-%m-%d")
+        _log('## Finding doslegs urls in reunions after %s (last week)' % last_week)
+
+        urls = find_texts_discussed_after(last_week, senate_urls=senate_urls, include_resolutions=include_resolutions)
+        _log('  => found', len(urls), 'doslegs')
+
+        for url in sorted(urls):
+            print(url)
+        return
+
+    urls_website = set()
+
+    LEGISLATURES = [14, 15]
+
+    INDEX_URLS = [
+        'http://www.assemblee-nationale.fr/15/documents/index-dossier.asp',
+        'http://www.assemblee-nationale.fr/14/documents/index-dossier.asp',
+        'http://www.assemblee-nationale.fr/13/documents/index-dossier.asp',
+        # 'http://www.assemblee-nationale.fr/12/documents/index-dossier.asp',
+        # 'http://www.assemblee-nationale.fr/11/documents/index-dossier.asp',
+
+        'http://www.assemblee-nationale.fr/15/documents/index-conventions.asp',
+        'http://www.assemblee-nationale.fr/14/documents/index-conventions.asp',
+        'http://www.assemblee-nationale.fr/13/documents/index-conventions.asp',
+
+        'http://www.assemblee-nationale.fr/13/documents/index-proposition.asp',
+
+        'http://www.assemblee-nationale.fr/13/documents/index-projets.asp',
+
+        'http://www.assemblee-nationale.fr/13/documents/index-depots.asp',
+    ]
+
+    PAGINATED_INDEX_URLS = [
+        # 'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/0/(limit)/100000/(legis)/15/(type)/propositions-loi/',
+        # 'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/0/(limit)/100000/(legis)/14/(type)/propositions-loi/',
+        # 'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/0/(limit)/100000/(legis)/15/(type)/projets-loi/',
+        # 'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/0/(limit)/100000/(legis)/14/(type)/projets-loi/',
+        'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/%d/(limit)/%d/(legis)/15/(type)/depots/',
+        'http://www2.assemblee-nationale.fr/documents/liste/(ajax)/1/(offset)/%d/(limit)/%d/(legis)/14/(type)/depots/'
+    ]
+
+    _log('## Finding doslegs urls in assemblee-nationale.fr...(since 13th legislature)')
+
+    for index_url in INDEX_URLS:
+        _log('     * scanning', index_url, '...')
+
+        for link in bs4.BeautifulSoup(download(index_url).text, 'lxml').select('a'):
+            url = urljoin('http://www.assemblee-nationale.fr', link.attrs.get('href', ''))
+
+            if '/dossiers/' in url:
+                urls_website.add(url)
+
+    page_size = 1000
+    for paginated_index_url in PAGINATED_INDEX_URLS:
+        page = 0
+        while True:
+            continue_pagination = False
+            paginated_url = paginated_index_url % (page*page_size, page_size)
+
+            _log('     * scanning', paginated_url, '...')
+
+            for link in bs4.BeautifulSoup(download(paginated_url).text, 'lxml').select('a'):
+                url = urljoin('http://www.assemblee-nationale.fr', link.attrs.get('href', ''))
+                if '/dossiers/' in url:
+                    urls_website.add(url)
+                    continue_pagination = True
+            if not continue_pagination:
+                break
+            page += 1
+
+    _log('  => found', len(urls_website), 'doslegs')
+    _log()
+
+    _log('## Finding doslegs urls in Open Data...')
+    urls_opendata = set()
+    for legislature in LEGISLATURES:
+        DATA = download_open_data_doslegs(legislature)
+        for dossier in DATA['export']['dossiersLegislatifs']['dossier']:
+            dossier = dossier["dossierParlementaire"]
+
+            if dossier["@xsi:type"] != "DossierLegislatif_Type":
+                continue
+
+            titreChemin = dossier['titreDossier']['titreChemin']
+            if not titreChemin:
+                _log('  - INVALID titreChemin attribute -', titreChemin)
+                continue
+
+            url = 'http://www.assemblee-nationale.fr/{}/dossiers/{}.asp'.format(
+                    dossier['legislature'], titreChemin)
+
+            if not include_resolutions and dossier["procedureParlementaire"]["libelle"] == "Résolution":
+                continue
+
+            if senate_urls:
+                url_senat = dossier["titreDossier"]["senatChemin"]
+                if url_senat:
+                    url = clean_url(url_senat)
+
+            urls_opendata.add(url)
+
+        _log('  => found', len(urls_opendata), 'doslegs (', legislature, 'leg.)')
+
+    for url in urls_website | urls_opendata:
+        print(url)
+
+
+@cli.command()
+@click.argument('output_dir')
+@click.option('--overwrite', is_flag=True)
+@click.option('--disable-cache', is_flag=True)
+def parse_many(output_dir, overwrite, disable_cache):
+    if not disable_cache:
+        enable_requests_cache()
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for url in sys.stdin:
+        url = url.strip()
+
+        an_id = url.split('/')[-1].replace('.asp', '')
+
+        filepath = os.path.join(output_dir, an_id)
+        if not overwrite and os.path.exists(filepath):
+            continue
+
+        _log(' -- ', url)
+        parsed = parse_dossier_like_senapy(url)
+        json.dump(parsed, open(filepath, 'w'), ensure_ascii=False, indent=2, sort_keys=True)
+    _log('parsing finished')
+
+
+if __name__ == '__main__':
+    cli()
