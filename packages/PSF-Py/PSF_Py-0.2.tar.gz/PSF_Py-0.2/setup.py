@@ -1,0 +1,24 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='PSF_Py',
+    version='0.2',
+    packages=find_packages(),
+    url='https://github.com/Mayur1009/PSF_py',
+    license='GPL',
+    author='Mayur Shende, Neeraj Bokde',
+    author_email='mayur.k.shende@gmail.com, neerajdhanraj@gmail.com',
+    description='PSF_Py: Pattern Sequence-based Forecasting (PSF_Py) algorithm',
+    long_description=open('README.md', 'r').read(),
+    install_requires=[
+        'pandas',
+        'numpy',
+        'sklearn',
+        'matplotlib',
+    ],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+)
