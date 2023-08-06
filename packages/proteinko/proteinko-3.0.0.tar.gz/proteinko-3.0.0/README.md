@@ -1,0 +1,93 @@
+# Proteinko
+
+Proteinko is used for modeling distributions of psysicochemical properties of 
+proteins.
+
+* [About](#About)
+* [Installation](#Installation)
+* [Usage](#Usage)
+
+---
+
+### About
+
+Protein is a sequence of amino acid residues, each characterized by a set of 
+physical and chemical properties. 
+By modeling properties of individual amino acid residues, mapping them to 
+single vector representing a protein sequence and summing the overlapping 
+portions of modeled amino acid residues, proteinko yields a distribution
+ of physicochemical properties of protein sequence.
+ 
+![plot1](https://raw.githubusercontent.com/stefs304/proteinko/dev/resources/plot1.png)
+
+Proteinko has built-in schemas for following properties, although it allows 
+adding custom schemas for any real or theoretical property of amino acid 
+residues:
+
+* Hydropathy
+* Donor hydrogen bonds
+* Acceptor hydrogen bonds
+* Isoelectric point
+* Van der Waals volume
+
+### Installation
+```bash
+pip install proteinko
+```
+
+### Usage
+
+To start we are going to import class called **Proteinko** from `proteinko` 
+package and initialize the instance of the class.
+ 
+```python
+from proteinko import Proteinko
+
+prt = Proteinko()
+
+```
+
+To list available physicochemical properties we can use the built-in method 
+`get_schemas()`. This should produce the following output.
+```python
+schemas = prt.get_schemas()
+print(schemas)
+ 
+>>> ['hydropathy', 'acceptors', 'donors', 'pI', 'volume']
+```
+
+This looks fine, but let's add one of our own schemas. We are going to use 
+Kyte-Doolittle hydropathy schema which is stored in a CSV file located in local
+`resources/` directory.
+```python
+prt.add_schema(
+    'resources/kyte_doolittle.csv', 
+    amino_col=0, 
+    value_col=1, 
+    key='kd', 
+    header=1
+)
+```
+To clarify what we did here, we passed the path to the csv file, specified 
+the columns which contain amino acid residues and corresponding values, 
+provided a key under which the data will be stored and let the parser know 
+the file has 1 header row. Now if we print schemas we should see following 
+output.
+```python
+print(prt.get_schemas())
+ 
+>>> ['hydropathy', 'acceptors', 'donors', 'pI', 'volume', 'kd']
+```
+
+Finally, in order to get a distribution of Kyte-Doolittle hydropathy across 
+protein sequence, let's first define our protein sequence and than call the 
+function `get_dist()` passing the sequence and schema as function arguments.
+```python
+sequence = 'ILKEPVHGV'
+dist = prt.get_dist(sequence, 'kd')
+```
+
+If we plot our modeled distribution it should look something like this.
+
+![plot2](https://raw.githubusercontent.com/stefs304/proteinko/dev/resources/plot2.png)
+
