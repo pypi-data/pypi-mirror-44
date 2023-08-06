@@ -1,0 +1,54 @@
+#!/bin/bash
+
+version="0.0.2"
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+  -V | --version )
+    echo $version
+    exit
+    ;;
+  -h | --help )
+    help=1
+    ;;
+  -v | --verbose )
+    verbose=1
+    ;;
+  -c | --clean )
+    clean=1
+    ;;
+  -r | --refresh )
+    refresh=1
+    ;;
+  -a | --auth )
+    auth=1
+    ;;
+  -d | --dry-run )
+    dry=1
+    ;;
+
+esac; shift; done
+if [[ "$1" == "--" ]]; then shift; fi
+
+parsed=""
+
+if [ "$help" == "1" ]; then
+  parsed="${parsed} help"
+fi
+if [ "$verbose" == "1" ]; then
+  parsed="${parsed} verbose"
+fi
+if [ "$clean" == "1" ]; then
+  parsed="${parsed} clean"
+fi
+if [ "$refresh" == "1" ]; then
+  parsed="${parsed} refresh"
+fi
+if [ "$auth" == "1" ]; then
+  parsed="${parsed} auth"
+fi
+if [ "$dry" == "1" ]; then
+  parsed="${parsed} dry"
+fi
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+python $DIR/gynx_run.py $parsed
