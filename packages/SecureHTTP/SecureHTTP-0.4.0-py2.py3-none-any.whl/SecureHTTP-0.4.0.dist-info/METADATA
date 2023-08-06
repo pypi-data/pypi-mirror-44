@@ -1,0 +1,99 @@
+Metadata-Version: 2.1
+Name: SecureHTTP
+Version: 0.4.0
+Summary: Make HTTP transmissions more secure, encrypted communication for C/S architecture.
+Home-page: https://github.com/staugur/Python-SecureHTTP
+Author: staugur
+Author-email: staugur@saintic.com
+License: BSD 3-Clause
+Download-URL: https://github.com/staugur/Python-SecureHTTP/releases/tag/v0.4.0
+Keywords: RSA,AES,MD5,HTTP
+Platform: any
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: pycryptodomex (>=3.7.2)
+
+Python-SecureHTTP
+=================
+
+让HTTP传输更加安全，C/S架构的加密通信!(Make HTTP transmissions more secure, encrypted communication for C/S architecture.)
+
+
+使用概述(Overview)
+~~~~~~~~~~~~~~~~~~
+
+**安装(Installation)**
+
+.. code:: bash
+
+    $ pip install -U SecureHTTP
+
+**示例代码(Examples)**
+
+
+1. RSA加密、解密
+
+   .. code:: python
+
+       from SecureHTTP import AESEncrypt, AESDecrypt
+       # 加密后的密文
+       ciphertext = AESEncrypt('ThisIsASecretKey', 'Hello World!')
+       # 解密后的明文
+       plaintext = AESDecrypt("ThisIsASecretKey", ciphertext)
+
+2. AES加密、解密
+
+   .. code:: python
+
+       from SecureHTTP import RSAEncrypt, RSADecrypt, generate_rsa_keys
+       # 生成密钥对
+       (pubkey, privkey) = generate_rsa_keys(incall=True)
+       # 加密后的密文
+       ciphertext = RSAEncrypt(pubkey, 'Hello World!')
+       # 解密后的明文
+       plaintext = RSADecrypt(privkey, ciphertext)
+
+3. C/S加解密示例： `点此查看以下模拟代码的真实WEB环境示例 <https://github.com/staugur/Python-SecureHTTP/blob/master/examples/Demo/>`__
+
+   .. code:: python
+
+       # 模拟C/S请求
+       from SecureHTTP import EncryptedCommunicationClient, EncryptedCommunicationServer, generate_rsa_keys
+       post = {u'a': 1, u'c': 3, u'b': 2, u'data': ["a", 1, None]}
+       resp = {u'msg': None, u'code': 0}
+       # 生成密钥对
+       (pubkey, privkey) = generate_rsa_keys(incall=True)
+       # 初始化客户端类
+       client = EncryptedCommunicationClient(pubkey)
+       # 初始化服务端类
+       server = EncryptedCommunicationServer(privkey)
+       # NO.1 客户端加密数据
+       c1 = client.clientEncrypt(post)
+       # NO.2 服务端解密数据
+       s1 = server.serverDecrypt(c1)
+       # NO.3 服务端返回加密数据
+       s2 = server.serverEncrypt(resp)
+       # NO.4 客户端获取返回数据并解密
+       c2 = client.clientDecrypt(s2)
+       # 以上四个步骤即完成一次请求/响应
+
+4. B/S加解密示例： `前端使用AES+RSA加密，后端解密 <https://github.com/staugur/Python-SecureHTTP/tree/master/examples/BS-RSA>`__
+
+
+文档(Documentation)
+~~~~~~~~~~~~~~~~~~~
+
+`中文(Chinese) <https://python-securehttp.readthedocs.io/zh_CN/latest/>`__
+
+
