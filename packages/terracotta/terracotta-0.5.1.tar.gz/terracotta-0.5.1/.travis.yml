@@ -1,0 +1,49 @@
+language: python
+
+dist: xenial
+
+python:
+  - "3.7"
+  - "3.6"
+
+env:
+  # boto config is dirty on some travis images
+  # https://github.com/travis-ci/travis-ci/issues/7940
+  - BOTO_CONFIG=/dev/null
+
+services:
+  - mysql
+
+branches:
+  only:
+    - master
+
+addons:
+  apt:
+    update: true
+    packages:
+      - build-essential
+      - gdal-bin
+      - libgdal-dev
+
+before_install:
+  - pip install cython
+
+install:
+  - pip install -e .[test]
+
+script:
+  - python -m pytest --color=yes --cov=terracotta --mysql-server="root@127.0.0.1"
+  - python -m pytest --color=yes tests/benchmarks.py
+
+after_success:
+  - codecov
+
+notifications:
+  email: false
+  slack:
+    rooms:
+      - dhigras:TPwMxNqVS9FeaTUJNZlMmL6i
+    on_failure: change
+    on_success: change
+    on_pull_requests: false
