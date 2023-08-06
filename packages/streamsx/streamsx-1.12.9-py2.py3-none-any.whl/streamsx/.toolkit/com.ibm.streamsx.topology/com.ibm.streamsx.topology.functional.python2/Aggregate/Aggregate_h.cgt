@@ -1,0 +1,90 @@
+@include "../py_pystateful.cgt"
+@include "../../opt/python/codegen/py_state.cgt"
+
+#include "splpy.h"
+#include "splpy_funcop.h"
+#include <SPL/Runtime/Window/Window.h>
+
+using namespace streamsx::topology;
+
+<%SPL::CodeGen::headerPrologue($model);%>
+
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
+<%
+# Configure Windowing
+ my $inputPort = $model->getInputPortAt(0); 
+ my $window = $inputPort->getWindow();
+ my $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
+%>
+
+#define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
+
+@include "../pyspltuple.cgt"
+class MY_OPERATOR : public MY_BASE_OPERATOR,
+      public WindowEvent<PyObject *>
+#if SPLPY_OP_STATE_HANDLER == 1
+ , public SPL::StateHandler
+#endif
+{
+public:
+  MY_OPERATOR();
+  virtual ~MY_OPERATOR(); 
+  void prepareToShutdown(); 
+  void process(Tuple const & tuple, uint32_t port);
+  void process(Punctuation const & punct, uint32_t port);
+
+  
+<% if ($window->isSliding()) {%>
+  void onWindowTriggerEvent(
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+  void afterTupleEvictionEvent(
+     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
+     Window<PyObject *>::PartitionType const & partition);
+<%}%>
+<% if ($window->isTumbling()) {%>
+  void beforeWindowFlushEvent(
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+<%}%>
+
+#if SPLPY_OP_STATE_HANDLER == 1
+  virtual void drain();
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+
+  void onCheckpointEvent(SPL::Checkpoint & ckpt) const {op()->checkpoint(ckpt);}
+  void onResetEvent(SPL::Checkpoint & ckpt) {op()->reset(ckpt);}
+  void onResetToInitialStateEvent() {op()->resetToInitialState();}
+#endif
+
+private:
+    SplpyOp * op() const { return funcop_; }
+<% if ($window->isTumbling()) {%>
+   void aggregateRemaining();
+<%}%>
+
+    // Members
+    // Control for interaction with Python
+    SplpyFuncOp *funcop_;
+    PyObject *spl_in_object_out;
+    
+    PyObject *pyInStyleObj_;
+
+    PyObject *loads;
+
+    // Number of output connections when passing by ref
+    // -1 when cannot pass by ref
+    int32_t occ_;
+
+    // Window definition
+    <%=$windowCppType%>  window_;	       
+
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    // Locking is through window acquire data when
+    // there are time policies
+    SPL::Mutex mutex_;
+#endif
+}; 
+
+<%SPL::CodeGen::headerEpilogue($model);%>
