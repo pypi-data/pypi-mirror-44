@@ -1,0 +1,2 @@
+W_GENERAL_ERROR = "Error"
+W_TEMPLATE_NOT_FOUND = "TemplateNotFound"
