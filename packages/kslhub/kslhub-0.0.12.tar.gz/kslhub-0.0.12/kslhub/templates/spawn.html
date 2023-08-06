@@ -1,0 +1,60 @@
+{% extends "page.html" %}
+{% if announcement_spawn %}
+  {% set announcement = announcement_spawn %}
+{% endif %}
+
+{% block main %}
+
+<div class="container">
+  {% block heading %}
+  <div class="row text-center">
+    <h1>Select your job on {{machine}}</h1>
+  </div>
+  {% endblock %}
+  <div class="row col-sm-offset-2 col-sm-8">
+    {% if for_user and user.name != for_user.name -%}
+      <p>Spawning server for {{ for_user.name }}</p>
+    {% endif -%}
+    {% if error_message -%}
+      <p class="spawn-error-msg text-danger">
+        Error: {{error_message}}
+      </p>
+    {% endif %}
+    <form enctype="multipart/form-data" id="spawn_form" action="{{url}}" method="post" role="form">
+      {{spawner_options_form | safe}}
+      <!-- <br> -->
+      <!-- <label for="case">Case:</label> -->
+      <input id="case_input" name="input" type="hidden" value="xx"> 
+      <br>
+      <input type="submit" value="Spawn" class="btn btn-jupyter form-control">
+    </form>
+  </div>
+</div>
+
+
+  
+<script type="text/javascript">
+
+  function update_case() {
+      selected_case = $('#spawn_select option:selected').attr('case');
+      $('#case_input').val(selected_case);
+
+      $('.additional').hide();
+      $('.case_'+selected_case).show();
+  }
+
+  $('#spawn_select').change(function(){
+      //fire your ajax call
+      update_case();
+  })
+
+  update_case();
+
+</script>
+
+
+
+
+
+
+{% endblock %}
