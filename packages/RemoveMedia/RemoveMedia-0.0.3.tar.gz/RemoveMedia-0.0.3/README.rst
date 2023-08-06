@@ -1,0 +1,71 @@
+Use case
+=========
+
+.. image:: https://img.shields.io/travis/Hatoris/RemoveMedia.svg
+
+
+This script is attented to be use on server, as cli, to remove file older than a given differential. More specificly, to remove media on server with small capacity (FreeNAS/FreeBSD).
+
+For this reason, scrpt can refresh plex instance and send you notification via pushbullet.
+
+Instalation
+===========
+
+.. code-block:: python
+
+    pip install RemoveMedia
+    git clone 
+
+Basic usage
+===========
+
+You have two choice to use this application : 
+
+    1. Generated a config file 
+        1. By generating a default one and edit the config file by yourself
+        2. Follow cli instruction to generate the config file
+    2. Pass your paremters directly
+
+Generated config file
+======================
+
+1. Generating default
+----------------------
+
+Open your shell and run the following command
+
+.. code-block:: bash
+
+    python RemoveMedia generate MyFirstConfig.ini -default=True
+
+This command will generate a empty config file inside the package : 
+
+.. code-block:: bash
+
+    ~/RemoveMedia/configuration/config
+
+The generating default config file will look like this
+
+.. note::
+
+    [folder]
+    threshold = 
+    path = 
+    threshold_type = 
+
+    [plex]
+    ip = 
+    token = 
+    link = http://${plex:IP}:32400/library/sections/all/refresh?X-Plex-Token=${plex:token}
+
+    [pushbullet]
+    api_key = 
+
+    [log]
+    log_path = 
+    log_filename = 
+
+.. warning::
+
+    Remove an used parameters to prevent error
+
