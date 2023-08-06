@@ -1,0 +1,73 @@
+Metadata-Version: 2.1
+Name: la-businesses
+Version: 0.1.1
+Summary: Save the latest database of businesses in Los Angeles as CSV and KML.
+Home-page: UNKNOWN
+License: MIT
+Author: Manuel Ochoa
+Author-email: dev@manuelochoa.com
+Requires-Python: >=3.7,<4.0
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: pandas (>=0.24.2,<0.25.0)
+Requires-Dist: pytz (>=2018.9,<2019.0)
+Requires-Dist: requests (>=2.21,<3.0)
+Requires-Dist: simplekml (>=1.3,<2.0)
+Description-Content-Type: text/markdown
+
+# la-businesses
+
+## Description
+This script downloads and processes the listing of all active businesses 
+currently registered with the City of Los Angeles Office of Finance. 
+An 'active' business is defined as a registered business whose owner has not 
+notified the Office of Finance of a cease of business operations. 
+Update Interval: Monthly.
+
+Data source: https://data.lacity.org/A-Prosperous-City/Listing-of-Active-Businesses/6rrh-rzua
+
+This script fetches the data and saves it locally as a CSV file. It also selects
+a subset of businesses with operation starting date within the last NDAYS days
+(default 30) and saves this as a separate CSV file. Finally, it creates and 
+saves a KML file from the subset, useful for importing into Google Maps or
+similar software to visualize the distribution of recent businesses opened in
+the Los Angeles area. 
+
+
+## Installation
+Install with pip. The package installs as a command-line script. 
+```
+pip install la-businesses
+```
+
+## Usage
+Run from the command line (it installs as as script). All downloaded and 
+generated files will be stored in a directory `files` inside the current 
+working directory.
+```
+usage: la-businesses [-h] [-u] [-d NDAYS]
+
+optional arguments:
+  -h, --help              show this help message and exit
+  -u, --update            update data (default: False)
+  -d NDAYS, --days NDAYS  started since NDAYS days ago (default: 30)
+```
+  
+## Known issues
+#### Locations with missing coordinates are omitted from KML file
+The script relies on coordinate data already provided in the downloaded dataset. 
+Some businesses contain addresses but no coordinates; in these cases, the 
+business is ignored when creating the KML (but is included in any saved CSV 
+file). Future implementations should include a function to look up location
+coordinates from a given address (e.g., using the Open Street Maps API). 
+
+#### Locations with no DBA name simply show NaN in the KML file
+The script could use better handling of business name / DBA combinations to 
+omit NaN from KML when it does not have a business name. 
+
+#### No phone numbers
+The data does not include any phone or email contact information; merging this
+dataset with one that includes contact information would be more useful for 
+market research. 
+
