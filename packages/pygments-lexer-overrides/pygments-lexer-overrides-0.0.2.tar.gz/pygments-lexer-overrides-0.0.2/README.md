@@ -1,0 +1,1 @@
+This project contains custom Pygments lexers required to generate documentation for the Brightspot platform. The custom lexers override those supplied with Pygments. For detailed information about developing, testing, and deploying this package, see the Git Hub page under **Project Links**.
