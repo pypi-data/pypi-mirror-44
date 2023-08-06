@@ -1,0 +1,17 @@
+- pipeline: test_b_pipeline_1
+  transform:
+    image: alpine:latest
+    cmd: ["/bin/sh", "-c", "date > /pfs/out/date"]
+  input:
+    cron:
+      name: tick
+      spec: 0 * * * *
+
+- pipeline: test_b_pipeline_2
+  transform:
+    image: alpine:latest
+    cmd: ["/bin/sh", "-c", "cat /pfs/test_b_pipeline_1/*"]
+  input:
+    pfs:
+      repo: test_b_pipeline_1
+      glob: "*"
