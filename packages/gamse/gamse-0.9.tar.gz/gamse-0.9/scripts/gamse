@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+from gamse.pipelines import make_obslog, reduce_echelle, show_spectra1d
+
+def print_help():
+    pass
+
+def main():
+
+    if len(sys.argv)==1:
+        print_help()
+        exit()
+    elif sys.argv[1] == 'list':
+        # list the observing log of raw data
+        make_obslog()
+    elif sys.argv[1] == 'reduce':
+        # reduce the spectra
+        reduce_echelle()
+    elif sys.argv[1] == 'plot':
+        plot_spectra1d()
+    elif sys.argv[1] == 'show':
+        filename_lst = [filename for filename in sys.argv[2:]
+                        if os.path.exists(filename)]
+        show_spectra1d(filename_lst)
+    else:
+        print('Unknow argument: %s'%sys.argv[1])
+        exit()
+
+if __name__=='__main__':
+    main()
