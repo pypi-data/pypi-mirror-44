@@ -1,0 +1,71 @@
+{% load static otree %}
+
+<script>
+    var wait_for_images ={{ wait_for_images|json }},
+        before_images_loaded,
+        loadingwindowtime,
+        unloadingwindowtime,
+        submittingformtime;
+
+    var time_tracker_ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+    var time_tracker_ws_path = time_tracker_ws_scheme + '://' + window.location.host + "/timetracker/{{ participant.code}}/{{page_name}}/{{page_index}}";
+    var time_tracker_socket = new WebSocket(time_tracker_ws_path);
+
+    // Make the function wait until the connection is made...
+    // (from here: https://stackoverflow.com/questions/13546424/how-to-wait-for-a-websockets-readystate-to-change)
+    function WaitForSocketConnection(socket, callback) {
+        setTimeout(
+            function () {
+                if (socket.readyState === 1) {
+                    if (callback != null) {
+                        callback();
+                    }
+                    return;
+
+                } else {
+                    WaitForSocketConnection(socket, callback);
+                }
+
+            }, 5); // wait 5 milisecond for the connection...
+    }
+
+    function time_tracker_sendingEvent(event_type, timestamp, exittype=null) {
+        var msg = JSON.stringify({
+            'eventtype': event_type,
+            'timestamp': timestamp,
+            'exittype': exittype,
+            'wait_for_images': wait_for_images,
+        });
+        WaitForSocketConnection(time_tracker_socket, function () {
+            time_tracker_socket.send(JSON.stringify(msg));
+        });
+    };
+
+    $(function () {
+        $(window).on('beforeunload', function () {
+            unloadingwindowtime = new Date().getTime();
+            time_tracker_sendingEvent('exit', unloadingwindowtime, 1);
+        });
+        $('form#form').on('submit', function () {
+            submittingformtime = new Date().getTime();
+            $(window).unbind('beforeunload');
+            time_tracker_sendingEvent('exit', submittingformtime, 0);
+        });
+
+
+    })
+    ;
+    {% if wait_for_images|default_if_none:True %}
+        $(window).on("load", function () {
+            loadingwindowtime = new Date().getTime();
+            time_tracker_sendingEvent('enter', loadingwindowtime);
+        });
+    {% else %}
+        document.addEventListener("DOMContentLoaded", function (event) {
+            before_images_loaded = new Date().getTime();
+            time_tracker_sendingEvent('enter', before_images_loaded);
+        });
+    {% endif %}
+
+</script>
+
