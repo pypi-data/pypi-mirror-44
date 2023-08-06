@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+"""
+ cij_testcases - Lists CIJOE testcases
+
+ CIJ_TESTCASES - This is what it is all about, these are the tests that are listed
+
+"""
+from __future__ import print_function
+import argparse
+import sys
+import os
+from cij.reporter import tcase_parse_descr, dset_to_html
+import cij.test
+import cij
+
+def construct_dset(evars):
+    """
+    Create a dataset = { "group_names": [ testcase, .. , testcase ] }
+    """
+
+    dset = {
+        "group_names": [],
+    }
+
+    for fname in cij.index(evars["TESTCASES"], "TCASES"):
+        group = fname.split("_")[0]
+        if group not in dset:
+            dset[group] = []
+            dset["group_names"].append(group)
+
+        fpath = os.sep.join([evars["TESTCASES"], fname])
+
+        tcase = {
+            "fpath": fpath,
+            "name": fname,
+            "fname": fname,
+            "descr": "",
+            "descr_long": "",
+            "src_content": open(fpath, "r").read()
+        }
+
+        descr, descr_long = tcase_parse_descr(tcase)
+
+        tcase["descr"] = descr
+        tcase["descr_long"] = descr_long
+
+        dset[group].append(tcase)
+
+    dset["group_names"].sort()
+
+    for group in dset["group_names"]:
+        dset[group] = sorted(dset[group], key=lambda k: k.get("name", ""))
+
+    return dset
+
+def parse_args():
+    """Parse command-line arguments and evars for cij_testcases"""
+
+    evars = cij.paths_from_env("CIJ", ["TEMPLATES", "TESTCASES"])
+    for key, val in evars.items():
+        if val is None:
+            cij.err(
+                "rprtr: failed parsing environment variable 'CIJ_%s'" %
+                key
+            )
+            return None, None
+
+    prsr = argparse.ArgumentParser(
+        description='cij_testcases - Creates a report containing all testcases'
+    )
+
+    prsr.add_argument(
+        '--template',
+        help="Path to template",
+        default=os.sep.join([evars["TEMPLATES"], "testcases.html"])
+    )
+    prsr.add_argument(
+        '--output',
+        help="Path to store testcase report",
+        default=os.getcwd()
+    )
+
+    args = prsr.parse_args()
+
+    # Expand and construct template paths
+    args.tmpl_fpath = args.template
+    args.tmpl_fname = os.path.basename(args.tmpl_fpath)
+    args.tmpl_name = os.path.splitext(args.tmpl_fname)[0]
+
+    return args, evars
+
+def main(args, evars):
+    """Main entry point"""
+
+    html_fpath = os.sep.join([args.output, "testcases.html"])
+
+    cij.emph("html_fpath: %r" % html_fpath)
+
+    dset = construct_dset(evars)
+
+    try:
+
+        with open(html_fpath, 'w') as html_fd:
+            html = dset_to_html(dset, args.tmpl_fpath)
+            html_fd.write(html)
+
+    except (IOError) as exc:
+        cij.err("Failed writing report to file, err: '%r'" % exc)
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    ARGS, EVARS = parse_args()
+
+    if None in [ARGS, EVARS]:
+        sys.exit(1)
+
+    sys.exit(main(ARGS, EVARS))
