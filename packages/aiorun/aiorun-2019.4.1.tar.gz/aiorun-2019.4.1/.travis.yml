@@ -1,0 +1,20 @@
+language: python
+sudo: false
+
+matrix:
+  include:
+  - python: "3.5"
+  - python: "3.6"
+  - python: "3.7"
+    dist: xenial
+  - python: '3.8-dev'
+    dist: xenial
+  - python: "nightly"
+    dist: xenial
+install:
+    - "pip install -U -r requirements-test.txt"
+script:
+    PYTHONPATH=. py.test --verbose --fulltrace --cov aiorun tests/
+after_success:
+    coveralls
+cache: pip
