@@ -1,0 +1,40 @@
+<h1 id="python-ca-installation-memo">Python-CA  installation memo</h1>
+<div class="container">
+<p>KEK, High Energy Accelerator Research Organization Acceleator Lab Noboru Yamamoto</p>
+</div>
+<div class="line-block"></div>
+<ol>
+<li>This program is retistered in PyPI.
+<ol>
+<li>you need to setup EPICSROOT environment varible before install this program using pip command. You may need other environment variables, such as WITH_TK, TKINC, TKLIB, HOSTARCH.</li>
+<li>You can create create EPICS_config_local.py files to setup these environment. Put this file in somewhere in your PYTHONPATH.</li>
+</ol></li>
+<li>You need Python 2.7 or later and EPICS 3.14.7 or later. (It may work with older version, but these are oldest versions I have built.) </li>
+<li>Get a Python-CA extension module package as <a href="CaPython-1.10.tar.gz">a tarball  here</a>[updated on 2007/05/03].</li>
+<li> Expand this tarball at  your working directory.</li>
+<li><p>Open setup.py in your favourite editor and change some parametes, such as EPICS architechture and installation path, appropriately.</p>
+<pre><code>EPICSROOT=os.path.join(&quot;your epics root path&quot;)</code></pre>
+<pre><code>EPICSBASE=os.path.join(EPICSROOT,&quot;base&quot;)</code></pre>
+<pre><code>EPICSEXT=os.path.join(EPICSROOT,&quot;extensions&quot;)</code></pre>
+<pre><code>HOSTARCH=&quot;your epics host architecture&quot;</code></pre></li>
+<li><p>run the installation script, setup.py/  for build extension moules.</p>
+<pre><code>python setup.py build</code></pre></li>
+<li>if you encounter the compilation errors or any trouble , please send a message to  noboru.yamamoto_at_kek.jp.</li>
+<li><div class="line-block">You need to have write permission of the target directories for installation. Run:</div>
+<pre><code>python setup.py install</code></pre></li>
+<li>Test extension module.</li>
+</ol>
+<div class="container">
+<p>start python interpreter.</p>
+</div>
+<pre><code> python</code></pre>
+<div class="container">
+<p>Try to import ca module</p>
+</div>
+<pre><code> import ca</code></pre>
+<div class="container">
+<p>Check access to EPICS DB. (Assuming excas is running.)</p>
+</div>
+<pre><code>ca.Get(&quot;fred&quot;)</code></pre>
+<h2 id="note-to-a-gui-programmer">Note to a GUI programmer:</h2>
+<div class="line-block">You should not call functions in GUI system(Tkinter or wxPython) in the Python-CA callback routines. It will crash your running program immediately.</div>
