@@ -1,0 +1,112 @@
+Metadata-Version: 2.1
+Name: detect-attacks
+Version: 0.0.12
+Summary: A python package to detect attacks via networks
+Home-page: UNKNOWN
+Author: Van-Kha Nguyen
+Author-email: hainguyen579@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+# Detect Attacks: 
+
+A python package which detects network attacks includes: 
+
+* Collecting data from attacks 
+* Classifying data to predict the risks of the network attacks 
+* Warning users risks which could be a network attack.
+
+# Getting Started
+
+## Prerequisites
+
+* These packages should be installed before using detect_attacks:
+
+```
+tensorflow	1.5.0
+sklearn	0.19.1
+keras	2.1.3
+numpy	1.14.0
+matplotlib	2.1.2
+deepmg 0.5.9
+```
+
+* Please install if you do not have them
+
+```
+pip install matplotlib
+pip install numpy
+
+conda install scikit-learn
+conda install -c conda-forge tensorflow 
+conda install -c conda-forge keras
+
+pip install Keras-Applications
+pip install Keras-Preprocessing
+pip install keras_sequential_ascii
+
+pip install deepmg
+```
+
+## Install or Download the package detect_attacks
+```
+pip install detect_attacks
+```
+
+# Running Experiments
+## How to use detect_attacks
+
+* **Input**: 
+  - mandatory: csv files containing data (\*_x.csv) and labels (\*_y.csv) 
+  - optional: if use external validation set: data (\*_zx.csv) and labels (\*_zy.csv)) put in [data](data/) changable with parameters *--orginal_data_folder*). 
+
+  For examples, data1_x.csv and data1_y.csv for.
+
+* **Output**:
+    - *results*: performance/training/testing information of each fold and summary results put in    [results/*name_dataset_parameters_to_generate_image*/] (results/) (changable with parameters **--parent_folder_results**), includes more than 5 files: 
+      - \*file_sum.txt: parameters used to run, performance at each fold. The last rows show training/testing performance in ACC, AUC, execution time, and other metrics of the experiment. When the experiment finishes, a suffix "_ok" (changable with parameters **--suff_fini**) appended to the name of file marking that the experiment finishes.
+
+      - \*file_eachfold.txt (if **--save_folds=y**): results of each fold with accuracy, auc, mcc, loss of training and testing.
+
+      - \*file_mean_acc.txt (if **--save_avg_run=y**): if the experiment includes *n* runs repeated independently, so the file includes average performance on *k*-folds of each run measured by **accuracy** and time execution at training/testing of beginning, training/testing when finished.
+
+      - \*file_mean_auc.txt (if **--save_avg_run=y**): if the experiment includes *n* runs repeated independently, so the file includes average performance on *k*-folds of each run measured by **AUC**  at training/testing of beginning, training/testing when finished.
+
+      - If **--save_para=y**: configuration file to repeat the experiment
+
+      - If use **--save_w=y** (save weights of trained networks) and/or **--save_entire_w=y**, **--save_d=y**, then 2 folders will be created:
+
+          - results/*name_dataset_parameters_to_generate_image*/models/: includes \*weightmodel\*.json contains structure of the model \*weightmodel\*.h5 stores weights.
+
+          - results/*name_dataset_parameters_to_generate_image*/details/\*weight_\*.txt: contains accuracy and loss of training and testing every epochs **--save_d=y**. If **--save_rf=y**, then we will have important scores generated from RFs for each run.
+
+## Some examples
+
+```
+db_name='data1';
+folder_data='/Users/hainguyen//test/data/';
+folder_res='/Users/hainguyen//test/results/';
+
+python -m detect_attacks -i $db_name -r $folder_data --parent_folder_results $folder_res --model rf_model
+python -m detect_attacks -i $db_name -r $folder_data --parent_folder_results $folder_res --model svm_model
+python -m detect_attacks -i $db_name -r $folder_data --parent_folder_results $folder_res --model model_cnn1d
+python -m detect_attacks -i $db_name -r $folder_data --parent_folder_results $folder_res --model model_mlp
+python -m detect_attacks -i $db_name -r $folder_data --parent_folder_results $folder_res --model fc_model
+
+```
+
+## Download data
+
+Please use the link below to download data for the experiments
+
+[darpa29f](https://drive.google.com/file/d/1xv6NhPHOQD3YxjTeQ0EgeW0px3QljXIw/view?usp=sharing)
+
+
+# References:
+
+
+
