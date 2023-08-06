@@ -1,0 +1,28 @@
+- project-template:
+    name: networking-ansible-tempest-jobs
+    check:
+      jobs:
+        - ironic-tempest-ipa-wholedisk-direct-tinyipa-multinode-networking-ansible:
+            voting: false
+
+- project:
+    templates:
+      - networking-ansible-tempest-jobs
+      - openstack-cover-jobs-neutron
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - periodic-jobs-with-neutron-lib-master
+      - check-requirements
+      - docs-on-readthedocs
+    check:
+      jobs:
+        - openstack-tox-docs:
+            required-projects:
+              - openstack/neutron
+    gate:
+      jobs:
+        - openstack-tox-docs:
+            required-projects:
+              - openstack/neutron
+    vars:
+      rtd_webhook_id: '45496'
