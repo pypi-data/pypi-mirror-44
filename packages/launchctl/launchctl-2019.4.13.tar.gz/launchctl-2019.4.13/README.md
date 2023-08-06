@@ -1,0 +1,53 @@
+<!--
+https://pypi.org/project/readme-generator/
+https://pypi.org/project/python-readme-generator/
+-->
+
+[![](https://img.shields.io/badge/OS-MacOS-blue.svg?longCache=True)]()
+[![](https://img.shields.io/pypi/pyversions/launchctl.svg?longCache=True)](https://pypi.org/project/launchctl/)
+
+#### Installation
+```bash
+$ [sudo] pip install launchctl
+```
+
+#### Classes
+class|`__doc__`
+-|-
+`launchctl.Job` |launchctl Job class. attrs: `pid`, `status`, `label`
+
+#### Functions
+function|`__doc__`
+-|-
+`launchctl.job(label)` |return launchctl Job by label
+`launchctl.jobs()` |return a list of launchctl jobs
+`launchctl.load(args)` |`launchctl load args ...`
+`launchctl.remove(label)` |`launchctl remove label`
+`launchctl.start(label)` |`launchctl start label`
+`launchctl.stop(label)` |`launchctl stop label`
+`launchctl.unload(args)` |`launchctl unload args ...`
+
+#### Examples
+```python
+import launchctl
+
+for job in launchctl.jobs():
+    print("%s %s %s" % (job.pid if job.pid else "", job.status, job.label))
+
+launchctl.job("com.apple.Finder")
+{...}
+```
+
+#### Related projects
++   [`launchd-env` - launchd.plist environment variables](https://pypi.org/project/launchd-env/)
++   [`launchd-exec` - execute script via launchd](https://pypi.org/project/launchd-exec/)
++   [`launchd-generator` - launchd.plist generator](https://pypi.org/project/launchd-generator/)
++   [`launchd-logs` - launchd.plist logs](https://pypi.org/project/launchd-logs/)
++   [`launchctl.py`](https://pypi.org/project/launchctl/)
+
+#### Links
++   [launchctl Man Page](https://ss64.com/osx/launchctl.html)
+
+<p align="center">
+    <a href="https://pypi.org/project/python-readme-generator/">python-readme-generator</a>
+</p>
