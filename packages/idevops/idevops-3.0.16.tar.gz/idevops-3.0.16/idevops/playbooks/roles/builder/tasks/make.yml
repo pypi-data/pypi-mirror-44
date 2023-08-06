@@ -1,0 +1,52 @@
+- include_vars:
+    file: ../../iserver/defaults/main.yml
+
+- name: Wait for project src lock file
+  wait_for:
+    path: "{{ iserver.repo.lock }}"
+    state: absent
+    timeout: 3
+
+- name: Checkout src and make build dir
+  block:
+  - name: Lock project src
+    file:
+      path: "{{ iserver.repo.lock }}"
+      state: touch
+
+  - name: Checkout iost-node project to {{ commit }}
+    git:
+      repo: "{{ iserver.repo.uri }}"
+      dest: "{{ iserver.repo.path }}"
+      version: "{{ commit }}"
+      accept_hostkey: true
+
+  - name: Create build dir
+    tempfile:
+      state: directory
+    register: result
+  - set_fact:
+      build_dir: "{{ result.path }}"
+
+  - name: Copy project to build dir
+    command: cp -r {{ iserver.repo.path }} {{ build_dir }}
+
+  always:
+  - name: Unlock project src
+    file:
+      path: "{{ iserver.repo.lock }}"
+      state: absent
+
+- name: Build iost-node project
+  make:
+    chdir: "{{ build_dir }}/{{ iserver.repo.name }}"
+    target: image
+  register: result
+- name: Get docker image
+  set_fact:
+    image: "{{ result.stdout | regex_search('(?<=tagged )iostio/iost-node:(\\d\\.){2}\\d-(\\w+-)?\\w{6,}$') }}"
+
+- name: Delete build dir
+  file:
+    path: "{{ build_dir }}"
+    state: absent

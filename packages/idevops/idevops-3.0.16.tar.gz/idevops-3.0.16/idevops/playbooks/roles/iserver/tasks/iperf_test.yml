@@ -1,0 +1,31 @@
+- name: Perform iperf bandwidth test
+  shell:
+    iperf3 -c {{ item }} -p {{ iperf.port }} -t 2 | awk '/bits\/sec/ { sum += $7; n++ } END { print sum / n }'
+  when:
+    - inventory_hostname != item
+    - bandwidth | d(false)
+  with_items:
+    - "{{ groups.master }}"
+    - "{{ groups.slave }}"
+  register: result
+
+- set_fact:
+    bd_res: "{{ bd_res | d({}) | combine( { item.item: item.stdout | d() } ) }}"
+  with_items:
+    - "{{ result.results }}"
+
+- name: Perform iperf latency test
+  shell:
+    iperf3 -c {{ item }} -p {{ iperf.port }} -u -t 2 | awk '/ ms / { print $9; exit }'
+  when:
+    - inventory_hostname != item
+    - latency_deprecated | d(false)
+  with_items:
+    - "{{ groups.master }}"
+    - "{{ groups.slave }}"
+  register: result
+
+- set_fact:
+    lt_res: "{{ lt_res | d({}) | combine( { item.item: item.stdout | d() } ) }}"
+  with_items:
+    - "{{ result.results }}"
