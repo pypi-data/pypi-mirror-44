@@ -1,0 +1,94 @@
+Metadata-Version: 2.1
+Name: xslide
+Version: 0.1
+Summary: UNKNOWN
+Home-page: https://gitlab.com/kamichal/xslide
+Author: Michał Kaczmarczyk
+Author-email: michal.s.kaczmarczyk@gmail.com
+Maintainer: Michał Kaczmarczyk
+Maintainer-email: michal.s.kaczmarczyk@gmail.com
+License: MIT license
+Description: xslide
+        ------
+        
+        Tool for creating presentations.
+        
+        Accepts content specified in:
+        
+        -  markdown
+        -  ``grot`` - graphviz syntax overlay for generating graphs
+        -  plain python strings
+        -  ``xplant`` syntax (can build arbitrary html code)
+        
+        Outputs:
+        
+        -  static ``html``
+        
+        Basic usage:
+        ------------
+        
+        .. code:: python
+        
+            import xslide
+        
+            slide = xslide.XSlide("Title of example from README")
+        
+            slide.markdown("""
+            # xslide
+        
+            - Can accept a `markdown`
+            - Can draw graphs in `grot` (`graphviz` overlay)
+            - Can use HTML in `xplant`
+        
+            Author: [Michal Kaczmarczyk](mailto:michal.s.kaczmarczyk@gmail.com), 
+        
+            """)
+        
+            slide.next("Header of the next slide")
+            slide.markdown("This one contains a graph:")
+        
+            with slide.make_graph("this_dot_name", html_style="max-width: 55%;") as g:
+                stage_1 = g.node("Stage 1", shape="box3d")
+                stage_2 = g.node("Stage\n2", shape="circle", penwidth="3.1")
+                g.edge(stage_1, stage_2, penwidth="2.6")
+                sink = g.node("This\nsinks\nall")
+        
+                for n in ["alfa", "beta", "gamma", "delta"]:
+                    if n == "gamma":
+                        g.edge(stage_2, n, sink, penwidth="2.6", color="#314289")
+                    else:
+                        g.edge(stage_2, n, sink, color="#aabbcc", style="dashed")
+        
+            slide.flush()  # makes a break
+            slide.markdown("""
+            *Markdown* with `nice_code` formatting. This example generates such a files:
+        
+            \`\`\`
+                >$ tree XSLIDE/examples/output/readme_example
+                XSLIDE/examples/output/readme_example
+                |-- index.html
+                |-- readme_example_01.html
+                |-- readme_example_01.html_this_dot_name.dot
+                |-- readme_example_01.html_this_dot_name.dot.svg
+                |-- readme_example_02.html
+                |-- serve.py
+                `-- xslide.css
+            \`\`\`
+            """)
+        
+            # don't forget to:
+            slide.store()
+        
+        | Result can be seen in gitlab in:
+        | `examples/output/readme\_example/index.html <examples/output/readme_example/index.html>`__
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Multimedia :: Graphics :: Presentation
+Description-Content-Type: text/x-rst; charset=UTF-8
