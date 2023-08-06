@@ -1,0 +1,228 @@
+#!python
+"""
+git-word-blame: word-by-word blame for git
+
+usage: 
+    git word-blame <path>
+"""
+import itertools
+import sys
+from pathlib import Path
+import argparse
+from collections import Counter
+import os.path
+
+import git
+import mwpersistence
+import deltas
+import mwreverts
+from lys import L, render, raw
+
+from gitwordblame import wikiwho_engine
+from gitwordblame.themes import THEMES, COMMON_CSS
+
+
+def get_git_config(repo, key, default=None):
+    try:
+        return repo.git.config('--get', key)
+    except Exception:
+        return default
+
+
+def get_github_url(path):
+    repo = git.Repo(path, search_parent_directories=True)
+    git_root = repo.git.rev_parse("--show-toplevel")
+
+    if repo.remotes:
+        url = repo.remotes.origin.url # todo: this can explode
+        if '@github.com' in url:
+            proj = url.split('github.com:')[1].split('.git')[0]
+            return "https://github.com/" + proj
+
+
+def git_file_history(path):
+    repo = git.Repo(path, search_parent_directories=True)
+    git_root = repo.git.rev_parse("--show-toplevel")
+    file_in_repo = str(Path(path)).replace(git_root + '/', '')
+
+    def list_commits():
+        nonlocal repo, git_root, file_in_repo
+        for i, commit in enumerate(reversed(list(repo.iter_commits(paths=path)))):
+            try:
+                filecontents = (commit.tree / file_in_repo).data_stream.read().decode('utf-8')
+                yield commit, filecontents
+            except KeyError:
+                # file renammed
+                continue
+
+    return repo, git_root, file_in_repo, list_commits
+
+
+def get_revision(revisions):
+    # first for original authorship
+    return revisions[0]
+    # last introduced for last introduction
+    last_rev = revisions[-1] + 1
+    for rev in revisions:
+        if rev != last_rev + 1:
+            return rev
+        last_rev = rev
+    return revisions[0]
+
+
+def author_stats(tokens, revisions, dest):
+    with open(os.path.join(dest, "author_stats.tsv"), 'w') as f:
+        print('author', 'words', 'words %', sep='\t', file=f)
+        c = Counter()
+        for token in tokens:
+            commit, _ = revisions[get_revision(token.revisions)]
+            author = str(commit.author)
+            for char in token: c[author] += 1
+
+        total = sum(c.values())
+        for rev, n in c.most_common():
+            print(rev, n, round(n/total*100, 2), sep='\t', file=f)
+
+
+def commit_stats(tokens, revisions, dest):
+    with open(os.path.join(dest, "commit_stats.tsv"), 'w') as f:
+        print('commit', 'message', 'words', 'words %', sep='\t', file=f)
+        c = Counter()
+        for token in tokens:
+            commit, _ = revisions[get_revision(token.revisions)]
+            msg = '%s\t%s' % (commit, commit.message.split('\n')[0])
+            for char in token: c[msg] += 1
+
+        total = sum(c.values())
+        for rev, n in c.most_common():
+            print(rev, n, round(n/total*100, 2), sep='\t', file=f)
+
+"""
+def text_output(tokens, revisions, dest):
+    last_commit = None
+    for token in tokens:
+        commit, _ = revisions[get_revision(token.revisions)]
+        if last_commit != str(commit):
+            print()
+            print(commit.author, commit, commit.message.split('\n')[0])
+        print(token, end='')
+        last_commit = str(commit)
+"""
+
+def html_output(tokens, revisions, path, file_in_repo, THEME, dest):
+    def token_commit(token):
+        commit, _ = revisions[get_revision(token.revisions)]
+        return str(commit)
+
+    github_url = get_github_url(path)
+
+    tokens_span = []
+    for _, tokens in itertools.groupby(tokens, key=token_commit):
+        tokens = list(tokens)
+        commit, _ = revisions[get_revision(tokens[0].revisions)]
+        span = L.a(
+            title=commit.message[:600] + '\n - ' + str(commit.author),
+            # href="%s/commit/%s" % (github_url, commit) if github_url else None,
+            data_file=file_in_repo,
+            data_commit=str(commit),
+            data_author=str(commit.author),
+        ) / [str(token) for token in tokens]
+        tokens_span.append(span)
+
+    for HIGHLIGHT_BY in ('commit', 'author'):
+        EXPORT_FILE = os.path.join(dest, "word-blame-by-%s.html" % HIGHLIGHT_BY)
+        html = (
+            L.head / (
+                raw("""<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">"""),
+                L.title / 'git-word-blame',
+            ),
+            L.body / (
+                L.style / raw(THEMES[THEME]),
+                L.style / raw(COMMON_CSS),
+                L.pre('#content') / tokens_span,
+                L.script / raw("""
+                    var select_by = "%s";
+                    document.querySelectorAll('pre > a').forEach(a => {
+                        a.onmouseenter = () => {
+                          document.querySelectorAll('pre > a').forEach(x => x.className = '');
+                          document.querySelectorAll('a[data-' + select_by + '="' + a.attributes['data-' + select_by].value + '"]').forEach(x => x.className = "hovered");
+                        };
+                        a.onclick = () => {
+                           var commit = a.attributes['data-commit'].value;
+                           var file = a.attributes['data-file'].value;
+                           alert('git show --color-words ' + commit + ' ' + file);
+                        };
+                    })
+                """ % (HIGHLIGHT_BY, )),
+            ),
+
+        )
+
+        open(EXPORT_FILE, 'w').write(render(html))
+
+
+def get_tokens_authorship(revisions):
+    state = mwpersistence.DiffState(
+        deltas.SegmentMatcher(),
+        revert_radius=15,
+        revert_detector=mwreverts.Detector(),
+    )
+
+    for i, revision in enumerate(revisions):
+        _, filecontents = revision
+        tokens, _, _ = state.update(filecontents, revision=i)
+        if i and i % 10 == 0:
+            print('...', i, 'revisions processed')
+    return tokens
+
+
+def main(args):
+    # TODO: move to a class
+    path = args.path[0]
+
+    LIMIT = 2000
+
+    OUTPUT_DIRECTORY = args.dest
+
+    repo, _, file_in_repo, list_commits = git_file_history(path)
+    revisions = list(list_commits())
+
+    ENGINE = get_git_config(repo, 'word-blame.engine', 'wikiwho')
+    THEME = get_git_config(repo, 'word-blame.theme', 'solarized-dark')
+    LIMIT = int(get_git_config(repo, 'word-blame.limit', '2000'))
+
+    print(len(revisions), 'revision(s) to process')
+
+    if LIMIT > 0 and len(revisions) > LIMIT:
+        revisions = revisions[-LIMIT:] # shorten it since it's too slow to process more for now
+        print('  -> shortened to', LIMIT, 'revisions')
+
+    if ENGINE == 'mwpersistence':
+        tokens = get_tokens_authorship(revisions)
+    elif ENGINE == 'wikiwho':
+        tokens = list(wikiwho_engine.get_tokens_authorship(revisions))
+    else:
+        raise Exception('Unkwnown engine')
+
+    os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
+
+    # text_output(tokens, revisions, dest=OUTPUT_DIRECTORY)  
+    author_stats(tokens, revisions, dest=OUTPUT_DIRECTORY)
+    commit_stats(tokens, revisions, dest=OUTPUT_DIRECTORY)
+    html_output(tokens, revisions, path, file_in_repo, THEME, dest=OUTPUT_DIRECTORY)
+
+    print('results in', OUTPUT_DIRECTORY)
+    print(' - author_stats.tsv')
+    print(' - commit_stats.tsv')
+    print(' - word-blame-by-commit.html')
+    print(' - word-blame-by-author.html')
+
+
+if __name__ == '__main__':
+    cls = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=cls)
+    parser.add_argument('path', nargs=1, help='')
+    parser.add_argument('dest', nargs='?', default='/tmp/word-blame-output/', help='path for the directory where the results will be stored')
+    args = parser.parse_args()
+
+    main(args)
