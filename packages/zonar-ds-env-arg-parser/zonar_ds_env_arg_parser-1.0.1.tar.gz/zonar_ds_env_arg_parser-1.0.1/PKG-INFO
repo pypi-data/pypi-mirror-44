@@ -1,0 +1,66 @@
+Metadata-Version: 1.1
+Name: zonar_ds_env_arg_parser
+Version: 1.0.1
+Summary: An argument helper used to validate environment variables
+Home-page: https://github.com/evcallia/zonar_ds_env_arg_parser.git
+Author: Zonar Systems - Data Services Pod
+Author-email: DSPod@zonarsystems.com
+License: UNKNOWN
+Description: zonar_ds_env_arg_parser
+        ======
+        
+        Overview
+        ------
+        This is a simple helper that is meant to enforce and validate that environment variables are set correctly
+        
+        Usage
+        ------
+        ```python3
+        from zonar_ds_env_arg_parser.env_arg_parser import env_arg_parser as parser
+        
+        parser.add_argument(env_var="SOME_EVN_VAR",
+                            required=True,
+                            type=int,
+                            help="Message to display about the variable")
+                            
+        parser.add_argument(env_var="SOMETHING_ELSE",
+                            required=False,
+                            default="TEST",
+                            validation=lambda x: x.lower() == "test" or
+                                                 x.lower() == "something" or
+                                                 x.lower() == "something_else",
+                            help="Some message about this variable")
+        
+        parser.add_argument(env_var="TRUE",
+                            required=False,
+                            default="True",
+                            type=bool,  # Will convert ("yes", "true", "t", "1", "y", "yeah") to True
+                            help="Another description about converting to True")
+        
+        parser.initialize()
+        options = parser.get_options()
+        
+        # This var doesn't have a default so 'SOME_EVN_VAR' needs to be set or it'll throw an exception
+        print("This is the type of SOME_EVN_VAR " + type(options.SOME_EVN_VAR))  # Should be int becasue we specified type
+        print("This is the value of SOMETHING_ELSE " + options.ENVIRONMENT)  # Should be 'TEST' since that's the default
+        print("This is the value of TRUE " + options.TRUE)  # Should be 'TEST' since that's the default
+        ```
+        
+        Arguments
+        ------
+        Parameters that can be passed into env_arg_parser.add_argument are as follows:
+        
+        | param | required | Description |
+        |-------|----------|-------------|
+        | env_var | Yes | The environment variable to look for. This will also be the name of the attribute when retrieving it. |
+        | required | Yes | Can be True or False, if required=False a default must be provided. |
+        | help | Yes | This message is displayed if an argument doesnt exist or fails validation. It should explain to the user what the argument is for to assist them in defining it. |
+        | default | Conditional | The default value. Must be set if required=False, cannot be set if required=True. |
+        | validation | No | A function should be provided that takes a single value and should return True, False or raise an Exception. False or an exception will prevent the program from launching. |
+        | type | No | If the value needs to be something other than a string, specify what it should be converted to.
+        
+Keywords: zonar_ds_env_arg_parser
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
