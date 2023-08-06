@@ -1,0 +1,25 @@
+# colosseum exporter launcher
+
+### 필요사항
+- Docker 18.06.0-ce or higher
+- Python 3.6 or higher
+- hawkeye에서 부여한 모니터링 대상 머신의 ID(hawkeye 웹페이지에서 머신 등록시 발급해줌)
+- kafka를 모니터링할 경우 kafka는 `9092`포트로 실행해야 하며, 수집한 메트릭을 송신하기 위해 `9308` 포트가 개방돼 있어야 한다.
+- MySQL을 모니터링할 경우 MySQL은 `3306`포트로 실행해야 하며, 수집한 메트릭을 송신하기 위해 `9104` 포트가 개방돼 있어야 한다.
+- elasticsearch를 모니터링할 경우 elasticsearch는 `9300`포트로 실행해야 하며, 수집한 메트릭을 송신하기 위해 `9108` 포트가 개방돼 있어야 한다.
+- redis를 모니터링할 경우 redis는 `6379`포트로 실행해야 하며, 수집한 메트릭을 송신하기 위해 `9121` 포트가 개방돼 있어야 한다.
+
+### 실행방법
+```$python launcher.py {모니터링 대상 머신의 ID}```
+
+### MySQL 모니터링 하기
+- 모니터링 대상에 MySQL이 있다면 `PROCESS`와 `REPLICATION CLIENT`의 권한을 가진 계정이 필요하다.
+- NOTE: It is recommended to set a max connection limit for the user to avoid overloading the server with monitoring scrapes under heavy load.
+- 모니터링 대상에 MySQL이 있을 경우 프로그램 실행 과정에서 MySQL 계정의 ID와 Password를 입력하는 프롬프트가 나타난다. `PROCESS`와 `REPLICATION CLIENT`의 권한을 가진 계정의 ID와 Password를 입력하면 계속 진행된다.
+- 다음은 해당 권한을 가진 계정을 새로 생성하는 구문이다.
+```
+CREATE USER 'exporter'@'localhost' IDENTIFIED BY 'XXXXXXXX' WITH MAX_USER_CONNECTIONS 3;
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';
+```
+
+(끝)
