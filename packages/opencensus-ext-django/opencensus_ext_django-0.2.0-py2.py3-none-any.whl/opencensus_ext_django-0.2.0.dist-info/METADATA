@@ -1,0 +1,89 @@
+Metadata-Version: 2.1
+Name: opencensus-ext-django
+Version: 0.2.0
+Summary: OpenCensus Django Integration
+Home-page: https://github.com/census-instrumentation/opencensus-python/tree/master/contrib/opencensus-ext-django
+Author: OpenCensus Authors
+Author-email: census-developers@googlegroups.com
+License: Apache-2.0
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: Django (<=1.11.20,>=1.11.0)
+Requires-Dist: opencensus (<1.0.0,>=0.4.0)
+
+OpenCensus Django Integration
+============================================================================
+
+|pypi|
+
+.. |pypi| image:: https://badge.fury.io/py/opencensus-ext-django.svg
+   :target: https://pypi.org/project/opencensus-ext-django/
+
+Installation
+------------
+
+::
+
+    pip install opencensus-ext-django
+
+Usage
+-----
+
+For tracing Django requests, you will need to add the following line to
+the ``MIDDLEWARE_CLASSES`` section in the Django ``settings.py`` file.
+
+.. code:: python
+
+    MIDDLEWARE_CLASSES = [
+        ...
+        'opencensus.ext.django.middleware.OpencensusMiddleware',
+    ]
+
+And add this line to the ``INSTALLED_APPS`` section:
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        ...
+        'opencensus.ext.django',
+    ]
+
+You can configure the sampler, exporter, propagator using the ``OPENCENSUS_TRACE`` setting in
+``settings.py``:
+
+.. code:: python
+
+    OPENCENSUS_TRACE = {
+        'SAMPLER': 'opencensus.trace.samplers.probability.ProbabilitySampler',
+        'REPORTER': 'opencensus.trace.print_exporter.PrintExporter',
+        'PROPAGATOR': 'opencensus.trace.propagation.google_cloud_format.'
+                      'GoogleCloudFormatPropagator',
+    }
+
+You can configure the sampling rate and other parameters using the ``OPENCENSUS_TRACE_PARAMS``
+setting in ``settings.py``:
+
+.. code:: python
+
+    OPENCENSUS_TRACE_PARAMS = {
+        'BLACKLIST_PATHS': ['/_ah/health'],
+        'GCP_EXPORTER_PROJECT': None,
+        'SAMPLING_RATE': 0.5,
+        'SERVICE_NAME': 'my_service',
+        'ZIPKIN_EXPORTER_HOST_NAME': 'localhost',
+        'ZIPKIN_EXPORTER_PORT': 9411,
+        'ZIPKIN_EXPORTER_PROTOCOL': 'http',
+    }
+
+
