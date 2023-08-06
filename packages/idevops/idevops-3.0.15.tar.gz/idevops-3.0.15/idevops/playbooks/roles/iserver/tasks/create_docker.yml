@@ -1,0 +1,21 @@
+- name: Create iserver docker container
+  docker_container:
+    name: "{{ docker.name }}"
+    image: "{{ image }}"
+    command: ./iserver -f /var/lib/iserver/iserver.yml
+    state: present
+    restart_policy: unless-stopped
+    ports:
+      - "30000:30000"
+      - "30001:30001"
+      - "30002:30002"
+      - "30003:30003"
+    volumes:
+      - "/data/iserver:/var/lib/iserver"
+    ulimits:
+      - "nofile:65535:65535"
+      - "core:-1"
+    memory: "{{ mem_limit }}"
+
+# start docker
+- import_tasks: start_docker.yml

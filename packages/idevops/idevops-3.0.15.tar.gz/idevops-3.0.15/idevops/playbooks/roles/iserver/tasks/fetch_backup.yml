@@ -1,0 +1,12 @@
+- name: Create backup directory
+  become: false
+  file:
+    path: "{{ local.config }}/backup/{{ inventory_hostname }}"
+    state: directory
+  delegate_to: localhost
+
+- name: Fetch {{ data.archive }} from node
+  synchronize:
+    mode: pull
+    dest: "{{ local.config }}/backup/{{ inventory_hostname }}/{{ data.archive }}"
+    src: "{{ data.backup_dir }}/{{ data.archive }}"
