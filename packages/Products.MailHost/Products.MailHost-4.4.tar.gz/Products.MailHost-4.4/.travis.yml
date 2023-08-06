@@ -1,0 +1,38 @@
+language: python
+sudo: false
+python:
+    - 2.7
+    - 3.5
+    - 3.6
+matrix:
+    include:
+        - python: "3.7"
+          dist: xenial
+          env: EXTRA=_with_gs
+        - python: "3.7"
+          dist: xenial
+          env: EXTRA=
+        - python: "3.8-dev"
+          dist: xenial
+          env: EXTRA=_with_gs
+        - python: "3.8-dev"
+          dist: xenial
+          env: EXTRA=
+env:
+    - EXTRA=
+    - EXTRA=_with_gs
+install:
+    - pip install coverage coveralls
+    - pip install zc.buildout
+    - buildout bootstrap
+    - buildout install test$EXTRA
+script:
+    - coverage run bin/test$EXTRA -v1
+notifications:
+    email: false
+after_success:
+    - coveralls
+cache:
+  pip: true
+  directories:
+    - eggs/
