@@ -1,0 +1,82 @@
+Metadata-Version: 2.1
+Name: mapstery
+Version: 0.0.7
+Summary: Digital terrain map manipulation high level functions
+Home-page: https://gitlab.com/frontierdevelopmentlab/space-resources/mapstery
+Author: Red Boumghar
+License: BSD
+Keywords: GDAL,python,raster,dataset,multilayer,multichannel,layers,channels,gis,information
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: BSD License
+Requires-Python: >=3
+Requires-Dist: gdal
+Requires-Dist: Pillow
+Requires-Dist: scipy
+Requires-Dist: numpy
+Provides-Extra: test
+Requires-Dist: pytest ; extra == 'test'
+Requires-Dist: pytest-cov ; extra == 'test'
+
+# Mapstery
+
+Digital terrain map manipulation library.
+
+High level scripts to convert, transform, manipulate small and large imagery
+using GDAL in python to cover part of the needs of the NASA/ESA Frontier
+Development Lab with respect to Space Resources challenges.
+
+## Quick install
+
+```
+pip install mapstery
+```
+
+For developers, you might like to install the last version from git. So if you've
+cloned _Mapstery_ in a folder called `mapstery_repo` then you could do the following:
+`pip install mapstery_repo/`
+
+NB: Make sure the gdal python package version correspond to the system gdal library.
+If you have GDAL python installation problems you may have to match versions between 
+gdal system libraries and gdal python package, one way or another.
+
+## Quick start
+
+```
+import mapstery
+import numpy as np
+
+M = mapstery.Map(500, 500)
+M.add_band(np.ones((35,50))*128.0, "BAND_NAME_01")
+M.add_band(np.ones((80,150))*89.0, "BAND_NAME_02")
+M.save("/tmp/mastery_test0.gtif")
+```
+
+## Another example, combining layers
+```
+import mapstery
+import numpy as np
+
+M = mapstery.Map(500, 500)
+M.dataset='layers.json'
+M.save("/tmp/testjson.gtif")
+
+```
+
+## Json file example: layers.json
+```
+{
+"BNAME":"LRO1.png",
+"BNAME2":"LRO2.png"
+}
+# BNAME - BAND NAME
+# LRO1.png - file path
+
+```
+## Dev infos
+
+You can write your own scripts in `tests/` starting with the *dev_* prefix so that they are ignored by git.
+
+
