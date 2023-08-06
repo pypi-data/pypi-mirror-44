@@ -1,0 +1,312 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tw2.core.params &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tw2.core.params</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">core</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+
+<span class="k">class</span> <span class="nc">ParameterError</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">):</span>
+    <span class="s2">&quot;Errors related to parameters.&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">_Required</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class is used to mark a widget parameter as being required, by</span>
+<span class="sd">    setting the default value to this.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Required&#39;</span>
+<span class="n">Required</span> <span class="o">=</span> <span class="n">_Required</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">_Auto</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used to explicitly mark a parameter as being automatically generated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Auto&#39;</span>
+<span class="n">Auto</span> <span class="o">=</span> <span class="n">_Auto</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Deferred"><a class="viewcode-back" href="../../../widget.html#tw2.core.Deferred">[docs]</a><span class="k">class</span> <span class="nc">Deferred</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class is used as a wrapper around a parameter value. It takes a</span>
+<span class="sd">    callable, which will be called every time the widget is displayed, with</span>
+<span class="sd">    the returned value giving the parameter value.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="o">.</span><span class="vm">__doc__</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="o">.</span><span class="vm">__doc__</span> <span class="k">else</span> <span class="s1">&#39;&lt;Deferred&gt;&#39;</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Deferred: </span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="n">doc</span></div>
+
+
+<span class="k">class</span> <span class="nc">_Default</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Default&#39;</span>
+<span class="n">Default</span> <span class="o">=</span> <span class="n">_Default</span><span class="p">()</span>
+
+<span class="n">_param_seq</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Param"><a class="viewcode-back" href="../../../widget.html#tw2.core.Param">[docs]</a><span class="k">class</span> <span class="nc">Param</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A parameter for a widget.</span>
+
+<span class="sd">    `description`</span>
+<span class="sd">        A string to describe the parameter. When overriding a parameter</span>
+<span class="sd">        description, the string can include ``$$`` to insert the previous</span>
+<span class="sd">        description.</span>
+
+<span class="sd">    `default`</span>
+<span class="sd">        The default value for the parameter. If no defalt is specified,</span>
+<span class="sd">        the parameter is a required parameter. This can also be specified</span>
+<span class="sd">        explicitly using tw.Required.</span>
+
+<span class="sd">    `request_local`</span>
+<span class="sd">        Can the parameter be overriden on a per-request basis? (default:</span>
+<span class="sd">        True)</span>
+
+<span class="sd">    `attribute`</span>
+<span class="sd">        Should the parameter be automatically included as an attribute?</span>
+<span class="sd">        (default: False)</span>
+
+<span class="sd">    `view_name`</span>
+<span class="sd">        The name used for the attribute. This is useful for attributes like</span>
+<span class="sd">        *class* which are reserved names in Python. If this is None, the name</span>
+<span class="sd">        is used. (default: None)</span>
+
+<span class="sd">    The class takes care to record which arguments have been explictly</span>
+<span class="sd">    specifed, even if to their default value. If a parameter from a base</span>
+<span class="sd">    class is updated in a subclass, arguments that have been explicitly</span>
+<span class="sd">    specified will override the base class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">child_param</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">internal</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">defined_on</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">view_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">Default</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">Default</span><span class="p">,</span>
+                 <span class="n">request_local</span><span class="o">=</span><span class="n">Default</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="n">Default</span><span class="p">,</span>
+                 <span class="n">view_name</span><span class="o">=</span><span class="n">Default</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">advance_iterator</span><span class="p">(</span><span class="n">_param_seq</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">Required</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_local</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">request_local</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">request_local</span> <span class="o">=</span> <span class="n">request_local</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span> <span class="o">=</span> <span class="n">attribute</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">view_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">view_name</span> <span class="o">=</span> <span class="n">view_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">specified</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;request_local&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;attribute&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;view_name&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">arg</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Default</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">specified</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1"> (default: </span><span class="si">%s</span><span class="s1">, defined on: </span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">defined_on</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Variable"><a class="viewcode-back" href="../../../design.html#tw2.core.Variable">[docs]</a><span class="k">class</span> <span class="nc">Variable</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A variable - a parameter that is passed from the widget to the template,</span>
+<span class="sd">    but cannot be controlled by the user. These do not appear in the concise</span>
+<span class="sd">    documentation for the widget.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">internal</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">Default</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specified</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;internal&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ChildParam"><a class="viewcode-back" href="../../../design.html#tw2.core.ChildParam">[docs]</a><span class="k">class</span> <span class="nc">ChildParam</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A parameter that applies to children of this widget</span>
+
+<span class="sd">    This is useful for situations such as a layout widget, which adds a</span>
+<span class="sd">    :attr:`label` parameter to each of its children. When a Widget subclass is</span>
+<span class="sd">    defined with a parent, the widget picks up the defaults for any child</span>
+<span class="sd">    parameters from the parent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">child_param</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ChildVariable"><a class="viewcode-back" href="../../../design.html#tw2.core.ChildVariable">[docs]</a><span class="k">class</span> <span class="nc">ChildVariable</span><span class="p">(</span><span class="n">Variable</span><span class="p">,</span> <span class="n">ChildParam</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A variable that applies to children of this widget</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<span class="k">class</span> <span class="nc">ParamMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="s2">&quot;Meta class the collects parameters.&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new `Widget` subclass. This detects `Param` instances</span>
+<span class="sd">        defined declaratively, updates with information from the containing</span>
+<span class="sd">        class, and stores the objects in `_params`.&quot;&quot;&quot;</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;_params&#39;</span><span class="p">):</span>
+                <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">_all_params</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pname</span><span class="p">,</span> <span class="n">prm</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dct</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prm</span><span class="p">,</span> <span class="n">Param</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pname</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                    <span class="n">newprm</span> <span class="o">=</span> <span class="n">prm</span>
+                    <span class="n">prm</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">newprm</span><span class="o">.</span><span class="n">specified</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">prm</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">newprm</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">prm</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">pname</span>
+                    <span class="k">if</span> <span class="n">prm</span><span class="o">.</span><span class="n">view_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">prm</span><span class="o">.</span><span class="n">view_name</span> <span class="o">=</span> <span class="n">pname</span>
+                    <span class="n">prm</span><span class="o">.</span><span class="n">defined_on</span> <span class="o">=</span> <span class="n">name</span>
+
+                <span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span> <span class="o">=</span> <span class="n">prm</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">prm</span><span class="o">.</span><span class="n">child_param</span> <span class="ow">and</span> <span class="n">prm</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Required</span><span class="p">:</span>
+                    <span class="n">dct</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span> <span class="o">=</span> <span class="n">prm</span><span class="o">.</span><span class="n">default</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">dct</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">pname</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">])</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">prm</span>
+                <span class="k">if</span> <span class="n">prm</span> <span class="ow">is</span> <span class="n">Required</span> <span class="ow">and</span> <span class="n">pname</span> <span class="o">!=</span> <span class="s1">&#39;validator&#39;</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">dct</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+
+        <span class="n">ins</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+        <span class="n">ins</span><span class="o">.</span><span class="n">_all_params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="n">ins</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                                                    <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">child_param</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ins</span>
+
+
+<span class="k">class</span> <span class="nc">Parametered</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ParamMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

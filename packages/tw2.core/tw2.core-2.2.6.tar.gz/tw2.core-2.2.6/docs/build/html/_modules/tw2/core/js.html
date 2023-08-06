@@ -1,0 +1,386 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tw2.core.js &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tw2.core.js</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Python-JS interface to dynamically create JS function calls from your widgets.</span>
+
+<span class="sd">This moudle doesn&#39;t aim to serve as a Python-JS &quot;translator&quot;. You should code</span>
+<span class="sd">your client-side code in JavaScript and make it available in static files which</span>
+<span class="sd">you include as JSLinks or inline using JSSources. This module is only intended</span>
+<span class="sd">as a &quot;bridge&quot; or interface between Python and JavaScript so JS function</span>
+<span class="sd">**calls** can be generated programatically.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">map</span>
+<span class="kn">import</span> <span class="nn">json.encoder</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;js_callback&quot;</span><span class="p">,</span> <span class="s2">&quot;js_function&quot;</span><span class="p">,</span> <span class="s2">&quot;js_symbol&quot;</span><span class="p">,</span> <span class="s2">&quot;encoder&quot;</span><span class="p">]</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TWEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A JSON encoder that can encode Widgets, js_calls, js_symbols and</span>
+<span class="sd">    js_callbacks.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; encode = TWEncoder().encode</span>
+<span class="sd">        &gt;&gt;&gt; print encode({</span>
+<span class="sd">        ...     &#39;onLoad&#39;: js_function(&quot;do_something&quot;)(js_symbol(&quot;this&quot;))</span>
+<span class="sd">        ... })</span>
+<span class="sd">        {&quot;onLoad&quot;: do_something(this)}</span>
+
+<span class="sd">        &gt;&gt;&gt; from tw2.core.api import Widget</span>
+<span class="sd">        &gt;&gt;&gt; w = Widget(&quot;foo&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; args = {</span>
+<span class="sd">        ...    &#39;onLoad&#39;: js_callback(</span>
+<span class="sd">        ...         js_function(&#39;jQuery&#39;)(w).click(js_symbol(&#39;onClick&#39;))</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... }</span>
+<span class="sd">        &gt;&gt;&gt; print encode(args)</span>
+<span class="sd">        {&quot;onLoad&quot;: function(){jQuery(\\&quot;foo\\&quot;).click(onClick)}}</span>
+<span class="sd">        &gt;&gt;&gt; print encode({&#39;args&#39;:args})</span>
+<span class="sd">        {&quot;args&quot;: {&quot;onLoad&quot;: function(){jQuery(\\&quot;foo\\&quot;).click(onClick)}}}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="c1"># This makes encoded objects be prettily formatted.  It is very nice</span>
+        <span class="c1"># for debugging and should be made configurable at some point.</span>
+        <span class="c1"># TODO -- make json encoding pretty-printing configurable</span>
+        <span class="c1">#kw[&#39;indent&#39;] = &#39;  &#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unescape_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;&quot;TW2Encoder_unescape_([0-9]*)&quot;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_through</span> <span class="o">=</span> <span class="p">(</span><span class="n">_js_call</span><span class="p">,</span> <span class="n">js_callback</span><span class="p">,</span> <span class="n">js_symbol</span><span class="p">,</span> <span class="n">js_function</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TWEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="c1"># This is required to get encoding of _js_call to work</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">namedtuple_as_object</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pass_through</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mark_for_escape</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;__json__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__json__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">TWEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unescape_symbols</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TWEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">unescaped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unescape_marked</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unescape_symbols</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">unescaped</span>
+
+        <span class="n">encoded</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TWEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unescape_marked</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">mark_for_escape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unescape_symbols</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="s1">&#39;TW2Encoder_unescape_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">unescape_marked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoded</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">unescape</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+            <span class="n">obj_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unescape_symbols</span><span class="p">[</span><span class="n">obj_id</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unescape_pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">unescape</span><span class="p">,</span> <span class="n">encoded</span><span class="p">)</span>
+
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># This gets reset at the bottom of the file.</span>
+
+
+<div class="viewcode-block" id="js_symbol"><a class="viewcode-back" href="../../../javascript.html#tw2.core.js.js_symbol">[docs]</a><span class="k">class</span> <span class="nc">js_symbol</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; An unquoted js symbol like ``document`` or ``window`` &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">src</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;js_symbol must be given name or src&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">src</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;js_symbol must not be given name and src&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">src</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">src</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="js_callback"><a class="viewcode-back" href="../../../javascript.html#tw2.core.js.js_callback">[docs]</a><span class="k">class</span> <span class="nc">js_callback</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A js function that can be passed as a callback to be called</span>
+<span class="sd">    by another JS function</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; str(js_callback(&quot;update_div&quot;))</span>
+<span class="sd">    &#39;update_div&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; str(js_callback(&quot;function (event) { .... }&quot;))</span>
+<span class="sd">    &#39;function (event) { .... }&#39;</span>
+
+<span class="sd">    Can also create callbacks for deferred js calls</span>
+
+<span class="sd">    &gt;&gt;&gt; str(js_callback(js_function(&#39;foo&#39;)(1,2,3)))</span>
+<span class="sd">    &#39;function(){foo(1, 2, 3)}&#39;</span>
+
+<span class="sd">    Or equivalently</span>
+
+<span class="sd">    &gt;&gt;&gt; str(js_callback(js_function(&#39;foo&#39;), 1,2,3))</span>
+<span class="sd">    &#39;function(){foo(1, 2, 3)}&#39;</span>
+
+<span class="sd">    A more realistic example</span>
+
+<span class="sd">    &gt;&gt;&gt; jQuery = js_function(&#39;jQuery&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; my_cb = js_callback(&#39;function() { alert(this.text)}&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; on_doc_load = jQuery(&#39;#foo&#39;).bind(&#39;click&#39;, my_cb)</span>
+<span class="sd">    &gt;&gt;&gt; call = jQuery(js_callback(on_doc_load))</span>
+<span class="sd">    &gt;&gt;&gt; print call</span>
+<span class="sd">    jQuery(function(){jQuery(\\&quot;#foo\\&quot;).bind(</span>
+<span class="sd">        \\&quot;click\\&quot;, function() { alert(this.text)})})</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cb</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cb</span> <span class="o">=</span> <span class="n">cb</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cb</span><span class="p">,</span> <span class="n">js_function</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cb</span> <span class="o">=</span> <span class="s2">&quot;function(){</span><span class="si">%s</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="n">cb</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cb</span><span class="p">,</span> <span class="n">_js_call</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cb</span> <span class="o">=</span> <span class="s2">&quot;function(){</span><span class="si">%s</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="n">cb</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cb</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;A js_callback cannot be called from Python&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb</span></div>
+
+
+<div class="viewcode-block" id="js_function"><a class="viewcode-back" href="../../../javascript.html#tw2.core.js.js_function">[docs]</a><span class="k">class</span> <span class="nc">js_function</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A JS function that can be &quot;called&quot; from python and added to</span>
+<span class="sd">    a widget by widget.add_call() so it get&#39;s called every time the widget</span>
+<span class="sd">    is rendered.</span>
+
+<span class="sd">    Used to create a callable object that can be called from your widgets to</span>
+<span class="sd">    trigger actions in the browser. It&#39;s used primarily to initialize JS code</span>
+<span class="sd">    programatically. Calls can be chained and parameters are automatically</span>
+<span class="sd">    json-encoded into something JavaScript undersrtands. Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; jQuery = js_function(&#39;jQuery&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; call = jQuery(&#39;#foo&#39;).datePicker({&#39;option1&#39;: &#39;value1&#39;})</span>
+<span class="sd">        &gt;&gt;&gt; str(call)</span>
+<span class="sd">        &#39;jQuery(&quot;#foo&quot;).datePicker({&quot;option1&quot;: &quot;value1&quot;})&#39;</span>
+
+<span class="sd">    Calls are added to the widget call stack with the ``add_call`` method.</span>
+
+<span class="sd">    If made at Widget initialization those calls will be placed in</span>
+<span class="sd">    the template for every request that renders the widget::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tw2.core as twc </span>
+<span class="sd">        &gt;&gt;&gt; class SomeWidget(twc.Widget): ...</span>
+<span class="sd">        pickerOptions = twc.Param(default={}) </span>
+<span class="sd">        &gt;&gt;&gt; SomeWidget.add_call( ...</span>
+<span class="sd">                jQuery(&#39;#%s&#39; % SomeWidget.id).datePicker(SomeWidget.pickerOptions)</span>
+<span class="sd">                ... )</span>
+
+<span class="sd">    More likely, we will want to dynamically make calls on every</span>
+<span class="sd">    request.  Here we will call add_calls inside the ``prepare`` method::</span>
+
+<span class="sd">        &gt;&gt;&gt; class SomeWidget(Widget):</span>
+<span class="sd">        ...     pickerOptions = twc.Param(default={})</span>
+<span class="sd">        ...     def prepare(self):</span>
+<span class="sd">        ...         super(SomeWidget, self).prepare()</span>
+<span class="sd">        ...         self.add_call(</span>
+<span class="sd">        ...             jQuery(&#39;#%s&#39; % d.id).datePicker(d.pickerOptions)</span>
+<span class="sd">        ...         )</span>
+
+<span class="sd">    This would allow to pass different options to the datePicker on every</span>
+<span class="sd">    display.</span>
+
+<span class="sd">    JS calls are rendered by the same mechanisms that render required css and</span>
+<span class="sd">    js for a widget and places those calls at bodybottom so DOM elements which</span>
+<span class="sd">    we might target are available.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; call = js_function(&#39;jQuery&#39;)(&quot;a .async&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; str(call)</span>
+<span class="sd">    &#39;jQuery(&quot;a .async&quot;)&#39;</span>
+
+<span class="sd">    js_function calls can be chained:</span>
+
+<span class="sd">    &gt;&gt;&gt; call = js_function(&#39;jQuery&#39;)(&quot;a .async&quot;).foo().bar()</span>
+<span class="sd">    &gt;&gt;&gt; str(call)</span>
+<span class="sd">    &#39;jQuery(&quot;a .async&quot;).foo().bar()&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_js_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__name</span><span class="p">,</span> <span class="p">[],</span> <span class="n">args</span><span class="p">,</span> <span class="n">called</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span></div>
+
+
+<span class="k">class</span> <span class="nc">_js_call</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;__name&#39;</span><span class="p">,</span> <span class="s1">&#39;__call_list&#39;</span><span class="p">,</span> <span class="s1">&#39;__args&#39;</span><span class="p">,</span> <span class="s1">&#39;__called&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">call_list</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">called</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="n">call_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__call_list</span> <span class="o">=</span> <span class="n">call_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__called</span> <span class="o">=</span> <span class="n">called</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__call_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__called</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__get_js_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__called</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__args</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__name</span><span class="p">,</span>
+                <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">rep</span>\
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>\
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)</span>\
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__called</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Last element in the chain has to be called&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">__get_js_repr</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__call_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">())</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">TWEncoder</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,445 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tw2.core.middleware &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tw2.core.middleware</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">webob</span> <span class="k">as</span> <span class="nn">wo</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="k">import</span> <span class="n">iter_entry_points</span><span class="p">,</span> <span class="n">DistributionNotFound</span>
+<span class="kn">from</span> <span class="nn">paste.deploy.converters</span> <span class="k">import</span> <span class="n">asbool</span><span class="p">,</span> <span class="n">asint</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">core</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../../getstarted.html#tw2.core.middleware.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    ToscaWidgets Configuration Set</span>
+
+<span class="sd">    `translator`</span>
+<span class="sd">        The translator function to use. (default: no-op)</span>
+
+<span class="sd">    `default_engine`</span>
+<span class="sd">        The main template engine in use by the application. Widgets with no</span>
+<span class="sd">        parent will display correctly inside this template engine. Other</span>
+<span class="sd">        engines may require passing displays_on to :meth:`Widget.display`.</span>
+<span class="sd">        (default:string)</span>
+
+<span class="sd">    `inject_resoures`</span>
+<span class="sd">        Whether to inject resource links in output pages. (default: True)</span>
+
+<span class="sd">    `inject_resources_location`</span>
+<span class="sd">        A location where the resources should be injected. (default: head)</span>
+
+<span class="sd">    `serve_resources`</span>
+<span class="sd">        Whether to serve static resources. (default: True)</span>
+
+<span class="sd">    `res_prefix`</span>
+<span class="sd">        The prefix under which static resources are served. This must start</span>
+<span class="sd">        and end with a slash. (default: /resources/)</span>
+
+<span class="sd">    `res_max_age`</span>
+<span class="sd">        The maximum time a cache can hold the resource. This is used to</span>
+<span class="sd">        generate a Cache-control header. (default: 3600)</span>
+
+<span class="sd">    `serve_controllers`</span>
+<span class="sd">        Whether to serve controller methods on widgets. (default: True)</span>
+
+<span class="sd">    `controller_prefix`</span>
+<span class="sd">        The prefix under which controllers are served. This must start</span>
+<span class="sd">        and end with a slash. (default: /controllers/)</span>
+
+<span class="sd">    `bufsize`</span>
+<span class="sd">        Buffer size used by static resource server. (default: 4096)</span>
+
+<span class="sd">    `params_as_vars`</span>
+<span class="sd">        Whether to present parameters as variables in widget templates. This</span>
+<span class="sd">        is the behaviour from ToscaWidgets 0.9. (default: False)</span>
+
+<span class="sd">    `debug`</span>
+<span class="sd">        Whether the app is running in development or production mode.</span>
+<span class="sd">        (default: True)</span>
+
+<span class="sd">    `validator_msgs`</span>
+<span class="sd">        A dictionary that maps validation message names to messages. This lets</span>
+<span class="sd">        you override validation messages on a global basis. (default: {})</span>
+
+<span class="sd">    `encoding`</span>
+<span class="sd">        The encoding to decode when performing validation (default: utf-8)</span>
+
+<span class="sd">    `auto_reload_templates`</span>
+<span class="sd">        Whether to automatically reload changed templates. Set this to False in</span>
+<span class="sd">        production for efficiency. If this is None, it takes the same value as</span>
+<span class="sd">        debug. (default: None)</span>
+
+<span class="sd">    `preferred_rendering_engines`</span>
+<span class="sd">        List of rendering engines in order of preference.</span>
+<span class="sd">        (default: [&#39;mako&#39;,&#39;genshi&#39;,&#39;jinja&#39;,&#39;kajiki&#39;])</span>
+
+<span class="sd">    `strict_engine_selection`</span>
+<span class="sd">        If set to true, TW2 will only select rendering engines from within your</span>
+<span class="sd">        preferred_rendering_engines, otherwise, it will try the default list if</span>
+<span class="sd">        it does not find a template within your preferred list. (default: True)</span>
+
+<span class="sd">    `rendering_engine_lookup`</span>
+<span class="sd">        A dictionary of file extensions you expect to use for each type of</span>
+<span class="sd">        template engine. Default::</span>
+<span class="sd">       </span>
+<span class="sd">         {</span>
+<span class="sd">                &#39;mako&#39;:[&#39;mak&#39;, &#39;mako&#39;],</span>
+<span class="sd">                &#39;genshi&#39;:[&#39;genshi&#39;, &#39;html&#39;],</span>
+<span class="sd">                &#39;jinja&#39;:[&#39;jinja&#39;, &#39;html&#39;],</span>
+<span class="sd">                &#39;kajiki&#39;:[&#39;kajiki&#39;, &#39;html&#39;],</span>
+<span class="sd">         }</span>
+
+<span class="sd">    `script_name`</span>
+<span class="sd">        A name to prepend to the url for all resource links (different from</span>
+<span class="sd">        res_prefix, as it may be shared across and entire wsgi app.</span>
+<span class="sd">        (default: &#39;&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">translator</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span>
+    <span class="n">default_engine</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+    <span class="n">inject_resources_location</span> <span class="o">=</span> <span class="s1">&#39;head&#39;</span>
+    <span class="n">inject_resources</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">serve_resources</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">res_prefix</span> <span class="o">=</span> <span class="s1">&#39;/resources/&#39;</span>
+    <span class="n">res_max_age</span> <span class="o">=</span> <span class="mi">3600</span>
+    <span class="n">serve_controllers</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">controller_prefix</span> <span class="o">=</span> <span class="s1">&#39;/controllers/&#39;</span>
+    <span class="n">bufsize</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">1024</span>
+    <span class="n">params_as_vars</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">validator_msgs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;utf-8&#39;</span>
+    <span class="n">auto_reload_templates</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">preferred_rendering_engines</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mako&#39;</span><span class="p">,</span> <span class="s1">&#39;genshi&#39;</span><span class="p">,</span> <span class="s1">&#39;jinja&#39;</span><span class="p">,</span> <span class="s1">&#39;kajiki&#39;</span><span class="p">]</span>
+    <span class="n">strict_engine_selection</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">rendering_extension_lookup</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;mako&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;mak&#39;</span><span class="p">,</span> <span class="s1">&#39;mako&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;genshi&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;genshi&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;genshi_abs&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;genshi&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span> <span class="c1"># just for backwards compatibility with tw2 2.0.0</span>
+        <span class="s1">&#39;jinja&#39;</span><span class="p">:[</span><span class="s1">&#39;jinja&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;kajiki&#39;</span><span class="p">:[</span><span class="s1">&#39;kajiki&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;chameleon&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;pt&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="n">script_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Set boolean properties</span>
+        <span class="n">boolean_props</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;inject_resources&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;serve_resources&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;serve_controllers&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;params_as_vars&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;strict_engine_selection&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;debug&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">boolean_props</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">asbool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">)))</span>
+
+        <span class="c1"># Set integer properties</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;res_max_age&#39;</span><span class="p">,</span> <span class="s1">&#39;bufsize&#39;</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">asint</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_reload_templates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auto_reload_templates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span></div>
+
+
+<div class="viewcode-block" id="TwMiddleware"><a class="viewcode-back" href="../../../getstarted.html#tw2.core.middleware.TwMiddleware">[docs]</a><span class="k">class</span> <span class="nc">TwMiddleware</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ToscaWidgets middleware</span>
+
+<span class="sd">    This performs three tasks:</span>
+<span class="sd">     * Clear request-local storage before and after each request. At the start</span>
+<span class="sd">       of a request, a reference to the middleware instance is stored in</span>
+<span class="sd">       request-local storage.</span>
+<span class="sd">     * Proxy resource requests to ResourcesApp</span>
+<span class="sd">     * Inject resources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">controllers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">):</span>
+
+        <span class="c1"># Here to avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">resources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resources_module</span> <span class="o">=</span> <span class="n">resources</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resources</span> <span class="o">=</span> <span class="n">resources</span><span class="o">.</span><span class="n">ResourcesApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controllers</span> <span class="o">=</span> <span class="n">controllers</span> <span class="ow">or</span> <span class="n">ControllersApp</span><span class="p">()</span>
+
+        <span class="n">rl</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span>
+        <span class="c1"># Load up controllers that wanted to be registered before we were ready</span>
+        <span class="k">for</span> <span class="n">widget</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;queued_controllers&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controllers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;queued_controllers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Load up resources that wanted to be registered before we were ready</span>
+        <span class="k">for</span> <span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span> <span class="ow">in</span> <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;queued_resources&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span><span class="p">)</span>
+
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;queued_resources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Future resource registrations should know to just plug themselves into</span>
+        <span class="c1"># me right away (instead of being queued).</span>
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="n">rl</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span>
+        <span class="n">rl</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">wo</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">environ</span><span class="p">)</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">path_info</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">serve_resources</span> <span class="ow">and</span> \
+           <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">res_prefix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">serve_controllers</span> <span class="ow">and</span> \
+               <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">controller_prefix</span><span class="p">):</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controllers</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">:</span>
+                    <span class="n">resp</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">catch_exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">resp</span> <span class="o">=</span> <span class="n">wo</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">&quot;404 Not Found&quot;</span><span class="p">)</span>
+
+            <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+            <span class="n">should_inject</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">inject_resources</span>
+                <span class="ow">and</span> <span class="s1">&#39;html&#39;</span> <span class="ow">in</span> <span class="n">ct</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">app_iter</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">GeneratorType</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">should_inject</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">charset</span><span class="p">:</span>
+                    <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources_module</span><span class="o">.</span><span class="n">inject_resources</span><span class="p">(</span>
+                        <span class="n">resp</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">charset</span><span class="p">),</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">charset</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources_module</span><span class="o">.</span><span class="n">inject_resources</span><span class="p">(</span>
+                        <span class="n">resp</span><span class="o">.</span><span class="n">body</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">):</span>
+                    <span class="n">resp</span><span class="o">.</span><span class="n">unicode_body</span> <span class="o">=</span> <span class="n">body</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">resp</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">resp</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">ControllersApp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widgets</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registered controller </span><span class="si">%r</span><span class="s2">-&gt;</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">widget</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widgets</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">widget</span>
+
+    <span class="k">def</span> <span class="nf">controller_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_widget</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the path against which a given widget is mounted or None if</span>
+<span class="sd">        it is not registered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">widget</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widgets</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">target_widget</span> <span class="o">==</span> <span class="n">widget</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">path</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">rl</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">path_info</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">pre</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">controller_prefix</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pre</span> <span class="ow">and</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">pre</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">wo</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">&quot;404 Not Found&quot;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">pre</span> <span class="k">else</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">widget_name</span> <span class="o">=</span> <span class="n">path</span> <span class="ow">or</span> <span class="s1">&#39;index&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">widget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widgets</span><span class="p">[</span><span class="n">widget_name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">wo</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">&quot;404 Not Found&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resp</span>
+
+
+<span class="k">def</span> <span class="nf">register_resource</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; API function for registering resources *for serving*.</span>
+
+<span class="sd">    This should not be confused with resource registration for *injection*.</span>
+<span class="sd">    A resource must be registered for serving for it to be also registered for</span>
+<span class="sd">    injection.</span>
+
+<span class="sd">    If the middleware is available, the resource is directly registered with</span>
+<span class="sd">    the ResourcesApp.</span>
+
+<span class="sd">    If the middleware is not available, the resource is stored in the</span>
+<span class="sd">    request_local dict.  When the middleware is later initialized, those</span>
+<span class="sd">    waiting registrations are processed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rl</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mw</span><span class="p">:</span>
+        <span class="n">mw</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;queued_resources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;queued_resources&#39;</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No middleware in place.  Queued </span><span class="si">%r</span><span class="s2">-&gt;</span><span class="si">%r</span><span class="s2">(</span><span class="si">%r</span><span class="s2">) registration.&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">whole_dir</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">register_controller</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; API function for registering widget controllers.</span>
+
+<span class="sd">    If the middleware is available, the widget is directly registered with the</span>
+<span class="sd">    ControllersApp.</span>
+
+<span class="sd">    If the middleware is not available, the widget is stored in the</span>
+<span class="sd">    request_local dict.  When the middleware is later initialized, those</span>
+<span class="sd">    waiting registrations are processed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rl</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mw</span><span class="p">:</span>
+        <span class="n">mw</span><span class="o">.</span><span class="n">controllers</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rl</span><span class="p">[</span><span class="s1">&#39;queued_controllers&#39;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">rl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;queued_controllers&#39;</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[(</span><span class="n">widget</span><span class="p">,</span> <span class="n">path</span><span class="p">)]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No middleware in place.  Queued </span><span class="si">%r</span><span class="s2">-&gt;</span><span class="si">%r</span><span class="s2"> registration.&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">widget</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">make_middleware</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">(</span><span class="n">config</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">TwMiddleware</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">app</span>
+
+
+<span class="k">def</span> <span class="nf">make_app</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">make_middleware</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

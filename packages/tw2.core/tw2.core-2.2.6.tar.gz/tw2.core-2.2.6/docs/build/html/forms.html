@@ -1,0 +1,1388 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Forms &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Validation" href="validation.html" />
+    <link rel="prev" title="Widgets" href="widget.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="forms">
+<span id="id1"></span><h1>Forms<a class="headerlink" href="#forms" title="Permalink to this headline">¶</a></h1>
+<p>ToscaWidgets provides all the widgets related to
+building HTML Forms in the <code class="docutils literal notranslate"><span class="pre">tw2.forms</span></code> package.</p>
+<p>While <code class="docutils literal notranslate"><span class="pre">tw2.core</span></code> implements the foundation for
+declaring any kind of widget, the <code class="docutils literal notranslate"><span class="pre">tw2.forms</span></code>
+is specialised in widgets that are needed to
+create HTML forms.</p>
+<div class="section" id="form">
+<h2>Form<a class="headerlink" href="#form" title="Permalink to this headline">¶</a></h2>
+<p>A form is usually created by declaring a subclass
+of a <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.forms.Form</span></code>. Within the
+form a <code class="docutils literal notranslate"><span class="pre">child</span></code> attribute that specifies the <a class="reference internal" href="#formlayout"><span class="std std-ref">Form Layout</span></a>
+(how the fields shoulb be arranged graphically)
+through a subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.forms.Layout</span></code> and then
+within <code class="docutils literal notranslate"><span class="pre">child</span></code> all the fields of the form can be declared:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tw2.core</span> <span class="kn">as</span> <span class="nn">twc</span>
+<span class="kn">import</span> <span class="nn">tw2.forms</span> <span class="kn">as</span> <span class="nn">twf</span>
+
+
+<span class="k">class</span> <span class="nc">MovieForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+        <span class="n">director</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s1">&#39;Default Director&#39;</span><span class="p">)</span>
+        <span class="n">genres</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">SingleSelectField</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Action&#39;</span><span class="p">,</span> <span class="s1">&#39;Comedy&#39;</span><span class="p">,</span> <span class="s1">&#39;Romance&#39;</span><span class="p">,</span> <span class="s1">&#39;Sci-fi&#39;</span><span class="p">])</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;/save_movie&#39;</span>
+</pre></div>
+</div>
+<p>The form must also provide an <code class="docutils literal notranslate"><span class="pre">action</span></code> attribute
+to specify where the form should be submitted.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are going to use ToscaWidgets with TurboGears
+you probably want the action to be a <code class="docutils literal notranslate"><span class="pre">tg.lurl</span></code> to
+ensure that prefix of your application is retained.</p>
+</div>
+<div class="section" id="form-buttons">
+<h3>Form Buttons<a class="headerlink" href="#form-buttons" title="Permalink to this headline">¶</a></h3>
+<p>By default, each form comes with a <strong>submit</strong> button.</p>
+<p>The submit button can be replaced by setting the
+form <code class="docutils literal notranslate"><span class="pre">submit</span></code> attribute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;/save_name&#39;</span>
+    <span class="n">submit</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">SubmitButton</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Save Name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Multiple buttons can also be provided for the form
+by setting the <code class="docutils literal notranslate"><span class="pre">buttons</span></code> attribute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;/save_name&#39;</span>
+    <span class="n">buttons</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">twf</span><span class="o">.</span><span class="n">SubmitButton</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Save Name&quot;</span><span class="p">),</span>
+        <span class="n">twf</span><span class="o">.</span><span class="n">ResetButton</span><span class="p">(),</span>
+        <span class="n">twf</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Say Hi&quot;</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">onclick</span><span class="o">=</span><span class="s2">&quot;alert(&#39;hi&#39;)&quot;</span><span class="p">))</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dynamic-forms">
+<h3>Dynamic Forms<a class="headerlink" href="#dynamic-forms" title="Permalink to this headline">¶</a></h3>
+<p>Children can be added and removed dynamically from forms
+using the <a class="reference internal" href="widget.html#tw2.core.widgets.Widget.post_define" title="tw2.core.widgets.Widget.post_define"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.post_define()</span></code></a> and <a class="reference internal" href="widget.html#tw2.core.widgets.Widget.prepare" title="tw2.core.widgets.Widget.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.prepare()</span></code></a>
+methods.</p>
+<p>For example to change children of a form based on an option,
+<a class="reference internal" href="widget.html#tw2.core.widgets.Widget.post_define" title="tw2.core.widgets.Widget.post_define"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.post_define()</span></code></a> can be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GrowingMovieForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">num_contacts</span><span class="p">):</span>
+                <span class="k">class</span> <span class="nc">person_fieldset</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableFieldSet</span><span class="p">):</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;person_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">count</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Person #</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">count</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">twc</span><span class="o">.</span><span class="n">Validator</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                    <span class="n">surname</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">person_fieldset</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">))</span>
+
+            <span class="bp">cls</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;/save_contacts&#39;</span>
+    <span class="n">num_contacts</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">fivefieldsform</span> <span class="o">=</span> <span class="n">GrowingMovieForm</span><span class="p">(</span><span class="n">num_contacts</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use the same <code class="docutils literal notranslate"><span class="pre">fivefieldsform</span></code> object for both display and
+validation. Trying to make a new <code class="docutils literal notranslate"><span class="pre">GrowingMovieForm</span></code> might not work
+even though <code class="docutils literal notranslate"><span class="pre">num_contacts</span></code> is always set to <code class="docutils literal notranslate"><span class="pre">5</span></code>.</p>
+</div>
+<p>This will not work btw if you need to take action at display time.
+In such case <code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.prepare()</span></code> is needed, for example to have
+a text field that suggests the placeholder based on its original value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">DynamicText</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;Put text here&quot;</span><span class="p">)</span>
+
+    <span class="n">action</span> <span class="o">=</span> <span class="s2">&quot;/save_movie&quot;</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DynamicText</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
+                <span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;Put text here (was </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">value</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.prepare()</span></code> is usually involved when setting a state that
+depends on the current request. For example current value of a field,
+or something else that is known only in current request. The resulting
+state of the widget is also only valid in current request, a different
+request might have nothing in common. Keep this in mind when using
+validation, as validation usually happens in a different request from
+the one that displayed the widget.</p>
+</div>
+<dl class="class">
+<dt id="tw2.forms.widgets.Form">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">Form</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Form" title="Permalink to this definition">¶</a></dt>
+<dd><p>A form, with a submit button. It’s common to pass a
+TableLayout or ListLayout widget as the child.</p>
+<dl class="classmethod">
+<dt id="tw2.forms.widgets.Form.post_define">
+<em class="property">classmethod </em><code class="descname">post_define</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form.post_define"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Form.post_define" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a class method, that is called when a subclass of this Widget
+is created. Process static configuration here. Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">LeafWidget</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>  <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;my&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;id must start with &#39;my&#39;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>post_define should always cope with missing data - the class may be an
+abstract class. There is no need to call super(), the metaclass will do
+this automatically.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tw2.forms.widgets.Form.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Form.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.Form.submit">
+<code class="descname">submit</code><a class="headerlink" href="#tw2.forms.widgets.Form.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.SubmitButton_s_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="validating-forms">
+<h2>Validating Forms<a class="headerlink" href="#validating-forms" title="Permalink to this headline">¶</a></h2>
+<p>When you submit a form, it will send its data to the endpoint
+you specified through the <code class="docutils literal notranslate"><span class="pre">action</span></code> parameter.</p>
+<p>Before using it, you probably want to make sure that the
+data that was sent is correct and display back to the user
+error messages when it is not.</p>
+<p>This can be done through <a class="reference internal" href="validation.html#validation"><span class="std std-ref">Validation</span></a> and thanks to the
+fact that Forms remember which form was just validated
+in the current request.</p>
+<p>For each field in the form it is possible to specify
+a <code class="docutils literal notranslate"><span class="pre">validator=</span></code> parameter, which will be in charge of
+validation for that field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ValidatedForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;a number (1, 2, 3, 4)&quot;</span><span class="p">,</span>
+                               <span class="n">validator</span><span class="o">=</span><span class="n">twc</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">IntValidator</span><span class="p">())</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">twc</span><span class="o">.</span><span class="n">Required</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To validate the data submitted through this form you can use
+the <code class="xref py py-meth docutils literal notranslate"><span class="pre">tw2.forms.widgets.Form.validate()</span></code> method.</p>
+<p>If the validation passes, the method will return the validated data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ValidatedForm</span><span class="o">.</span><span class="n">validate</span><span class="p">({</span><span class="s1">&#39;numer&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="s1">&#39;hello&#39;</span><span class="p">})</span>
+<span class="go">{&#39;numer&#39;: 5, &#39;required&#39;: &#39;hello&#39;}</span>
+</pre></div>
+</div>
+<p>If the validation fails, it will raise a <a class="reference internal" href="validation.html#tw2.core.validation.ValidationError" title="tw2.core.validation.ValidationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.validation.ValidationError</span></code></a>
+exception:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+    <span class="n">File</span> <span class="s2">&quot;/home/amol/wrk/tw2.core/tw2/core/validation.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">106</span><span class="p">,</span> <span class="ow">in</span> <span class="n">wrapper</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">File</span> <span class="s2">&quot;/home/amol/wrk/tw2.core/tw2/core/widgets.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">718</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_validate</span>
+        <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;childerror&#39;</span><span class="p">,</span> <span class="n">exception_validator</span><span class="p">)</span>
+<span class="n">tw2</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ValidationError</span>
+</pre></div>
+</div>
+<p>Such error can be trapped to get back the validated widget,
+the value that was being validated and the error message for
+each of its children:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ValidatedForm</span><span class="o">.</span><span class="n">validate</span><span class="p">({</span><span class="s1">&#39;numer&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">})</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">tw2</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">compound_key</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">error_msg</span><span class="p">)</span>
+
+<span class="go">{&#39;numer&#39;: &#39;Hello&#39;, &#39;required&#39;: &#39;&#39;}</span>
+<span class="go">numer : Must be an integer</span>
+<span class="go">required : Enter a value</span>
+</pre></div>
+</div>
+<p>Also, trying to display back the form that was just validated, will
+print out the error message for each field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ValidatedForm</span><span class="o">.</span><span class="n">validate</span><span class="p">({</span><span class="s1">&#39;numer&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">})</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">tw2</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">display</span><span class="p">())</span>
+
+<span class="go">&lt;form enctype=&quot;multipart/form-data&quot; method=&quot;post&quot;&gt;</span>
+<span class="go">    &lt;span class=&quot;error&quot;&gt;&lt;/span&gt;</span>
+
+<span class="go">    &lt;table&gt;</span>
+<span class="go">    &lt;tr class=&quot;odd error&quot; id=&quot;numer:container&quot;&gt;</span>
+<span class="go">        &lt;th&gt;&lt;label for=&quot;numer&quot;&gt;Numer&lt;/label&gt;&lt;/th&gt;</span>
+<span class="go">        &lt;td&gt;</span>
+<span class="go">            &lt;input id=&quot;numer&quot; name=&quot;numer&quot; placeholder=&quot;a number (1, 2, 3, 4)&quot; type=&quot;text&quot; value=&quot;Hello&quot;/&gt;</span>
+<span class="go">            &lt;span id=&quot;numer:error&quot;&gt;Must be an integer&lt;/span&gt;</span>
+<span class="go">        &lt;/td&gt;</span>
+<span class="go">    &lt;/tr&gt;&lt;tr class=&quot;even required error&quot; id=&quot;required:container&quot;&gt;</span>
+<span class="go">        &lt;th&gt;&lt;label for=&quot;required&quot;&gt;Required&lt;/label&gt;&lt;/th&gt;</span>
+<span class="go">        &lt;td&gt;</span>
+<span class="go">            &lt;input id=&quot;required&quot; name=&quot;required&quot; type=&quot;text&quot; value=&quot;&quot;/&gt;</span>
+<span class="go">            &lt;span id=&quot;required:error&quot;&gt;Enter a value&lt;/span&gt;</span>
+<span class="go">        &lt;/td&gt;</span>
+<span class="go">    &lt;/tr&gt;</span>
+<span class="go">    &lt;/table&gt;</span>
+<span class="go">    &lt;input type=&quot;submit&quot; value=&quot;Save&quot;/&gt;</span>
+<span class="go">&lt;/form&gt;</span>
+</pre></div>
+</div>
+<p>For convenience, you can also recover the currently validated instance
+of the form anywhere in the code. Even far away from the exception
+that reported the validation error.</p>
+<p>This can be helpful when you are isolating validation into a separate
+Aspect of your application and then you need to recover the form instance
+that includes the errors to display into your views.</p>
+<p>To retrieve the currently validated widget, you can just use <code class="xref py py-meth docutils literal notranslate"><span class="pre">tw2.core.widget.Widget.req()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ValidatedForm</span><span class="o">.</span><span class="n">validate</span><span class="p">({</span><span class="s1">&#39;numer&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">})</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">tw2</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">ValidatedForm</span><span class="o">.</span><span class="n">req</span><span class="p">())</span>
+
+<span class="go">&lt;__main__.ValidatedForm object at 0x7f9432e5e080&gt;</span>
+<span class="go">&lt;__main__.ValidatedForm object at 0x7f9432e5e080&gt;</span>
+</pre></div>
+</div>
+<p>As you can see <code class="docutils literal notranslate"><span class="pre">ValidatedForm.req()</span></code> returns the same exact instance
+that <code class="docutils literal notranslate"><span class="pre">e.widget</span></code> was. That’s because when <code class="docutils literal notranslate"><span class="pre">Widget.req()</span></code> is used
+and there is a validated instance of that same exact widget in the current
+request, ToscaWidgets will assume you are trying to access the widget
+you just validated and will return that one instace of building a
+new instance.</p>
+<p>If you want a new instance, you can still do <code class="docutils literal notranslate"><span class="pre">ValidatedForm().req()</span></code>
+instead of <code class="docutils literal notranslate"><span class="pre">ValidatedForm.req()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">ValidatedForm</span><span class="o">.</span><span class="n">validate</span><span class="p">({</span><span class="s1">&#39;numer&#39;</span><span class="p">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">})</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">tw2</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">ValidatedForm</span><span class="p">()</span><span class="o">.</span><span class="n">req</span><span class="p">())</span>
+
+<span class="go">&lt;__main__.ValidatedForm object at 0x7f9432e5e080&gt;</span>
+<span class="go">&lt;tw2.core.params.ValidatedForm_d object at 0x7f9432420940&gt;</span>
+</pre></div>
+</div>
+<p>Keep in mind that this only keeps memory of the <em>last</em> widget
+that failed validation. So in case multiple widgets failed validation
+in the same request, you must used <code class="xref py py-attr docutils literal notranslate"><span class="pre">tw2.core.validation.ValidationError.widget</span></code>
+to access each one of them.</p>
+</div>
+<div class="section" id="form-layout">
+<span id="formlayout"></span><h2>Form Layout<a class="headerlink" href="#form-layout" title="Permalink to this headline">¶</a></h2>
+<p>A layout specifies how the fields of the form
+should be arranged.</p>
+<p>This can be specified by having <code class="docutils literal notranslate"><span class="pre">Form.child</span></code>
+inherit from a specific layout class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">TableLayout</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">ListLayout</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="custom-layouts">
+<h3>Custom Layouts<a class="headerlink" href="#custom-layouts" title="Permalink to this headline">¶</a></h3>
+<p>A custom layout class can also be made to
+show the children however you want:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Bootstrap3Layout</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">BaseLayout</span><span class="p">):</span>
+    <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="s2">&quot;kajiki&quot;</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">&lt;div py:attrs=&quot;w.attrs&quot;&gt;</span>
+<span class="s2">    &lt;div class=&quot;form-group&quot; py:for=&quot;c in w.children_non_hidden&quot; title=&quot;${w.hover_help and c.help_text or None}&quot; py:attrs=&quot;c.container_attrs&quot; id=&quot;$</span><span class="si">{c.compound_id}</span><span class="s2">:container&quot;&gt;</span>
+<span class="s2">        &lt;label for=&quot;$</span><span class="si">{c.id}</span><span class="s2">&quot; py:if=&quot;c.label&quot;&gt;$c.label&lt;/label&gt;</span>
+<span class="s2">        ${c.display(attrs={&quot;class&quot;: &quot;form-control&quot;})}</span>
+<span class="s2">        &lt;span id=&quot;$</span><span class="si">{c.compound_id}</span><span class="s2">:error&quot; class=&quot;error help-block&quot; py:content=&quot;c.error_msg&quot;/&gt;</span>
+<span class="s2">    &lt;/div&gt;</span>
+<span class="s2">    &lt;py:for each=&quot;c in w.children_hidden&quot;&gt;${c.display()}&lt;/py:for&gt;</span>
+<span class="s2">    &lt;div id=&quot;$</span><span class="si">{w.compound_id}</span><span class="s2">:error&quot; py:content=&quot;w.error_msg&quot;&gt;&lt;/div&gt;</span>
+<span class="s2">&lt;/div&gt;&quot;&quot;&quot;</span>
+
+<span class="k">class</span> <span class="nc">BootstrapNameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">Bootstrap3Layout</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="n">submit</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">SubmitButton</span><span class="p">(</span><span class="n">css_class</span><span class="o">=</span><span class="s2">&quot;btn btn-default&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="complex-layouts">
+<h3>Complex Layouts<a class="headerlink" href="#complex-layouts" title="Permalink to this headline">¶</a></h3>
+<p>In case of complex custom layouts, you can even
+specify the layout case by case in the form itself
+with each children in a specific position accessing
+the children using <code class="docutils literal notranslate"><span class="pre">w.children.child_name</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OddNameForm</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">child</span><span class="p">(</span><span class="n">twf</span><span class="o">.</span><span class="n">BaseLayout</span><span class="p">):</span>
+        <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="s2">&quot;kajiki&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        &lt;div py:attrs=&quot;w.attrs&quot;&gt;</span>
+<span class="s2">            &lt;div py:with=&quot;c=w.children.name&quot;&gt;</span>
+<span class="s2">                ${c.display()}</span>
+<span class="s2">                &lt;span id=&quot;$</span><span class="si">{c.compound_id}</span><span class="s2">:error&quot; py:content=&quot;c.error_msg&quot;/&gt;</span>
+<span class="s2">            &lt;/div&gt;</span>
+<span class="s2">            &lt;div py:with=&quot;c=w.children.surname&quot;&gt;</span>
+<span class="s2">                ${c.display()}</span>
+<span class="s2">                &lt;span id=&quot;$</span><span class="si">{c.compound_id}</span><span class="s2">:error&quot; py:content=&quot;c.error_msg&quot;/&gt;</span>
+<span class="s2">            &lt;/div&gt;</span>
+
+<span class="s2">            &lt;py:for each=&quot;ch in w.children_hidden&quot;&gt;${ch.display()}&lt;/py:for&gt;</span>
+<span class="s2">            &lt;div id=&quot;$</span><span class="si">{w.compound_id}</span><span class="s2">:error&quot; py:content=&quot;w.error_msg&quot;&gt;&lt;/div&gt;</span>
+<span class="s2">        &lt;/div&gt;</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+        <span class="n">surname</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="tw2.forms.widgets.BaseLayout">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">BaseLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#BaseLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.BaseLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+<dl class="method">
+<dt id="tw2.forms.widgets.BaseLayout.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#BaseLayout.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.BaseLayout.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagate the value for this widget to the children, based on their id.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ListLayout">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ListLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ListLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ListLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrange widgets and labels in a list.</p>
+<p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TableLayout">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TableLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TableLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TableLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrange widgets and labels in a table.</p>
+<p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.GridLayout">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">GridLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#GridLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.GridLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrange labels and multiple rows of widgets in a grid.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.GridLayout.child">
+<code class="descname">child</code><a class="headerlink" href="#tw2.forms.widgets.GridLayout.child" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.RowLayout_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.RowLayout">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RowLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RowLayout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RowLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arrange widgets in a table row. This is normally only useful as a child to
+GridLayout.</p>
+<dl class="method">
+<dt id="tw2.forms.widgets.RowLayout.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RowLayout.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RowLayout.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagate the value for this widget to the children, based on their id.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="bultin-form-fields">
+<h2>Bultin Form Fields<a class="headerlink" href="#bultin-form-fields" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tw2.forms</span></code> package comes with a bunch of builtin
+widgets that can help you build the most common kind
+of forms.</p>
+<span class="target" id="module-tw2.forms.widgets"></span><dl class="class">
+<dt id="tw2.forms.widgets.FormField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">FormField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FormField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FormField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Basic Form Widget from which each other field will inherit</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.FormField.name">
+<code class="descname">name</code><a class="headerlink" href="#tw2.forms.widgets.FormField.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the field</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.FormField.required">
+<code class="descname">required</code><a class="headerlink" href="#tw2.forms.widgets.FormField.required" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the field is required according to its validator (read-only)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TextFieldMixin">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TextFieldMixin</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TextFieldMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TextFieldMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Misc mixin class with attributes for textual input fields</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TextFieldMixin.maxlength">
+<code class="descname">maxlength</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.TextFieldMixin.maxlength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum length of the field</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TextFieldMixin.placeholder">
+<code class="descname">placeholder</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.TextFieldMixin.placeholder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder text, until user writes something.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.InputField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">InputField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#InputField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.InputField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic &lt;input&gt; field.</p>
+<p>Generally you won’t use this one, but will rely
+on one of its specialised subclasses like <a class="reference internal" href="#tw2.forms.widgets.TextField" title="tw2.forms.widgets.TextField"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextField</span></code></a>
+or <code class="xref py py-class docutils literal notranslate"><span class="pre">Checkbox</span></code>.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.InputField.type">
+<code class="descname">type</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.InputField.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input type</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.InputField.value">
+<code class="descname">value</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.InputField.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current value of the input</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.InputField.required">
+<code class="descname">required</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.InputField.required" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add required attributed to the input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.InputField.autofocus">
+<code class="descname">autofocus</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.InputField.autofocus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add autofocus attributed to the input.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tw2.forms.widgets.InputField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#InputField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.InputField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.PostlabeledInputField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">PostlabeledInputField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#PostlabeledInputField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.PostlabeledInputField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherits InputField, but with a text
+label that follows the input field</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.PostlabeledInputField.text">
+<code class="descname">text</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.PostlabeledInputField.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text to display in the label after the field.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.PostlabeledInputField.text_attrs">
+<code class="descname">text_attrs</code><em class="property"> = {}</em><a class="headerlink" href="#tw2.forms.widgets.PostlabeledInputField.text_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attributes of the label displayed after to the field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TextField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TextField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TextField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TextField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple text field where to input a single line of text</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TextField.size">
+<code class="descname">size</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.TextField.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add size attribute to the HTML field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TextArea">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TextArea</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TextArea"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TextArea" title="Permalink to this definition">¶</a></dt>
+<dd><p>A multiline text area</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TextArea.rows">
+<code class="descname">rows</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.TextArea.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a rows= attribute to the HTML textarea</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TextArea.cols">
+<code class="descname">cols</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.TextArea.cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a cols= attribute to the HTML textarea</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.CheckBox">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">CheckBox</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#CheckBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.CheckBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single checkbox.</p>
+<p>Its value will be True or Folse if selected or not.</p>
+<dl class="method">
+<dt id="tw2.forms.widgets.CheckBox.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#CheckBox.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.CheckBox.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.RadioButton">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RadioButton</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RadioButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RadioButton" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single radio button</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.RadioButton.checked">
+<code class="descname">checked</code><em class="property"> = False</em><a class="headerlink" href="#tw2.forms.widgets.RadioButton.checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the radio button is checked or not.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.PasswordField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">PasswordField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#PasswordField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.PasswordField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A password field. This never displays a value passed into the widget,
+although it does redisplay entered values on validation failure. If no
+password is entered, this validates as EmptyField.</p>
+<dl class="method">
+<dt id="tw2.forms.widgets.PasswordField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#PasswordField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.PasswordField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.FileValidator">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">FileValidator</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FileValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FileValidator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate a file upload field</p>
+<dl class="docutils">
+<dt><cite>extension</cite></dt>
+<dd>Allowed extension for the file</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.FileField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">FileField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FileField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FileField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field for uploading files.  The returned object has (at least) two
+properties of note:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="first docutils">
+<dt>filename:</dt>
+<dd>the name of the uploaded file</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>value:</dt>
+<dd>a bytestring of the contents of the uploaded file, suitable for being
+written to disk</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="tw2.forms.widgets.FileField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FileField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FileField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.HiddenField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">HiddenField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#HiddenField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.HiddenField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A hidden field.</p>
+<p>Typically this is used to bring around in the form
+values that the user should not be able to modify
+or see. Like the ID of the entity edited by the form.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.IgnoredField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">IgnoredField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#IgnoredField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.IgnoredField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A hidden field. The value is never included in validated data.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.LabelField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">LabelField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#LabelField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.LabelField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A read-only label showing the value of a field. The value is stored in a
+hidden field, so it remains through validation failures. However, the
+value is never included in validated data.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.LinkField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">LinkField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#LinkField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.LinkField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dynamic link based on the value of a field. If either <em>link</em> or <em>text</em>
+contain a $, it is replaced with the field value. If the value is None,
+and there is no default, the entire link is hidden.</p>
+<dl class="method">
+<dt id="tw2.forms.widgets.LinkField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#LinkField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.LinkField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.Button">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">Button</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Button"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Button" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic button. You can override the text using <cite>value</cite> and define a
+JavaScript action using <cite>attrs[‘onclick’]</cite>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SubmitButton">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SubmitButton</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SubmitButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SubmitButton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Button to submit a form.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ResetButton">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ResetButton</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ResetButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ResetButton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Button to clear the values in a form.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ImageButton">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ImageButton</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ImageButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ImageButton" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="tw2.forms.widgets.ImageButton.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ImageButton.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ImageButton.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.HTML5PatternMixin">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">HTML5PatternMixin</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#HTML5PatternMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.HTML5PatternMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML5 mixin for input field regex pattern matching</p>
+<p>See <a class="reference external" href="http://html5pattern.com/">http://html5pattern.com/</a> for common patterns.</p>
+<p>TODO: Configure server-side validator</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.HTML5MinMaxMixin">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">HTML5MinMaxMixin</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#HTML5MinMaxMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.HTML5MinMaxMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML5 mixin for input field value limits</p>
+<p>TODO: Configure server-side validator</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.HTML5StepMixin">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">HTML5StepMixin</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#HTML5StepMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.HTML5StepMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML5 mixin for input field step size</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.HTML5NumberMixin">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">HTML5NumberMixin</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#HTML5NumberMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.HTML5NumberMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTML5 mixin for number input fields</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.EmailField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">EmailField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#EmailField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.EmailField" title="Permalink to this definition">¶</a></dt>
+<dd><p>An email input field (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.UrlField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">UrlField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#UrlField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.UrlField" title="Permalink to this definition">¶</a></dt>
+<dd><p>An url input field (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.NumberField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">NumberField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#NumberField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.NumberField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A number spinbox (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.RangeField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RangeField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RangeField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RangeField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A number slider (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SearchField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SearchField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SearchField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SearchField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A search box (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ColorField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ColorField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ColorField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ColorField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A color picker field (HTML5 only).</p>
+<p>Will fallback to a normal text input field on browser not supporting HTML5.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SelectionField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SelectionField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SelectionField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SelectionField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for single and multiple selection fields.</p>
+<p>The <cite>options</cite> parameter must be a list; it can take several formats:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A list of values, e.g.
+<code class="docutils literal notranslate"><span class="pre">['',</span> <span class="pre">'Red',</span> <span class="pre">'Blue']</span></code></li>
+<li>A list of (code, value) tuples, e.g.
+<code class="docutils literal notranslate"><span class="pre">[(0,</span> <span class="pre">''),</span> <span class="pre">(1,</span> <span class="pre">'Red'),</span> <span class="pre">(2,</span> <span class="pre">'Blue')]</span></code></li>
+<li>A mixed list of values and tuples. If the code is not specified, it
+defaults to the value. e.g.
+<code class="docutils literal notranslate"><span class="pre">['',</span> <span class="pre">(1,</span> <span class="pre">'Red'),</span> <span class="pre">(2,</span> <span class="pre">'Blue')]</span></code></li>
+<li>Attributes can be specified for individual items, e.g.
+<code class="docutils literal notranslate"><span class="pre">[(1,</span> <span class="pre">'Red',</span> <span class="pre">{'style':'background-color:red'})]</span></code></li>
+<li>A list of groups, e.g.
+<code class="docutils literal notranslate"><span class="pre">[('group1',</span> <span class="pre">[(1,</span> <span class="pre">'Red')]),</span> <span class="pre">('group2',</span> <span class="pre">['Pink',</span> <span class="pre">'Yellow'])]</span></code></li>
+</ul>
+</div></blockquote>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">value</span></code> before rendering will set the default displayed value on
+the page.  In ToscaWidgets1, this was accomplished by setting <code class="docutils literal notranslate"><span class="pre">default</span></code>.
+That is no longer the case.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.SelectionField.options">
+<code class="descname">options</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.SelectionField.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of options to pick from in the form <code class="docutils literal notranslate"><span class="pre">[(id,</span> <span class="pre">text),</span> <span class="pre">(id,</span> <span class="pre">text),</span> <span class="pre">...]</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.SelectionField.prompt_text">
+<code class="descname">prompt_text</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.SelectionField.prompt_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prompt to display when no option is selected. Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> to disable this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tw2.forms.widgets.SelectionField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SelectionField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SelectionField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.MultipleSelectionField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">MultipleSelectionField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#MultipleSelectionField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.MultipleSelectionField" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="tw2.forms.widgets.MultipleSelectionField.item_validator">
+<code class="descname">item_validator</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.MultipleSelectionField.item_validator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validator that has to be applied to each item.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tw2.forms.widgets.MultipleSelectionField.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#MultipleSelectionField.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.MultipleSelectionField.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SingleSelectField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SingleSelectField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SingleSelectField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SingleSelectField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specialised <a class="reference internal" href="#tw2.forms.widgets.SelectionField" title="tw2.forms.widgets.SelectionField"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectionField</span></code></a> to pick one element from a list of options.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.MultipleSelectField">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">MultipleSelectField</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#MultipleSelectField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.MultipleSelectField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specialised <a class="reference internal" href="#tw2.forms.widgets.SelectionField" title="tw2.forms.widgets.SelectionField"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectionField</span></code></a> to pick multiple elements from a list of options.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.MultipleSelectField.size">
+<code class="descname">size</code><em class="property"> = None</em><a class="headerlink" href="#tw2.forms.widgets.MultipleSelectField.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of options to show</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SelectionList">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SelectionList</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SelectionList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SelectionList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SeparatedSelectionTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SeparatedSelectionTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SeparatedSelectionTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SeparatedSelectionTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.RadioButtonList">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RadioButtonList</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RadioButtonList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RadioButtonList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.CheckBoxList">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">CheckBoxList</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#CheckBoxList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.CheckBoxList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SelectionTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SelectionTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SelectionTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SelectionTable" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="tw2.forms.widgets.SelectionTable.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SelectionTable.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SelectionTable.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.VerticalSelectionTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">VerticalSelectionTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#VerticalSelectionTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.VerticalSelectionTable" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="tw2.forms.widgets.VerticalSelectionTable.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#VerticalSelectionTable.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.VerticalSelectionTable.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.RadioButtonTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RadioButtonTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RadioButtonTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.RadioButtonTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SeparatedRadioButtonTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SeparatedRadioButtonTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SeparatedRadioButtonTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SeparatedRadioButtonTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.VerticalRadioButtonTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">VerticalRadioButtonTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#VerticalRadioButtonTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.VerticalRadioButtonTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.CheckBoxTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">CheckBoxTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#CheckBoxTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.CheckBoxTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.SeparatedCheckBoxTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">SeparatedCheckBoxTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#SeparatedCheckBoxTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.SeparatedCheckBoxTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.VerticalCheckBoxTable">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">VerticalCheckBoxTable</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#VerticalCheckBoxTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.VerticalCheckBoxTable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">BaseLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#BaseLayout"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#BaseLayout.prepare"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Propagate the value for this widget to the children, based on their id.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TableLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TableLayout"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Arrange widgets and labels in a table.</p>
+<p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ListLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ListLayout"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Arrange widgets and labels in a list.</p>
+<p>The following CSS classes are used, on the element containing
+both a child widget and its label.</p>
+<dl class="docutils">
+<dt><cite>odd</cite> / <cite>even</cite></dt>
+<dd>On alternating rows. The first row is odd.</dd>
+<dt><cite>required</cite></dt>
+<dd>If the field is a required field.</dd>
+<dt><cite>error</cite></dt>
+<dd>If the field contains a validation error.</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">RowLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RowLayout"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Arrange widgets in a table row. This is normally only useful as a child to
+GridLayout.</p>
+<dl class="method">
+<dt>
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#RowLayout.prepare"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Propagate the value for this widget to the children, based on their id.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.StripBlanks">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">StripBlanks</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#StripBlanks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.StripBlanks" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="tw2.forms.widgets.StripBlanks.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>value</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#StripBlanks.to_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.StripBlanks.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an external value to Python and validate it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">GridLayout</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#GridLayout"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Arrange labels and multiple rows of widgets in a grid.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">child</code></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.RowLayout_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.Spacer">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">Spacer</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Spacer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Spacer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A blank widget, used to insert a blank row in a layout.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.Label">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">Label</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.Label" title="Permalink to this definition">¶</a></dt>
+<dd><p>A textual label. This disables any label that would be displayed by
+a parent layout.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">Form</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A form, with a submit button. It’s common to pass a
+TableLayout or ListLayout widget as the child.</p>
+<dl class="classmethod">
+<dt>
+<em class="property">classmethod </em><code class="descname">post_define</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form.post_define"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This is a class method, that is called when a subclass of this Widget
+is created. Process static configuration here. Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">LeafWidget</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>  <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;my&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;id must start with &#39;my&#39;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>post_define should always cope with missing data - the class may be an
+abstract class. There is no need to call super(), the metaclass will do
+this automatically.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">submit</code></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.SubmitButton_s_s</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">prepare</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#Form.prepare"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This is an instance method, that is called just before the Widget is
+displayed. Process request-local configuration here. For
+efficiency, widgets should do as little work as possible here.
+Use it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;My: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.FieldSet">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">FieldSet</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FieldSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FieldSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field set. It’s common to pass a TableLayout or ListLayout
+widget as the child.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TableForm">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TableForm</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TableForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TableForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to a Form containing a TableLayout.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TableForm.child">
+<code class="descname">child</code><a class="headerlink" href="#tw2.forms.widgets.TableForm.child" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.TableLayout_s</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TableForm.submit">
+<code class="descname">submit</code><a class="headerlink" href="#tw2.forms.widgets.TableForm.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.SubmitButton_s_s_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ListForm">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ListForm</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ListForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ListForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to a Form containing a ListLayout.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.ListForm.child">
+<code class="descname">child</code><a class="headerlink" href="#tw2.forms.widgets.ListForm.child" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.ListLayout_s</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tw2.forms.widgets.ListForm.submit">
+<code class="descname">submit</code><a class="headerlink" href="#tw2.forms.widgets.ListForm.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.SubmitButton_s_s_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.TableFieldSet">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">TableFieldSet</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#TableFieldSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.TableFieldSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to a FieldSet containing a TableLayout.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.TableFieldSet.child">
+<code class="descname">child</code><a class="headerlink" href="#tw2.forms.widgets.TableFieldSet.child" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.TableLayout_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.ListFieldSet">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">ListFieldSet</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#ListFieldSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.ListFieldSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to a FieldSet containing a ListLayout.</p>
+<dl class="attribute">
+<dt id="tw2.forms.widgets.ListFieldSet.child">
+<code class="descname">child</code><a class="headerlink" href="#tw2.forms.widgets.ListFieldSet.child" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.params.ListLayout_s</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.forms.widgets.FormPage">
+<em class="property">class </em><code class="descclassname">tw2.forms.widgets.</code><code class="descname">FormPage</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/forms/widgets.html#FormPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.forms.widgets.FormPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>A page that contains a form. The request method performs
+validation, redisplaying the form on errors.
+On success, it calls validated_request.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="widget.html">Widgets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Forms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#form">Form</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#form-buttons">Form Buttons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-forms">Dynamic Forms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#validating-forms">Validating Forms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#form-layout">Form Layout</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#custom-layouts">Custom Layouts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complex-layouts">Complex Layouts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bultin-form-fields">Bultin Form Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="widget.html" title="previous chapter">Widgets</a></li>
+      <li>Next: <a href="validation.html" title="next chapter">Validation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/forms.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

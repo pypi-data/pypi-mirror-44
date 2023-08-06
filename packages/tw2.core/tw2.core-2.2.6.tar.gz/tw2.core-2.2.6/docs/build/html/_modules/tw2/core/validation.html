@@ -1,0 +1,817 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tw2.core.validation &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tw2.core.validation</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">core</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">util</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">webob</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">.i18n</span> <span class="k">import</span> <span class="n">_</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="c1"># Compat</span>
+<span class="k">if</span> <span class="n">six</span><span class="o">.</span><span class="n">PY3</span><span class="p">:</span>
+    <span class="n">capitalize</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">capitalize</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">capitalize</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">capitalize</span>
+
+<span class="c1"># This hack helps work with different versions of WebOb</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">webob</span><span class="p">,</span> <span class="s1">&#39;MultiDict&#39;</span><span class="p">):</span>
+    <span class="c1"># Check for webob versions with UnicodeMultiDict</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">webob</span><span class="o">.</span><span class="n">multidict</span><span class="p">,</span> <span class="s1">&#39;UnicodeMultiDict&#39;</span><span class="p">):</span>
+        <span class="n">webob</span><span class="o">.</span><span class="n">MultiDict</span> <span class="o">=</span> <span class="n">webob</span><span class="o">.</span><span class="n">multidict</span><span class="o">.</span><span class="n">UnicodeMultiDict</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">webob</span><span class="o">.</span><span class="n">MultiDict</span> <span class="o">=</span> <span class="n">webob</span><span class="o">.</span><span class="n">multidict</span><span class="o">.</span><span class="n">MultiDict</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">formencode</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">formencode</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span> <span class="nc">Invalid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">EmptyField</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">if</span> <span class="n">formencode</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">BaseValidationError</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">,</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+            <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">BaseValidationError</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span>
+
+
+<div class="viewcode-block" id="ValidationError"><a class="viewcode-back" href="../../../validation.html#tw2.core.ValidationError">[docs]</a><span class="k">class</span> <span class="nc">ValidationError</span><span class="p">(</span><span class="n">BaseValidationError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Invalid data was encountered during validation.</span>
+
+<span class="sd">    The constructor can be passed a short message name, which is looked up in</span>
+<span class="sd">    a validator&#39;s :attr:`msgs` dictionary. Any values in this, like</span>
+<span class="sd">    ``$val``` are substituted with that attribute from the validator. An</span>
+<span class="sd">    explicit validator instance can be passed to the constructor, or this</span>
+<span class="sd">    defaults to :class:`Validator` otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">widget</span>
+        <span class="n">validator</span> <span class="o">=</span> <span class="n">validator</span> <span class="ow">or</span> <span class="n">Validator</span>
+        <span class="n">mw</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validator</span><span class="p">,</span> <span class="n">Validator</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">msg_rewrites</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mw</span> <span class="ow">and</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">validator_msgs</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">validator_msgs</span><span class="p">[</span><span class="n">msg</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">validator</span><span class="p">,</span> <span class="s1">&#39;msgs&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">msgs</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">msgs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># In the event that the user specified a form-wide validator but</span>
+        <span class="c1"># they did not specify a childerror message, show no error.</span>
+        <span class="k">if</span> <span class="n">msg</span> <span class="o">==</span> <span class="s1">&#39;childerror&#39;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;\$(\w+)&#39;</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">validator</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))),</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ValidationError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Added for backwards compatibility.  Synonymous with `msg`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">msg</span></div>
+
+
+<span class="n">catch</span> <span class="o">=</span> <span class="n">ValidationError</span>
+<span class="k">if</span> <span class="n">formencode</span><span class="p">:</span>
+    <span class="n">catch</span> <span class="o">=</span> <span class="p">(</span><span class="n">catch</span><span class="p">,</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Invalid</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">safe_validate</span><span class="p">(</span><span class="n">validator</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">validator</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">catch</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Invalid</span>
+
+
+<span class="k">def</span> <span class="nf">catch_errors</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">d</span>
+        <span class="k">except</span> <span class="n">catch</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">e_msg</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="n">e_msg</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">e_msg</span><span class="p">,</span> <span class="n">widget</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<div class="viewcode-block" id="unflatten_params"><a class="viewcode-back" href="../../../validation.html#tw2.core.unflatten_params">[docs]</a><span class="k">def</span> <span class="nf">unflatten_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This performs the first stage of validation. It takes a dictionary where</span>
+<span class="sd">    some keys will be compound names, such as &quot;form:subform:field&quot; and converts</span>
+<span class="sd">    this into a nested dict/list structure. It also performs unicode decoding,</span>
+<span class="sd">    with the encoding specified in the middleware config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">webob</span><span class="o">.</span><span class="n">MultiDict</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mixed</span><span class="p">()</span>
+
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+    <span class="n">enc</span> <span class="o">=</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">encoding</span> <span class="k">if</span> <span class="n">mw</span> <span class="k">else</span> <span class="s1">&#39;utf-8&#39;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">six</span><span class="o">.</span><span class="n">binary_type</span><span class="p">):</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">enc</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;decode&#39;</span><span class="p">,</span> <span class="n">Validator</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">enc</span><span class="p">))</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">pname</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="n">dct</span> <span class="o">=</span> <span class="n">out</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">pname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">dct</span> <span class="o">=</span> <span class="n">dct</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">dct</span><span class="p">[</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+
+    <span class="n">numdict_to_list</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<span class="n">number_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^\d+$&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">numdict_to_list</span><span class="p">(</span><span class="n">dct</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dct</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">numdict_to_list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">number_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">v</span><span class="p">):</span>
+                <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">)]</span>
+
+
+<span class="k">class</span> <span class="nc">ValidatorMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Metaclass for :class:`Validator`.</span>
+
+<span class="sd">    This makes the :attr:`msgs` dict copy from its base class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;msgs&#39;</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+            <span class="n">msgs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">rewrites</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">msgs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">msgs</span><span class="p">)</span>
+                    <span class="n">rewrites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">msgs_rewrites</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="n">msgs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s1">&#39;msgs&#39;</span><span class="p">])</span>
+            <span class="n">add_to_msgs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">del_from_msgs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">msgs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">add_to_msgs</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">rewrites</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">del_from_msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">msgs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">add_to_msgs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">del_from_msgs</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">msgs</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;msgs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">msgs</span>
+            <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;msg_rewrites&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rewrites</span>
+        <span class="k">if</span> <span class="s1">&#39;validate_python&#39;</span> <span class="ow">in</span> <span class="n">dct</span> <span class="ow">and</span> <span class="s1">&#39;_validate_python&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+            <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;_validate_python&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;validate_python&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;validate_python() is deprecated;&#39;</span>
+                <span class="s1">&#39; use _validate_python() instead&#39;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Validator"><a class="viewcode-back" href="../../../validation.html#tw2.core.Validator">[docs]</a><span class="k">class</span> <span class="nc">Validator</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ValidatorMeta</span><span class="p">,</span> <span class="nb">object</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for validators</span>
+
+<span class="sd">    `required`</span>
+<span class="sd">        Whether empty values are forbidden in this field. (default: False)</span>
+
+<span class="sd">    `strip`</span>
+<span class="sd">        Whether to strip leading and trailing space from the input, before</span>
+<span class="sd">        any other validation. (default: True)</span>
+
+<span class="sd">    To convert and validate a value to Python, use the :meth:`to_python`</span>
+<span class="sd">    method, to convert back from Python, use :meth:`from_python`.</span>
+
+<span class="sd">    To create your own validators, sublass this class, and override any of</span>
+<span class="sd">    :meth:`_validate_python`, :meth:`_convert_to_python`,</span>
+<span class="sd">    or :meth:`_convert_from_python`. Note that these methods are not</span>
+<span class="sd">    meant to be used externally. All of them may raise ValidationErrors.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Enter a value&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;decode&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Received in wrong character set; should be $encoding&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;corrupt&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Form submission received corrupted; please try again&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;childerror&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>  <span class="c1"># Children of this widget have errors</span>
+    <span class="p">}</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">strip</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">if_empty</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">kw</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Validator.to_python"><a class="viewcode-back" href="../../../validation.html#tw2.core.Validator.to_python">[docs]</a>    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert an external value to Python and validate it.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_empty</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">required</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;required&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">if_empty</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="Validator.from_python"><a class="viewcode-back" href="../../../validation.html#tw2.core.Validator.from_python">[docs]</a>    <span class="k">def</span> <span class="nf">from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert from a Python object to an external value.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_empty</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_from_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_bool</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Validator(required=</span><span class="si">%s</span><span class="s2">, strip=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">_bool</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required</span><span class="p">)],</span> <span class="n">_bool</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strip</span><span class="p">)]))</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;Overridable internal method for validation of Python values.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;Overridable internal method for conversion to Python values.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">_convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;Overridable internal method for conversion from Python values.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_empty</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the given value should be considered &quot;empty&quot;.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Validator.validate_python"><a class="viewcode-back" href="../../../validation.html#tw2.core.Validator.validate_python">[docs]</a>    <span class="k">def</span> <span class="nf">validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;Deprecated, use :meth:`_validate_python` instead.</span>
+
+<span class="sd">        This method has been renamed in FormEncode 1.3 and ToscaWidgets 2.2</span>
+<span class="sd">        in order to clarify that is an internal method that is meant to be</span>
+<span class="sd">        overridden only; you must call meth:`to_python` to validate values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;validate_python() is deprecated;&#39;</span>
+            <span class="s1">&#39; use _validate_python() instead&#39;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">nself</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">nself</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">kw</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">nself</span></div>
+
+
+<div class="viewcode-block" id="BlankValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.BlankValidator">[docs]</a><span class="k">class</span> <span class="nc">BlankValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Always returns EmptyField. This is the default for hidden fields,</span>
+<span class="sd">    so their values are not included in validated data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BlankValidator.to_python"><a class="viewcode-back" href="../../../validation.html#tw2.core.BlankValidator.to_python">[docs]</a>    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">EmptyField</span></div></div>
+
+
+<div class="viewcode-block" id="LengthValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.LengthValidator">[docs]</a><span class="k">class</span> <span class="nc">LengthValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm a value is of a suitable length. Usually you&#39;ll use</span>
+<span class="sd">    :class:`StringLengthValidator` or :class:`ListLengthValidator` instead.</span>
+
+<span class="sd">    `min`</span>
+<span class="sd">        Minimum length (default: None)</span>
+
+<span class="sd">    `max`</span>
+<span class="sd">        Maximum length (default: None)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;tooshort&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Value is too short&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;toolong&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Value is too long&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nb">max</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LengthValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">required</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;tooshort&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;toolong&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StringLengthValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.StringLengthValidator">[docs]</a><span class="k">class</span> <span class="nc">StringLengthValidator</span><span class="p">(</span><span class="n">LengthValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check a string is a suitable length. The only difference to LengthValidator</span>
+<span class="sd">    is that the messages are worded differently.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;tooshort&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s1">&#39;string_tooshort&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be at least $min characters&#39;</span><span class="p">)),</span>
+        <span class="s1">&#39;toolong&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s1">&#39;string_toolong&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Cannot be longer than $max characters&#39;</span><span class="p">)),</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ListLengthValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.ListLengthValidator">[docs]</a><span class="k">class</span> <span class="nc">ListLengthValidator</span><span class="p">(</span><span class="n">LengthValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check a list is a suitable length. The only difference to LengthValidator</span>
+<span class="sd">    is that the messages are worded differently.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;tooshort&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;list_tooshort&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Select at least $min&#39;</span><span class="p">)),</span>
+        <span class="s1">&#39;toolong&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;list_toolong&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Select no more than $max&#39;</span><span class="p">)),</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="RangeValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.RangeValidator">[docs]</a><span class="k">class</span> <span class="nc">RangeValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm a value is within an appropriate range. This is not usually used</span>
+<span class="sd">    directly, but other validators are derived from this.</span>
+
+<span class="sd">    `min`</span>
+<span class="sd">        Minimum value (default: None)</span>
+
+<span class="sd">    `max`</span>
+<span class="sd">        Maximum value (default: None)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;toosmall&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be at least $min&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;toobig&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Cannot be more than $max&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nb">max</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;toosmall&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;toobig&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.IntValidator">[docs]</a><span class="k">class</span> <span class="nc">IntValidator</span><span class="p">(</span><span class="n">RangeValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is an integer. This is derived from</span>
+<span class="sd">    :class:`RangeValidator` so `min` and `max` can be specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;notint&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be an integer&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;notint&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoolValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.BoolValidator">[docs]</a><span class="k">class</span> <span class="nc">BoolValidator</span><span class="p">(</span><span class="n">RangeValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a value to a boolean. This is particularly intended to handle</span>
+<span class="sd">    check boxes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;required&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;bool_required&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;You must select this&#39;</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="n">if_empty</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;on&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">and</span> <span class="s1">&#39;true&#39;</span> <span class="ow">or</span> <span class="s1">&#39;false&#39;</span></div>
+
+
+<div class="viewcode-block" id="OneOfValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.OneOfValidator">[docs]</a><span class="k">class</span> <span class="nc">OneOfValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is one of a list of acceptable values. This is useful for</span>
+<span class="sd">    confirming that select fields have not been tampered with by a user.</span>
+
+<span class="sd">    `values`</span>
+<span class="sd">        Acceptable values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;notinlist&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Invalid value&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;notinlist&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DateTimeValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.DateTimeValidator">[docs]</a><span class="k">class</span> <span class="nc">DateTimeValidator</span><span class="p">(</span><span class="n">RangeValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid date and time. This is derived from</span>
+<span class="sd">    :class:`RangeValidator` so `min` and `max` can be specified.</span>
+
+<span class="sd">    `format`</span>
+<span class="sd">        The expected date/time format. The format must be specified using</span>
+<span class="sd">        the same syntax as the Python strftime function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;baddatetime&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must follow date/time format $format_str&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;toosmall&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;date_toosmall&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Cannot be earlier than $min_str&#39;</span><span class="p">)),</span>
+        <span class="s1">&#39;toobig&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;date_toobig&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Cannot be later than $max_str&#39;</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span>
+
+    <span class="n">format_tbl</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="s1">&#39;hour&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="s1">&#39;minute&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="s1">&#39;second&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">format_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_tbl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;%(.)&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;baddatetime&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DateValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.DateValidator">[docs]</a><span class="k">class</span> <span class="nc">DateValidator</span><span class="p">(</span><span class="n">DateTimeValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid date.</span>
+
+<span class="sd">    Just like :class:`DateTimeValidator`, but without the time component.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;baddatetime&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s1">&#39;baddate&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must follow date format $format_str&#39;</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">DateValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_convert_to_python</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">date</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="RegexValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.RegexValidator">[docs]</a><span class="k">class</span> <span class="nc">RegexValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value matches a regular expression.</span>
+
+<span class="sd">    `regex`</span>
+<span class="sd">        A Python regular expression object, generated like</span>
+<span class="sd">        ``re.compile(&#39;^\w+$&#39;)``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;badregex&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Invalid value&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">regex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badregex&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EmailValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.EmailValidator">[docs]</a><span class="k">class</span> <span class="nc">EmailValidator</span><span class="p">(</span><span class="n">RegexValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid email address.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;badregex&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;bademail&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be a valid email address&#39;</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^[\w\-.]+@[\w\-.]+$&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UrlValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.UrlValidator">[docs]</a><span class="k">class</span> <span class="nc">UrlValidator</span><span class="p">(</span><span class="n">RegexValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid URL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;regex&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;badurl&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be a valid URL&#39;</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^https?://&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IpAddressValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.IpAddressValidator">[docs]</a><span class="k">class</span> <span class="nc">IpAddressValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid IP4 address, or network block.</span>
+
+<span class="sd">    `allow_netblock`</span>
+<span class="sd">        Allow the IP address to include a network block (default: False)</span>
+
+<span class="sd">    `require_netblock`</span>
+<span class="sd">        Require the IP address to include a network block (default: False)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allow_netblock</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">require_netblock</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;badipaddress&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be a valid IP address&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;badnetblock&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Must be a valid IP network block&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;^(\d+)\.(\d+)\.(\d+)\.(\d+)(/(\d+))?$&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">groups</span><span class="p">()[:</span><span class="mi">4</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badipaddress&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_netblock</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badipaddress&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mi">32</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badnetblock&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">require_netblock</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badnetblock&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UUIDValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.UUIDValidator">[docs]</a><span class="k">class</span> <span class="nc">UUIDValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm the value is a valid uuid and convert to uuid.UUID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;badregex&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;baduuid&#39;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s1">&#39;Value not recognised as a UUID&#39;</span><span class="p">)),</span>
+    <span class="p">}</span>
+
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>\
+               <span class="s1">&#39;[0-9a-f]</span><span class="si">{8}</span><span class="s1">-[0-9a-f]</span><span class="si">{4}</span><span class="s1">-[0-9a-f]</span><span class="si">{4}</span><span class="s1">-[0-9a-f]</span><span class="si">{4}</span><span class="s1">-[0-9a-f]</span><span class="si">{12}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">regex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;badregex&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span> <span class="s2">&quot;{</span><span class="si">%s</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="n">value</span> <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;baduuid&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MatchValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.MatchValidator">[docs]</a><span class="k">class</span> <span class="nc">MatchValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Confirm a field matches another field</span>
+
+<span class="sd">    `other_field`</span>
+<span class="sd">        Name of the sibling field this must match</span>
+<span class="sd">    `pass_on_invalid`</span>
+<span class="sd">        Pass validation if sibling field is Invalid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;mismatch&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Must match $other_field_str&quot;</span><span class="p">),</span>
+        <span class="s1">&#39;notfound&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;$other_field_str field is not found&quot;</span><span class="p">),</span>
+        <span class="s1">&#39;invalid&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;$other_field_str field is invalid&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_field</span><span class="p">,</span> <span class="n">pass_on_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MatchValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">other_field</span> <span class="o">=</span> <span class="n">other_field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pass_on_invalid</span> <span class="o">=</span> <span class="n">pass_on_invalid</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">other_field_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">capitalize</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">name2label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">other_field</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Backward compatibility</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">full_dict</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">other_field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;notfound&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">other_value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">other_field</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">other_value</span> <span class="ow">is</span> <span class="n">Invalid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pass_on_invalid</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;invalid&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">other_value</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;mismatch&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">required</span> <span class="ow">and</span> <span class="nb">super</span><span class="p">(</span><span class="n">MatchValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_is_empty</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CompoundValidator"><a class="viewcode-back" href="../../../validation.html#tw2.core.CompoundValidator">[docs]</a><span class="k">class</span> <span class="nc">CompoundValidator</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Base class for compound validators.</span>
+
+<span class="sd">    Child classes :class:`Any` and :class:`All` take validators as arguments</span>
+<span class="sd">    and use them to validate &quot;value&quot;.  In case the validation fails, they</span>
+<span class="sd">    raise a ValidationError with a compound message.</span>
+
+<span class="sd">    &gt;&gt;&gt; v = All(StringLengthValidator(max=50), EmailValidator, required=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CompoundValidator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Validator</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Validator</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s1">&#39;required&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">required</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="All"><a class="viewcode-back" href="../../../validation.html#tw2.core.All">[docs]</a><span class="k">class</span> <span class="nc">All</span><span class="p">(</span><span class="n">CompoundValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm all validators passed as arguments are valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">validator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">validator</span><span class="o">.</span><span class="n">_validate_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="n">msgset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">msg</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">msgset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">msgset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Any"><a class="viewcode-back" href="../../../validation.html#tw2.core.Any">[docs]</a><span class="k">class</span> <span class="nc">Any</span><span class="p">(</span><span class="n">CompoundValidator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Confirm at least one of the validators passed as arguments is valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_validate_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">validator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">validator</span><span class="o">.</span><span class="n">_validate_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validators</span><span class="p">):</span>
+            <span class="n">msgset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">msg</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">msgset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">msgset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

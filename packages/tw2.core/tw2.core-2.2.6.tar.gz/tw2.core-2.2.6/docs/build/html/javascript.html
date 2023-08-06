@@ -1,0 +1,342 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Javascript Integration &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Design" href="design.html" />
+    <link rel="prev" title="Validation" href="validation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="javascript-integration">
+<h1>Javascript Integration<a class="headerlink" href="#javascript-integration" title="Permalink to this headline">¶</a></h1>
+<p>ToscaWidget2 was designed to work with any Javascript framework
+and integrate Python and Javascript as well as possible,
+leading to a seamless development experience when you have
+to provide Javascript callbacks or functions to your Python
+declared widgets and forms.</p>
+<div class="section" id="javascript-on-display">
+<h2>Javascript on Display<a class="headerlink" href="#javascript-on-display" title="Permalink to this headline">¶</a></h2>
+<p>Frequently, when a widget is displayed, you might have to
+run some form of initialization in JavaScript to attach
+dynamic behaviours to it.</p>
+<p>This can be done by using <code class="xref py py-meth docutils literal notranslate"><span class="pre">tw2.core.Widget.add_call()</span></code>
+to register a <cite>tw2.core.js.js_function</cite> that should be
+called.</p>
+<p>A simple example might be to display a widget that shows
+an “Hello World” alert every time it renders:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tw2.core</span> <span class="k">as</span> <span class="nn">twc</span>
+
+
+<span class="k">class</span> <span class="nc">HelloJSWidget</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Message to display&quot;</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&lt;div&gt;&lt;/div&gt;&quot;</span>
+    <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="s2">&quot;kajiki&quot;</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HelloJSWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+        <span class="n">alert</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">js</span><span class="o">.</span><span class="n">js_function</span><span class="p">(</span><span class="s2">&quot;alert&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_call</span><span class="p">(</span><span class="n">alert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>As you can see we define a new <a class="reference internal" href="#tw2.core.js.js_function" title="tw2.core.js.js_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.js.js_function</span></code></a> named
+“alert” and we assign it to the python “alert” variable.
+If a message is provided, <code class="xref py py-meth docutils literal notranslate"><span class="pre">tw2.core.Widget.add_call()</span></code>
+is used to register <code class="docutils literal notranslate"><span class="pre">alert(self.message)</span></code> as what should
+be called every time the widget is rendered.</p>
+<p>Displaying the widget in a web page:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HelloJSWidget</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>will in fact open an alert box with the “Hello World” text.</p>
+<p>But you are not constrained to use pre-existing Javascript
+functions (like <code class="docutils literal notranslate"><span class="pre">alert</span></code>), you can in fact declare your
+own function (or use one that was imported from a <a class="reference internal" href="widget.html#tw2.core.resources.JSLink" title="tw2.core.resources.JSLink"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.resources.JSLink</span></code></a>).</p>
+<p>For example we can change the previous widget to accept
+only the name of the person to greet instead of the whole
+message and display <code class="docutils literal notranslate"><span class="pre">&quot;Hello</span> <span class="pre">SOMEONE&quot;</span></code> always:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">HelloJSWidget</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">greeted</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Who to greet&quot;</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&lt;div&gt;&lt;/div&gt;&quot;</span>
+    <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="s2">&quot;kajiki&quot;</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HelloJSWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">sayhello</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">js</span><span class="o">.</span><span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;(function(target){ alert(&quot;Hello &quot; + target); })&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">greeted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_call</span><span class="p">(</span><span class="n">sayhello</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">greeted</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>As you could see, instead of having out <a class="reference internal" href="#tw2.core.js.js_function" title="tw2.core.js.js_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.js.js_function</span></code></a> point
+to an already existing one, we declared a new one that accepts
+a <code class="docutils literal notranslate"><span class="pre">target</span></code> argument and displays an alert to greet the target.</p>
+<p>The target of the greet message is then set in <code class="docutils literal notranslate"><span class="pre">HelloJSWidget.prepare</span></code>
+through the <code class="docutils literal notranslate"><span class="pre">greeted</span></code> param.</p>
+<p>Displaying such widget will lead as expected to show an alert box
+with “Hello” plus the name of the greeted person:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HelloJSWidget</span><span class="p">(</span><span class="n">greeted</span><span class="o">=</span><span class="s2">&quot;Mario&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>It’s also for example possible to run javascript that will target
+the widget itself by using the <code class="xref py py-attr docutils literal notranslate"><span class="pre">Widget.id</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">Widget.compound_id</span></code>
+properties to know the unique identifier of the widget in the dom.</p>
+<p>Using such tactic we could rewrite the previous widget to always read
+the greeted person from the content of the <code class="docutils literal notranslate"><span class="pre">div</span></code> instead of passing
+it as an argument:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">HelloJSWidget</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">greeted</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Who to greet&quot;</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;div id=&quot;$w.id&quot;&gt;$</span><span class="si">{w.greeted}</span><span class="s2">&lt;/div&gt;&quot;&quot;&quot;</span>
+    <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="s2">&quot;kajiki&quot;</span>
+
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HelloJSWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="n">sayhello</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">js</span><span class="o">.</span><span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;(function(widget_id){ var target = document.getElementById(widget_id).innerText; alert(&quot;Hello &quot; + target); })&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_call</span><span class="p">(</span><span class="n">sayhello</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">compound_id</span></code> is safer to use, as it avoids collions
+when widgets with the same id are used within different
+parents. But is mostly only available in form fields.
+On plain widgets you might need to use <code class="docutils literal notranslate"><span class="pre">id</span></code> itself.</p>
+</div>
+</div>
+<div class="section" id="javascript-callbacks">
+<h2>Javascript Callbacks<a class="headerlink" href="#javascript-callbacks" title="Permalink to this headline">¶</a></h2>
+<p>While being able to call javascript every time the widget is displayed
+is essential to be able to attach advanced javascript behaviours to widgets,
+sometimes you will need to trigger Javascript callbacks when something
+happens on the widgets.</p>
+<p>This can usually be done with <a class="reference internal" href="#tw2.core.js.js_callback" title="tw2.core.js.js_callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.js.js_callback</span></code></a> to declare the
+javascript callback you care about.</p>
+<p>A possible example is to run some javascript when the selected
+option is changed in a single select field:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alertpicker</span> <span class="o">=</span> <span class="n">twf</span><span class="o">.</span><span class="n">SingleSelectField</span><span class="p">(</span>
+    <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;onchange&#39;</span><span class="p">:</span> <span class="n">twc</span><span class="o">.</span><span class="n">js</span><span class="o">.</span><span class="n">js_callback</span><span class="p">(</span><span class="s1">&#39;alert(&quot;changed!&quot;)&#39;</span><span class="p">)},</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;First&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Second&#39;</span><span class="p">)]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-tw2.core.js">
+<span id="builtin-javascript-helpers"></span><h2>Builtin Javascript Helpers<a class="headerlink" href="#module-tw2.core.js" title="Permalink to this headline">¶</a></h2>
+<p>Python-JS interface to dynamically create JS function calls from your widgets.</p>
+<p>This moudle doesn’t aim to serve as a Python-JS “translator”. You should code
+your client-side code in JavaScript and make it available in static files which
+you include as JSLinks or inline using JSSources. This module is only intended
+as a “bridge” or interface between Python and JavaScript so JS function
+<strong>calls</strong> can be generated programatically.</p>
+<dl class="class">
+<dt id="tw2.core.js.js_callback">
+<em class="property">class </em><code class="descclassname">tw2.core.js.</code><code class="descname">js_callback</code><span class="sig-paren">(</span><em>cb</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/core/js.html#js_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.core.js.js_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>A js function that can be passed as a callback to be called
+by another JS function</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">js_callback</span><span class="p">(</span><span class="s2">&quot;update_div&quot;</span><span class="p">))</span>
+<span class="go">&#39;update_div&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">js_callback</span><span class="p">(</span><span class="s2">&quot;function (event) { .... }&quot;</span><span class="p">))</span>
+<span class="go">&#39;function (event) { .... }&#39;</span>
+</pre></div>
+</div>
+<p>Can also create callbacks for deferred js calls</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">js_callback</span><span class="p">(</span><span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+<span class="go">&#39;function(){foo(1, 2, 3)}&#39;</span>
+</pre></div>
+</div>
+<p>Or equivalently</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">js_callback</span><span class="p">(</span><span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">&#39;function(){foo(1, 2, 3)}&#39;</span>
+</pre></div>
+</div>
+<p>A more realistic example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">jQuery</span> <span class="o">=</span> <span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;jQuery&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_cb</span> <span class="o">=</span> <span class="n">js_callback</span><span class="p">(</span><span class="s1">&#39;function() { alert(this.text)}&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">on_doc_load</span> <span class="o">=</span> <span class="n">jQuery</span><span class="p">(</span><span class="s1">&#39;#foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="n">my_cb</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">call</span> <span class="o">=</span> <span class="n">jQuery</span><span class="p">(</span><span class="n">js_callback</span><span class="p">(</span><span class="n">on_doc_load</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">call</span>
+<span class="go">jQuery(function(){jQuery(\&quot;#foo\&quot;).bind(</span>
+<span class="go">    \&quot;click\&quot;, function() { alert(this.text)})})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.core.js.js_function">
+<em class="property">class </em><code class="descclassname">tw2.core.js.</code><code class="descname">js_function</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/core/js.html#js_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.core.js.js_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A JS function that can be “called” from python and added to
+a widget by widget.add_call() so it get’s called every time the widget
+is rendered.</p>
+<p>Used to create a callable object that can be called from your widgets to
+trigger actions in the browser. It’s used primarily to initialize JS code
+programatically. Calls can be chained and parameters are automatically
+json-encoded into something JavaScript undersrtands. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">jQuery</span> <span class="o">=</span> <span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;jQuery&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">call</span> <span class="o">=</span> <span class="n">jQuery</span><span class="p">(</span><span class="s1">&#39;#foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">datePicker</span><span class="p">({</span><span class="s1">&#39;option1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
+<span class="go">&#39;jQuery(&quot;#foo&quot;).datePicker({&quot;option1&quot;: &quot;value1&quot;})&#39;</span>
+</pre></div>
+</div>
+<p>Calls are added to the widget call stack with the <code class="docutils literal notranslate"><span class="pre">add_call</span></code> method.</p>
+<p>If made at Widget initialization those calls will be placed in
+the template for every request that renders the widget:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tw2.core</span> <span class="k">as</span> <span class="nn">twc</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeWidget</span><span class="p">(</span><span class="n">twc</span><span class="o">.</span><span class="n">Widget</span><span class="p">):</span> <span class="o">...</span>
+<span class="go">pickerOptions = twc.Param(default={}) </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeWidget</span><span class="o">.</span><span class="n">add_call</span><span class="p">(</span> <span class="o">...</span>
+<span class="go">        jQuery(&#39;#%s&#39; % SomeWidget.id).datePicker(SomeWidget.pickerOptions)</span>
+<span class="go">        ... )</span>
+</pre></div>
+</div>
+<p>More likely, we will want to dynamically make calls on every
+request.  Here we will call add_calls inside the <code class="docutils literal notranslate"><span class="pre">prepare</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">pickerOptions</span> <span class="o">=</span> <span class="n">twc</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="p">{})</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="nb">super</span><span class="p">(</span><span class="n">SomeWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">add_call</span><span class="p">(</span>
+<span class="gp">... </span>            <span class="n">jQuery</span><span class="p">(</span><span class="s1">&#39;#</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">datePicker</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">pickerOptions</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="p">)</span>
+</pre></div>
+</div>
+<p>This would allow to pass different options to the datePicker on every
+display.</p>
+<p>JS calls are rendered by the same mechanisms that render required css and
+js for a widget and places those calls at bodybottom so DOM elements which
+we might target are available.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">call</span> <span class="o">=</span> <span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;jQuery&#39;</span><span class="p">)(</span><span class="s2">&quot;a .async&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
+<span class="go">&#39;jQuery(&quot;a .async&quot;)&#39;</span>
+</pre></div>
+</div>
+<p>js_function calls can be chained:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">call</span> <span class="o">=</span> <span class="n">js_function</span><span class="p">(</span><span class="s1">&#39;jQuery&#39;</span><span class="p">)(</span><span class="s2">&quot;a .async&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">foo</span><span class="p">()</span><span class="o">.</span><span class="n">bar</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
+<span class="go">&#39;jQuery(&quot;a .async&quot;).foo().bar()&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="tw2.core.js.js_symbol">
+<em class="property">class </em><code class="descclassname">tw2.core.js.</code><code class="descname">js_symbol</code><span class="sig-paren">(</span><em>name=None</em>, <em>src=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/core/js.html#js_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.core.js.js_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unquoted js symbol like <code class="docutils literal notranslate"><span class="pre">document</span></code> or <code class="docutils literal notranslate"><span class="pre">window</span></code></p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Javascript Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#javascript-on-display">Javascript on Display</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#javascript-callbacks">Javascript Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-tw2.core.js">Builtin Javascript Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="validation.html" title="previous chapter">Validation</a></li>
+      <li>Next: <a href="design.html" title="next chapter">Design</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/javascript.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

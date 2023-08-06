@@ -1,0 +1,1161 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tw2.core.widgets &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tw2.core.widgets</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">webob</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">templating</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">validation</span> <span class="k">as</span> <span class="n">vd</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">params</span> <span class="k">as</span> <span class="n">pm</span>
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">filter</span>
+<span class="kn">from</span> <span class="nn">markupsafe</span> <span class="k">import</span> <span class="n">Markup</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">formencode</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">formencode</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">reserved_names</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;parent&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;demo_for&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;child&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;submit&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;datasrc&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;newlink&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;edit&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">_widget_seq</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">WidgetMeta</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">ParamMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This metaclass:</span>
+
+<span class="sd">     * Detects members that are widgets, and constructs the</span>
+<span class="sd">       `children` parameter based on this.</span>
+<span class="sd">     * Gives widgets a sequence number, so ordering works correctly.</span>
+<span class="sd">     * Calls post_define for the widget class and base classes. This</span>
+<span class="sd">       is needed as it&#39;s not possible to call super() in post_define.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_collect_base_children</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Collect the children from the base classes &#39;&#39;&#39;</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="n">bcld</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bcld</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bcld</span><span class="p">,</span> <span class="n">RepeatingWidgetBunchCls</span><span class="p">):</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bcld</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">children</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;Widget&#39;</span> <span class="ow">and</span> <span class="s1">&#39;children&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+            <span class="n">new_children</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dct</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="nb">issubclass</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Widget</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reserved_names</span><span class="p">:</span>
+
+                    <span class="n">new_children</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+                    <span class="k">del</span> <span class="n">dct</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+
+            <span class="n">children</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">_collect_base_children</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span>
+            <span class="n">new_children</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">new_children</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_seq</span><span class="p">)</span>
+            <span class="n">children</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">or</span> <span class="n">v</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">new_children</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">children</span><span class="p">:</span>
+                <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;children&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">children</span>
+
+        <span class="n">widget</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">WidgetMeta</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+
+        <span class="n">widget</span><span class="o">.</span><span class="n">_seq</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">advance_iterator</span><span class="p">(</span><span class="n">_widget_seq</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">widget</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;post_define&#39;</span> <span class="ow">in</span> <span class="n">w</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">post_define</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">widget</span>
+
+
+<div class="viewcode-block" id="Widget"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget">[docs]</a><span class="k">class</span> <span class="nc">Widget</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">WidgetMeta</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">Parametered</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all widgets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Widget identifier&#39;</span><span class="p">,</span> <span class="n">request_local</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Widget data key; None just uses id&#39;</span><span class="p">,</span>
+                   <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">request_local</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Template file for the widget, in the format &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;engine_name:template_path.  If `engine_name` is specified, this &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;is interepreted not as a path, but as an *inline template*&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">inline_engine_name</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Name of an engine.  If specified, `template` is interpreted as &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;an *inline template* and not a path.&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Validator for the widget.&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">request_local</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s2">&quot;Extra attributes to include in the widget&#39;s outer-most HTML tag.&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">{},</span>
+    <span class="p">)</span>
+    <span class="n">css_class</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;CSS class name&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">view_name</span><span class="o">=</span><span class="s1">&#39;class&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s2">&quot;The value for the widget.&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">resources</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s2">&quot;Resources used by the widget. This must be an iterable, each &quot;</span> <span class="o">+</span> \
+        <span class="s2">&quot;item of which is a :class:`Resource` subclass.&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">request_local</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">error_msg</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s2">&quot;Validation error message.&quot;</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+        <span class="s2">&quot;The parent of this widget, or None if this is a root widget.&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">_sub_compound</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_valid_id_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[a-zA-Z][\w\-\_\.]*$&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Widget.req"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.req">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">req</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate an instance of the widget.</span>
+
+<span class="sd">        Return the validated widget for this request if one exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ins</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Create an instance.  First check for the validated widget.</span>
+        <span class="n">vw</span> <span class="o">=</span> <span class="n">vw_class</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;validated_widget&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vw</span><span class="p">:</span>
+            <span class="c1"># Pull out actual class instances to compare to see if this</span>
+            <span class="c1"># is really the widget that was actually validated</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">vw_class</span><span class="p">,</span> <span class="s1">&#39;__bases__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">vw_class</span> <span class="o">=</span> <span class="n">vw</span><span class="o">.</span><span class="vm">__class__</span>
+
+            <span class="k">if</span> <span class="n">vw_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">cls</span><span class="p">:</span>
+                <span class="n">vw</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">vw</span><span class="p">:</span>
+                <span class="n">ins</span> <span class="o">=</span> <span class="n">vw</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We weren&#39;t the validated widget (or there wasn&#39;t one), so</span>
+            <span class="c1"># create a new instance</span>
+            <span class="n">ins</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="n">ins</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ins</span></div>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        New is overloaded to return a subclass of the widget, rather than an</span>
+<span class="sd">        instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Support backwards compatibility with tw1-style calling</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">and</span> <span class="s1">&#39;id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">id</span>
+
+        <span class="n">newname</span> <span class="o">=</span> <span class="n">calc_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="p">),</span> <span class="n">kw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="n">kw</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_js_calls</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Widget.post_define"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.post_define">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a class method, that is called when a subclass of this Widget</span>
+<span class="sd">        is created. Process static configuration here. Use it like this::</span>
+
+<span class="sd">            class MyWidget(LeafWidget):</span>
+<span class="sd">                @classmethod</span>
+<span class="sd">                def post_define(cls):</span>
+<span class="sd">                    id = getattr(cls,  &#39;id&#39;, None)</span>
+<span class="sd">                    if id and not id.startswith(&#39;my&#39;):</span>
+<span class="sd">                        raise pm.ParameterError(&quot;id must start with &#39;my&#39;&quot;)</span>
+
+<span class="sd">        post_define should always cope with missing data - the class may be an</span>
+<span class="sd">        abstract class. There is no need to call super(), the metaclass will do</span>
+<span class="sd">        this automatically.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_valid_id_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+                <span class="c1"># http://www.w3schools.com/tags/att_standard_id.asp</span>
+                <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span>
+                    <span class="s2">&quot;Not a valid W3C id: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">cls</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">id</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">compound_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_id</span><span class="p">(</span><span class="n">for_url</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">compound_id</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">compound_id</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">compound_key</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_key</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;request&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">middleware</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_id</span><span class="p">(</span><span class="n">for_url</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">middleware</span><span class="o">.</span><span class="n">register_controller</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span> <span class="ow">is</span> <span class="n">pm</span><span class="o">.</span><span class="n">Required</span><span class="p">:</span>
+                <span class="n">vld</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">validator</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="n">vld</span> <span class="ow">and</span> <span class="n">vld</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">or</span> \
+                        <span class="n">vd</span><span class="o">.</span><span class="n">Validator</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="n">vd</span><span class="o">.</span><span class="n">Validator</span><span class="p">):</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">formencode</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Validator</span><span class="p">):</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="n">vd</span><span class="o">.</span><span class="n">Validator</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="ow">not</span> <span class="p">(</span><span class="n">formencode</span> <span class="ow">and</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Validator</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span>
+                    <span class="s2">&quot;Validator must be either a tw2 or FormEncode validator&quot;</span>
+                <span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">resources</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">resources</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_deferred</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+                         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deferred</span><span class="p">)]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">attribute</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_all_params</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">child_param</span> <span class="ow">and</span> \
+                   <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="n">p</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">pm</span><span class="o">.</span><span class="n">Required</span><span class="p">:</span>
+
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">default</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_gen_compound_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="n">ancestors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="k">while</span> <span class="n">cur</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">ancestors</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">(</span><span class="s1">&#39;Parent loop&#39;</span><span class="p">)</span>
+            <span class="n">ancestors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">elems</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">_compound_name_elem</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ancestors</span>
+        <span class="p">])))</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">parent</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">RepeatingWidget</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_compound_name_elem</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">RepeatingWidget</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">for_url</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;repetition&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_compound_id_elem</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_compound_name_elem</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">for_url</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_gen_compound_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_name</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">for_url</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_gen_compound_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_name</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Widget.get_link"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.get_link">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_link</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the URL to the controller . This is called at run time, not startup</span>
+<span class="sd">        time, so we know the middleware if configured with the controller path.</span>
+<span class="sd">        Note: this function is a temporary measure, a cleaner API for this is</span>
+<span class="sd">        planned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;request&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">(</span><span class="s1">&#39;Not a controller widget&#39;</span><span class="p">)</span>
+        <span class="n">mw</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">controller_prefix</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gen_compound_id</span><span class="p">(</span><span class="n">for_url</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Widget.prepare"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is an instance method, that is called just before the Widget is</span>
+<span class="sd">        displayed. Process request-local configuration here. For</span>
+<span class="sd">        efficiency, widgets should do as little work as possible here.</span>
+<span class="sd">        Use it like this::</span>
+
+<span class="sd">            class MyWidget(Widget):</span>
+<span class="sd">                def prepare(self):</span>
+<span class="sd">                    super(MyWidget, self).prepare()</span>
+<span class="sd">                    self.value = &#39;My: &#39; + str(self.value)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># First, if we don&#39;t already have an id, then pick a random one.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="s1">&#39;id_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Then, enforce any params marked with twc.Required.</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">pm</span><span class="o">.</span><span class="n">Required</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is a required Parameter for </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferred</span><span class="p">:</span>
+            <span class="n">dfr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dfr</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deferred</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">dfr</span><span class="o">.</span><span class="n">fn</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_validated&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="c1"># Handles the case where FE expects dict-like object, but</span>
+            <span class="c1"># you have None at your disposal.</span>
+            <span class="k">if</span> <span class="n">formencode</span> <span class="ow">and</span> \
+               <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="n">formencode</span><span class="o">.</span><span class="n">Validator</span><span class="p">)</span> <span class="ow">and</span> \
+               <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">from_python</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">catch</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span>
+
+            <span class="k">if</span> <span class="n">formencode</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">==</span> <span class="p">{}</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="ow">or</span> <span class="s1">&#39;attrs&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compound_id</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compound_id</span>
+
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span><span class="p">:</span>
+                <span class="n">view_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="n">a</span><span class="p">]</span><span class="o">.</span><span class="n">view_name</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">view_name</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span>
+                        <span class="s2">&quot;Attr param clashes with user-supplied attr: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">a</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">view_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Widget.iteritems"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.iteritems">[docs]</a>    <span class="k">def</span> <span class="nf">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An iterator which will provide the params of the widget in</span>
+<span class="sd">        key, value pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="Widget.controller_path"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.controller_path">[docs]</a>    <span class="nd">@util</span><span class="o">.</span><span class="n">class_or_instance</span>
+    <span class="k">def</span> <span class="nf">controller_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the URL path against which this widget&#39;s controller is</span>
+<span class="sd">        mounted or None if it is not registered with the ControllerApp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mw</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mw</span><span class="o">.</span><span class="n">controllers</span><span class="o">.</span><span class="n">controller_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Widget.add_call"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.add_call">[docs]</a>    <span class="nd">@util</span><span class="o">.</span><span class="n">class_or_instance</span>
+    <span class="k">def</span> <span class="nf">add_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_arg</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s2">&quot;bodybottom&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Not sure what the &quot;extra_arg&quot; needed is for, but it is needed, as is</span>
+<span class="sd">        the decorator, or an infinite loop ensues.</span>
+
+<span class="sd">        Adds a :func:`tw.api.js_function` call that will be made when the</span>
+<span class="sd">        widget is rendered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#log.debug(&quot;Adding call &lt;%s&gt; for %r statically.&quot;, call, self)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_js_calls</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">call</span><span class="p">,</span> <span class="n">location</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Widget.display"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.display">[docs]</a>    <span class="nd">@util</span><span class="o">.</span><span class="n">class_or_instance</span>
+    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">displays_on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Display the widget - render the template. In the template, the</span>
+<span class="sd">        widget instance is available as the variable ``$w``.</span>
+
+<span class="sd">        If display is called on a class, it automatically creates an instance.</span>
+
+<span class="sd">        `displays_on`</span>
+<span class="sd">            The name of the template engine this widget is being displayed</span>
+<span class="sd">            inside. If not specified, this is determined automatically, from</span>
+<span class="sd">            the parent&#39;s template engine, or the default, if there is no</span>
+<span class="sd">            parent. Set this to ``string`` to get raw string output.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Support backwards compatibility with tw1-style calling</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;value&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># Support arguments to .display on either instance or class</span>
+        <span class="c1"># https://github.com/toscawidgets/tw2.core/issues/41</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">req</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="c1"># Register any deferred params that are handed to us late in the game</span>
+        <span class="c1"># (after post_define).  The .prepare method handles processing them</span>
+        <span class="c1"># later.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deferred</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deferred</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_calls</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">safe_modify</span><span class="p">(</span><span class="s1">&#39;resources&#39;</span><span class="p">)</span>
+            <span class="c1">#avoids circular reference</span>
+            <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">rs</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_calls</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;JSFuncCall&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rs</span><span class="o">.</span><span class="n">_JSFuncCall</span><span class="p">(</span>
+                        <span class="n">src</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                        <span class="n">location</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resources</span> <span class="o">=</span> <span class="n">WidgetBunch</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">req</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">resources</span><span class="p">:</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_output</span><span class="p">(</span><span class="n">displays_on</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Widget.generate_output"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.generate_output">[docs]</a>    <span class="k">def</span> <span class="nf">generate_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">displays_on</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the actual output text for this widget.</span>
+
+<span class="sd">        By default this renders the widget&#39;s template. Subclasses can override</span>
+<span class="sd">        this method for purely programmatic output.</span>
+
+<span class="sd">        `displays_on`</span>
+<span class="sd">            The name of the template engine this widget is being displayed</span>
+<span class="sd">            inside.</span>
+
+<span class="sd">        Use it like this::</span>
+
+<span class="sd">            class MyWidget(LeafWidget):</span>
+<span class="sd">                def generate_output(self, displays_on):</span>
+<span class="sd">                    return &quot;&lt;span {0}&gt;{1}&lt;/span&gt;&quot;.format(self.attrs, self.text)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mw</span> <span class="o">=</span> <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;middleware&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">displays_on</span><span class="p">:</span>
+            <span class="n">displays_on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_default_displays_on</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+
+        <span class="c1"># Build the arguments used while rendering the template</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">mw</span> <span class="ow">and</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">params_as_vars</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A template must be provided.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">templating</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">,</span>
+            <span class="n">displays_on</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inline_engine_name</span><span class="p">,</span>
+            <span class="n">mw</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_default_displays_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mw</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mw</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_engine</span>
+            <span class="k">return</span> <span class="s1">&#39;string&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">templating</span><span class="o">.</span><span class="n">get_engine_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">template</span><span class="p">,</span> <span class="n">mw</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Widget.validate"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Widget.validate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate form input. This should always be called on a class. It</span>
+<span class="sd">        either returns the validated data, or raises a</span>
+<span class="sd">        :class:`ValidationError` exception.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">(</span><span class="s1">&#39;Only call validate on root widgets&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">vd</span><span class="o">.</span><span class="n">unflatten_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">cls</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">ins</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">req</span><span class="p">()</span>
+
+        <span class="c1"># Key the validated widget by class id</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()[</span><span class="s1">&#39;validated_widget&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ins</span>
+        <span class="k">return</span> <span class="n">ins</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Widget._validate"><a class="viewcode-back" href="../../../design.html#tw2.core.widgets.Widget._validate">[docs]</a>    <span class="nd">@vd</span><span class="o">.</span><span class="n">catch_errors</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inner validation method; this is called by validate and should not be</span>
+<span class="sd">        called directly. Overriding this method in widgets is discouraged; a</span>
+<span class="sd">        custom validator should be coded instead. However, in some</span>
+<span class="sd">        circumstances overriding is necessary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">safe_modify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="ow">and</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">))):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">children_deep</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">cls</span></div>
+
+
+<div class="viewcode-block" id="LeafWidget"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.LeafWidget">[docs]</a><span class="k">class</span> <span class="nc">LeafWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget that has no children; this is the most common kind, e.g. form</span>
+<span class="sd">    fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<span class="k">class</span> <span class="nc">WidgetBunch</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">w</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Widget has no child named &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CompoundWidget"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.CompoundWidget">[docs]</a><span class="k">class</span> <span class="nc">CompoundWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget that has an arbitrary number of children, this is common for</span>
+<span class="sd">    layout components, such as :class:`tw2.forms.TableLayout`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Children for this widget. This must be an iterable, &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;each item of which is a Widget&#39;</span>
+    <span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+        <span class="s2">&quot;Alias for children&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">children</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">children_deep</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+        <span class="s2">&quot;Children, including any children from child &quot;</span> <span class="o">+</span>
+        <span class="s2">&quot;CompoundWidgets that have no id&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s1">&#39;tw2.core.templates.display_children&#39;</span>
+    <span class="n">separator</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;HTML snippet which will be inserted &#39;</span>
+                         <span class="s1">&#39;between each repeated child&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CompoundWidget.post_define"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.CompoundWidget.post_define">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check children are valid; update them to have a link to the parent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_sub_compound</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">joined_cld</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Widget</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;All children must be widgets&quot;</span><span class="p">)</span>
+            <span class="n">joined_cld</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">))</span>
+
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">children_deep</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">core</span><span class="o">.</span><span class="n">WidgetError</span><span class="p">(</span><span class="s2">&quot;Duplicate id &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">WidgetBunch</span><span class="p">(</span><span class="n">joined_cld</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">keyed_children</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">joined_cld</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span><span class="o">.</span><span class="n">key</span> <span class="o">!=</span> <span class="n">c</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CompoundWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">WidgetBunch</span><span class="p">(</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">req</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">weakref</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="CompoundWidget.prepare"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.CompoundWidget.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Propagate the value for this widget to the children, based on their id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CompoundWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_validated&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">_sub_compound</span><span class="p">:</span>
+                        <span class="n">c</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">key</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">c</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">_sub_compound</span><span class="p">:</span>
+                        <span class="n">c</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">c</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">key</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">get_child_error_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CompoundWidget._validate"><a class="viewcode-back" href="../../../design.html#tw2.core.widgets.CompoundWidget._validate">[docs]</a>    <span class="nd">@vd</span><span class="o">.</span><span class="n">catch_errors</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The value must be a dict, or None. Each item in the dict is passed to</span>
+<span class="sd">        the corresponding child widget for validation, with special</span>
+<span class="sd">        consideration for _sub_compound widgets. If a child returns</span>
+<span class="sd">        vd.EmptyField, that value is not included in the resulting dict at all,</span>
+<span class="sd">        which is different to including None. Child widgets with a key are</span>
+<span class="sd">        passed the validated value from the field the key references. The</span>
+<span class="sd">        resulting dict is validated by this widget&#39;s validator. If any child</span>
+<span class="sd">        widgets produce an errors, this results in a &quot;childerror&quot; failure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;corrupt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">clone_object</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">full_dict</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">validated_values</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Validate compound children</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">child</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">_sub_compound</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">catch</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s1">&#39;msg&#39;</span><span class="p">):</span>
+                    <span class="n">c</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span>
+                <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Validate non compound children</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">child</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">child</span><span class="o">.</span><span class="n">_sub_compound</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">vd</span><span class="o">.</span><span class="n">EmptyField</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">catch</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s1">&#39;msg&#39;</span><span class="p">):</span>
+                    <span class="n">c</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">vd</span><span class="o">.</span><span class="n">Invalid</span>
+                <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Validate self, usually a CompoundValidator or a FormEncode form-level</span>
+        <span class="c1"># validator.</span>
+        <span class="n">exception_validator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">catch</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># If it failed to validate, check if the error_dict has any</span>
+                <span class="c1"># messages pertaining specifically to this widget&#39;s children.</span>
+                <span class="n">error_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s1">&#39;error_dict&#39;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">error_dict</span><span class="p">:</span>
+                    <span class="k">raise</span>
+
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">in</span> <span class="n">error_dict</span><span class="p">:</span>
+                        <span class="n">c</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="n">error_dict</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+                        <span class="n">data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">vd</span><span class="o">.</span><span class="n">Invalid</span>
+                        <span class="n">exception_validator</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="c1"># Only re-raise this top-level exception if the validation</span>
+                <span class="c1"># error doesn&#39;t pertain to any of our children.</span>
+                <span class="k">if</span> <span class="n">exception_validator</span><span class="p">:</span>
+                    <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="n">any_errors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;childerror&#39;</span><span class="p">,</span> <span class="n">exception_validator</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">children_deep</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="bp">cls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">children_deep</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">cc</span></div>
+
+
+<span class="k">class</span> <span class="nc">RepeatingWidgetBunchCls</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Must specify an integer&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">rep</span>
+        <span class="k">return</span> <span class="n">rep</span>
+
+
+<span class="k">class</span> <span class="nc">RepeatingWidgetBunch</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">rwbc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rwbc</span> <span class="o">=</span> <span class="n">rwbc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">repetitions</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Must specify an integer&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwbc</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">req</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">weakref</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_repetition_cache</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">rep</span>
+        <span class="k">return</span> <span class="n">rep</span>
+
+
+<div class="viewcode-block" id="RepeatingWidget"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.RepeatingWidget">[docs]</a><span class="k">class</span> <span class="nc">RepeatingWidget</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget that has a single child, which is repeated an arbitrary number</span>
+<span class="sd">    of times, such as :class:`tw2.forms.GridLayout`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">child</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Child for this widget. The child must have no id.&#39;</span><span class="p">)</span>
+    <span class="n">repetitions</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Fixed number of repetitions. If this is None, it dynamically &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;determined, based on the length of the value list.&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">min_reps</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Minimum number of repetitions&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">max_reps</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Maximum number of repetitions&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">extra_reps</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Number of extra repeitions, beyond the length of the value list.&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Children specified for this widget will be passed to the child.  &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;In the template, children gets the list of repeated childen.&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+    <span class="p">)</span>
+
+    <span class="n">repetition</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">ChildVariable</span><span class="p">(</span><span class="s1">&#39;The repetition of a child widget.&#39;</span><span class="p">)</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s1">&#39;tw2.core.templates.display_children&#39;</span>
+    <span class="n">separator</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;HTML snippet which will be inserted &#39;</span>
+                         <span class="s1">&#39;between each repeated child&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RepeatingWidget.post_define"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.RepeatingWidget.post_define">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check child is valid; update with link to parent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="n">Widget</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;Child must be a Widget&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="n">DisplayOnlyWidget</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s1">&#39;Child cannot be a DisplayOnlyWidget&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;Child must have no id&quot;</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">rwbc</span> <span class="o">=</span> <span class="n">RepeatingWidgetBunchCls</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RepeatingWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">RepeatingWidgetBunch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rwbc</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RepeatingWidget.prepare"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.RepeatingWidget.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Propagate the value for this widget to the children, based on their</span>
+<span class="sd">        index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RepeatingWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">separator</span> <span class="o">=</span> <span class="n">Markup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">separator</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_reps</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_reps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reps</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_reps</span><span class="p">:</span>
+                <span class="n">reps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_reps</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_reps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reps</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_reps</span><span class="p">:</span>
+                <span class="n">reps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_reps</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">repetitions</span> <span class="o">=</span> <span class="n">reps</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RepeatingWidget._validate"><a class="viewcode-back" href="../../../design.html#tw2.core.widgets.RepeatingWidget._validate">[docs]</a>    <span class="nd">@vd</span><span class="o">.</span><span class="n">catch_errors</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The value must either be a list or None. Each item in the list is</span>
+<span class="sd">        passed to the corresponding child widget for validation. The resulting</span>
+<span class="sd">        list is passed to this widget&#39;s validator. If any of the child widgets</span>
+<span class="sd">        produces a validation error, this widget generates a &quot;childerror&quot;</span>
+<span class="sd">        failure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;corrupt&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">clone_object</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">full_dict</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">validated_values</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">catch</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vd</span><span class="o">.</span><span class="n">Invalid</span><span class="p">)</span>
+                <span class="n">any_errors</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">to_python</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">any_errors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;childerror&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">DisplayOnlyWidgetMeta</span><span class="p">(</span><span class="n">WidgetMeta</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_collect_base_children</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="n">bchild</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bchild</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">child</span>
+            <span class="n">bcld</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bcld</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bcld</span><span class="p">,</span> <span class="n">RepeatingWidgetBunchCls</span><span class="p">):</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bcld</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">children</span>
+
+
+<span class="k">def</span> <span class="nf">calc_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">char</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;parent&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+        <span class="n">newname</span> <span class="o">=</span> <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;parent&#39;</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;__&#39;</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">newname</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">char</span>
+    <span class="k">return</span> <span class="n">newname</span>
+
+
+<div class="viewcode-block" id="DisplayOnlyWidget"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.DisplayOnlyWidget">[docs]</a><span class="k">class</span> <span class="nc">DisplayOnlyWidget</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">DisplayOnlyWidgetMeta</span><span class="p">,</span> <span class="n">Widget</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A widget that has a single child. The parent widget is only used for</span>
+<span class="sd">    display purposes; it does not affect value propagation or validation.</span>
+<span class="sd">    This is used by widgets like :class:`tw2.forms.FieldSet`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">child</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Child for this widget.&#39;</span><span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Children specified for this widget will be passed to the child&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+    <span class="p">)</span>
+    <span class="n">id_suffix</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;Suffix to append to compound IDs&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">newname</span> <span class="o">=</span> <span class="n">calc_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">newname</span><span class="p">,</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,),</span> <span class="n">kw</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DisplayOnlyWidget.post_define"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.DisplayOnlyWidget.post_define">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">children</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;validator&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="n">Widget</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span><span class="s2">&quot;Child must be a widget&quot;</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">compound_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_sub_compound</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">_sub_compound</span>
+        <span class="n">cls_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">child_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cls_id</span> <span class="ow">and</span> <span class="n">child_id</span> <span class="ow">and</span> <span class="n">cls_id</span> <span class="o">!=</span> <span class="n">child_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">pm</span><span class="o">.</span><span class="n">ParameterError</span><span class="p">(</span>
+                <span class="s2">&quot;Can only specify id on either a DisplayOnlyWidget, or &quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;its child, not both: &#39;</span><span class="si">%s</span><span class="s2">&#39; &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls_id</span><span class="p">,</span> <span class="n">child_id</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cls_id</span> <span class="ow">and</span> <span class="n">child_id</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">child_id</span>
+            <span class="n">DisplayOnlyWidget</span><span class="o">.</span><span class="n">post_define</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="n">Widget</span><span class="o">.</span><span class="n">post_define</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">cls_id</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">cls</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_gen_compound_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="n">elems</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Widget</span><span class="o">.</span><span class="n">_gen_compound_name</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">),</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">elems</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">elems</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">elems</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">for_url</span> <span class="ow">and</span> <span class="n">attr</span><span class="o">==</span><span class="s1">&#39;id&#39;</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id_suffix&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">id_suffix</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_compound_name_elem</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parent</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">RepeatingWidget</span><span class="p">):</span>
+            <span class="n">Widget</span><span class="o">.</span><span class="n">_compound_name_elem</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">for_url</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DisplayOnlyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;child&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">req</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">weakref</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DisplayOnlyWidget.prepare"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.DisplayOnlyWidget.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DisplayOnlyWidget</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_validated&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span></div>
+
+    <span class="nd">@vd</span><span class="o">.</span><span class="n">catch_errors</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">vd</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;childerror&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">children_deep</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">child</span><span class="o">.</span><span class="n">children_deep</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">c</span></div>
+
+
+<span class="k">def</span> <span class="nf">default_content_type</span><span class="p">():</span>
+    <span class="s2">&quot;default_content_type&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;text/html; charset=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">encoding</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Page"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Page">[docs]</a><span class="k">class</span> <span class="nc">Page</span><span class="p">(</span><span class="n">DisplayOnlyWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An HTML page. This widget includes a :meth:`request` method that serves</span>
+<span class="sd">    the page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="s1">&#39;Title for the page&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">content_type</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span>
+        <span class="s1">&#39;Content type header&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">Deferred</span><span class="p">(</span><span class="n">default_content_type</span><span class="p">),</span>
+        <span class="n">request_local</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;tw2.core.templates.page&quot;</span>
+    <span class="n">id_suffix</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span>
+    <span class="n">_no_autoid</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Page.post_define"><a class="viewcode-back" href="../../../widget.html#tw2.core.widgets.Page.post_define">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_define</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;_no_autoid&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">DisplayOnlyWidget</span><span class="o">.</span><span class="n">post_define</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="n">Widget</span><span class="o">.</span><span class="n">post_define</span><span class="o">.</span><span class="vm">__func__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">content_type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deferred</span><span class="p">):</span>
+            <span class="n">ct</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">fn</span><span class="p">()</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">webob</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">ct</span><span class="p">)</span>
+        <span class="n">ins</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">req</span><span class="p">()</span>
+        <span class="n">ins</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="n">resp</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">ins</span><span class="o">.</span><span class="n">display</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+            <span class="n">core</span><span class="o">.</span><span class="n">request_local</span><span class="p">()[</span><span class="s1">&#39;middleware&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">encoding</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">resp</span>
+
+    <span class="k">def</span> <span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

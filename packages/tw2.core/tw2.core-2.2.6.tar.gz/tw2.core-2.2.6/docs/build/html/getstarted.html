@@ -1,0 +1,277 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Getting Started &#8212; ToscaWidgets2 2.2.4 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Widgets" href="widget.html" />
+    <link rel="prev" title="ToscaWidgets2 Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="enabling-toscawidgets">
+<span id="middleware"></span><h2>Enabling ToscaWidgets<a class="headerlink" href="#enabling-toscawidgets" title="Permalink to this headline">¶</a></h2>
+<p>ToscaWidgets is designed to work within a web request life cycle,
+so some of its features rely on the a current request object
+to be able to work a keep track of the state of widgets or
+resources for the whole duration of the request.</p>
+<p>For this reason, to start using ToscaWidgets you need to
+wrap your WSGI application in the <a class="reference internal" href="#tw2.core.middleware.TwMiddleware" title="tw2.core.middleware.TwMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.middleware.TwMiddleware</span></code></a>,
+which is also used to configure ToscaWidgets itself:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="n">response_headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)]</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="s2">&quot;200 OK&quot;</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">tw2.core.middleware</span> <span class="k">import</span> <span class="n">TwMiddleware</span>
+<span class="n">application</span> <span class="o">=</span> <span class="n">TwMiddleware</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="k">import</span> <span class="n">make_server</span>
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">application</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Serving on port 8000...&quot;</span><span class="p">)</span>
+<span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also provide all options available
+to configure ToscaWidgets
+(those listed in <a class="reference internal" href="#tw2.core.middleware.Config" title="tw2.core.middleware.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">tw2.core.middleware.Config</span></code></a>)
+to <code class="docutils literal notranslate"><span class="pre">TwMiddleware</span></code> as keyword arguments to
+change ToscaWidgets configuration:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tw2.core.middleware</span> <span class="k">import</span> <span class="n">TwMiddleware</span>
+<span class="n">application</span> <span class="o">=</span> <span class="n">TwMiddleware</span><span class="p">(</span><span class="n">application</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Debug mode is enabled by default in ToscaWidgets,
+so make sure you provide <code class="docutils literal notranslate"><span class="pre">debug=False</span></code> on production
+to leverage templates caching and other speedups.</p>
+</div>
+<p>Now that the middleare is in place, you can easily
+display any widget you want into your application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tw2.forms</span> <span class="k">import</span> <span class="n">SingleSelectField</span>
+
+<span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="n">widget</span> <span class="o">=</span> <span class="n">SingleSelectField</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">widget</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+    <span class="n">response_headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/html&#39;</span><span class="p">)]</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="s2">&quot;200 OK&quot;</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;&lt;h1&gt;Hello World!&lt;/h1&gt;&quot;</span><span class="p">,</span>
+            <span class="sa">b</span><span class="s2">&quot;&lt;p&gt;Pick one of the options&lt;/p&gt;&quot;</span><span class="p">,</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)]</span>
+
+<span class="kn">from</span> <span class="nn">tw2.core.middleware</span> <span class="k">import</span> <span class="n">TwMiddleware</span>
+<span class="n">application</span> <span class="o">=</span> <span class="n">TwMiddleware</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="k">import</span> <span class="n">make_server</span>
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">application</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Serving on port 8000...&quot;</span><span class="p">)</span>
+<span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="widget.html#widgets"><span class="std std-ref">Widgets</span></a> and <a class="reference internal" href="forms.html#forms"><span class="std std-ref">Forms</span></a> to get started
+creating widgets and forms.</p>
+<dl class="class">
+<dt id="tw2.core.middleware.TwMiddleware">
+<em class="property">class </em><code class="descclassname">tw2.core.middleware.</code><code class="descname">TwMiddleware</code><span class="sig-paren">(</span><em>app</em>, <em>controllers=None</em>, <em>**config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/core/middleware.html#TwMiddleware"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.core.middleware.TwMiddleware" title="Permalink to this definition">¶</a></dt>
+<dd><p>ToscaWidgets middleware</p>
+<dl class="docutils">
+<dt>This performs three tasks:</dt>
+<dd><ul class="first last simple">
+<li>Clear request-local storage before and after each request. At the start
+of a request, a reference to the middleware instance is stored in
+request-local storage.</li>
+<li>Proxy resource requests to ResourcesApp</li>
+<li>Inject resources</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tw2.core.middleware.Config">
+<em class="property">class </em><code class="descclassname">tw2.core.middleware.</code><code class="descname">Config</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tw2/core/middleware.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tw2.core.middleware.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>ToscaWidgets Configuration Set</p>
+<dl class="docutils">
+<dt><cite>translator</cite></dt>
+<dd>The translator function to use. (default: no-op)</dd>
+<dt><cite>default_engine</cite></dt>
+<dd>The main template engine in use by the application. Widgets with no
+parent will display correctly inside this template engine. Other
+engines may require passing displays_on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">Widget.display()</span></code>.
+(default:string)</dd>
+<dt><cite>inject_resoures</cite></dt>
+<dd>Whether to inject resource links in output pages. (default: True)</dd>
+<dt><cite>inject_resources_location</cite></dt>
+<dd>A location where the resources should be injected. (default: head)</dd>
+<dt><cite>serve_resources</cite></dt>
+<dd>Whether to serve static resources. (default: True)</dd>
+<dt><cite>res_prefix</cite></dt>
+<dd>The prefix under which static resources are served. This must start
+and end with a slash. (default: /resources/)</dd>
+<dt><cite>res_max_age</cite></dt>
+<dd>The maximum time a cache can hold the resource. This is used to
+generate a Cache-control header. (default: 3600)</dd>
+<dt><cite>serve_controllers</cite></dt>
+<dd>Whether to serve controller methods on widgets. (default: True)</dd>
+<dt><cite>controller_prefix</cite></dt>
+<dd>The prefix under which controllers are served. This must start
+and end with a slash. (default: /controllers/)</dd>
+<dt><cite>bufsize</cite></dt>
+<dd>Buffer size used by static resource server. (default: 4096)</dd>
+<dt><cite>params_as_vars</cite></dt>
+<dd>Whether to present parameters as variables in widget templates. This
+is the behaviour from ToscaWidgets 0.9. (default: False)</dd>
+<dt><cite>debug</cite></dt>
+<dd>Whether the app is running in development or production mode.
+(default: True)</dd>
+<dt><cite>validator_msgs</cite></dt>
+<dd>A dictionary that maps validation message names to messages. This lets
+you override validation messages on a global basis. (default: {})</dd>
+<dt><cite>encoding</cite></dt>
+<dd>The encoding to decode when performing validation (default: utf-8)</dd>
+<dt><cite>auto_reload_templates</cite></dt>
+<dd>Whether to automatically reload changed templates. Set this to False in
+production for efficiency. If this is None, it takes the same value as
+debug. (default: None)</dd>
+<dt><cite>preferred_rendering_engines</cite></dt>
+<dd>List of rendering engines in order of preference.
+(default: [‘mako’,’genshi’,’jinja’,’kajiki’])</dd>
+<dt><cite>strict_engine_selection</cite></dt>
+<dd>If set to true, TW2 will only select rendering engines from within your
+preferred_rendering_engines, otherwise, it will try the default list if
+it does not find a template within your preferred list. (default: True)</dd>
+<dt><cite>rendering_engine_lookup</cite></dt>
+<dd><p class="first">A dictionary of file extensions you expect to use for each type of
+template engine. Default:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+       <span class="s1">&#39;mako&#39;</span><span class="p">:[</span><span class="s1">&#39;mak&#39;</span><span class="p">,</span> <span class="s1">&#39;mako&#39;</span><span class="p">],</span>
+       <span class="s1">&#39;genshi&#39;</span><span class="p">:[</span><span class="s1">&#39;genshi&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+       <span class="s1">&#39;jinja&#39;</span><span class="p">:[</span><span class="s1">&#39;jinja&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+       <span class="s1">&#39;kajiki&#39;</span><span class="p">:[</span><span class="s1">&#39;kajiki&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+<dt><cite>script_name</cite></dt>
+<dd>A name to prepend to the url for all resource links (different from
+res_prefix, as it may be shared across and entire wsgi app.
+(default: ‘’)</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">ToscaWidgets2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#enabling-toscawidgets">Enabling ToscaWidgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="widget.html">Widgets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="javascript.html">Javascript Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">ToscaWidgets2 Documentation</a></li>
+      <li>Next: <a href="widget.html" title="next chapter">Widgets</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Alessandro Molina.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/getstarted.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
