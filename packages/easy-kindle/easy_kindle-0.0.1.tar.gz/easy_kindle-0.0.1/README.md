@@ -1,0 +1,4 @@
+easy_kindle is a command line tool written in python that'll send documents to your kindle right from the command line. The tool asks for your primary approved Gmail address and password which is used to send the document and the Send-to-Kindle email address which you can find on the website.
+The tool also saves the credentials locally into the tools in user data directory so that you don't have to type in the email every single time. 
+
+Supports only Python3.x and works on MacOS, Linux and Windows.
