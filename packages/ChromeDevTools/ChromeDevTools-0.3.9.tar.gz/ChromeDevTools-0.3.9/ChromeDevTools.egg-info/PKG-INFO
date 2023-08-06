@@ -1,0 +1,92 @@
+Metadata-Version: 2.1
+Name: ChromeDevTools
+Version: 0.3.9
+Summary: Async Chrome DevTools
+Home-page: https://github.com/codedumps/async-chrome-dev-tools
+Author: Sergey M
+Author-email: tz4678@gmail.com
+License: NO F*CKING LICENSE
+
+Description: ## Description
+        
+        Asynchronous Python library for Chrome DevTools.
+        
+        ## Install
+        
+        ```bash
+        # via github
+        pip install git+git://github.com/codedumps/async-chrome-dev-tools.git
+        # via pip
+        pip install -U ChromeDevTools
+        ```
+        
+        ## Chrome Debugging Mode
+        
+        Launch Chrome instance with argument `--remote-debugging-port`:
+        
+        ```bash
+        $ google-chrome-stable --remote-debugging-port=9222
+        ```
+        
+        Instead of Chrome you can use Chronium.
+        
+        ## Usage
+        
+        ```python
+        import asyncio
+        from ChromeDevTools import ChromeDevTools
+        
+        
+        async def run():
+          devtools = ChromeDevTools()
+          tab = await devtools.new_tab('http://linux.org.ru')
+          ...
+        
+        
+        asyncio.get_event_loop().run_until_complete(run())
+        ```
+        
+        ## API
+        
+        Инстанс Chrome принимает команды по http и через вебсокеты. По http мы можем управлять табами. Чтобы получить исходный код страницы, выполнить JavaScript на ней, перехватить запросы и т.д., нужно подключиться к табу через вебсокеты, а затем отправить команду через jsonrpc. Вызов jsonrpc-методов реализован с помощью обращения к несуществующим атрибутам объектов. Например, вызов метода `Page.captureScreenshot` будет выглядеть так:
+        
+        ```python
+        response = await tab.page.capture_screenshot(format='png', quality=100)
+        print(response.result.data)
+        ```
+        
+        Общий вид вызова метода:
+        
+        ```python
+        tab.domain.method(params_dict, param1=value1, param2=value2, ...)
+        ```
+        
+        Первая буква имени домена переводится в верхний регистр, имя метода из under_score транслируется в camelCase.
+        
+        Не все методы API предполагают возвращение ответа. К имени таких методов нужно добавлять окончание `_nowait`. Пример для `Network.enable`:
+        
+        ```python
+        await tab.network.enable_nowait()
+        async for event in tab:
+          # Обрабатываем события
+        ```
+        
+        ## Tests
+        
+        ```bash
+        pytest tests -s
+        ```
+        
+        ## Links
+        
+        * [Chrome DevTools](https://developers.google.com/web/tools/chrome-devtools/) &ndash; общая ифнормация;
+        * [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) &ndash; список методов, доступных для вызова через jsonrpc
+        
+Keywords: async chrome devtools
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Framework :: AsyncIO
+Classifier: Topic :: Software Development :: Debuggers
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Description-Content-Type: text/markdown
