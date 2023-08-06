@@ -1,0 +1,37 @@
+- job:
+    name: vitrage-dashboard-integration-tests
+    parent: horizon-integration-tests
+    required-projects:
+      - name: openstack/horizon
+      - name: openstack/vitrage
+      - name: openstack/python-vitrageclient
+      - name: openstack/vitrage-dashboard
+    roles:
+      - zuul: openstack-infra/devstack
+      - zuul: openstack/horizon
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    vars:
+      devstack_plugins:
+        vitrage: https://git.openstack.org/openstack/vitrage
+        vitrage-dashboard: https://git.openstack.org/openstack/vitrage-dashboard
+      devstack_services:
+        horizon: true
+      tox_envlist: integration
+
+- project:
+    templates:
+      - horizon-nodejs4-jobs-nonvoting
+      - horizon-nodejs10-jobs-nonvoting
+      - openstack-python-jobs-horizon
+      - openstack-python35-jobs-horizon
+      - publish-openstack-docs-pti
+      - check-requirements
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - vitrage-dashboard-integration-tests:
+            voting: false
+
