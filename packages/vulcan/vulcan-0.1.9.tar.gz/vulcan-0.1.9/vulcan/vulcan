@@ -1,0 +1,130 @@
+#!/usr/bin/python3
+
+# Copyright (C) 2019 github.com/shyal
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# standard lib imports
+
+import argparse
+import os
+import sys
+from textwrap import dedent
+
+# packages imports
+
+from urwid import *
+
+def fix_imports():
+    """
+    Make sure we can actually import stuff both in the package and dev envrionment.
+    Seriously though, how does one get rid of this?
+    """
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',  '..', 'vulcan')))
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',  '..', 'vulcan', 'lib')))
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'lib')))
+
+fix_imports()
+
+from vulcan.lib import utils
+
+
+class VulcanLauncher(object):
+
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+            description='vulcan - remember anything',
+            usage=dedent('''
+                vulcan <command> [<args>]
+
+                The most commonly used vulcan commands are:
+                   launch (default) Launches the main vulcan interface
+                   stats            Print out useful stats about the current deck
+                   screenshots      Generate screenshots for the docs
+                   export           Export database to json file
+                   import_to_db     Import json file into database
+                '''))
+        if len(sys.argv) == 1:
+            self.launch()
+            return
+        parser.add_argument('command', help='Subcommand to run')
+        parser.add_argument('--db_path', action='store', default='~/.vulcan/vulcan.db')
+        args = parser.parse_args(sys.argv[1:2])
+        if not hasattr(self, args.command):
+            print('Unrecognized command')
+            parser.print_help()
+            exit(1)
+        getattr(self, args.command)()
+
+    def launch(self):
+        parser = argparse.ArgumentParser(
+            description='Launch the main vulcan interface')
+        parser.add_argument('--db_path', action='store', default='~/.vulcan/vulcan.db')
+
+        from vulcan.lib.controller import VulcanController
+
+
+        args = parser.parse_args(sys.argv[2:])
+
+        controller = VulcanController(args.db_path)
+        try:
+            controller.main()
+        except KeyboardInterrupt:
+            try:
+                controller.view.exit_program()
+            except ExitMainLoop:
+                print("Goodbye")
+                sys.exit(0)
+        except ExitMainLoop:
+            print("Goodbye")
+            sys.exit(0)
+
+
+    def stats(self):
+        parser = argparse.ArgumentParser(
+            description='Display deck statistics')
+        parser.add_argument('--total', action='store_true')
+        parser.add_argument('--today', action='store_true')
+        args = parser.parse_args(sys.argv[2:])
+        print(utils.stats(today=args.today, total=args.total))
+
+    def export(self):
+        parser = argparse.ArgumentParser(
+            description='Display deck statistics')
+        parser.add_argument('--db_path', action='store', default='~/.vulcan/vulcan.db')
+        parser.add_argument('--json_path', action='store', default='~/.vulcan/vulcan.json')
+        args = parser.parse_args(sys.argv[2:])
+        utils.export(db_path=args.db_path, json_path=args.json_path)
+
+    def import_to_db(self):
+        parser = argparse.ArgumentParser(
+            description='Display deck statistics')
+        parser.add_argument('--db_path', action='store', default='~/.vulcan/vulcan.db')
+        parser.add_argument('--json_path', action='store', default='~/.vulcan/vulcan.json')
+        args = parser.parse_args(sys.argv[2:])
+        utils.import_to_db(db_path=args.db_path, json_path=args.json_path)
+
+    def screenshots(self):
+        import screenshots
+        from uuid import uuid4
+        db_path = os.path.join('/tmp/', str(uuid4()))
+        screenshots.main(db_path)
+
+
+if '__main__'==__name__:
+    VulcanLauncher()
