@@ -1,0 +1,76 @@
+{% include "default_menubar.yml" %}
+
+vcp:
+  name: Not Set
+  version: Not Set
+  author: Not Set
+  description: No description provided.
+
+windows:
+  mainwindow:
+    provider: qtpyvcp.widgets.form_widgets.main_window:VCPMainWindow
+
+# This sections defines the default Data Sources
+data_plugins:
+  status:
+    provider: qtpyvcp.plugins.status:Status
+    kwargs:
+      cycle_time: 75
+
+  settings:
+    provider: qtpyvcp.plugins.settings:Settings
+    kwargs:
+      # persistent settings file, relative to config dir
+      persistence_file: .settings.json
+
+  position:
+    provider: qtpyvcp.plugins.positions:Position
+    kwargs:
+      report_actual_pos: True
+      use_program_units: True
+
+  tooltable:
+    provider: qtpyvcp.plugins.tool_table:ToolTable
+
+  notifications:
+    provider: qtpyvcp.plugins.notifications:Notifications
+    kwargs:
+      # whether to save messages on exit
+      persistent: True
+      # where to save, relative to config dir
+      persistent_file: .qtpyvcp-messages.json
+
+dialogs:
+  open_file:
+    provider: qtpyvcp.widgets.dialogs.open_file_dialog:_OpenFileDialog
+
+  set_work_offsets:
+    provider: qtpyvcp.widgets.dialogs.offsets_dialog:OffsetsDialog
+
+  tool_edit:
+    provider: qtpyvcp.widgets.dialogs.base_dialog:BaseDialog
+    kwargs:
+      ui_file: {{ file.dir }}/../widgets/dialogs/tooledit_dialog.ui
+
+  probe_sim:
+    provider: qtpyvcp.widgets.dialogs.probesim_dialog:ProbeSim
+
+virtual_keyboards:
+  default:
+    provider: qtpyvcp.ui_vkb_loader.UIVKBLoader
+    args: []
+    kwargs:
+      ui_file: keyboards/default_vkb.ui
+
+  integer:
+    provider: qtpyvcp.ui_vkb_loader.UIVKBLoader
+    args: []
+    kwargs:
+      ui_file: keyboards/integer_vkb.ui
+      frameless: True
+      modal: False
+
+application:
+  provider: qtpyvcp.application:VCPApplication
+  kwargs:
+#    stylesheet: {{ file.dir }}/widgets/default_stylesheet.qss   # application wide stylesheet
