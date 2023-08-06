@@ -1,0 +1,67 @@
+Metadata-Version: 2.1
+Name: windows-entry-exe
+Version: 1.0
+Summary: Replacement exe launchers for setuptools entry_points
+Home-page: https://gitlab.com/alelec/windows_entry_exe/
+Author: Andrew Leech
+Author-email: andrew@alelec.net
+License: MIT
+Platform: UNKNOWN
+Requires-Python: >=3.2
+
+=================
+windows_entry_exe
+=================
+
+This is a simple launcher for Python files, which is functionally equivalent to
+the launchers in setuptools but not based on setuptools code. There are two
+versions of the launcher - console and GUI - built from the same source code.
+
+This project is based on simple_launcher by Vinay Sajip (https://bitbucket.org/vinay.sajip/simple_launcher).
+Where the original project launches the script via a python child process however,
+this launcher embeds python and launches the script directly. 
+
+The main benefit of this is seen with gui projects on windows, such that the program
+in the taskbar is the launcher exe rather than the python.exe in `simple_launcher`.
+This change means pinning the program to the taskbar works, as does any application icons set.
+
+The launcher is intended to facilitate script execution under Windows where a
+PEP 397-compatible launcher is not available. The idea is that each Python
+script has a copy of the launcher (symlinks not being generally available
+under Windows). For scripts to work with the launcher, they have to have a name
+ending in -script.py (for a console script) or -script.pyw (for a GUI script).
+The deployment system (e.g. packaging) will ensure that for foo-script.py, a
+console launcher opy named foo.exe is placed in the same directory; for
+bar-script.pyw, a GUI launcher copy named bar.exe is placed in the same
+directory.
+
+Assuming that the relevant directories are on the path, the scripts can be
+invoked using just "foo" or "bar". The foo.exe or bar.exe executable then
+runs: it looks for a script with the appropriate suffix ("-script.py" or
+"-script.pyw") in the same directory, and if found, opens that script to read a
+shebang line indicating which Python executable to use for the script. The folder
+of that executable, if found, is used to specify which python.dll the launcher is run against.
+
+The above scheme is used automatically by `setuptools` when `entry_points` aree defined. 
+`distutil` however works with an archive appended to the executable, rather than a separate file. 
+This scheme is also supported natively; if an archive is found it will be used preferentially, if not a companion script
+will be used.
+
+These launchers can be used automatically for a project by including this module in 
+your `setup.py` configuration like so ::
+
+    setup(
+        name="my_proj",
+        ...,
+        use_windows_entry_exe=True,
+        setup_requires=['windows_entry_exe'],
+        entry_points={
+            'gui_scripts': [
+                'MyProj = my_proj:main',
+            ]
+        },
+    )
+
+setuptools will then build entry_point exe's using these launchers rather than its own bundled ones.
+
+
