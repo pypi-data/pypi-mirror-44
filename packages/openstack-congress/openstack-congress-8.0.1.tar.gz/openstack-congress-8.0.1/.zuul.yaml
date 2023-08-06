@@ -1,0 +1,156 @@
+- job:
+    name: congress-devstack-api-base
+    parent: legacy-dsvm-base
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^congress/tests/.*$
+      - ^releasenotes/.*$
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/aodh
+      - openstack/python-aodhclient
+      - openstack/congress
+      - openstack/congress-dashboard
+      - openstack/congress-tempest-plugin
+      - openstack/python-congressclient
+      - openstack/murano
+      - openstack/murano-dashboard
+      - openstack/python-muranoclient
+      - openstack/mistral
+      - openstack/python-mistralclient
+      - openstack/mistral-tempest-plugin
+      - openstack/murano-tempest-plugin
+      - openstack/telemetry-tempest-plugin
+      - openstack/heat-tempest-plugin
+      - openstack/monasca-agent
+      - openstack/monasca-api
+      - openstack/monasca-common
+      - openstack/monasca-grafana-datasource
+      - openstack/monasca-notification
+      - openstack/monasca-persister
+      - openstack/monasca-statsd
+      - openstack/monasca-thresh
+      - openstack/monasca-ui
+      - openstack/python-monascaclient
+      - openstack/monasca-tempest-plugin
+    run: playbooks/legacy/congress-devstack-api-base/run.yaml
+    post-run: playbooks/legacy/congress-devstack-api-base/post.yaml
+    timeout: 6000
+
+- job:
+    name: congress-pe-replicated-base
+    parent: legacy-dsvm-base
+    vars:
+      database: mysql
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^congress/tests/.*$
+      - ^releasenotes/.*$
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/aodh
+      - openstack/python-aodhclient
+      - openstack/congress
+      - openstack/congress-dashboard
+      - openstack/congress-tempest-plugin
+      - openstack/python-congressclient
+      - openstack/murano
+      - openstack/murano-dashboard
+      - openstack/python-muranoclient
+      - openstack/mistral
+      - openstack/python-mistralclient
+      - openstack/mistral-tempest-plugin
+      - openstack/murano-tempest-plugin
+      - openstack/telemetry-tempest-plugin
+      - openstack/heat-tempest-plugin
+    run: playbooks/legacy/congress-pe-replicated-base/run.yaml
+    post-run: playbooks/legacy/congress-pe-replicated-base/post.yaml
+    timeout: 6000
+
+- job:
+    name: congress-devstack-api-mysql
+    parent: congress-devstack-api-base
+    vars:
+      database: mysql
+
+- job:
+    name: congress-devstack-api-postgresql
+    parent: congress-devstack-api-base
+    voting: false
+    vars:
+      database: postgresql
+
+- job:
+    name: congress-devstack-py35-api-mysql
+    parent: legacy-dsvm-base
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^congress/tests/.*$
+      - ^releasenotes/.*$
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/congress
+      - openstack/congress-tempest-plugin
+      - openstack/congress-dashboard
+      - openstack/python-congressclient
+      - openstack/murano
+      - openstack/murano-dashboard
+      - openstack/python-muranoclient
+      - openstack/murano-tempest-plugin
+      - openstack/heat-tempest-plugin
+    run: playbooks/legacy/congress-devstack-py35-api-mysql/run.yaml
+    post-run: playbooks/legacy/congress-devstack-py35-api-mysql/post.yaml
+    timeout: 6000
+
+- job:
+    name: congress-pe-replicated-mysql
+    parent: congress-pe-replicated-base
+    voting: false
+
+
+- job:
+    name: congress-pe-replicated-postgresql
+    parent: congress-pe-replicated-base
+    voting: false
+    vars:
+      database: postgresql
+
+- project:
+    templates:
+      - check-requirements
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - release-notes-jobs
+      - publish-openstack-sphinx-docs
+      - periodic-stable-jobs
+    check:
+      jobs:
+        - openstack-tox-cover:
+            voting: false
+        - congress-devstack-api-mysql
+        - congress-devstack-py35-api-mysql
+        - congress-devstack-api-postgresql
+        - congress-pe-replicated-mysql
+        - congress-pe-replicated-postgresql
+        # TripleO jobs that deploy Congress.
+        # Note we don't use a project-template here, so it's easier
+        # to disable voting on one specific job if things go wrong.
+        # tripleo-ci-centos-7-scenario001-multinode-oooq will only
+        # run on stable/pike while the -container will run in Queens
+        # and beyond.
+        # If you need any support to debug these jobs in case of
+        # failures, please reach us on #tripleo IRC channel.
+        - tripleo-ci-centos-7-scenario001-multinode-oooq:
+            voting: false
+        - tripleo-ci-centos-7-scenario001-multinode-oooq-container:
+            voting: false
+        - openstack-tox-lower-constraints
+    gate:
+      queue: congress
+      jobs:
+        - congress-devstack-api-mysql
+        - congress-devstack-py35-api-mysql
+        - openstack-tox-lower-constraints
