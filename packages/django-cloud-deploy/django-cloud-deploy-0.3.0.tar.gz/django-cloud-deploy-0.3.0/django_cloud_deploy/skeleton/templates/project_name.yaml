@@ -1,0 +1,121 @@
+# This file configures the {{ project_name }} application . The frontend serves
+# public web traffic.
+
+# The bookshelf frontend replication controller ensures that at least 3
+# instances of the bookshelf app are running on the cluster.
+# For more info about Pods see:
+#   https://cloud.google.com/container-engine/docs/pods/
+# For more info about Deployments:
+#   https://kubernetes.io/docs/user-guide/deployments/
+
+# [START kubernetes_deployment]
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ project_name }}
+  labels:
+    app: {{ project_name }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+    spec:
+      containers:
+      - name: {{ project_name }}-app
+        # Replace  with your project ID or use `make template`
+        image: {{ image_tag }}
+        # This setting makes nodes pull the docker image every time before
+        # starting the pod. This is useful when debugging, but should be turned
+        # off in production.
+        imagePullPolicy: Always
+        env:
+            # [START cloudsql_secrets]
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: password
+            # [END cloudsql_secrets]
+        ports:
+        - containerPort: 8080
+        {% if django_secrets is not none -%}
+        volumeMounts:
+          {% for secret in django_secrets -%}
+          - name: {{ secret }}
+            mountPath: /secrets/django_app
+            readOnly: true
+          {% endfor -%}
+        {% endif -%}
+
+      # [START proxy_container]
+      - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
+        name: cloudsql-proxy
+        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                  "-instances={{ cloud_sql_connection_string }}=tcp:5432",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          {% for secret in cloudsql_secrets -%}
+          - name: {{ secret }}
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          {% endfor -%}
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+          - name: cloudsql
+            mountPath: /cloudsql
+      # [END proxy_container]
+      # [START volumes]
+      volumes:
+        {% if cloudsql_secrets is not none -%}
+        {% for secret in cloudsql_secrets -%}
+        - name: {{ secret }}
+          secret:
+            secretName: {{ secret }}
+        {% endfor -%}
+        {% endif -%}
+        {% if django_secrets is not none -%}
+        {% for secret in django_secrets -%}
+        - name: {{ secret }}
+          secret:
+            secretName: {{ secret }}
+        {% endfor -%}
+        {% endif -%}
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+        - name: cloudsql
+          emptyDir:
+      # [END volumes]
+# [END kubernetes_deployment]
+
+---
+
+# [START service]
+# The {{ project_name }} service provides a load-balancing proxy over the {{ project_name }} app
+# pods. By specifying the type as a 'LoadBalancer', Container Engine will
+# create an external HTTP load balancer.
+# For more information about Services see:
+#   https://cloud.google.com/container-engine/docs/services/
+# For more information about external HTTP load balancing see:
+#   https://cloud.google.com/container-engine/docs/load-balancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ project_name }}
+  labels:
+    app: {{ project_name }}
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: {{ project_name }}
+# [END service]
