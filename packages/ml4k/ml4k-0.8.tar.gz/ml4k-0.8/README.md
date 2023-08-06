@@ -1,0 +1,64 @@
+# Python wrapper for the machinelearningforkids.co.uk API
+
+This library was designed for use with [machinelearningforkids.co.uk](https://machinelearningforkids.co.uk).
+
+## Installation
+
+Use pip to install the `ml4k` package:
+
+    sudo pip install ml4k
+
+## Usage
+
+In order to use your machine learning model, create a `Model` object
+with your project's API key:
+
+    import ml4k
+
+    API_KEY = "PASTE-API-KEY-HERE"
+    model = ml4k.Model(API_KEY)
+
+
+The following methods are available:
+
+### `model.classify(data)`
+
+Classifies the given data and returns a dictionary with the result. The
+result dictionary contains the `"label"` and `"confidence"` values.
+
+
+### `model.add_training_data(label, data)`
+
+Adds training data to the given label "bucket". You can pass text,
+images, or a list of numbers.
+
+
+## Examples
+
+### Recognizing Text
+
+    # Get input from user and pass it to our model
+    command = input("Type a command: ")
+    result = model.classify("Turn on the lamp")
+
+    if result["label"] == "lamp_on":
+        print("Turning on the lamp")
+    elif result["label"] == "lamp_off":
+        print("Turning off the lamp")
+
+
+### Recognizing Images
+
+Recognizing images is similar, but you need to pass binary image data.
+There are many was to get image data in python, such as opening and
+reading a file, or capturing from the webcam using a the
+[SimpleCV](http://simplecv.org/) library. 
+
+Images will be automatically downsized before sending to the API. 
+
+    # Assuming you have image data stored as a binary string...
+    result = model.classify(image)
+    if result["label"] == "dog":
+        print("That's a dog")
+    elif result["label"] == "cat":
+        print("That's a cat")
