@@ -1,0 +1,40 @@
+language: python
+addons:
+  firefox: latest-esr
+python:
+  - '2.7'
+  - '3.5'
+  - '3.6'
+  - pypy
+stages:
+  - test
+  - name: deploy
+    if: tag IS true
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      before_install:
+      after_success:
+      install: pip install -U setuptools setuptools_scm
+      script: skip
+      deploy:
+        provider: pypi
+        skip_existing: true
+        user: mshriver
+        distributions: sdist bdist_wheel
+        password:
+          secure: "CdM5neluGVCqh+RhWnQiR3Ysewm5rgMpGYkpFuwJZYxDhNu2Kc/TlwWNcKW9GVO5i0HszGNsFrbi8ky2jg+nhrzZihSOnpPuWsXdt73IGrcts3cHM6IAyMOJYFnqZjfRHH0VFxfxMQNik4hOpHtkdC9N/0P1r9j4uQTYjxiATOKcPIGMwKJApQ9RWY7csWVZJs+RBvJMQhTSzZYqQt1vZ1upwjB9demqM+Uv0XpdoCuegojmR2Z01Jy1mL2CHwVi+HSWzkX0fKKhi+TSuTVz2iBlyqghuGWkWWh7wHU2yB+c1i0HivW98Ii/Wqe6+rY55g6wISP1s5QzCxbRODYwtprmiVCe6u8Ly0Rc39txdQk6U9F6IqnUhd/o/nauZbxlNGtHGbGg6naz93pY1648G7aWHaLO0GR2l2lBiHH54g17aHGpPjoXloFOgfrGIXtWjnBdjrv5WObtPXHIED71P59b9xWgrTxtZMMyfto61EhqnmzsxSnRqRvtMXGmqWgv8O2TIkMjE04XxGJ6mVOdENXyQvPVorLmAep18/XvDE3zdd33SNHjdYxmVIezakUFqHUaOcsHRxlbk/MxODpi9TE3zpgwmhQVsBcj/oWLAv6st0oIPrQAiA13J41gVWupFVpCKcDSYOxVBFl/GzNQo/tWaM71NTVLyRze6NFOB2c="
+        on:
+          tags: true
+          repo: RedHatQE/widgetastic.core
+install:
+  - pip install -U pip
+  - pip install -U setuptools
+  - pip install -U tox tox-travis coveralls
+  - pip install git+https://github.com/quarckster/webdriverdownloader.git@fix_github
+  - webdrivermanager firefox:v0.20.1
+script:
+  - tox
+after_success:
+  - coveralls
