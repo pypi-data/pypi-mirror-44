@@ -1,0 +1,28 @@
+#! /usr/bin/env python3
+
+from trecord import Command, get_database_by_url
+import click
+import sys
+
+
+@click.command()
+@click.argument('database_url')
+def cli(database_url: str):
+    """An interactive SQL client.
+
+    Database URL Format: dialect+driver://username:password@host:port/database
+
+    Similar to this: https://docs.sqlalchemy.org/en/latest/core/engines.html
+    """
+    try:
+        db = get_database_by_url(database_url)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    cmd = Command(db)
+    cmd.loop()
+
+
+if __name__ == '__main__':
+    cli()
