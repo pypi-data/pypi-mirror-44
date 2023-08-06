@@ -1,0 +1,51 @@
+{% load staticfiles %}
+
+<div id="{{ id }}"{% if origin != 'unknown' %} style="background: #fafafa; padding: 15px; display: table; border: 1px solid #dadada; text-align: center; width: 100%; height: 150px;">
+  <div style="display: table-cell; vertical-align: middle; width: 100%; height: 100%%;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" x="0" y="0" style="width: 32px; opacity: .5;">
+      <path d="M87.31,18H14.69A6.71,6.71,0,0,0,8,24.69v50.6A6.71,6.71,0,0,0,14.69,82H87.31A6.71,6.71,0,0,0,94,75.29V24.69A6.71,6.71,0,0,0,87.31,18Zm3.54,55.52a5.33,5.33,0,0,1-5.31,5.31H16.46a5.33,5.33,0,0,1-5.31-5.31V26.46a5.33,5.33,0,0,1,5.31-5.31H85.54a5.33,5.33,0,0,1,5.31,5.31Z"></path>
+      <path d="M67.42,43.49a3.33,3.33,0,0,0-5.26-.15L44.93,64.25A3.33,3.33,0,0,1,40,64.5L31.47,56a3.33,3.33,0,0,0-4.83.14l-12.56,14a3.3,3.3,0,0,0,2.48,5.49H84.38a3.3,3.3,0,0,0,2.69-5.23Z"></path>
+      <circle cx="28.98" cy="35.83" r="10.49"></circle>
+    </svg>
+  </div>{% else %}><p><a href="{{ url }}" target="_blank">{{ url }}</a></p>{% endif %}
+
+  <script>
+    (
+      function() {
+        var s = function() {
+          var e = document.getElementById('{{ id }}');
+          var b = e.getBoundingClientRect();
+          var l = document.documentElement;
+
+          if (
+            b.top >= 0 && b.left >= 0 &&
+            b.right <= (window.innerWidth || l.clientWidth) &&
+            b.bottom <= (window.innerHeight || l.clientHeight)
+          ) {
+            var u = '{{ OBJECT_URL }}?url=' + encodeURIComponent('{{ url|escapejs }}');
+            var t = document.createElement('script');
+
+            window.removeEventListener('scroll', s);
+            window.cb_{{ id }} = function(v) {
+              if(v.html) {
+                e.style = {};
+                e.innerHTML = v.html;
+              }
+            };
+
+            t.src = u + '&callback=cb_{{ id }}';
+            document.getElementsByTagName('head')[0].appendChild(t);
+          }
+        }
+
+        if (document.attachEvent ? document.readyState === "complete" : document.readyState !== 'loading') {
+          s();
+        } else {
+          document.addEventListener('DOMContentLoaded', s);
+        }
+
+        window.addEventListener('scroll', s);
+      }
+    )();
+  </script>
+</div>
