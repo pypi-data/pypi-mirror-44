@@ -1,0 +1,4 @@
+config
+======
+
+.. automodule:: spicerack.config
