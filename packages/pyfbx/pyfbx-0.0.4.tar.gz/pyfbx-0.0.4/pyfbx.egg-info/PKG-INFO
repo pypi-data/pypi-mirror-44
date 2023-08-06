@@ -1,0 +1,139 @@
+Metadata-Version: 2.1
+Name: pyfbx
+Version: 0.0.4
+Summary: Freebox thin client
+Home-page: https://framagit.org/sun/pyfbx
+Author-email: teebeenator@gmail.com
+License: MIT
+Description: # Freebox client library
+        
+        ## Features
+        
+        * Full API coverage
+        * Https and Mdns discovery
+        * Thin client wrapper library (~250 lines)
+        * CLI script example to access any command
+        
+        [![pipeline status](https://framagit.org/sun/pyfbx/badges/master/pipeline.svg)](https://framagit.org/sun/pyfbx/commits/master)
+        [![coverage report](https://framagit.org/sun/pyfbx/badges/master/coverage.svg)](https://framagit.org/sun/pyfbx/commits/master)
+        
+        
+        ## Script
+        A script called pyfbx is installed and can be used like this:
+        
+        To register the application:
+        
+        ```shell
+        pyfbx SuperAppId
+        ```
+        Once registration is done on the device, write down the application token.
+        
+        Using this app token, acquire a session token to execute a test command
+        
+        ```shell
+        pyfbx -t '<TOKEN>' SuperAppId
+        ```
+        
+        You can also store the token in a file (example token.txt) and also execute a specific command
+        
+        ```shell
+        pyfbx -t f:/home/foo/token.txt SuperAppId -c 'Contacts.Create_a_contact(\
+        post_data={"display_name": "Sandy Kilo", "first_name": "Sandy", "last_name":"Kilo"})'
+        {   'birthday': '',
+            'company': '',
+            'display_name': 'Sandy Kilo',
+            'first_name': 'Sandy',
+            'id': 17,
+            'last_name': 'Kilo',
+            'last_update': 1554378898,
+            'notes': '',
+            'photo_url': ''}
+        ```
+        _Note_ : Don't forget to escape token and command with quotes.
+        
+        The complete script help is:
+        ```shell
+        pyfbx -h
+        usage: pyfbx [-h] [-c COMMAND] [-t TOKEN] [-v] [-n] app_id
+        
+        positional arguments:
+          app_id                application identifier
+        
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c COMMAND, --command COMMAND
+                                command, defaults to
+                                System.Get_the_current_system_info()
+          -t TOKEN, --token TOKEN
+                                token (or f:<filename>)
+          -v, --verbose         increase verbosity to INFO, use twice for DEBUG
+          -n, --http            Disable MDNS and use http known address
+        ```
+        
+        ## Library usage
+        
+        The REST API is generated at runtime with the creation of class attributes for all Freebox subsystems.
+        
+        ```python
+        >>> from pyfbx import Fbx
+        >>> f=Fbx()             # By default, this will perform MDNS discovery
+        >>> f=Fbx(nomdns=True)  # Use faster http api discovery
+        >>> f.<TAB>
+        f.Airmedia         f.Download_Config  f.Lan              f.Rrd              f.Upnpav
+        f.Call             f.Download_Feeds   f.Lcd              f.Share            f.Vpn
+        f.Connection       f.Freeplug         f.Nat              f.Storage          f.Vpn_Client
+        f.Contacts         f.Fs               f.Network_Share    f.Switch           f.Wifi
+        f.Dhcp             f.Ftp              f.Parental         f.System           f.mksession(
+        f.Download         f.Igd              f.Pvr              f.Upload           f.register(
+        >>> f.Freeplug.<TAB>
+        f.Freeplug.Get_a_particular_Freeplug_information(
+        f.Freeplug.Reset_a_Freeplug(
+        f.Freeplug.Get_the_current_Freeplugs_networks(
+        
+        # Register application to get app token. Physical access is required.
+        >>> token = f.register("AppId", "My App", "PC")
+        # Generate session token
+        >>> f.mksession(app_id="AppId", token=token)
+        
+        >>> help(f.Lan.Update_the_current_Lan_configuration)
+        Help on method Update_the_current_Lan_configuration:
+        
+        Update_the_current_Lan_configuration(post_data) method of pyfbx.client.Lan instance
+            Update the current Lan configuration
+        
+            Url parameters:
+            Post data:PostData
+        
+        >>> help(f.Contacts.Access_a_given_contact_entry)
+        Help on method Access_a_given_contact_entry:
+        
+        Access_a_given_contact_entry(id) method of pyfbx.client.Contacts instance
+            Access a given contact entry
+        
+            Url parameters: id
+            Post data:
+        
+        >>> f.Lan.Get_the_current_Lan_configuration()
+        {'name_dns': 'freebox-server', 'name': 'Freebox Server', 'name_mdns': 'Freebox-Server', 
+        'mode': 'router', 'name_netbios': 'Freebox_Server', 'ip': '192.168.1.254'}
+        
+        # Any subsequent call to mksession will refresh the session token
+        >>> f.mksession()
+        ```
+        
+        ## Developpment
+        
+        ### Testing
+        
+        You can run tests with
+        
+        ```shell
+        pip3 install -r requirements-dev.txt
+        pytest tests
+        ```
+        Currently to get 100% library coverage, a Freebox sitting on its default IP (192.168.1.254) is required.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Description-Content-Type: text/markdown
