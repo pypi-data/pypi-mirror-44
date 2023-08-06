@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load config %}
+{% block all_page_title %}
+    {% vocabulary "subscription" as v_subscription %}
+    <div class="offset-md-3 col-md-9 juntagrico">
+        <h3>
+            {% blocktrans %}Wähle deine {{ v_subscription }}-Grösse{% endblocktrans %}
+        </h3>
+    </div>
+{% endblock %}
+{% block allcontent %}
+    {% config "organisation_name" as c_organisation_name %}
+    {% config "currency" as c_currency %}
+    {% vocabulary "member_type" as v_member_type %}
+    {% vocabulary "member_type_pl" as v_member_type_pl %}
+    {% vocabulary "subscription" as v_subscription %}
+    {% config "enable_shares" as c_enable_shares %}
+    <div class="row">
+        <div class="offset-md-2 col-md-8">
+            <form action="" method="post">
+                {% csrf_token %}
+                {% for p in products %}
+                    <div class="form-group row">
+                                <label class="col-md-3">
+                                    {% if forloop.first %}
+                                        {% blocktrans %}{{ v_subscription }}-Grösse{% endblocktrans %}
+                                    {% endif %}
+                                </label>
+                        <div class="col-md-9">
+                            {{ p.name }}
+                            <br/>
+                            {{ p.description }}
+                        </div>
+                    </div>
+                    {% for ss in p.sizes.all %}
+                      <div class="form-group row">
+                            <div class="col-md-9 offset-md-4">
+                                {{ ss.long_name }}
+                                <br/>
+                                {{ ss.description }}
+                            </div>
+                        </div>
+                        {% for type in ss.types.all %}
+                            {% if type.visible %}
+                                <div class="form-group row">
+                                    <div class="col-md-9 offset-md-4">
+                                        <div class="row align-items-center h-100 no-gutters">
+                                            <div class="col-md-2">
+                                                <span class="switch switch-sm">
+                                                    <input type="radio" class="switch" name="subscription" value="{{ type.id }}" id="type{{ type.id }}" {% if selected_subscription == type.id %}checked="checked"{% endif %}/>
+                                                    <label for="type{{ type.id }}">
+                                                    </label>
+                                                </span>
+                                            </div>
+                                            <label for="type{{ type.id }}" class="col-md-10">
+                                                {% if type.long_name.strip %}
+                                                    {{ type.long_name }}
+                                                    <br/>
+                                                {% endif %}
+                                                {% if type.description.strip %}
+                                                    {{ type.description }}
+                                                    <br/>
+                                                {% endif %}
+                                                {% vocabulary "price" %}: {{ type.price }} {% config "currency" %}
+                                                {% if c_enable_shares %}
+                                                    <br/>
+                                                    {% vocabulary "share_pl" %}: {{ type.shares }}
+                                                {% endif %}
+                                                <br/>
+                                                {% trans "Arbeitseinsätze" %}: {{ type.required_assignments }}
+                                                {% if hours_used %}
+                                                    {% trans "Stunden" %}
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+                <div class="form-group row">
+                    <div class="offset-md-3 col-md-9">
+                        Kein {% vocabulary "subscription" %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-9 offset-md-4">
+                        <div class="row align-items-center h-100 no-gutters">
+                            <div class="col-md-2">
+                                <span class="switch switch-sm">
+                                    <input type="radio" class="switch" name="subscription" value="-1" id="none" {% if selected_subscription == -1 %}checked="checked"{% endif %}/>
+                                    <label for="none">
+                                    </label>
+                                </span>
+                            </div>
+                            <label class="col-md-10">
+                                {% blocktrans trimmed %}
+                                Du kannst auch ohne {{ v_subscription }} {{ c_organisation_name }}-
+                                {{ v_member_type }} sein. Bleibe
+                                auf dem Laufenden und mach mit, wenn du Lust hast.
+                                {% endblocktrans %}
+                                <br/>
+                                {% config "base_fee" as base_fee %}
+                                {% if base_fee.strip %}
+                                    {% blocktrans trimmed%}
+                                    {{ v_member_type_pl }} ohne {{ v_subscription }} bezahlen
+                                    einen Jahresbeitrag von {{ base_fee }} {{ c_currency }}
+                                    {% endblocktrans %}
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions row">
+                    <div class="offset-md-3 col-md-9">
+                        <button type="submit" class="btn btn-success">
+                            {% trans "Weiter" %}
+                        </button>
+                        <a href="/my/create/subscription/cancel" class="btn">
+                            {% trans "Abbrechen" %}
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
