@@ -1,0 +1,121 @@
+- import_tasks: set_hosts.yml
+
+- name: Install packages from PM
+  package:
+    name:
+      - docker
+      - gdb
+      - git
+      - go
+      - iperf3
+      - python-pip
+    enablerepo:
+      - epel
+    state: latest
+
+- name: Get extra softwares
+  shell: "{{ item }}"
+  with_items:
+    - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
+    # this url only works with Amazon Linux 1, i.e. yum with sysv
+    # see also [Installing Fluentd Using rpm Package](https://docs.fluentd.org/v1.0/articles/install-by-rpm#amazon-linux)
+    - curl -L https://toolbelt.treasuredata.com/sh/install-amazon1-td-agent3.sh | sudo sh
+
+#- name: Install docker-py via pip
+  #pip: # bug: DistributionNotFound: The 'pip==7.1.0' distribution was not found
+    #name: docker-py
+
+- name: Install extra softwares
+  command: "{{ item }}"
+  with_items:
+    - yum -y install python-pip git-lfs
+    - pip install docker-py
+    - git lfs install
+
+- name: Config fluentd
+  template:
+    src: td-agent.conf.j2
+    dest: /etc/td-agent/td-agent.conf
+    owner: root
+
+- name: Enable and start docker service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - docker
+    - td-agent
+
+- name: Check data volume exists
+  command:
+    fdisk -l "{{ data.dev }}"
+  register: result
+  ignore_errors: yes
+
+- set_fact:
+    data_dev_rc : "{{ result.rc }}"
+
+- name: Mount data volume
+  command: "{{ item }}"
+  with_items:
+    - printf "o\nn\np\n1\n\n\nw\n" | fdisk "{{ data.dev }}"
+    - mkfs -F -t ext4 "{{ data.dev }}"
+    - mkdir -p "{{ iserver.prefix }}"
+    - mount "{{ data.dev }}" "{{ iserver.prefix }}"
+  when:
+    - data_dev_rc == "0"
+  ignore_errors: yes
+
+- name: Auto mount
+  lineinfile:
+    dest: /etc/rc.local
+    regexp: "mount {{ data.dev}} {{ iserver.prefix }}\t# added by idevops$"
+    line: "mount {{ data.dev }} {{ iserver.prefix }}\t# added by idevops"
+    state: present
+  when:
+    - data_dev_rc == "0"
+
+- name: Create dirs
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    mode: "{{ item.mode | d('0755') }}"
+  with_items:
+    - path: "{{ iserver.repo.path }}"
+    - path: "{{ iserver.prefix }}/cores"
+    - path: "{{ iserver.prefix }}/logs"
+    - path: "{{ iserver.prefix }}/p2p"
+    - path: "{{ iserver.prefix }}/tmp"
+    - path: "{{ iserver.prefix }}/genesis"
+
+- name: Set kernel options
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.val }}"
+    state: present
+    sysctl_set: yes
+  with_items:
+    - key: kernel.core_pattern
+      val: /var/lib/iserver/cores/core_%e_%p_%t
+    - key: net.ipv4.ip_forward
+      val: 1
+
+- name: Set log dir
+  file:
+    src: "{{ iserver.prefix }}/logs"
+    dest: /var/log/iserver
+    state: link
+
+# upload iserver config
+- import_tasks: upload_config.yml
+
+- name: Copy iserver p2p priv.key to seed node `node-0`
+  copy:
+    src: "{{ local.config }}/config/priv.key"
+    dest: "{{ iserver.prefix }}/p2p/priv.key"
+    owner: root
+    group: root
+    mode: '0644'
+  when: inventory_hostname == "node-0"
