@@ -1,0 +1,22 @@
+{%- extends "sphinx_rtd_theme/search.html" %}
+{% if theme_elasticsearch_host %}
+{% set script_files = script_files + ['_static/elasticsearch.jquery.min.js'] %}
+{% endif %}
+
+{% block footer %}
+  {%- if theme_elasticsearch_host %}
+  {# Cannot use `script_files` for this, since we need to come *after*
+     `searchtools.js` included by the upstream `search.html` to monkeypatch it.
+     However, due to `extends`, that runs after us, so instead we take advantage
+     that block `footer` comes after `script_files` in `layout.html`. #}
+  <script type="text/javascript" src="{{ pathto('_static/search-elastic.js', 1) }}"></script>
+
+  <script type="text/javascript">
+    DOCUMENTATION_OPTIONS.ELASTICSEARCH_HOST = "{{theme_elasticsearch_host}}";
+    DOCUMENTATION_OPTIONS.ELASTICSEARCH_INDEX = "{{theme_elasticsearch_index}}";
+    DOCUMENTATION_OPTIONS.PUBLIC_URL_ROOT = "{{theme_public_url_root}}";
+  </script>
+  {%- endif %}
+
+  {{ super() }}
+{% endblock %}
