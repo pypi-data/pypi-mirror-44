@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block favicon_stylesheet %} {{ super() }} {% endblock %}
+{% block title %} {{ super() }} {% endblock %}
+
+{% block body %}
+    <div id="project-section">
+        {% include "flash_messages.html" %}
+    </div>
+    <div id="index-top-buttons">
+        <div id="takeout-buttons">
+            <button id="takeout-cancel-button" class="button-cancel" disabled>Stop</button>
+        </div>
+        <button id="visualize-button" class="button" {{ 'disabled' if not db else '' }}>Visualize</button>
+        <button id="new-project-button" class="button">New project</button>
+    </div>
+    <div id="logging-setting">
+        Database operations logging verbosity:
+        <select id="logging-verbosity-level">
+            <option value="0" {{ "selected" if logging_verbosity == "0" }}>0</option>
+            <option value="1" {{ "selected" if logging_verbosity == "1" }}>1</option>
+            <option value="2" {{ "selected" if logging_verbosity == "2" }}>2</option>
+            <option value="3" {{ "selected" if logging_verbosity == "3" }}>3</option>
+        </select>
+        (output goes to the terminal and the events.log file in the project directory)
+    </div>
+    <div id="takeout-section" data-full="{{ 'true' if db else 'false' }}">
+        <div id="takeout-setup">
+            <h2>Add data from Google Takeout</h2>
+            <div>
+                <p>If you don't yet have it, download it
+                    <a href="https://takeout.google.com/settings/takeout" target="_blank">here</a>.
+                    Only files in <b>English</b> will work. If yours are in another language, switching it to English
+                    <a href="https://myaccount.google.com/language?utm_source=google-account&amp;utm_medium=web"
+                       target="_blank">here</a> should make the Takeout archives created afterwards be in English as
+                    well.
+                </p>
+                <p>
+                    Once downloaded and extracted, enter the path to the <b>watch-history.html</b> file located in
+                    Takeout/YouTube/history.
+                </p>
+            </div>
+            <a href="#" id="multiple-files-toggle">For multiple archives{{ ':' if description or not db else '...'}}</a>
+            <div id="multiple-files-instructions" class="{{ '' if description or not db else 'hidden' }}">
+                Enter the path to either of the following (searching will become confined to one kind after the first
+                match):
+                <ul>
+                    <li>a directory with watch-history file(s). Something may be appended at the
+                        end of each file name for them to be unique, e.g. watch-history001.html</li>
+                    <li>a directory with directories of the Takeout archives, extracted with their archive names, e.g.
+                        takeout-20181120T163352Z-001</li>
+                </ul>
+
+            </div>
+
+            <form id="takeout-form"
+                  action="{{ url_for('records.start_db_process') }}" method="POST">
+                <input id="takeout-input" name="takeout-dir" placeholder="Takeout directory path"
+                       value="{{ takeout_dir if takeout_dir else '' }}" required>
+                <input class="button" type="submit" value="Start">
+            </form>
+        </div>
+    </div>
+    <div id="update-records">
+        <h2>Update video records in the database</h2>
+
+        <form id="update-form"
+              action="{{ url_for('records.start_db_process') }}" method="POST">
+
+            Entries that were last updated more than
+            <input id="update-cutoff-input" name="update-cutoff" type="text"
+                   value="{{ cutoff_time if cutoff_time else '2'}}"
+                   pattern="\d+" required>
+            <select id="update-cutoff-periods" form="update-form" name="update-cutoff-denomination">
+                <option value="3600" {{ "selected" if cutoff_denomination == "3600" }}>hours</option>
+                <option value="84600" {{ "selected" if cutoff_denomination == "84600" }}>days</option>
+                <option value="592200" {{ "selected" if cutoff_denomination == "592200" }}>weeks</option>
+                <option value="2592000" {{ "selected" if cutoff_denomination == "2592000" }}>months</option>
+            </select>
+            ago
+            <input class="button" type="submit" value="Start" {{ "disabled" if not db }}>
+        </form>
+    <div id="db-progress">
+        <div id="progress-bar-container">
+            <div id="progress-bar-rectangle">
+                <div id="progress-bar"></div>
+                <div id="progress-bar-text"><span></span></div>
+            </div>
+        </div>
+        <div id="progress-msg"></div>
+        <div id="wait-for-db"></div>
+        <div id="process-results"></div>
+    </div>
+    </div>
+    <hr>
+    {% include "help/takeout_help.html" %}
+    <script src="{{ url_for('static', filename='js/manage_takeout.js') }}"></script>
+    <script>
+        toggleElementVisibility("multiple-files-toggle", "multiple-files-instructions",
+            "For multiple archives{{ '...' if description or not db else ':' }}");
+    </script>
+{% endblock %}
