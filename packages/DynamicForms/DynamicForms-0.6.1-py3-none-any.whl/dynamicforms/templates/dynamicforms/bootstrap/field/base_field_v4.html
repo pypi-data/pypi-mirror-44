@@ -1,0 +1,35 @@
+{% load dynamicforms %}
+<div id="container-{{ field.uuid }}"
+     class="{% block container_class %}form-group{% endblock %} {% if field.errors %}has-error{% endif %} {% if field.read_only and not style.serializer.is_filter or style.display == 'none' %}d-none{% endif %}">
+  {% block field_input_label %}
+    {% if field.label %}
+      <label id="label-{{ field.uuid }}" for="{{ field.name }}" {% if style.hide_label %}class="sr-only"{% endif %}>
+        {{ field.label }}
+      </label>
+    {% endif %}
+
+    {% block field_input %}{% endblock %}
+  {% endblock %}
+
+  {% comment %}<div id="errors-{{ field.uuid }}">{% endcomment %}
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <span class="invalid-feedback">{{ error }}</span>
+    {% endfor %}
+  {% endif %}
+  {% comment %}</div>{% endcomment %}
+
+  {% if field.help_text %}
+    <span id="help-{{ field.uuid }}" class="form-text text-muted">{{ field.help_text|safe }}</span>
+  {% endif %}
+</div>
+<script type="application/javascript">
+  {% block field_onchange %}$('#{{ field.uuid }}')
+    .on('change', function () { dynamicforms.fieldChange('{{ field.uuid }}', 'final'); });
+  {% endblock %}
+  {% block field_get %}dynamicforms
+    .registerFieldGetter('{{ style.serializer.uuid }}', '{{ field.uuid }}', dynamicforms.fieldGetValue); {% endblock %}
+  {% block field_set %}dynamicforms
+    .registerFieldSetter('{{ style.serializer.uuid }}', '{{ field.uuid }}', dynamicforms.fieldSetValue); {% endblock %}
+  {% render_table_commands style.serializer 'onfieldinit' field_name=field.uuid %}
+</script>
