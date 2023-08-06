@@ -1,0 +1,104 @@
+Metadata-Version: 1.2
+Name: monitorcontrol
+Version: 1.3
+Summary: Monitor controls using MCSS over DDC-CI.
+Home-page: https://github.com/newAM/monitorcontrol
+Author: Alex M.
+Author-email: 7845120+newAM@users.noreply.github.com
+License: MIT
+Description: monitorcontrol
+        ==============
+        
+        |PyPi Version| |Build Status| |Coverage Status|
+        
+        Python monitor control using the VESA Monitor Control Command Set (MCCS)
+        over Display Data Channel Command Interface Standard (DDC-CI).
+        
+        Supported Platforms
+        -------------------
+        
+        -  Linux
+        -  Windows
+        
+        The Virtual Control Panel (VCP) is re-implemented once per platform. The
+        monitor class receives a VCP as an argument and uses the VCP for all
+        monitor controls.
+        
+        Installation
+        ------------
+        
+        Simply install with pip.
+        
+        ::
+        
+            pip3 install monitorcontrol
+        
+        Manual Installation
+        ~~~~~~~~~~~~~~~~~~~
+        
+        Clone (or download) and install the package.
+        
+        ::
+        
+            git clone https://github.com/newAM/monitorcontrol.git
+            cd monitorcontrol
+            python3 setup.py install
+        
+        Usage
+        -----
+        
+        Example using context manager:
+        
+        .. code:: python
+        
+            from monitorcontrol import get_monitors
+        
+            for monitor in get_monitors():
+                with monitor as m:
+                    # set backlight luminance to 100%
+                    m.luminance = 100
+        
+        Example using open and close:
+        
+        .. code:: python
+        
+            from monitorcontrol import get_monitors, VCPError
+        
+            for monitor in get_monitors():
+                try:
+                    monitor.open()
+                    # put monitor in standby mode
+                    monitor.power_mode = "standby"
+                except VCPError:
+                    print("uh-oh")
+                    raise
+                finally:
+                    monitor.close()
+        
+        Known Problems
+        --------------
+        
+        -  Will not work on Windows if you have more than one physical monitor
+           per handle.
+        -  Limited MCCS commands implemented, only back-light and power modes
+           are available. Please open an issue or pull request if you would like
+           additional controls.
+        
+        References
+        ----------
+        
+        -  VESA Monitor Control Command Set Standard Version 2.2a
+        -  Display Data Channel Command Interface Standard Version 1.1
+        -  `Informatic/python-ddcci <https://github.com/Informatic/python-ddcci>`__
+        -  `siemer/ddcci <https://github.com/siemer/ddcci/>`__
+        -  https://stackoverflow.com/a/18065609
+        
+        .. |PyPi Version| image:: https://badge.fury.io/py/monitorcontrol.svg
+           :target: https://badge.fury.io/py/monitorcontrol
+        .. |Build Status| image:: https://travis-ci.org/newAM/monitorcontrol.svg?branch=master
+           :target: https://travis-ci.org/newAM/monitorcontrol
+        .. |Coverage Status| image:: https://coveralls.io/repos/github/newAM/monitorcontrol/badge.svg?branch=master
+           :target: https://coveralls.io/github/newAM/monitorcontrol?branch=master
+        
+Platform: UNKNOWN
+Requires-Python: >=3.6
