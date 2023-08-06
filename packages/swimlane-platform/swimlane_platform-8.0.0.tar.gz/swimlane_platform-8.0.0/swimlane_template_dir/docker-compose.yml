@@ -1,0 +1,99 @@
+networks:
+  internal_network: null
+secrets:
+  database_encryption_key:
+    file: /opt/swimlane/.secrets/database_encryption.key
+  swimlane.crt:
+    file: /opt/swimlane/.secrets/swimlane.crt
+  swimlane.key:
+    file: /opt/swimlane/.secrets/swimlane.key
+services:
+  sw_api:
+    cap_add:
+    - CHOWN
+    - KILL
+    cap_drop:
+    - ALL
+    container_name: sw_api
+    depends_on:
+    - sw_mongo
+    env_file: /opt/swimlane/.secrets/.api-env
+    image: <sw_docker_image_repo_placeholder>swimlane/swimlane-api:<sw_docker_image_tag_placeholder>
+    networks:
+      internal_network:
+        aliases:
+          - sw-api
+    restart: unless-stopped
+    secrets:
+    - database_encryption_key
+    security_opt:
+    - no-new-privileges
+    volumes:
+    - api_temp:/wwwroot/temp
+    - pip:/home/swimlane/.pyenv/versions/2.7.15/lib/python2.7/site-packages
+  sw_mongo:
+    container_name: sw_mongo
+    env_file: /opt/swimlane/.secrets/.mongo-env
+    image: mongo:4.0.5
+    networks:
+      internal_network:
+        aliases:
+        - sw-mongo
+    ports:
+    - 27017:27017
+    restart: unless-stopped
+    volumes:
+    - mongodb:/data/db
+  sw_tasks:
+    cap_add:
+    - CHOWN
+    - KILL
+    cap_drop:
+    - ALL
+    container_name: sw_tasks
+    depends_on:
+    - sw_mongo
+    env_file: /opt/swimlane/.secrets/.tasks-env
+    image: <sw_docker_image_repo_placeholder>swimlane/swimlane-tasks:<sw_docker_image_tag_placeholder>
+    networks:
+    - internal_network
+    restart: unless-stopped
+    secrets:
+    - database_encryption_key
+    security_opt:
+    - no-new-privileges
+    volumes:
+    - pip:/home/swimlane/.pyenv/versions/2.7.15/lib/python2.7/site-packages
+  sw_web:
+    cap_add:
+    - CHOWN
+    - KILL
+    cap_drop:
+    - ALL
+    container_name: sw_web
+    depends_on:
+    - sw_api
+    image: <sw_docker_image_repo_placeholder>swimlane/swimlane-web:<sw_docker_image_tag_placeholder>
+    networks:
+      internal_network:
+        aliases:
+          - sw-web
+    ports:
+    - 80:8080
+    - 443:4443
+    restart: unless-stopped
+    secrets:
+    - swimlane.crt
+    - swimlane.key
+    security_opt:
+    - no-new-privileges
+version: '3.7'
+volumes:
+  api_temp:
+    external: false
+  backup:
+    external: false
+  mongodb:
+    external: false
+  pip:
+    external: false

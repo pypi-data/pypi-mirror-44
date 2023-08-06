@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: swimlane-platform
+Version: 8.0.0
+Summary: Swimlane platform on linux. Install, Upgrade, Backups etc. All maintenance.
+Home-page: https://github.com/swimlane/platform-installer-linux
+Author: Swimlane
+Author-email: info@swimlane.com
+License: UNKNOWN
+Description: # Swimlane Platform
+        
+        ## Install
+        
+        ### Prerequisites
+        
+        See [the Linux Swimlane Installation end user documentation](https://swimlane.gitbook.io/swimlane-installation-and-upgrade-guide/swimlane_installation/linux_swimlane_installation) for prerequisite information and installation instructions.
+        
+        ### Install online master package
+        
+        Run `pip install swimlane_platform --upgrade`
+        
+        ### Install the offline master package
+        
+        The offline master package must be downloaded first from TBD.
+        
+        You must then unpack it to the folder of your choice with `tar -xvf /path/to/swimlane_platform.tar.bz2`
+        
+        After above step is completed switch to that folder and run `pip install swimlane_platform-*-py2-none-any.whl --no-index --find-links .`
+        
+        ## Run
+        
+        You can execute master script by running `swimlane-platform`. If you want to run from developers distributions,
+        pass it `--dev` switch.
+        
+        ## After install
+        
+        ### Optional Add-on services
+        
+        By default, optional services such as the Syslog Receiver and Selenium Chrome are commented out in the `docker-compose.override.yml`. You will need to uncomment the service (and it's corresponding volume if applicable), and then run `docker-compose up -d` to run Swimlane with the additional services enabled.
+        
+        #### Workspace volume
+        The workspace volume can be utilized by commenting out the `volumes` key on the tasks container in the `docker-compose.override.yml`. Specify the path to a local directory on the host that contains files you wish to share with the tasks service.
+        
+        Example:
+        
+        ```yaml
+          sw_tasks:
+            volumes:
+              - /opt/swimlane/workspace:/app/workspace
+        ```
+        
+        #### Third party certificates volume
+        The third party certificates volume can be utilized by commenting out the `volumes` key on the api and tasks containers in `docker-compose.override.yml`. Specify the path to a local directory on the host that contains files you wish to share with the tasks service. On each start of the api and tasks services `update-ca-certificates` will be run to import the certificates. The api and tasks containers need to be restarted for the changes to take affect if new certs are added.
+        
+        Example:
+        
+        ```yaml
+          sw_api:
+            volumes:
+              - /opt/swimlane/ca-certs/:/usr/local/share/ca-certificates/swimlane/
+          sw_tasks:
+            volumes:
+              - /opt/swimlane/ca-certs/:/usr/local/share/ca-certificates/swimlane/
+        ```
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
