@@ -1,0 +1,137 @@
+Metadata-Version: 2.1
+Name: octomachinery
+Version: 0.0.12
+Summary: Invisible engine driving octobot machines. Simple, yet powerful.
+Home-page: https://octomachinery.dev
+Author: Sviatoslav Sydorenko (@webknjaz)
+Author-email: wk+octomachinery@sydorenko.org.ua
+License: GPLv3+
+Project-URL: Bug Tracker, https://github.com/sanitizers/octomachinery/issues
+Project-URL: CI: Travis, https://travis-ci.com/sanitizers/octomachinery
+Project-URL: Documentation, https://docs.octomachinery.dev
+Project-URL: Source Code, https://github.com/sanitizers/octomachinery
+Keywords: Bot,Framework,Framework for writing GitHub Apps,GitHub,GitHub Actions,GitHub API,GitHub Apps,GitHub Checks API
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: Environment :: Other Environment
+Classifier: Environment :: Web Environment
+Classifier: Framework :: AsyncIO
+Classifier: Framework :: Robot Framework
+Classifier: Framework :: Robot Framework :: Library
+Classifier: Framework :: Robot Framework :: Tool
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Operating System :: OS Independent
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Classifier: Topic :: Software Development
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Version Control
+Classifier: Topic :: Software Development :: Version Control :: Git
+Classifier: Topic :: System :: Networking
+Classifier: Topic :: Utilities
+Classifier: Typing :: Typed
+Requires-Python: >=3.7
+Requires-Dist: aiohttp
+Requires-Dist: cryptography
+Requires-Dist: environ-config
+Requires-Dist: envparse
+Requires-Dist: gidgethub
+Requires-Dist: pyjwt
+Requires-Dist: setuptools-scm
+Provides-Extra: docs
+Requires-Dist: sphinx ; extra == 'docs'
+Requires-Dist: sphinxcontrib-apidoc ; extra == 'docs'
+Provides-Extra: testing
+Requires-Dist: pytest ; extra == 'testing'
+
+.. image:: https://img.shields.io/pypi/v/octomachinery.svg?logo=Python&logoColor=white
+   :target: https://pypi.org/project/octomachinery
+   :alt: octomachinery @ PyPI
+
+.. DO-NOT-REMOVE-docs-badges-END
+
+.. image:: https://img.shields.io/travis/com/sanitizers/octomachinery/master.svg?label=Linux%20builds&logo=travis&logoColor=white
+   :target: https://travis-ci.com/sanitizers/octomachinery
+   :alt: Travis CI build status
+
+.. image:: https://img.shields.io/readthedocs/octomachinery/latest.svg?logo=Read%20The%20Docs&logoColor=white
+   :target: https://docs.octomachinery.dev/en/latest/?badge=latest
+   :alt: Documentation Status
+
+octomachinery: Bots Without Boilerplate
+=======================================
+
+Invisible engine driving octobot machines. Simple, yet powerful.
+
+Web-site @ https://octomachinery.dev. Stay tuned!
+
+.. DO-NOT-REMOVE-docs-intro-START
+
+**How-to create a GitHub Bot tutorial** is ready for preview
+@ https://tutorial.octomachinery.dev
+
+Elevator pitch
+--------------
+
+Here's how you 👍 a just-created comment:
+
+.. code:: python
+
+    from octomachinery.app.routing import process_event_actions
+    from octomachinery.app.routing.decorators import process_webhook_payload
+    from octomachinery.app.runtime.context import RUNTIME_CONTEXT
+    from octomachinery.app.server.runner import run as run_app
+
+
+    @process_event_actions('issue_comment', {'created'})
+    @process_webhook_payload
+    async def on_comment(
+            *,
+            action, issue, comment,
+            repository=None, sender=None,
+            installation=None,
+            assignee=None, changes=None,
+    ):
+        github_api = RUNTIME_CONTEXT.app_installation_client
+        comment_reactions_api_url = f'{comment["url"]}/reactions'
+        await github_api.post(
+            comment_reactions_api_url,
+            preview_api_version='squirrel-girl',
+            data={'content': '+1'},
+        )
+
+
+    run_app(
+        name='Thumbs-Up-Bot',
+        version='1.0.0',
+        url='https://github.com/apps/thuuuuuuuuuuuuuumbs-uuuuuuuuuuuup',
+    )
+
+Prerequisites
+-------------
+
+Python 3.7+
+
+License
+-------
+
+The source code and the documentation in this project are released under
+the `GPL v3 license`_.
+
+.. _`GPL v3 license`:
+   https://github.com/sanitizers/octomachinery/blob/master/LICENSE
+
+
