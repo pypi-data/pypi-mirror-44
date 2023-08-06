@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+
+from pirogue.join import Join, JoinType
+
+
+if __name__ == "__main__":
+    """
+    Main process
+    """
+
+    # create the top-level parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--version", help="print the version and exit", action='store_true')
+    parser.add_argument('-p', '--pg_service', help='postgres service')
+
+    subparsers = parser.add_subparsers(title='commands', description='pirogue command', dest='command')
+
+
+    # simple join view
+    join_parser = subparsers.add_parser('join', help='create a simple join view')
+    join_parser.add_argument('table_a')
+    join_parser.add_argument('table_b')
+    join_parser.add_argument('-s', '--view-schema', help='schema for the created join view')
+    join_parser.add_argument('-v', '--view-name', help='name for the created join view')
+    join_parser.add_argument('-t', '--join-type', help='the type of join: LEFT (default), RIGHT, FULL or INNER.')
+
+    args = parser.parse_args()
+
+    # print the version and exit
+    if args.version:
+        print('pirogue version: {}'.format('0.3'))
+        parser.exit()
+
+    # if no command is passed, print the help and exit
+    if not args.command:
+        parser.print_help()
+        parser.exit()
+
+    exit_val = 0
+
+    if args.pg_service:
+        pg_service = args.pg_service
+    else:
+        pg_service = os.getenv('PGSERVICE')
+
+    if args.command == 'join':
+        join_type = JoinType(args.join_type.upper()) if args.join_type else JoinType.LEFT
+        success = Join(args.table_a, args.table_b,
+                       pg_service=pg_service,
+                       view_schema=args.view_schema,
+                       view_name=args.view_name,
+                       join_type=join_type).create()
+        if not success:
+            exit_val = 1
+
+    exit(exit_val)
