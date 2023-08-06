@@ -1,0 +1,31 @@
+- name: Copy contract
+  unarchive:
+    src: "{{ local.config }}/config/contract.tgz"
+    dest: "{{ iserver.prefix }}/genesis"
+    owner: root
+
+- name: Copy iserver config files using template
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    mode: "{{ item.mode | d('0644') }}"
+  with_items:
+    - src: "{{ local.config }}/config/iserver.yml.j2"
+      dest: "{{ iserver.prefix }}/iserver.yml"
+    - src: "{{ local.config }}/config/genesis.yml.j2"
+      dest: "{{ iserver.prefix }}/genesis/genesis.yml"
+  when: static is not defined or not static
+
+- name: Copy iserver config files using static file
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    mode: "{{ item.mode | d('0644') }}"
+  with_items:
+    - src: "{{ local.config }}/config/iserver.yml_{{ inventory_hostname }}"
+      dest: "{{ iserver.prefix }}/iserver.yml"
+    - src: "{{ local.config }}/config/genesis.yml"
+      dest: "{{ iserver.prefix }}/genesis/genesis.yml"
+  when: static is defined and static
