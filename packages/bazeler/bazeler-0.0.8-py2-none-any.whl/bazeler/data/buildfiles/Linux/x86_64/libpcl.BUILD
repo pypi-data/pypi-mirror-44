@@ -1,0 +1,30 @@
+cc_library(
+  name = "libpcl",
+  hdrs = glob([
+    "include/pcl-1.7/pcl/**/*",
+  ]),
+  srcs = [
+      "lib/x86_64-linux-gnu/libpcl_visualization.so",
+      "lib/x86_64-linux-gnu/libpcl_segmentation.so",
+      "lib/x86_64-linux-gnu/libpcl_recognition.so",
+      "lib/x86_64-linux-gnu/libpcl_keypoints.so",
+      "lib/x86_64-linux-gnu/libpcl_io_ply.so",
+      "lib/x86_64-linux-gnu/libpcl_surface.so",
+      "lib/x86_64-linux-gnu/libpcl_filters.so",
+      "lib/x86_64-linux-gnu/libpcl_common.so",
+      "lib/x86_64-linux-gnu/libpcl_registration.so",
+      "lib/x86_64-linux-gnu/libpcl_octree.so",
+      "lib/x86_64-linux-gnu/libpcl_sample_consensus.so",
+      "lib/x86_64-linux-gnu/libpcl_people.so",
+      "lib/x86_64-linux-gnu/libpcl_kdtree.so",
+      "lib/x86_64-linux-gnu/libpcl_io.so",
+      "lib/x86_64-linux-gnu/libpcl_search.so",
+      "lib/x86_64-linux-gnu/libpcl_features.so",
+      "lib/x86_64-linux-gnu/libpcl_tracking.so",
+      "lib/x86_64-linux-gnu/libpcl_outofcore.so",
+  ],
+  includes = [
+    "include/pcl-1.7",
+  ],
+  visibility = ["//visibility:public"],
+)
