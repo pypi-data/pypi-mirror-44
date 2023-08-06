@@ -1,0 +1,61 @@
+- project:
+    templates:
+      - check-requirements
+      - openstack-cover-jobs-horizon
+      - openstack-lower-constraints-jobs-horizon
+      - openstack-python-jobs-horizon
+      - openstack-python35-jobs-horizon
+      - publish-openstack-docs-pti
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - manila-ui-dsvm:
+            voting: false
+        - manila-ui-integration-tests:
+            voting: false
+        - horizon-openstack-tox-python3-django111
+        - horizon-openstack-tox-py27dj19
+        - horizon-openstack-tox-py27dj110
+    gate:
+      jobs:
+        - horizon-openstack-tox-python3-django111
+        - horizon-openstack-tox-py27dj19
+        - horizon-openstack-tox-py27dj110
+
+- job:
+    name: manila-ui-dsvm
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/manila-ui-dsvm/run.yaml
+    post-run: playbooks/legacy/manila-ui-dsvm/post.yaml
+    timeout: 6000
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/manila
+      - openstack/manila-ui
+      - openstack/python-manilaclient
+      - openstack/manila-tempest-plugin
+
+- job:
+    name: manila-ui-integration-tests
+    parent: horizon-integration-tests
+    required-projects:
+      - name: openstack/horizon
+      - name: openstack/manila
+      - name: openstack/python-manilaclient
+      - name: openstack/manila-ui
+      - name: openstack/manila-tempest-plugin
+    roles:
+      - zuul: openstack-infra/devstack
+      - zuul: openstack/horizon
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    vars:
+      devstack_plugins:
+        manila: https://git.openstack.org/openstack/manila
+        manila-ui: https://git.openstack.org/openstack/manila-ui
+      devstack_services:
+        horizon: true
+      tox_envlist: integration
+
