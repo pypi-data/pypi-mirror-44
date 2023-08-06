@@ -1,0 +1,121 @@
+Metadata-Version: 2.1
+Name: mergedeep
+Version: 1.1.1
+Summary: A deep merge function for 🐍.
+Home-page: https://github.com/clarketm/mergedeep
+Author: Travis Clarke
+Author-email: travis.m.clarke@gmail.com
+License: UNKNOWN
+Description: # [mergedeep](https://mergedeep.readthedocs.io/en/latest/)
+        
+        [![PyPi release](https://img.shields.io/pypi/v/mergedeep.svg)](https://pypi.org/project/mergedeep/)
+        [![PyPi versions](https://img.shields.io/pypi/pyversions/mergedeep.svg)](https://pypi.org/project/mergedeep/)
+        [![Downloads](https://pepy.tech/badge/mergedeep)](https://pepy.tech/project/mergedeep)
+        [![Documentation Status](https://readthedocs.org/projects/mergedeep/badge/?version=latest)](https://mergedeep.readthedocs.io/en/latest/?badge=latest)
+        
+        A deep merge function for 🐍.
+        
+        [Check out the mergedeep docs](https://mergedeep.readthedocs.io/en/latest/)
+        
+        ## Installation
+        
+        ```bash
+        $ pip install mergedeep
+        ```
+        
+        ## Usage
+        
+        ```text
+        merge(target: Map[KT, VT], *sources: Map[KT, VT], strategy: Strategy = Strategy.REPLACE) -> Map[KT, VT]
+        ```
+        
+        Deep merge without mutating the source dicts.
+        
+        ```python
+        from mergedeep import merge
+        
+        a = {"keyA": 1}
+        b = {"keyB": {"sub1": 10}}
+        c = {"keyB": {"sub2": 20}}
+        
+        merged = merge({}, a, b, c) 
+        
+        print(merged)
+        # {"keyA": 1, "keyB": {"sub1": 10, "sub2": 20}}
+        ```
+        
+        Deep merge into an existing dict.
+        ```python
+        from mergedeep import merge
+        
+        a = {"keyA": 1}
+        b = {"keyB": {"sub1": 10}}
+        c = {"keyB": {"sub2": 20}}
+        
+        merge(a, b, c) 
+        
+        print(a)
+        # {"keyA": 1, "keyB": {"sub1": 10, "sub2": 20}}
+        ```
+        
+        ### Merge strategies:
+        1. Replace (*default*)
+        ```python
+        # Strategy.REPLACE
+        # When `target` and `source` values are the same, replace the `target` value with one from `source` (default).
+        # Note: with multiple sources, the `last` source value with be what appears in the merged result. 
+        
+        from mergedeep import merge, Strategy
+        
+        target = {"key": [1, 2]}
+        source = {"key": [3, 4]}
+        
+        merge(target, source, strategy=Strategy.REPLACE) 
+        # same as: merge(target, source)
+        
+        print(target)
+        # {"key": [3, 4]}
+        ```
+        
+        2. Additive
+        ```python
+        # Strategy.ADDITIVE
+        # When `target` and `source` values are both either `list`, `tuple`, or `set`, extend/update `target` with values from `source` collection.
+        
+        from mergedeep import merge, Strategy
+        
+        target = {"key": [1, 2]}
+        source = {"key": [3, 4]}
+        
+        merge(target, source, strategy=Strategy.ADDITIVE) 
+        
+        print(target)
+        # {"key": [1, 2, 3, 4]}
+        ```
+        
+        3. Typesafe
+        ```python
+        # Strategy.TYPESAFE
+        # When `target` and `source` values are of different types, raise `TypeError`.
+        
+        from mergedeep import merge, Strategy
+        
+        target = {"key": [1, 2]}
+        source = {"key": {3, 4}}
+        
+        merge(target, source, strategy=Strategy.TYPESAFE) 
+        # TypeError: target type: <class 'list'> differs from source type: <class 'set'> for key: "key"
+        ```
+        
+        ## License
+        
+        MIT &copy; [**Travis Clarke**](https://blog.travismclarke.com/)
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
