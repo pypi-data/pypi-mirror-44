@@ -1,0 +1,30 @@
+- job:
+    name: telemetry-dsvm-integration
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/telemetry-dsvm-integration-tempest-plugin/run.yaml
+    post-run: playbooks/legacy/telemetry-dsvm-integration-tempest-plugin/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/aodh
+      - openstack/ceilometer
+      - openstack/panko
+      - openstack/telemetry-tempest-plugin
+      - openstack/heat
+      - openstack/heat-tempest-plugin
+      # following are required when DEVSTACK_GATE_HEAT, which this
+      # job turns on
+      - openstack/dib-utils
+      - openstack/diskimage-builder
+
+- project:
+    templates:
+      - check-requirements
+      - tempest-plugin-jobs
+    check:
+      jobs:
+        - telemetry-dsvm-integration
+    gate:
+      queue: telemetry
+      jobs:
+        - telemetry-dsvm-integration
