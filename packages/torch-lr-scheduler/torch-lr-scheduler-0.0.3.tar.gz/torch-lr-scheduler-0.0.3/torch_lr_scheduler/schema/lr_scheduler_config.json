@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "lr_scheduler_config",
+  "description": "Lr Scheduler Config",
+  "type": "object",
+  "properties": {
+    "initial_lr": {
+      "type": "number",
+      "default": 0.0
+    },
+    "learning_rate_scale": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Support scale LR from hybrid config"
+    },
+    "scheduler_list": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/scheduler"
+      },
+      "default": []
+    }
+  },
+  "definitions": {
+    "lr_mode": {
+      "enum": [
+        "linear",
+        "cos",
+        "fixed"
+      ],
+      "default": "fixed"
+    },
+    "scheduler": {
+      "type": "object",
+      "properties": {
+        "lr_mode": {
+          "$ref": "#/definitions/lr_mode"
+        },
+        "target_lr": {
+          "type": "number",
+          "default": 0.0
+        },
+        "milestone": {
+          "type": "number",
+          "default": 1.0,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "the stop point ratio, like 0.3 means 30% of the training process"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
