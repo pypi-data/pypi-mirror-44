@@ -1,0 +1,34 @@
+Metadata-Version: 2.1
+Name: lru-cache-pubsub-cache-clear
+Version: 0.0.1
+Summary: redis based cache_clear() for lru_cache
+Home-page: https://github.com/pglotov/lru_cache_pubsub_cache_clear
+Author: Petr Glotoov
+Author-email: pglotov@yahoo.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+# lru_cache_pubsub_cache_clear
+`lru_cache_pubsub_cache_clear` is a decorator to broadcast `cache_clear()` calls to `lru_cache` across
+multiple instances of an application. This allows for local cache access speed. Example:
+
+```
+from lru_cache_pubsub_cache_clear import lru_cache_pubsub_cache_clear
+from django_redis import get_redis_connection
+
+
+@lru_cache_pubsub_cache_clear(redis_connection=get_redis_connection(),
+                              channel_name='CHANNEL_CACHE_CLEAR',
+                              sleep_time=3)
+@lru_cache
+def cache_data(key, value)
+    ...
+```
+
+Then every time one of app instances calls `cache_data.cache_clear()` it will be executed on all connected instances.
+
