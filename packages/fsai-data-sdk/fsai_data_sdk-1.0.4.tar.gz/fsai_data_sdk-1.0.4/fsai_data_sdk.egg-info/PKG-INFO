@@ -1,0 +1,94 @@
+Metadata-Version: 2.1
+Name: fsai-data-sdk
+Version: 1.0.4
+Summary: The official Python fsai_data_sdk library for accessing Foresight Data Portal
+Home-page: https://github.com/ForesightAI/fsai_data_sdk_python
+License: UNKNOWN
+Description: Foresight Data Portal for Python
+        ===================
+        
+        
+        Installation
+        ------
+        
+        `
+            $ pip install --upgrade fsai_data_sdk
+        `
+        
+        Usage
+        ------
+        
+        ## Get Data
+        ### Get data at a specific location
+        
+        ```python
+            import fsai_data_sdk as DatasetService
+            
+            dataset_service = DatasetService(API_KEY, SECRET_KEY)
+            datasets = dataset_service.get_data_at(lng=-122.1598309, lat=37.4358347, radius=2000, layers=["SEMANTIC_2D", "DYNAMIC_OBJECTS"])
+            print(len(datasets))
+            sample_dataset = datasets[0]
+            print(sample_dataset)
+            print(sample_dataset.layers.semantic_2d.get())
+            print(sample_dataset.layers.dynamic_objects[0].get())
+          
+        ```
+        
+        The **get_data_at** function returns a list of **Dataset**. Each **Dataset** object contains the data layers:
+        * semantic_2d: a **DataGetter** object to get the semantic 2d json data of the area.
+        * dynamic_objects: a list of **DataGetter** object to get the array of dynamic_object.
+        
+        ### DataGetter class
+        Because the data layers are normally large, they can't be returned directly in the getting data calls. 
+        The SDK wrap the data layer in the **DataGetter** class which provides a **get** function to fetch 
+        the data and return the actual data of the layer.
+        
+        ### Parsing data
+        
+        ```python
+            import fsai_data_sdk as DatasetService
+            from fsai.services.data_object.DynamicObjectData import DynamicObjectData
+            from fsai.services.data_object.Semantic2DData import semantic_2d_data_from_dict
+        
+        
+            dataset_service = DatasetService(API_KEY, SECRET_KEY)
+            datasets = dataset_service.get_data_at(lng=-122.1598309, lat=37.4358347, radius=2000, layers=["SEMANTIC_2D", "DYNAMIC_OBJECTS"])
+            print(len(datasets))
+            sample_dataset = datasets[0]
+            
+            
+            # DYNAMIC OBJECT
+            "Get raw JSON data"
+            dynamic_object_json_data = sample_dataset.layers.dynamic_objects[0].get()
+        
+            "Get parsed data objects"
+            dynamic_object_data = DynamicObjectData.from_json(dynamic_object_json_data)
+            for object in dynamic_object_data.collections[0].objects:
+                print(object.get_moving_distance())
+        
+            # SEMANTIC MAP
+            "Get semantic map apollo open drive JSON data"
+            semantic_2d_data = sample_dataset.layers.semantic_2d.get()
+            "Get parsed data objects"
+            semantic_object = semantic_2d_data_from_dict(semantic_2d_data)
+            # empty to get sum length
+            total_length = 0
+            # loop through all the roads and compute the total length
+            for road in semantic_object.road:
+                total_length = total_length + road.attributes.length
+            print('\n')
+            print(total_length)
+          
+        ```
+                
+        ## See also
+        * SDK for Javascript https://github.com/ForesightAI/fsai_data_sdk_js
+        * Rest API: https://data.foresight.ai/docs/public/api/
+        
+Keywords: foresight,foresightai,foresightai-ai
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2.7
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries
+Description-Content-Type: text/markdown
