@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+cp ${DEPLOY_OSTREE_path} $1/var/authorized_keys
+
+chroot $1 /bin/sh <<EOF
+ssh=~${DEPLOY_OSTREE_user}/.ssh
+mkdir -p \$ssh
+mv /var/authorized_keys \$ssh/authorized_keys
+
+chown -R ${DEPLOY_OSTREE_user}:${DEPLOY_OSTREE_user} \$ssh
+chmod 0700 \$ssh
+chmod 0600 \$ssh/authorized_keys
+EOF
