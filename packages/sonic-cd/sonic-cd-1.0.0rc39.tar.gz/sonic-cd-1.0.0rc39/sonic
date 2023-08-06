@@ -1,0 +1,27 @@
+#!/usr/bin/python2 -tt
+# -*- coding: utf-8 -*-
+
+import argparse
+
+from soniclib import sonic, util
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("sequence", nargs='*', default=["default"])
+arg_parser.add_argument("-f", "--file", help="The sonic control file", default=".sonic.yml")
+arg_parser.add_argument("-c", "--context", default=[], action='append', help="<key>:<value> pair to put on the context")
+arg_parser.add_argument("-p", "--pull", help="Force pull of used Docker images", default=False, action="store_true")
+arg_parser.add_argument("-l", "--login", help="Force Docker registry authentication attempt", default=False, action="store_true")
+arg_parser.add_argument("-s", "--skip_login", help="Skip Docker registry authentication attempt (when needed)", default=False, action="store_true")
+arg_parser.add_argument("-n", "--no_cleanup", help="Don't clean up afterwards", default=False, action="store_true")
+arg_parser.add_argument("-d", "--debug", help="Log on debug level", default=False, action="store_true")
+arg_parser.add_argument("-v", "--version", help="Display version and exit", default=False, action="store_true")
+arg_parser.add_argument("-g", "--config", help="Display config and exit", default=False, action="store_true")
+if not util.host_is_cygwin():
+	arg_parser.add_argument("-D", "--dryrun", help="For setup, make a dry run", default=False, action="store_true")
+
+arg_parser_results = arg_parser.parse_args()
+
+util.setup_logging(arg_parser_results.debug)
+util.init_config()
+
+sonic.run(arg_parser_results)
