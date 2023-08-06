@@ -1,0 +1,230 @@
+
+config/configure.py,3568
+def AddDefine(conffile,name,value,prefix='SLEPC_'):AddDefine15,489
+def CreateFile(basedir,fname,log):CreateFile18,635
+def CreateDir(basedir,dirname,log):CreateDir27,900
+def CreateDirTwo(basedir,dir1,dir2,log):CreateDirTwo37,1207
+def CreateDirTest(basedir,dirname,log):CreateDirTest53,1719
+def WriteModulesFile(modules,version,sdir):WriteModulesFile66,2106
+def WritePkgconfigFile(pkgconfig,version,pversion,sdir,isinstall,prefixdir,singlelib):WritePkgconfigFile78,2756
+def WriteCMakeConfigFile(cmakeconf):WriteCMakeConfigFile97,3648
+def WriteReconfigScript(reconfig,slepcdir,usedargs):WriteReconfigScript113,4376
+configdir = os.path.abspath('config')configdir134,5600
+argdb = argdb.ArgDB(sys.argv)argdb142,5876
+log   = log.Log()log143,5906
+slepc   = slepc.SLEPc(argdb,log)slepc147,6077
+petsc   = petsc.PETSc(argdb,log)petsc148,6110
+arpack  = arpack.Arpack(argdb,log)arpack149,6143
+blopex  = blopex.Blopex(argdb,log)blopex150,6178
+blzpack = blzpack.Blzpack(argdb,log)blzpack151,6213
+feast   = feast.Feast(argdb,log)feast152,6250
+primme  = primme.Primme(argdb,log)primme153,6283
+trlan   = trlan.Trlan(argdb,log)trlan154,6318
+sowing  = sowing.Sowing(argdb,log)sowing155,6351
+lapack  = lapack.Lapack(argdb,log)lapack156,6386
+slicot  = slicot.Slicot(argdb,log)slicot157,6421
+externalpackages = [arpack, blopex, blzpack, feast, primme, slicot, trlan]externalpackages159,6457
+optionspackages  = [slepc, arpack, blopex, blzpack, feast, primme, slicot, trlan, sowing]optionspackages160,6532
+checkpackages    = [arpack, blopex, blzpack, feast, primme, slicot, trlan, lapack]checkpackages161,6622
+emptyarch = not ('PETSC_ARCH' in os.environ and os.environ['PETSC_ARCH'])emptyarch187,7471
+  archname = petsc.archarchname198,7836
+libdir  = CreateDir(archdir,'lib',log)libdir202,7970
+confdir = CreateDirTwo(libdir,'slepc','conf',log)confdir203,8009
+      f = open(os.path.join(confdir,'slepcvariables'),'r')f227,8840
+      searchlines = f.readlines()searchlines228,8899
+includedir = CreateDir(archdir,'include',log)includedir251,9818
+modulesdir = CreateDirTwo(confdir,'modules','slepc',log)modulesdir252,9864
+pkgconfdir = CreateDir(libdir,'pkgconfig',log)pkgconfdir253,9921
+slepcvars  = CreateFile(confdir,'slepcvariables',log)slepcvars254,9968
+slepcrules = CreateFile(confdir,'slepcrules',log)slepcrules255,10022
+slepcconf  = CreateFile(includedir,'slepcconf.h',log)slepcconf256,10072
+cmakeconf  = CreateFile(confdir,'SLEPcBuildInternal.cmake',log)cmakeconf257,10126
+pkgconfig  = CreateFile(pkgconfdir,'SLEPc.pc',log)pkgconfig258,10190
+  modules  = CreateFile(modulesdir,slepc.lversion,log)modules260,10261
+  modules  = CreateFile(modulesdir,slepc.lversion+'-'+archname,log)modules262,10322
+  reconfig = CreateFile(confdir,'reconfigure-'+archname+'.py',log)reconfig263,10390
+  reconfigpath = os.path.join(confdir,'reconfigure-'+archname+'.py')reconfigpath264,10457
+  globconf = CreateFile(os.path.join(slepc.dir,'lib','slepc','conf'),'slepcvariables',log)globconf288,11422
+slflag = ''slflag328,13442
+bfort = petsc.bfortbfort352,14226
+  bfort = sowing.Install(archdir,petsc.make)bfort354,14273
+      bfort = os.path.join(archdir,'bin','bfort')bfort359,14395
+      bfort = sowing.Install(archdir,petsc.make)bfort361,14479
+cmakeok = Falsecmakeok375,15033
+      cmakeok = cmakeboot.main(slepc.dir,petsc.dir,log=log)cmakeok392,15652
+      petscdate = dateutil.parser.parse(petsc.gitdate)petscdate429,17073
+      slepcdate = dateutil.parser.parse(slepc.gitdate)slepcdate430,17128
+
+config/cmakeboot.py,647
+def noCheck(command, status, output, error):noCheck21,784
+def quoteIfNeeded(path):quoteIfNeeded24,839
+class StdoutLogger(object):StdoutLogger32,1102
+  def write(self,str):write33,1130
+class PETScMaker(script.Script):PETScMaker36,1169
+ def __init__(self, slepcdir, petscdir, petscarch, argDB = None, framework = None):__init__37,1202
+ def __str__(self):__str__48,1596
+ def setupModules(self):setupModules51,1630
+ def setup(self):setup69,2909
+ def cmakeboot(self, args, log):cmakeboot75,3049
+def main(slepcdir, petscdir, petscarch=os.environ['PETSC_ARCH'], argDB=None, framework=None, log=StdoutLogger(), args=[]):main176,8168
+
+config/install.py,1693
+  getstatusoutput = commands.getstatusoutputgetstatusoutput6,129
+  getstatusoutput = subprocess.getstatusoutputgetstatusoutput9,200
+  WindowsError = NoneWindowsError14,286
+class Installer:Installer16,309
+  def __init__(self, args = None):__init__17,326
+  def readInstallDir(self, src):readInstallDir42,1439
+  def setupDirectories(self):setupDirectories58,1957
+  def checkDestdir(self):checkDestdir79,3329
+  def copyfile(self, src, dst, symlinks = False, copyFunc = shutil.copy2):copyfile103,4779
+  def copyexamplefiles(self, src, dst, copyFunc = shutil.copy2):copyexamplefiles128,5604
+  def fixExamplesMakefile(self, src):fixExamplesMakefile137,5944
+  def copyExamples(self, src, dst):copyExamples162,6960
+  def copyConfig(self, src, dst):copyConfig190,8107
+  def copytree(self, src, dst, symlinks = False, copyFunc = shutil.copy2, exclude = [], exclude_ext= ['.DSYM','.o','.pyc','.html'], recurse = 1):copytree204,8647
+  def fixConfFile(self, src):fixConfFile256,10876
+  def fixConf(self):fixConf279,12133
+  def createUninstaller(self):createUninstaller287,12472
+  def installIncludes(self):installIncludes319,13373
+  def installConf(self):installConf325,13665
+  def installBin(self):installBin330,14028
+  def installShare(self):installShare337,14296
+  def copyLib(self, src, dst):copyLib349,14808
+  def installLib(self):installLib374,15947
+  def outputInstallDone(self):outputInstallDone380,16294
+  def outputDestDirDone(self):outputDestDirDone392,16676
+  def runsetup(self):runsetup401,16945
+  def runcopy(self):runcopy406,17031
+  def runfix(self):runfix426,17770
+  def rundone(self):rundone430,17821
+  def run(self):run438,17995
+
+config/packages/lapack.py,338
+class Lapack(package.Package):Lapack13,420
+  def __init__(self,argdb,log):__init__15,452
+  def ShowInfo(self):ShowInfo19,562
+  def Process(self,conf,vars,cmake,petsc,archdir=''):Process29,978
+  def LinkBlasLapack(self,functions,callbacks,flags,petsc):LinkBlasLapack37,1259
+  def Check(self,conf,vars,cmake,petsc):Check52,1726
+
+config/packages/trlan.py,212
+class Trlan(package.Package):Trlan13,424
+  def __init__(self,argdb,log):__init__15,455
+  def Check(self,conf,vars,cmake,petsc):Check28,969
+  def Install(self,conf,vars,cmake,petsc,archdir):Install46,1371
+
+config/packages/slepc.py,211
+class SLEPc(package.Package):SLEPc14,469
+  def __init__(self,argdb,log):__init__16,500
+  def ShowHelp(self):ShowHelp24,803
+  def InitDir(self):InitDir31,1187
+  def LoadVersion(self):LoadVersion43,1743
+
+config/packages/petsc.py,253
+class PETSc(package.Package):PETSc13,424
+  def __init__(self,argdb,log):__init__15,455
+  def Check(self):Check19,564
+  def InitDir(self,prefixdir):InitDir22,627
+  def LoadVersion(self):LoadVersion34,1025
+  def LoadConf(self):LoadConf65,2304
+
+config/packages/slicot.py,214
+class Slicot(package.Package):Slicot13,424
+  def __init__(self,argdb,log):__init__15,456
+  def Check(self,conf,vars,cmake,petsc):Check29,923
+  def Install(self,conf,vars,cmake,petsc,archdir):Install44,1256
+
+config/packages/sowing.py,142
+class Sowing(package.Package):Sowing13,429
+  def __init__(self,argdb,log):__init__15,461
+  def Install(self,archdir,make):Install22,698
+
+config/packages/primme.py,214
+class Primme(package.Package):Primme13,432
+  def __init__(self,argdb,log):__init__15,464
+  def Check(self,conf,vars,cmake,petsc):Check28,936
+  def Install(self,conf,vars,cmake,petsc,archdir):Install77,2675
+
+config/packages/blzpack.py,149
+class Blzpack(package.Package):Blzpack13,420
+  def __init__(self,argdb,log):__init__15,453
+  def Check(self,conf,vars,cmake,petsc):Check23,692
+
+config/packages/blopex.py,159
+class Blopex(package.Package):Blopex13,432
+  def __init__(self,argdb,log):__init__15,464
+  def Install(self,conf,vars,cmake,petsc,archdir):Install25,846
+
+config/packages/feast.py,145
+class Feast(package.Package):Feast13,420
+  def __init__(self,argdb,log):__init__15,451
+  def Check(self,conf,vars,cmake,petsc):Check23,691
+
+config/packages/arpack.py,261
+class Arpack(package.Package):Arpack13,424
+  def __init__(self,argdb,log):__init__15,456
+  def Functions(self,petsc):Functions28,969
+  def Check(self,conf,vars,cmake,petsc):Check54,1778
+  def Install(self,conf,vars,cmake,petsc,archdir):Install72,2347
+
+config/log.py,276
+class Log:Log14,453
+  def Open(self,confdir,fname):Open16,465
+  def Println(self,string):Println28,866
+  def Print(self,string):Print32,944
+  def NewSection(self,string):NewSection36,1028
+  def write(self,string):write41,1162
+  def Exit(self,string):Exit44,1220
+
+config/cmakegen.py,1341
+class StdoutLogger(object):StdoutLogger21,653
+  def write(self,str):write22,681
+def cmakeconditional(key,val):cmakeconditional25,720
+  def unexpected():unexpected26,751
+AUTODIRS = set('ftn-auto ftn-custom f90-custom'.split()) # Automatically recurse into these, if they existAUTODIRS50,1516
+SKIPDIRS = set('benchmarks'.split())                     # Skip these during the buildSKIPDIRS51,1623
+NOWARNDIRS = set('tests tutorials'.split())              # Do not warn about mismatch in theseNOWARNDIRS52,1710
+def pathsplit(path):pathsplit54,1806
+class Mistakes(object):Mistakes63,2089
+    def __init__(self, log, verbose=False):__init__64,2113
+    def compareDirLists(self,root, mdirs, dirs):compareDirLists69,2239
+    def compareSourceLists(self, root, msources, files):compareSourceLists85,3028
+    def summary(self):summary101,3919
+def stripsplit(line):stripsplit107,4483
+def pkgsources(pkg, mistakes):pkgsources110,4563
+    def relpath(filename):relpath133,5641
+def writeRoot(f,petscdir,petscprefixdir):writeRoot144,6199
+def writePackage(f,pkg,pkgdeps,mistakes):writePackage187,7878
+    def body(indentlevel):body190,7999
+def main(slepcdir,petscdir,petscprefixdir,log=StdoutLogger(), verbose=False):main213,8983
+    written = Truewritten254,10730
+  parser = optparse.OptionParser()parser265,10961
+
+config/argdb.py,382
+class ArgDB:ArgDB13,415
+  def __init__(self,argv):__init__15,429
+  def UsedArgs(self):UsedArgs35,1217
+  def PopString(self,keyword):PopString38,1272
+  def PopPath(self,keyword):PopPath55,1686
+  def PopUrl(self,keyword):PopUrl72,2130
+  def PopBool(self,keyword):PopBool92,2639
+  def PopHelp(self):PopHelp109,3048
+  def ErrorIfNotEmpty(self):ErrorIfNotEmpty125,3423
+
+config/package.py,875
+class Package:Package27,751
+  def __init__(self,argdb,log):__init__29,767
+  def RunCommand(self,instr):RunCommand42,1162
+  def ProcessArgs(self,argdb):ProcessArgs51,1440
+  def Process(self,conf,vars,cmake,petsc,archdir=''):Process75,2293
+  def Precondition(self,petsc):Precondition93,2957
+  def Download(self,externdir,builddir,prefix=None):Download111,3939
+  def ShowHelp(self):ShowHelp172,6187
+  def ShowInfo(self):ShowInfo183,6913
+  def TestRuns(self,petsc):TestRuns188,7084
+  def LinkWithOutput(self,functions,callbacks,flags,givencode=''):LinkWithOutput194,7204
+  def Link(self,functions,callbacks,flags):Link248,9129
+  def FortranLink(self,functions,callbacks,flags):FortranLink253,9289
+  def GenerateGuesses(self,name):GenerateGuesses282,10196
+  def FortranLib(self,conf,vars,cmake,dirs,libs,functions,callbacks = []):FortranLib301,10788

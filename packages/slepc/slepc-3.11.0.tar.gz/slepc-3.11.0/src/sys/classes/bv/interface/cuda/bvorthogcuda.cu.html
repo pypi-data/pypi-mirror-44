@@ -1,0 +1,267 @@
+<center><a href="bvorthogcuda.cu">Actual source code: bvorthogcuda.cu</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://slepc.upv.es/documentation/current/src/sys/classes/bv/interface/cuda/bvorthogcuda.cu.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2019-03-29T11:47:17+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>slepc-3.11.0 2019-03-29</b></div>
+   <div id="bugreport" align=right><a href="mailto:slepc-maint@upv.es?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: slepc-3.11.0 v3.11 src/sys/classes/bv/interface/cuda/bvorthogcuda.cu.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line3">  3: </a><font color="#B22222">   SLEPc - Scalable Library for Eigenvalue Problem Computations</font>
+<a name="line4">  4: </a><font color="#B22222">   Copyright (c) 2002-2019, Universitat Politecnica de Valencia, Spain</font>
+
+<a name="line6">  6: </a><font color="#B22222">   This file is part of SLEPc.</font>
+<a name="line7">  7: </a><font color="#B22222">   SLEPc is distributed under a 2-clause BSD license (see LICENSE).</font>
+<a name="line8">  8: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line9">  9: </a><font color="#B22222">*/</font>
+<a name="line10"> 10: </a><font color="#B22222">/*</font>
+<a name="line11"> 11: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> orthogonalization routines (CUDA)</font>
+<a name="line12"> 12: </a><font color="#B22222">*/</font>
+
+<a name="line14"> 14: </a><font color="#A020F0">#include &lt;slepc/private/bvimpl.h&gt;          </font><font color="#B22222">/*I   "slepcbv.h"   I*/</font><font color="#A020F0"></font>
+<a name="line15"> 15: </a><font color="#A020F0">#include &lt;slepcblaslapack.h&gt;</font>
+
+<a name="line17"> 17: </a><font color="#B22222">/*</font>
+<a name="line18"> 18: </a><font color="#B22222">   BV_CleanCoefficients_CUDA - Sets to zero all entries of column j of the bv buffer</font>
+<a name="line19"> 19: </a><font color="#B22222">*/</font>
+<a name="line20"> 20: </a><strong><font color="#4169E1"><a name="BV_CleanCoefficients_CUDA"></a>PetscErrorCode BV_CleanCoefficients_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h)</font></strong>
+<a name="line21"> 21: </a>{
+<a name="line23"> 23: </a>  PetscScalar    *d_hh,*d_a;
+<a name="line24"> 24: </a>  PetscInt       i;
+
+<a name="line27"> 27: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line28"> 28: </a>    VecCUDAGetArrayReadWrite(bv-&gt;buffer,&amp;d_a);
+<a name="line29"> 29: </a>    d_hh = d_a + j*(bv-&gt;nc+bv-&gt;m);
+<a name="line30"> 30: </a>    cudaMemset(d_hh,0,(bv-&gt;nc+j)*<font color="#4169E1">sizeof</font>(PetscScalar));
+<a name="line31"> 31: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line32"> 32: </a>    VecCUDARestoreArrayReadWrite(bv-&gt;buffer,&amp;d_a);
+<a name="line33"> 33: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* cpu memory */</font>
+<a name="line34"> 34: </a>    <font color="#4169E1">for</font> (i=0;i&lt;bv-&gt;nc+j;i++) h[i] = 0.0;
+<a name="line35"> 35: </a>  }
+<a name="line36"> 36: </a>  <font color="#4169E1">return</font>(0);
+<a name="line37"> 37: </a>}
+
+<a name="line39"> 39: </a><font color="#B22222">/*</font>
+<a name="line40"> 40: </a><font color="#B22222">   BV_AddCoefficients_CUDA - Add the contents of the scratch (0-th column) of the bv buffer</font>
+<a name="line41"> 41: </a><font color="#B22222">   into column j of the bv buffer</font>
+<a name="line42"> 42: </a><font color="#B22222"> */</font>
+<a name="line43"> 43: </a><strong><font color="#4169E1"><a name="BV_AddCoefficients_CUDA"></a>PetscErrorCode BV_AddCoefficients_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h,PetscScalar *c)</font></strong>
+<a name="line44"> 44: </a>{
+<a name="line46"> 46: </a>  PetscScalar    *d_h,*d_c,sone=1.0;
+<a name="line47"> 47: </a>  PetscInt       i;
+<a name="line48"> 48: </a>  PetscBLASInt   one=1;
+<a name="line49"> 49: </a>  cublasStatus_t cberr;
+<a name="line50"> 50: </a>  cublasHandle_t cublasv2handle;
+
+<a name="line53"> 53: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line54"> 54: </a>    PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line55"> 55: </a>    VecCUDAGetArrayReadWrite(bv-&gt;buffer,&amp;d_c);
+<a name="line56"> 56: </a>    d_h = d_c + j*(bv-&gt;nc+bv-&gt;m);
+<a name="line57"> 57: </a>    cberr = cublasXaxpy(cublasv2handle,bv-&gt;nc+j,&amp;sone,d_c,one,d_h,one);CHKERRCUBLAS(cberr);
+<a name="line58"> 58: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line59"> 59: </a>    VecCUDARestoreArrayReadWrite(bv-&gt;buffer,&amp;d_c);
+<a name="line60"> 60: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* cpu memory */</font>
+<a name="line61"> 61: </a>    <font color="#4169E1">for</font> (i=0;i&lt;bv-&gt;nc+j;i++) h[i] += c[i];
+<a name="line62"> 62: </a>  }
+<a name="line63"> 63: </a>  <font color="#4169E1">return</font>(0);
+<a name="line64"> 64: </a>}
+
+<a name="line66"> 66: </a><font color="#B22222">/*</font>
+<a name="line67"> 67: </a><font color="#B22222">   BV_SetValue_CUDA - Sets value in row j (counted after the constraints) of column k</font>
+<a name="line68"> 68: </a><font color="#B22222">   of the coefficients array</font>
+<a name="line69"> 69: </a><font color="#B22222">*/</font>
+<a name="line70"> 70: </a><strong><font color="#4169E1"><a name="BV_SetValue_CUDA"></a>PetscErrorCode BV_SetValue_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscInt k,PetscScalar *h,PetscScalar value)</font></strong>
+<a name="line71"> 71: </a>{
+<a name="line73"> 73: </a>  PetscScalar    *d_h,*a;
+<a name="line74"> 74: </a>  cudaError_t    cerr;
+
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line78"> 78: </a>    VecCUDAGetArrayReadWrite(bv-&gt;buffer,&amp;a);
+<a name="line79"> 79: </a>    d_h = a + k*(bv-&gt;nc+bv-&gt;m) + bv-&gt;nc+j;
+<a name="line80"> 80: </a>    cerr = cudaMemcpy(d_h,&amp;value,<font color="#4169E1">sizeof</font>(PetscScalar),cudaMemcpyHostToDevice);CHKERRCUDA(cerr);
+<a name="line81"> 81: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line82"> 82: </a>    VecCUDARestoreArrayReadWrite(bv-&gt;buffer,&amp;a);
+<a name="line83"> 83: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* cpu memory */</font>
+<a name="line84"> 84: </a>    h[bv-&gt;nc+j] = value;
+<a name="line85"> 85: </a>  }
+<a name="line86"> 86: </a>  <font color="#4169E1">return</font>(0);
+<a name="line87"> 87: </a>}
+
+<a name="line89"> 89: </a><font color="#B22222">/*</font>
+<a name="line90"> 90: </a><font color="#B22222">   BV_SquareSum_CUDA - Returns the value h'*h, where h represents the contents of the</font>
+<a name="line91"> 91: </a><font color="#B22222">   coefficients array (up to position j)</font>
+<a name="line92"> 92: </a><font color="#B22222">*/</font>
+<a name="line93"> 93: </a><strong><font color="#4169E1"><a name="BV_SquareSum_CUDA"></a>PetscErrorCode BV_SquareSum_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h,PetscReal *sum)</font></strong>
+<a name="line94"> 94: </a>{
+<a name="line95"> 95: </a>  PetscErrorCode    ierr;
+<a name="line96"> 96: </a>  const PetscScalar *d_h;
+<a name="line97"> 97: </a>  PetscScalar       dot;
+<a name="line98"> 98: </a>  PetscInt          i;
+<a name="line99"> 99: </a>  PetscBLASInt      one=1;
+<a name="line100">100: </a>  cublasStatus_t    cberr;
+<a name="line101">101: </a>  cublasHandle_t    cublasv2handle;
+
+<a name="line104">104: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line105">105: </a>    PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line106">106: </a>    VecCUDAGetArrayRead(bv-&gt;buffer,&amp;d_h);
+<a name="line107">107: </a>    cberr = cublasXdotc(cublasv2handle,bv-&gt;nc+j,d_h,one,d_h,one,&amp;dot);CHKERRCUBLAS(cberr);
+<a name="line108">108: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line109">109: </a>    *sum = PetscRealPart(dot);
+<a name="line110">110: </a>    VecCUDARestoreArrayRead(bv-&gt;buffer,&amp;d_h);
+<a name="line111">111: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* cpu memory */</font>
+<a name="line112">112: </a>    *sum = 0.0;
+<a name="line113">113: </a>    <font color="#4169E1">for</font> (i=0;i&lt;bv-&gt;nc+j;i++) *sum += PetscRealPart(h[i]*PetscConj(h[i]));
+<a name="line114">114: </a>  }
+<a name="line115">115: </a>  <font color="#4169E1">return</font>(0);
+<a name="line116">116: </a>}
+
+<a name="line118">118: </a><strong><font color="#228B22">#define X_AXIS        0</font></strong>
+<a name="line119">119: </a><strong><font color="#228B22">#define BLOCK_SIZE_X 64</font></strong>
+<a name="line120">120: </a><strong><font color="#228B22">#define TILE_SIZE_X  16 </font><font color="#B22222">/* work to be done by any thread on axis x */</font><font color="#228B22"></font></strong>
+
+<a name="line122">122: </a><font color="#B22222">/*</font>
+<a name="line123">123: </a><font color="#B22222">   Set the kernels grid dimensions</font>
+<a name="line124">124: </a><font color="#B22222">   xcount: number of kernel calls needed for the requested size</font>
+<a name="line125">125: </a><font color="#B22222"> */</font>
+<a name="line126">126: </a><strong><font color="#4169E1"><a name="SetGrid1D"></a>PetscErrorCode SetGrid1D(PetscInt n, dim3 *dimGrid, dim3 *dimBlock,PetscInt *xcount)</font></strong>
+<a name="line127">127: </a>{
+<a name="line128">128: </a>  PetscInt              one=1,card;
+<a name="line129">129: </a>  <font color="#4169E1">struct cudaDeviceProp</font> devprop;
+<a name="line130">130: </a>  cudaError_t           cerr;
+
+<a name="line133">133: </a>  *xcount = 1;
+<a name="line134">134: </a>  <font color="#4169E1">if</font> (n&gt;BLOCK_SIZE_X) {
+<a name="line135">135: </a>    dimBlock-&gt;x = BLOCK_SIZE_X;
+<a name="line136">136: </a>    dimGrid-&gt;x = (n+BLOCK_SIZE_X*TILE_SIZE_X-one)/BLOCK_SIZE_X*TILE_SIZE_X;
+<a name="line137">137: </a>  } <font color="#4169E1">else</font> {
+<a name="line138">138: </a>    dimBlock-&gt;x = (n+TILE_SIZE_X-one)/TILE_SIZE_X;
+<a name="line139">139: </a>    dimGrid-&gt;x = one;
+<a name="line140">140: </a>  }
+<a name="line141">141: </a>  cerr = cudaGetDevice(&amp;card);CHKERRCUDA(cerr);
+<a name="line142">142: </a>  cerr = cudaGetDeviceProperties(&amp;devprop,card);CHKERRCUDA(cerr);
+<a name="line143">143: </a>  <font color="#4169E1">if</font> (dimGrid-&gt;x&gt;(unsigned)devprop.maxGridSize[X_AXIS]) {
+<a name="line144">144: </a>    *xcount = (dimGrid-&gt;x+devprop.maxGridSize[X_AXIS]-one)/devprop.maxGridSize[X_AXIS];
+<a name="line145">145: </a>    dimGrid-&gt;x = devprop.maxGridSize[X_AXIS];
+<a name="line146">146: </a>  }
+<a name="line147">147: </a>  <font color="#4169E1">return</font>(0);
+<a name="line148">148: </a>}
+
+<a name="line150">150: </a><font color="#B22222">/* pointwise multiplication */</font>
+<a name="line151">151: </a><strong><font color="#4169E1"><a name="PointwiseMult_kernel"></a>__global__ void PointwiseMult_kernel(PetscInt xcount,PetscScalar *a,const PetscScalar *b,PetscInt n)</font></strong>
+<a name="line152">152: </a>{
+<a name="line153">153: </a>  PetscInt i,x;
+
+<a name="line155">155: </a>  x = xcount*gridDim.x*blockDim.x+blockIdx.x*blockDim.x*TILE_SIZE_X+threadIdx.x*TILE_SIZE_X;
+<a name="line156">156: </a>  <font color="#4169E1">for</font> (i=x;i&lt;x+TILE_SIZE_X&amp;&amp;i&lt;n;i++) {
+<a name="line157">157: </a>    a[i] *= PetscRealPart(b[i]);
+<a name="line158">158: </a>  }
+<a name="line159">159: </a>}
+
+<a name="line161">161: </a><font color="#B22222">/* pointwise division */</font>
+<a name="line162">162: </a><strong><font color="#4169E1"><a name="PointwiseDiv_kernel"></a>__global__ void PointwiseDiv_kernel(PetscInt xcount,PetscScalar *a,const PetscScalar *b,PetscInt n)</font></strong>
+<a name="line163">163: </a>{
+<a name="line164">164: </a>  PetscInt i,x;
+
+<a name="line166">166: </a>  x = xcount*gridDim.x*blockDim.x+blockIdx.x*blockDim.x*TILE_SIZE_X+threadIdx.x*TILE_SIZE_X;
+<a name="line167">167: </a>  <font color="#4169E1">for</font> (i=x;i&lt;x+TILE_SIZE_X&amp;&amp;i&lt;n;i++) {
+<a name="line168">168: </a>    a[i] /= PetscRealPart(b[i]);
+<a name="line169">169: </a>  }
+<a name="line170">170: </a>}
+
+<a name="line172">172: </a><font color="#B22222">/*</font>
+<a name="line173">173: </a><font color="#B22222">   BV_ApplySignature_CUDA - Computes the pointwise product h*omega, where h represents</font>
+<a name="line174">174: </a><font color="#B22222">   the contents of the coefficients array (up to position j) and omega is the signature;</font>
+<a name="line175">175: </a><font color="#B22222">   if inverse=TRUE then the operation is h/omega</font>
+<a name="line176">176: </a><font color="#B22222">*/</font>
+<a name="line177">177: </a><strong><font color="#4169E1"><a name="BV_ApplySignature_CUDA"></a>PetscErrorCode BV_ApplySignature_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h,PetscBool inverse)</font></strong>
+<a name="line178">178: </a>{
+<a name="line179">179: </a>  PetscErrorCode    ierr;
+<a name="line180">180: </a>  PetscScalar       *d_h;
+<a name="line181">181: </a>  const PetscScalar *d_omega,*omega;
+<a name="line182">182: </a>  PetscInt          i,xcount;
+<a name="line183">183: </a>  dim3              blocks3d, threads3d;
+<a name="line184">184: </a>  cudaError_t       cerr;
+
+<a name="line187">187: </a>  <font color="#4169E1">if</font> (!(bv-&gt;nc+j)) <font color="#4169E1">return</font>(0);
+<a name="line188">188: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line189">189: </a>    VecCUDAGetArrayReadWrite(bv-&gt;buffer,&amp;d_h);
+<a name="line190">190: </a>    VecCUDAGetArrayRead(bv-&gt;omega,&amp;d_omega);
+<a name="line191">191: </a>    SetGrid1D(bv-&gt;nc+j,&amp;blocks3d,&amp;threads3d,&amp;xcount);
+<a name="line192">192: </a>    <font color="#4169E1">if</font> (inverse) {
+<a name="line193">193: </a>      <font color="#4169E1">for</font> (i=0;i&lt;xcount;i++) {
+<a name="line194">194: </a>        PointwiseDiv_kernel&lt;&lt;&lt;blocks3d,threads3d&gt;&gt;&gt;(i,d_h,d_omega,bv-&gt;nc+j);
+<a name="line195">195: </a>      }
+<a name="line196">196: </a>    } <font color="#4169E1">else</font> {
+<a name="line197">197: </a>      <font color="#4169E1">for</font> (i=0;i&lt;xcount;i++) {
+<a name="line198">198: </a>        PointwiseMult_kernel&lt;&lt;&lt;blocks3d,threads3d&gt;&gt;&gt;(i,d_h,d_omega,bv-&gt;nc+j);
+<a name="line199">199: </a>      }
+<a name="line200">200: </a>    }
+<a name="line201">201: </a>    cerr = cudaGetLastError();CHKERRCUDA(cerr);
+<a name="line202">202: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line203">203: </a>    VecCUDARestoreArrayRead(bv-&gt;omega,&amp;d_omega);
+<a name="line204">204: </a>    VecCUDARestoreArrayReadWrite(bv-&gt;buffer,&amp;d_h);
+<a name="line205">205: </a>  } <font color="#4169E1">else</font> {
+<a name="line206">206: </a>    VecGetArrayRead(bv-&gt;omega,&amp;omega);
+<a name="line207">207: </a>    <font color="#4169E1">if</font> (inverse) <font color="#4169E1">for</font> (i=0;i&lt;bv-&gt;nc+j;i++) h[i] /= PetscRealPart(omega[i]);
+<a name="line208">208: </a>    <font color="#4169E1">else</font> <font color="#4169E1">for</font> (i=0;i&lt;bv-&gt;nc+j;i++) h[i] *= PetscRealPart(omega[i]);
+<a name="line209">209: </a>    VecRestoreArrayRead(bv-&gt;omega,&amp;omega);
+<a name="line210">210: </a>  }
+<a name="line211">211: </a>  <font color="#4169E1">return</font>(0);
+<a name="line212">212: </a>}
+
+<a name="line214">214: </a><font color="#B22222">/*</font>
+<a name="line215">215: </a><font color="#B22222">   BV_SquareRoot_CUDA - Returns the square root of position j (counted after the constraints)</font>
+<a name="line216">216: </a><font color="#B22222">   of the coefficients array</font>
+<a name="line217">217: </a><font color="#B22222">*/</font>
+<a name="line218">218: </a><strong><font color="#4169E1"><a name="BV_SquareRoot_CUDA"></a>PetscErrorCode BV_SquareRoot_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h,PetscReal *beta)</font></strong>
+<a name="line219">219: </a>{
+<a name="line220">220: </a>  PetscErrorCode    ierr;
+<a name="line221">221: </a>  const PetscScalar *d_h;
+<a name="line222">222: </a>  PetscScalar       hh;
+<a name="line223">223: </a>  cudaError_t       cerr;
+
+<a name="line226">226: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line227">227: </a>    VecCUDAGetArrayRead(bv-&gt;buffer,&amp;d_h);
+<a name="line228">228: </a>    cerr = cudaMemcpy(&amp;hh,d_h+bv-&gt;nc+j,<font color="#4169E1">sizeof</font>(PetscScalar),cudaMemcpyDeviceToHost);CHKERRCUDA(cerr);
+<a name="line229">229: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line230">230: </a>    BV_SafeSqrt(bv,hh,beta);
+<a name="line231">231: </a>    VecCUDARestoreArrayRead(bv-&gt;buffer,&amp;d_h);
+<a name="line232">232: </a>  } <font color="#4169E1">else</font> {
+<a name="line233">233: </a>    BV_SafeSqrt(bv,h[bv-&gt;nc+j],beta);
+<a name="line234">234: </a>  }
+<a name="line235">235: </a>  <font color="#4169E1">return</font>(0);
+<a name="line236">236: </a>}
+
+<a name="line238">238: </a><font color="#B22222">/*</font>
+<a name="line239">239: </a><font color="#B22222">   BV_StoreCoefficients_CUDA - Copy the contents of the coefficients array to an array dest</font>
+<a name="line240">240: </a><font color="#B22222">   provided by the caller (only values from l to j are copied)</font>
+<a name="line241">241: </a><font color="#B22222">*/</font>
+<a name="line242">242: </a><strong><font color="#4169E1"><a name="BV_StoreCoefficients_CUDA"></a>PetscErrorCode BV_StoreCoefficients_CUDA(<a href="../../../../../../docs/manualpages/BV/BV.html#BV">BV</a> bv,PetscInt j,PetscScalar *h,PetscScalar *dest)</font></strong>
+<a name="line243">243: </a>{
+<a name="line244">244: </a>  PetscErrorCode    ierr;
+<a name="line245">245: </a>  const PetscScalar *d_h,*d_a;
+<a name="line246">246: </a>  PetscInt          i;
+<a name="line247">247: </a>  cudaError_t       cerr;
+
+<a name="line250">250: </a>  <font color="#4169E1">if</font> (!h) {
+<a name="line251">251: </a>    VecCUDAGetArrayRead(bv-&gt;buffer,&amp;d_a);
+<a name="line252">252: </a>    d_h = d_a + j*(bv-&gt;nc+bv-&gt;m)+bv-&gt;nc;
+<a name="line253">253: </a>    cerr = cudaMemcpy(dest-bv-&gt;l,d_h,(j-bv-&gt;l)*<font color="#4169E1">sizeof</font>(PetscScalar),cudaMemcpyDeviceToHost);CHKERRCUDA(cerr);
+<a name="line254">254: </a>    WaitForGPU();CHKERRCUDA(ierr);
+<a name="line255">255: </a>    VecCUDARestoreArrayRead(bv-&gt;buffer,&amp;d_a);
+<a name="line256">256: </a>  } <font color="#4169E1">else</font> {
+<a name="line257">257: </a>    <font color="#4169E1">for</font> (i=bv-&gt;l;i&lt;j;i++) dest[i-bv-&gt;l] = h[bv-&gt;nc+i];
+<a name="line258">258: </a>  }
+<a name="line259">259: </a>  <font color="#4169E1">return</font>(0);
+<a name="line260">260: </a>}
+
+</pre>
+</body>
+
+</html>
