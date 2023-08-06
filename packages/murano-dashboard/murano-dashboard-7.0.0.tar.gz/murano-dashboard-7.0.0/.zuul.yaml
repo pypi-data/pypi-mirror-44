@@ -1,0 +1,42 @@
+- project:
+    templates:
+      - check-requirements
+      - nodejs4-jobs
+      - openstack-cover-jobs-horizon
+      - openstack-lower-constraints-jobs
+      - openstack-python-jobs-horizon
+      - openstack-python35-jobs-horizon
+      - openstack-python36-jobs
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - murano-dashboard-sanity-check
+        - horizon-openstack-tox-python3-django111
+    gate:
+      jobs:
+        - horizon-openstack-tox-python3-django111
+
+- job:
+    name: murano-dashboard-sanity-check
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/murano-dashboard-sanity-check/run.yaml
+    post-run: playbooks/legacy/murano-dashboard-sanity-check/post.yaml
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^setup.cfg$
+      - ^doc/.*$
+      - ^.*\.rst$
+      - ^releasenotes/.*$
+      - ^muranodashboard/locale/.*$
+      - ^muranodashboard/tests/unit/.*$
+    voting: false
+    timeout: 10800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/heat
+      - openstack/murano
+      - openstack/murano-dashboard
+      - openstack/python-heatclient
+      - openstack/python-muranoclient
+      - openstack/horizon
+      - openstack/heat-dashboard
