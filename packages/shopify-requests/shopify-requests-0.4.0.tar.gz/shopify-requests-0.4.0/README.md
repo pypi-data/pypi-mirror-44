@@ -1,0 +1,34 @@
+# Shopify Requests
+[![pipeline status](https://gitlab.com/perobertson/shopify-requests/badges/master/pipeline.svg)](https://gitlab.com/perobertson/shopify-requests/commits/master)
+[![coverage report](https://gitlab.com/perobertson/shopify-requests/badges/master/coverage.svg)](https://gitlab.com/perobertson/shopify-requests/commits/master)
+[![Documentation Status](https://readthedocs.org/projects/shopify-requests/badge/?version=latest)](https://shopify-requests.readthedocs.io/en/latest/?badge=latest)
+
+ShopifyRequests is an API client for Shopify built on top of the [requests](http://docs.python-requests.org/en/master/) library.
+
+The main goals of this project are:
+- remove boiler plate code needed to do a single API call
+- work well with testing libraries like VCR and RequestsMock
+- easy to use
+
+There are also future plans to support `http2`, `asyncio`, and `GraphQL`.
+
+## Usage
+```python
+from shopify_requests import RestClient
+
+client = RestClient('foo.myshopify.com', access_token='abc123')
+response = client.get('shop.json')
+```
+The `RestClient` is the configuration point so that all requests made with it will have the same options.
+Some of the options you can configure are:
+- Oauth token vs private app token
+- API version
+- Safe retries
+- Rate limit backoff
+
+For more configuration options check out the [API Docs](https://shopify-requests.readthedocs.io/en/latest/index.html#api-docs)
+
+An additional benefits of using the same client is that it will reuse the same TCP connection so the SSL handshake only has to happen once.
+
+## Did you find a bug or have a question?
+The [issue board](https://gitlab.com/perobertson/shopify-requests/issues) will be the best place to reach out and get the problem sorted out.
