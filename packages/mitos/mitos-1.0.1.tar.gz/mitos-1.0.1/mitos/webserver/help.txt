@@ -1,0 +1,3187 @@
+<div style="width:680px;margin:0 auto;text-align:justify;" >
+
+  <div style="margin-top: 50px;">
+    Welcome to <b>MITOS</b>, a free web server for the annotation of metazoan
+    mitochondrial genomes. Using <b>MITOS</b> has a number of advantages
+    compared to manual curation:
+  </div>
+
+  <div style="width: 465px; margin-left: auto; margin-right: auto; text-align: left; margin-top: 10px;" >
+    <ul>
+      <li> <b>reliable and consistent analysis</b> of metazoan mitochondrial genomes</li>
+      <li> <b>simple usage</b> - selection of cutoff values not necessary</li>
+      <li> <b>advanced usage</b> - for users who are not satisfied with the default values</li>
+      <li> <b>widely used file formats</b> for sequence upload and download of the results</li>
+      <li> <b>state-of-the-art methods</b> - novel structure-based covariance models for ncRNA annotation</li>
+      <li> <b>unmatched sensitivity</b> in tRNA prediction and <b>improved detection</b>
+     	of rRNA 5' and 3' ends</li>
+    </ul>
+  </div>
+
+  <br/>
+  Click <a href="http://{mitosurl}">here</a> to start using <b>MITOS</b> or
+  continue reading the following sections to learn more about <b>MITOS</b> and how to use it:
+
+  <div style="width: 420px; margin-left: auto; margin-right: auto; text-align: justify; margin-top: 10px;">
+
+    <a href="#overview">Overview</a><br/>
+    <a href="#input">Input</a><br/>
+    <a href="#output">Output</a><br/>
+    <a href="#faq">FAQ</a><br/>
+    <a href="#example">Example</a><br/>
+    <a href="#advanced">Advanced Usage</a><br/>
+    <a href="#uses">Studies using <b>MITOS</b></a><br/>
+    <a href="#privacy">Privacy</a><br/>
+
+  </div>
+
+  <br/>
+  <h2 id = "overview">Overview</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    <b>MITOS</b> is a web server for the automatic annotation of metazoan
+    mitochondrial genomes. <b>MITOS</b> allows a reliable and consistent
+    annotation of proteins and non-coding RNAs. The analysis steps are as
+    follows:<br/>
+    <div style="margin-top: 10px; margin-left: 30px; margin-right: 50px;" >
+      <ul>
+	<li> Candidate <i>protein coding genes</i> are found by detecting congruences in the
+	  results of blastx searches against the amino acid sequences of the annotated
+  	  proteins of metazoan mitochondrial genomes found in the NCBI RefSeq 39. A
+  	  postprocessing step detects start and stop codons, duplicates, and hits belonging to
+  	  the same transcript, e.g. frame shift or splicing.<br/><br/>
+	</li>
+	<li> <i>tRNAs</i> are annotated using MITFI, i.e. novel structure-based covariance models
+      as described in <a href="http://dx.doi.org/10.1093/nar/gkr1131" target="_blank">J&uuml;hling, et al. Nucleic Acids Research, 2012, 40(7):2833-2845</a>.
+      This approach was shown to have an unmatched sensitivity (outperforming ARWEN and tRNAscan-SE, respectively)
+  	  and a precision higher than ARWEN and equivalent to tRNAscan-SE.
+  	  <br/><br/>
+	</li>
+	<li> <i>rRNA</i> annotation is performed using structure-based covariance
+#   	  models that have been developed similarly to the tRNA models.
+  	  Structural considerations improve 5' and 3' end predictions of the rRNAs.<br/><br/>
+	</li>
+	<li>In a final step, conflicts are resolved and the outcome is prepared for
+  	  visualization.
+	</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id = "input">Input</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    Annotating mitochondrial genomes with <b>MITOS</b> is rather simple and
+    straightforward, unburdening the user from having to select cutoff values
+    and the like. All that must be provided is:
+    <ol>
+	<li>
+	  a <a href="https://en.wikipedia.org/wiki/FASTA_format" target="_blank">FASTA</a> file,
+	  containing the genome to be annotated and<br/><br/>
+	</li>
+	<li>
+	  the appropriate  <a href="http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi" target="_blank">genetic code</a>.
+	</li>
+      </ol>
+    <br/>
+    The user does not have to provide a name or e-mail address. However, if one
+    chooses to do so, a link to the results page will be sent to the given
+    address upon completion of the job.
+    In either case, after submission of the job the user will be directed to a
+    page displaying the status of the job, a link that allows the deletion of the job, and
+    as soon as the job is finished the results will be shown on the same page.
+  </div>
+
+  <h2 id = "output">Output</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    Results are provided in commonly used file formats:
+    <a href="http://genome.ucsc.edu/FAQ/FAQformat.html#format1" target="_blank">BED</a>,
+    <a href="http://genome.ucsc.edu/FAQ/FAQformat.html#format3" target="_blank">GFF</a>,
+    <a href="https://en.wikipedia.org/wiki/FASTA_format" target="_blank">FASTA</a>, and
+    <a href="http://www.ncbi.nlm.nih.gov/genbank/tbl2asn2#tbl" target="_blank">TBL</a> format and
+     a visual overview of the results is presented.  Additionally, a file
+     containing the gene order, i.e. the gene names in the order of their
+     appearance on the genome, that can be used for genome rearrangement
+     analyses (e.g. with <a href="http://pacosy.informatik.uni-leipzig.de/crex/" target="_blank">CREx</a>) is
+     provided. Furthermore, the raw data, i.e. all files that have been generated by <b>MITOS</b>,
+     is available as zip archive.
+    <br/>
+  </div>
+
+  <div style="margin-top: 0px; margin-left: 20px; margin-right: 50px;" >
+  <h3 id = "scores">Evaluating the Output</h3>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    <b>MITOS</b> calculates <i>e-values</i> for ncRNA and <i>quality values</i> for protein coding
+    gene predictions. <a href="mito/data/stat-pshs-logx-h.pdf">Here</a>, we provide plots with the
+    quality value distributions for
+      <ul>
+	<li> the initial hits found for the 13 protein coding gene families in RefSeq 39 (<i>norm</i>),
+	</li>
+	<li> the sequences without the respective gene (<i>cut</i>), and
+	</li>
+	<li> the trinucleotide frequency preserving permutations (<i>shuffle</i>).
+	</li>
+      </ul>
+      Within the plots the best 939 (50% the size of RefSeq 39; dashed line) and 1878 (solid line)
+      <i>quality values</i> of the initial hits are indicated.
+      These plots might be used for estimating the relative quality of the results.
+    </div>
+  </div>
+
+
+  <h2 id = "faq">FAQ</h2>
+  <div style="text-align: left; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    <b>Q:</b> <i>How long does it take for <b>MITOS</b> to annotate my mitochondrial genome?</i><br/>
+    <b>A:</b> MITOS needs about 1.5h for a single mitogenome of average length.
+	If multiple users submit jobs they are put in a queue. The jobs in the queue are
+    processed in the order of their arrival and two jobs can be processed in parallel.
+    So, if your job is queued the time until the job will be started might be roughly as:
+    queue position ~ hours to wait.
+    <br/>
+    <br/>
+    <b>Q:</b> <i>How can I share the results of <b>MITOS</b> with colleagues?</i><br/>
+    <b>A:</b> By sending them the URL shown in the browser when you access your results.
+    <br/>
+    <br/>
+
+    <b>Q:</b> <i>How secure is the data that is uploaded and the results? Who can access it?</i><br/>
+    <b>A:</b> Your data is only accessible by persons knowing the precise URL. This is
+    initially only the person who submitted the job. Thus this person can control who may
+    access the data and results by keeping the URL a secret or distributing it.
+    The uniqueness of the URL is ensured by a unique job identifier (which is generated using the
+    SHA-256 method from the submitted data). It is extremely unlikely (virtually impossible)
+    to find an identifier at random. Thus, a high security level is ensured and
+    at the same time it is still easy for you to distribute the results to colleagues.
+    <br/>
+    <br/>
+
+    <b>Q:</b> <i>How long are the results kept? </i><br/>
+    <b>A:</b> The results are deleted automatically 1 month after the submission, but they can be
+    regenerated by restarting the job which is possible via the result link (for jobs created after
+    April 2013).
+    <br/>
+    <br/>
+
+    <b>Q:</b> <i>Do you provide results in other formats?</i><br/>
+    <b>A:</b> Currently not. However, if you think we should offer an additional
+    format please send us a message: <script type='text/javascript'> var pref = '&#109;a' + 'i&#108;' + '&#116;o'; var attribut = 'hr' + 'ef' + '='; var first = '%6D%69%74%6F%73'; var at = '%40'; var last = '&#x62;&#x69;&#x6F;&#x69;&#x6E;&#x66;&#x2E;&#x75;&#x6E;&#x69;&#x2D;&#x6C;&#x65;&#x69;&#x70;&#x7A;&#x69;&#x67;&#x2E;&#x64;&#x65;'; var first2 = '&#x6D;&#x69;&#x74;&#x6F;&#x73;'; var at2 = '&#x40;'; var last2 = '&#98;&#105;&#111;&#105;&#110;&#102;&#46;&#117;&#110;&#105;&#45;&#108;&#101;&#105;&#112;&#122;&#105;&#103;&#46;&#100;&#101;'; document.write( '<a ' + attribut + '\'' + pref + ':' + first + at + last + '\'>' ); document.write( first2 + at2 + last2 ); document.write( '<\/a>' ); </script> <noscript> <div style='display:none; '>are-</div><div style='display:inline; '>&#x6D;&#x69;&#x74;&#x6F;&#x73;</div><div style='display:none; '>-xya34</div><div style='display:inline; '>[at]</div><div style='display:none; '>ddks-</div><div style='display:inline; '>&#98;&#105;&#111;&#105;&#110;&#102;&#46;&#117;&#110;&#105;&#45;&#108;&#101;&#105;&#112;&#122;&#105;&#103;&#46;&#100;&#101;</div> </noscript>.
+    <br/>
+    <br/>
+
+    <b>Q:</b> <i>I don't have a complete genome...</i><br/>
+    <b>A:</b> Basically, no problem. <b>MITOS</b> can also annotate fragments. But you should be
+    aware of MITOS' strategy which tries to enforce a copy for each of the default metazoan mitogenes.
+    This might evoke low scoring spurious hits.
+    <br/>
+    <br/>
+
+    <b>Q:</b> <i>How do I cite <b>MITOS</b>?</i><br/>
+    <b>A:</b> Please cite:<br/>
+	<i>M. Bernt, A. Donath, F. J&uuml;hling, F. Externbrink, C. Florentz, G. Fritzsch, J. P&uuml;tz, M. Middendorf, P. F. Stadler</i><br>
+	<b>MITOS: Improved de novo Metazoan Mitochondrial Genome Annotation</b><br>
+	Molecular Phylogenetics and Evolution 2013, 69(2):313-319
+	<a href="http://dx.doi.org/10.1016/j.ympev.2012.08.023" target="_blank">link</a>
+    <br/>
+    <br/>
+    <b>Q:</b> <i>What can I do if <b>MITOS</b> produced an error or is behaving unexpectedly? </i><br/>
+    <b>A:</b> It would be nice if you inform us by sending an email to {mail}.
+    <br/>
+    <br/>
+  </div>
+
+  <h2 id = "example">Example</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+
+    This example is based on the complete mitochondrial genome of
+    <i>Arborophila rufipectus</i> (NC_012453). You can download
+    the sequence in FASTA format <a href="NC_012453.fasta">here</a>.
+    Precomputed results from <b>MITOS</b> for this example can be found
+    <a href="result.py?hash=example">here</a>. If you
+    want to compare it with the annotation found in RefSeq,
+    <a href="NC_012453.gff2">here</a> is a GFF compiled
+    from the original GenBank file (<a href="http://www.ncbi.nlm.nih.gov/nuccore/NC_012453.1" target="_blank">NC_012453.1</a>).<br/> <br/>
+
+    <h4 id = "upload">UPLOAD</h4>
+    <div class="helptxt">
+      All you have to provide is the sequence in FASTA (Pearson) format and
+      the selection of the correct genetic code. The job is submitted
+      by clicking the <i>Proceed</i> button.
+      If you enter a valid email address you will receive a notification as
+      soon as the analysis is complete.
+      The notification email will contain a link to the <b>MITOS</b> results
+      of the job and mention the job identifier (or filename if not given).
+      The job identifier will also be given on the job settings page.
+      Optionally you can provide a name wich will be used to adress you.
+      <br/>
+      If all of our resources are currently in use, your job will be put in a queue
+      and you are notified about your position. Here you also have the possibility to
+      delete your job.<br/>
+      <br/>
+      Once your job is being processed you will be notified about this.
+      Cancelling the job is not possible as soon as it is executed.<br/>
+      The page will reload every 30 seconds until the results are available. If
+      you have provided a valid email address you can close this window.
+      Otherwise you have to bookmark it or leave it open until the analysis is
+      complete.<br/>
+    </div>
+
+    <img src="mito/input.png" alt="Input mask" class="helpimg">
+    <img src="mito/analysis.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <h4 id = "results">RESULTS</h4>
+
+    <div class="helptxt">
+    Once the annotation is ready, you will be redirected the results page. This page
+    has a menu on the left that offering several downloads and the results in tabular and
+    graphical form on the right.
+    </div>
+
+	<div style="clear: both;"> </div>
+
+
+    <div class="helptxt">
+    The central part is the results table where you find all genes predicted by <b>MITOS</b> and their
+    position in the provided sequence. The coordinates are as defined for the
+    GFF format, i.e. the first base of the sequence is numbered 1 and start and stop of the feature are included.
+    For tRNAs and rRNAs we provide secondary structure plots in svg and postscript format.
+    </div>
+
+    <img src="mito/resulttop.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <div class="helptxt">
+      Below the table you will see a visualization of the annotation.
+      Genes located on the plus strand are drawn in the upper part. Genes annotated on the
+      minus strand are shown in the lower region. A small vertical line is
+      drawn every 1,000 nt. A click on the image will present a larger
+      annotated version.<br/>
+      Note that the legend of the plot indicates which feature types have been searched
+      by <b>MITOS</b> (tRNA, rRNA, protein). In our example all three types have been searched - which is the default setting of <b>MITOS</b>.
+
+      On the very bottom of the page <b>MITOS</b> reports peculiarities and problems of the
+      results which may need your attention. Most importantly genes that could
+      not be located are listed. This may happen if there is no signal for the gene or if
+      its predicted position conflicts with other genes (e.g. if a gene is annotated to long).
+      Furthermore cases of genes that have been found as copies or in multiple parts are listed.
+      For both cases we provide detailed data that support the analysis of these cases
+      (described below).
+    </div>
+
+    <img src="mito/resultimg.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <div class="helptxt">
+    In the upper left you will find the <b>Downloads</b> section which contains
+    links to different file formats to download the annotation of your sequence.
+    Below, in the <b>Raw Data</b> section a zip archive containing
+    all raw data that has been created during the annotation process,
+    i.e. unfiltered BLAST outputs, results from the HMM search etc.
+    Furthermore, the protein and ncRNA plots provide an easy overview on the raw data,
+    i.e. the quality values of the initial hits from <b>MITOS'</b> protein prediction
+    method and the e-values of the original infernal predictions (details below).
+    <br/>
+    </div>
+
+    <img src="mito/resultfiles.png" alt="analysis" class="helpimg">
+
+	<div style="clear: both;"> </div>
+
+    <div class="helptxt">
+    <b>MITOS</b> annotates two copies of <i>nad6</i> for this sequence:
+    the first copy on the plus strand (736-1,155) and the other on the minus
+    strand (16,141-16,659). You will also notice that the
+    second copy is roughly 100 nt longer than the other one. Now we
+    need to take a look at one of the result files to confirm whether we have a
+    real duplication event.
+    </div>
+
+    <img src="mito/resultbottom.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <div class="helptxt">
+    Download, for example, the BED file and open it
+    with an editor of your choice. (Keep in mind that coordinates in
+    BED files start with 0 and the stop is <b>not</b> included.)
+
+    <div style="margin-top: 10px;"></div>
+    <b>MITOS</b> annotates protein coding genes by detecting congruences
+    in the results of BLASTX searches. That is, in short, the <i>e-values</i>
+    of BLASTX searches aiming at the same target are summed up position-wise
+    (see also: <a href="#scores">Evaluating the Output</a>). Regions
+    defined by stretches of positions with a "good" score are considered as
+    connected and part of the respective protein coding region. This
+    enables <b>MITOS</b> to detect frame-shifts and, by applying a
+    greedy method, duplication events. However, in rare cases, this
+    greedy procedure annotates an unlikely copy.<br/> This can easily
+    be identified by evaluating the scores given in the annotations
+    (or the protein plots).
+    Certainly, <i>e-values</i> (and therefore <i>quality values</i>) of two
+    different BLAST searches cannot be compared. Nevertheless, they
+    give us a good indication whether we have a true copy or just a
+    region with a slight similarity.<br/>
+	As we can see, the putative <i>nad6</i> duplicate on
+    the minus strand has a much higher score than the one on the plus
+    strand. Additionally, most other protein coding regions exhibit
+    similar high quality values. From this we can conclude that the
+    region on the minus strand contains a true <i>nad6</i> gene, but the
+    other one is unlikely and needs further examination.
+    </div>
+
+    <img src="mito/nad6a.png" alt="analysis" class="helpimg">
+
+    <img src="mito/nad6b.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <div class="helptxt">
+	Further possibilities for a more detailed analysis of the results is given
+	by the protein and ncRNA plots that are linked in the "Raw data" section.
+	The protein plot shows for each gene and each position the quality value
+	if it is above the threshold. Different colors are used to differentiate
+	the genes. Basically, the initial hits used in MITOS correspond to the
+	"mountains" in this plot. Thus this plot visualizes the signal from the
+	BLAST searches. The arrows shown on the top of the plot show the annotation
+	reported by <b>MITOS</b>. Note that the quality values are shown on a log scale.
+	In the protein plot for the example one can clearly see the inferior quality values
+	of the spurious nad6 hit.
+	<br>
+	The ncRNA plot shows the hits reported by infernal where conflicts among
+	tRNAs (respectively rRNAs) are already removed. The plot differentiates between
+	the hits from the global and glocal (if present) search by line type.
+	Furthermore the hits are separated in priorities (1 or 2). Priority "1" refers
+	to features set in the first round when MITOS takes the prediction hit of each
+	feature, and priority "2" refers to all other features set afterwards in the
+	remaining unassigned regions.
+	Note the reverse log scale for the e-value.
+    </div>
+
+	<img src="mito/protplot.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+    <div class="helptxt">
+	In order to retrieve the parameters used for the annotation of your job
+	we provide the <i>job settings</i> page. The link is the last item in the menu
+	on the results page. The setting are shown in tabular form. The heading shows
+	job identifier that was provided.
+    </div>
+
+	<img src="mito/settings.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+
+  </div>
+  <h2 id = "advanced">Advanced Usage</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+    The default values implemented in <b>MITOS</b> are tested
+    thoroughly and work well for different taxonomic lineages. If,
+    however, you are not satisfied with the result of the annotation
+    or if you are only interested in certain gene types, <b>MITOS</b>
+    offers an <i>advanced mode</i>. To change the annotation
+    parameters, press the <i>Advanced</i> button below the input mask.
+
+    <div style="clear: both;"> </div>
+    <h4>GENERAL SEARCH SETTINGS</h4>
+	<b>Multi Fasta</b><br/>
+	Per default the <b>MITOS</b> web server accepts only files containing a single
+	fasta formatted sequence. This may be changed with the Multifasta
+	checkbox. Please use this option carefully, considering the following
+	points:
+	<ul>
+	<li> If a multifasta file is uploaded for each sequence in that file a job
+		will be created. Your web browser will be redirected to the results page
+		of the job corresponding to the last sequence in your file.</li>
+	<li> In order to be able to access the results of the other sequences you
+		have to specify an email address. Note that, MITOS will send a result
+		notification mail for each sequence (which might have spam like character).</li>
+	<li> Please consider that MITOS currently needs about 1-2 hours for a
+		typical mitochondrial genome. Hence a larger amount of jobs will create
+		a considerable computational demand which might delay also jobs of other
+		users. You can check the current workload of the MITOS web server on the
+		<a href="http://{mitosurl}/stats.py">Status and Statistics page</a>.</li>
+	<li> For larger data sets we could provide dedicated computational
+		resources. Also more convenient access to larger sets of results can be
+		organized.</li>
+	<li> In case of questions you might contact us at {mail}.</li>
+	</ul>
+	<br/>
+
+    <b>Feature types</b><br/>
+    Here you can select if you want to annotate all three types of
+    genes or only a subset. If you are only interested in protein
+    coding genes, untick the boxes for tRNAs and rRNAs. This will
+    also decrease the time needed for annotation dramatically.
+    See the <b>MITOS</b> article for a further explanation of the parameters.<br/>
+
+      <h4>PROTEIN SEARCH PARAMETERS</h4>
+      <div class="helptxt">
+      <b>BLAST E-value Exponent</b>
+      Change this value to specify the statistical significance
+      threshold for considering matches in the BLASTX search.
+      The value entered here is the negation of the exponent of the E-value
+      threshold that should be used by BLAST, i.e. a value X gives an E-value of 10^(-X).
+      <br/>
+      <br/>
+      <b>Cutoff</b>
+      Minimum allowed quality value (in percent) of the maximum
+      quality value per reading frame. A higher values correspond to
+      shorter protein prediction and therefore reduced risk for
+      conflicts with other features <br/>
+      <br/>
+      <b>Maximum Overlap</b>
+      Maximum allowed overlap (in percent) of the smaller
+      feature.<br/>
+      <br/>
+      <b>Clipping Factor</b>
+      Clipping is started if overlapping prediction of hits with the same
+      name differ by less than a factor X in their quality value.<br/>
+      <br/>
+      <b>Fragment Overlap</b>
+      Maximum fraction (of the shorter feature) allowed that two hits
+      overlap in the query to be counted as fragments.<br/>
+      <br/>
+      <b>Fragment Quality Factor</b>
+      Maximum factor by which fragments may differ in their quality
+      scores. Higher values allow that parts of a gene can differ more
+      in their quality.<br/>
+      <br/>
+      <b>Start/Stop Range</b>
+      Range (number of amino acids) in which start and stop codon are
+      searched.
+      <h4>FINAL STEP PARAMETERS</h4>
+      <b>Final Maximum Overlap</b>
+      Maximum number of nucleotides by which genes of different
+      types may overlap. Applies to merging of the final
+      predictions.
+    </div>
+
+    <img src="mito/input_adv.png" alt="analysis" class="helpimg">
+
+    <div style="clear: both;"> </div>
+    </div>
+
+  <h2>Raw Data</h2>
+  <div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+	The raw data contains the following:
+	<dl>
+	<dt>blast/</dt><dd>The BLAST results. The directory "prot" contains the output files produced by BLAST in tabular format. The file "blast.dat" is a auxiliary file that is used to generate the protein plot. </dd>
+	<dt>mitfi-global/ and mitfi-local/</dt><dd>The results of MiTFi (tRNAout.nc and rRNAout.nc) and infernal (.cmout file) for the global and glocal search search.</dd>
+	<dt>plots/</dt><dd>All plots: protein plot, ncRNA plot, and all ncRNA secondary structures.</dd>
+	<dt>result</dt><dd>File containing the results. Positions are 0-based and start&amp;stop position are included. Columns are: id, type, name, prediction-method, start, stop, strand, anticodon, copy-number, part-number, structure, anticodon-position.</dd>
+	<dt>sequence.fas</dt><dd>The original sequence.</dd>
+	</dl>
+  </div>
+
+  <h2>Original data used in <b>MITOS</b></h2>
+<div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+To allow for reproducibility we publish the used original data.
+      <ul>
+	<li> The seed alignments and structural models for the ncRNA can be found <a href="mito/ncRNA.zip"> here</a></li>
+	<li> The aminoacid sequences used to find the protein coding sequences are deposited <a href="mito/RefSeq39.zip">here</a>.</li>
+      </ul>
+</div
+
+
+<h2><b>MITOS</b> source code</h2>
+<div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+The sources of MITOS are available on <a href="https://gitlab.com/Bernt/MITOS">gitlab</a>. 
+</div
+
+  <br/>
+  <h2 id = "uses">Studies using <b>MITOS</b></h2>
+<div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+
+<ol reversed="reversed">
+
+<!--
+
+<li>. 
+.
+ <a href="http://dx.doi.org/" target="_blank">link</a>.
+</li>
+-->
+
+<li>J Hyde, SJB Cooper, P Munguia, WF Humphreys et al. 
+The first complete mitochondrial genomes of subterranean dytiscid diving beetles (Limbodessus and Paroster) from calcrete aquifers of Western Australia. 
+Australian Journal of Zoology. <a href="http://dx.doi.org/10.1071/ZO17076" target="_blank">link</a>.
+</li>
+
+<li>D Kusy, M Motyka, C Andujar, M Bocek, M Masek, et al. 
+Genome sequencing of Rhinorhipus Lawrence exposes an early branch of the Coleoptera.
+Frontiers in Zoology201815:21 2018. <a href="http://dx.doi.org/10.1186/s12983-018-0262-0" target="_blank">link</a>.
+</li>
+
+<li>MH Tan, HM Gan, G Dally, S Horner, PAR Moreno, et al. 
+More limbs on the tree: mitogenome characterisation and systematic position of 'living fossil'species Neoglyphea inopinata and Laurentaeglyphea neocaledonica (Decapoda : Glypheidea : Glypheidae).
+Invertebrate Systematics, 2018. <a href="http://dx.doi.org/10.1071/IS17050" target="_blank">link</a>.
+</li>
+
+<li>DJ Machado, D Janies, C Brouwer, T Grant. 
+A new strategy to infer circularity applied to four new complete frog mitogenomes.
+Wiley Ecology and Evolution. 2018;8:4011–4018. <a href="http://dx.doi.org/10.1002/ece3.3918" target="_blank">link</a>.
+</li>
+
+<li>Y Zhang, J Sun, GW Rouse, H Wiklund, F Pleijel et al. 
+Phylogeny, evolution and mitochondrial gene order rearrangement in scale worms (Aphroditiformia, Annelida).
+Phylogenetics and Evolution, 2018. <a href="http://dx.doi.org/10.1016/j.ympev.2018.04.002" target="_blank">link</a>.
+</li>
+
+<li>JM Doyle, DA Bell, PH Bloom, G Emmons, A Fesnock et al. 
+New insights into the phylogenetics and population structure of the prairie falcon (Falco mexicanus).
+BMC Genomics, 2018. <a href="http://dx.doi.org/10.1186/s12864-018-4615-z" target="_blank">link</a>.
+</li>
+
+<li>NJ Kenny, C Noreña, C Damborenea, C Grande. 
+Probing recalcitrant problems in polyclad evolution and systematics with novel mitochondrial genome resources. 
+Genomics, 2018. <a href="http://dx.doi.org/10.1016/j.ygeno.2018.02.009" target="_blank">link</a>.
+</li>
+
+<li>EE Chase, BM Robicheau, S Veinot, S Breton, et al. 
+The complete mitochondrial genome of the hermaphroditic freshwater mussel Anodonta cygnea (Bivalvia: Unionidae): in silico analyses of sex-specific ORFs across order Unionoida.
+BMC Genomics, 2018. <a href="http://dx.doi.org/10.1186/s12864-018-4583-3" target="_blank">link</a>.
+</li>
+
+<li>Y Fu, Y Yang, H Zhang, G Farley, J Wang, KA Quarles. 
+The genome of the Hi5 germ cell line from Trichoplusia ni, an agricultural pest and novel model for small RNA biology.
+eLife, 2018 <a href="https://cdn.elifesciences.org/articles/31628/elife-31628-v1.pdf" target="_blank">link</a>.
+</li>
+
+<li>J Li, J Zhu, S Lou, P Wang, Y Zhang, L Wang, R Yin, et al. 
+The Complete Mitochondrial Genome of Coptotermes 'suzhouensis'(syn. Coptotermes formosanus)(Isoptera: Rhinotermitidae) and Molecular Phylogeny Analysis.
+Journal of Insect Science, 2018 <a href="http://dx.doi.org/10.1093/jisesa/iey018" target="_blank">link</a>.
+</li>
+
+<li>M Yang, L Song, J Mao, Y Shi, C Wu, Y Zhang. 
+Complete mitochondrial genome of the soybean leaffolder, Omiodes indicata (Lepidoptera: Pyraloidea: Crambidae), and phylogenetic analysis for Pyraloidea.
+ International Journal of Biological Macromolecules, 2018 <a href="http://dx.doi.org/10.1016/j.ijbiomac.2018.03.041" target="_blank">link</a>.
+</li>
+
+<li>BY Zheng, LJ Cao, P Tang, K van Achterberg, et al. 
+Gene arrangement and sequence of mitochondrial genomes yield insights into the phylogeny and evolution of bees and sphecid wasps (Hymenoptera: Apoidea).
+Molecular Phylogenetics and Evolution, 2018 <a href="http://dx.doi.org/10.1016/j.ympev.2018.02.028" target="_blank">link</a>.
+</li>
+
+<li>J Li, Y Zhang, K Hu, Y Zhao, R Lin, Y Li, Z Huang, et al. 
+Mitochondrial genome characteristics of two Sphingidae insects (Psilogramma increta and Macroglossum stellatarum) and implications for their phylogeny.
+International Journal of Biological Macromolecules, 2018 <a href="http://dx.doi.org/10.1016/j.ijbiomac.2018.02.159" target="_blank">link</a>.
+</li>
+
+
+<li>TI Terraneo, R Arrigoni, F Benzoni, ZH Forsman et al. 
+The complete mitochondrial genome of Porites harrisoni (Cnidaria: Scleractinia) obtained using next-generation sequencing.
+Mitochondrial DNA Part B, 2018 <a href="https://doi.org/10.1080/23802359.2018.1443852" target="_blank">link</a>.
+</li>
+
+<li>YQ Liu, DB Chen, HH Liu, HL Hu, HX Bian, RS Zhang et al. 
+The Complete Mitochondrial Genome of the Longhorn Beetle Dorysthenes paradoxus (Coleoptera: Cerambycidae: Prionini) and the Implication for the Phylogenetic Relationships of the Cerambycidae Species.
+Journal of Insect Science, 2018 <a href="http://dx.doi.org/10.1093/jisesa/iey012" target="_blank">link</a>.
+</li>
+
+<li>KA O'Connell, A Hamidy, N Kurniawan, EN Smith, MK Fujita. 
+Synchronous diversification of parachuting frogs (Genus Rhacophorus) on Sumatra and Java.
+Molecular Phylogenetics and Evolution, 2018 <a href="http://dx.doi.org/10.1016/j.ympev.2018.02.003" target="_blank">link</a>.
+</li>
+
+<li>G Fagua, FL Condamine, BMT Brunet, AL Clamens, J Laroche, RC Levesque, M Cusson, FAH Sperling. 
+Convergent herbivory on conifers by Choristoneura moths after boreal forest formation.
+Molecular Phylogenetics and Evolution, 2018 <a href="http://dx.doi.org/10.1016/j.ympev.2018.01.013" target="_blank">link</a>.
+</li>
+
+<li>FL Condamine, B Nabholz, AL Clamens, JR Dupuis, FAH Sperling. 
+Mitochondrial phylogenomics, the origin of swallowtail butterflies, and the impact of the number of clocks in Bayesian molecular dating.
+Systematic Entomology <a href="http://dx.doi.org/10.1111/syen.12284" target="_blank">link</a>.
+</li>
+
+<li>EA Solares, M Chakraborty, DE Miller, S Kalsow, KE Hall, AG Perera, JJ Emerson, RS Hawley. 
+Rapid low-cost assembly of the Drosophila melanogaster reference genome using low-coverage, long-read sequencing.
+bioRxiv, 2018 <a href="http://dx.doi.org/10.1101/267401" target="_blank">link</a>.
+</li>
+
+<li>TI Terraneo, R Arrigoni, F Benzoni, ZH Forsman, ML Berumen. 
+Using ezRAD to reconstruct the complete mitochondrial genome of Porites fontanesii (Cnidaria: Scleractinia).
+Mitochondrial DNA Part B, 2018 <a href="http://dx.doi.org/10.1080/23802359.2018.1437805" target="_blank">link</a>.
+</li>
+
+<li>CB de Queiroz, MF Santana, PMP Vidigal, M Vieira de Queiroz. 
+Comparative analysis of the mitochondrial genome of the fungus Colletotrichum lindemuthianum, the causal agent of anthracnose in common beans.
+Applied Microbiology and Biotechnology, 2018 <a href="http://dx.doi.org/10.1007/s00253-018-8812-0" target="_blank">link</a>.
+</li>
+
+<li>G Xian, L XIONG, L Jianbin, Q Shirong, Z Zhuoma, G Zengcuo, J Pei; P Bao, P Yan; X Ding. 
+Study on the Complete Mitochondrial Genome of Qaidam Cattle (Bos taurus).
+Agricultural Science & Technology 2017 <a href="http://web.a.ebscohost.com/abstract?direct=true&profile=ehost&scope=site&authtype=crawler&jrnl=10094229&AN=127713355&h=Zw755DxlCtzcTdOsGNwluhyzt1MleKVw9ovayjGWoTGZhG4U%2bZ2GtgfJsYgxH2jgCVA70KLZHj1UH9n58HU%2btQ%3d%3d&crl=c&resultNs=AdminWebAuth&resultLocal=ErrCrlNotAuth&crlhashurl=login.aspx%3fdirect%3dtrue%26profile%3dehost%26scope%3dsite%26authtype%3dcrawler%26jrnl%3d10094229%26AN%3d127713355" target="_blank">link</a>.
+</li>
+
+<li>F Antoine, JP Vacher, EA Courtois, B Villette, H Reizine, P Gaucher, R Jairam, P Ouboter, PJR Kok. 
+On the brink of extinction: two new species of Anomaloglossus from French Guiana and amended definitions of Anomaloglossus degranvillei and A. surinamensis.
+Zootaxa, 2018 <a href="http://dx.doi.org/10.11646/zootaxa.4379.1.1" target="_blank">link</a>.
+</li>
+
+<li>RK Sarvani, DR Parmar, W Tabasum, N Thota, A Sreenivas, and A Gaur. 
+Characterization of the complete mitogenome of Indian Mouse Deer, Moschiola indica (Artiodactyla: Tragulidae) and its evolutionary significance.
+Scientific Reports, 2018  <a href="http://dx.doi.org/10.1038/s41598-018-20946-5" target="_blank">link</a>.
+</li>
+
+<li>T Bourguignon, T Qian, SYW Ho, F Juna, Z Wang, DA Arab, SL Cameron, J Walker, D Rentz, TAE Nathan Lo . 
+Transoceanic dispersal and plate tectonics shaped global cockroach distributions: evidence from mitochondrial phylogenomics.
+Molecular Biology and Evolution 2018 <a href="http://dx.doi.org/10.1093/molbev/msy013" target="_blank">link</a>.
+</li>
+
+<li>N Bondarenko, A Glotova, E Nassonova, A Masharsky, A Kudryavtsev, Alexey Smirnov. 
+The complete mitochondrial genome of Vannella simplex (Amoebozoa, Discosea, Vannellida).
+European Journal of Protistology, 2018 <a href="http://dx.doi.org/10.1016/j.ejop.2018.01.006" target="_blank">link</a>.
+</li>
+
+<li>N Song, A Lin, X Zhao. 
+Insight into higher-level phylogeny of Neuropterida: Evidence from secondary structures of mitochondrial rRNA genes and mitogenomic data.
+PloS one, 2018 <a href="http://dx.doi.org/10.1371/journal.pone.0191826" target="_blank">link</a>.
+</li>
+
+<li>SI Chi, I Urbarova, SD Johansen. 
+Expression of homing endonuclease gene and insertion-like element in sea anemone mitochondrial genomes: Lesson learned from Anemonia viridis.
+Gene, 2018 <a href="http://dx.doi.org/10.1016/j.gene.2018.01.067" target="_blank">link</a>.
+</li>
+
+<li>S Chandhini, VM Arjunan, PHA Ali, R Raghavan, D Pillai, VJR Kumar. 
+Complete mitogenome analysis of endangered Malabar mahseer (Tor malabaricus)
+Conservation Genetics Resources, 2018 <a href="https://link.springer.com/article/10.1007/s12686-018-0997-0" target="_blank">link</a>.
+</li>
+
+<li>W Liang, Z Yunlin, X Zhenggang, H Tian, Z Libo, L Shiquan. 
+The complete mitochondrial genome and phylogeny of Geospiza magnirostris (Passeriformes: Thraupidae).
+Conservation Genetics Resources, 2018 <a href="https://link.springer.com/article/10.1007/s12686-018-0998-z" target="_blank">link</a>.
+</li>
+
+<li>VC Seixas, CRR Ventura, PC Paiva. 
+The complete mitochondrial genome of the sea star Echinaster (Othilia) brasiliensis (Asteroidea: Echinasteridae).
+Conservation Genetics Resources, 2018 <a href="https://link.springer.com/article/10.1007/s12686-018-0986-3" target="_blank">link</a>.
+</li>
+
+<li>AM Lamb, HM Gan, C Greening, L Joseph, YP Lee, Y Peng, A Moran-Ordonez, P Sunnucks, A Pavlova.
+Climate‐driven mitochondrial selection: a test in Australian songbirds.
+Molecular Ecology 2018  <a href="http://dx.doi.org/10.1111/mec.14488" target="_blank">link</a>.
+</li>
+
+<li>ZT Chen, MY Zhao, C Xu, YZ Du. 
+Molecular phylogeny of Systellognatha (Plecoptera: Arctoperlaria) inferred from mitochondrial genome sequences
+International Journal of Biological Macromolecules, 2018 <a href="http://dx.doi.org/10.1016/j.ijbiomac.2018.01.065" target="_blank">link</a>.
+</li>
+
+<li>. 
+The mitochondrial genome of red-necked phalarope Phalaropus lobatus (Charadriiformes: Scolopacidae) and phylogeny analysis among Scolopacidae
+W Liu, C Hu, W Xie, P Chen, Y Zhang, R Yao, K Li, Q Chang.
+Genes & Genomics 2018 <a href="https://link.springer.com/article/10.1007/s13258-017-0632-6" target="_blank">link</a>.
+</li>
+
+<li>YX Huang, DZ Qin. 
+Sequencing and analysis of the complete mitochondrial genome of Changeondelphax velitchkovskyi (Hemiptera: Fulgoroidea).
+Mitochondrial DNA Part B<a href="https://doi.org/10.1080/23802359.2017.1422407" target="_blank">link</a>.
+</li>
+
+<li>Q Wang, L Li, C Wang, C Wei, R Feng, J Huang. 
+The complete maternal mitochondrial genome of Acuticosta chinensis (Bivalvia: Unionoida: Unionidae).
+Conservation Genetics Resources 2018 <a href="https://link.springer.com/article/10.1007/s12686-017-0980-1" target="_blank">link</a>.
+</li>
+
+<li>ZT Chen, YZ Du. 
+The first two mitochondrial genomes from Taeniopterygidae (Insecta: Plecoptera): Structural features and phylogenetic implications.
+International Journal of Biological Macromolecules, 2017 <a href="http://dx.doi.org/10.1016/j.ijbiomac.2017.12.150" target="_blank">link</a>.
+</li>
+
+<li>H Nakano, H Miyazawa, A Maeno, T Shiroishi, K Kakui, R Koyanagi, M Kanda, N Satoh, A Omori and H Kohtsuka. 
+A new species of Xenoturbella from the western Pacific Ocean and the evolution of Xenoturbella.
+BMC Evolutionary Biology, 2017 <a href="http://dx.doi.org/10.1186/s12862-017-1080-2" target="_blank">link</a>.
+</li>
+
+<li>D Guerra, K Bouvet, S Breton. 
+Mitochondrial gene order evolution in Mollusca: inference of the ancestral state from the mtDNA of Chaetopleura apiculata (Polyplacophora, Chaetopleuridae).
+Molecular Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.12.013" target="_blank">link</a>.
+</li>
+
+<li>M Lee-Estevez, G Larama, E Figueroa. 
+Complete mitochondrial genome sequence of Patagonian blenny, Eleginops maclovinus (Perciformes: Eleginopidae) with phylogenetic consideration.
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0954-3" target="_blank">link</a>.
+</li>
+
+<li>AZ Zaccaron, BH Bluhm. 
+The genome sequence of Bipolaris cookei reveals mechanisms of pathogenesis underlying target leaf spot of sorghum.
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-17476-x" target="_blank">link</a>.
+</li>
+
+<li>J Pei, M Chu, P Bao, Z Sha, X Ding, P Yan, X Guo. 
+The complete mitochondrial genome of Sanhe horse (Equus caballus).
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0951-6" target="_blank">link</a>.
+</li>
+
+<li>Kyle T. David & Kenneth M. Halanych. 
+Mitochondrial genome of Dinophilus gyrociliatus (Annelida: Dinophilidae).
+Mitochondrial DNA Part B <a href="http://dx.doi.org/10.1080/23802359.2017.1407704" target="_blank">link</a>.
+</li>
+
+<li>Y Du, W Dai, CH Dietrich. 
+Mitochondrial genomic variation and phylogenetic relationships of three groups in the genus Scaphoideus (Hemiptera: Cicadellidae: Deltocephalinae).
+Scientific Reports <a href="http://dx.doi.org/10.1038/s41598-017-17145-z" target="_blank">link</a>.
+</li>
+
+<li>Y Su, Y Zhang, S Feng, J He, Z Zhao, Z Bai, L Liu, R Zhang, Z Li. 
+The mitochondrial genome of the wolfberry fruit fly, Neoceratitis asiatica (Becker)(Diptera: Tephritidae) and the phylogeny of Neoceratitis Hendel genus.
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-16929-7" target="_blank">link</a>.
+</li>
+
+<li>J Takahashi, S Deowanish, H Okuyama. 
+Analysis of the complete mitochondrial genome of the giant honeybee, Apis dorsata,(Hymenoptera: Apidae) in Thailand.
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0942-7" target="_blank">link</a>.
+</li>
+
+<li>J Quan, X Zhang, T Zhou, Y Hu, X Liu. 
+Characterization of the complete mitochondrial genome sequence of Artamus cinereus (Passeriformes: Artamidae).
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0939-2" target="_blank">link</a>.
+</li>
+
+<li>Q Wang, R Feng, L Li, C Wang, C Zhu. 
+Characterization of the complete mitogenome for the freshwater shrimp Exopalaemon modestus.
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0935-6" target="_blank">link</a>.
+</li>
+
+<li>GF González. 
+Phylogeny, evolution and speciation of Choristoneura and Tortricidae (Lepidoptera).
+University of Alberta 2017 <a href="https://era.library.ualberta.ca/files/ccv43nx26n/Fagua_Gonzalez_Giovanny_201707_PhD.pdf" target="_blank">link</a>.
+</li>
+
+<li>T Hartmann, M Bernt, M Middendorf. 
+An Exact Algorithm for Sorting by Weighted Preserving Genome Rearrangements.
+16-th Asia Pacific Bioinformatics Conference (APBC '18) <a href="https://www.researchgate.net/profile/Tom_Hartmann3/publication/320583912_An_Exact_Algorithm_for_Sorting_by_Weighted_Preserving_Genome_Rearrangements/links/59eeea94a6fdcc32187ddd67/An-Exact-Algorithm-for-Sorting-by-Weighted-Preserving-Genome-Rearrangements.pdf" target="_blank">link</a>.
+</li>
+
+<li>Renata Velôzo Timbó. 
+Caracterização de fatores que afetam a detecção de presas através do sequenciamento de alto desempenho do DNA.
+Universidade de Brasília <a href="http://repositorio.unb.br/bitstream/10482/25232/1/2017_RenataVel%C3%B4zoTimb%C3%B3.pdf" target="_blank">link</a>.
+</li>
+
+<li>J Takahashi, S Hadisoesilo, H Okuyama, HR Hepburn. 
+Analysis of the complete mitochondrial genome of Apis nigrocincta (Insecta: Hymenoptera: Apidae) on Sangihe Island in Indonesia.
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0922-y" target="_blank">link</a>.
+</li>
+  
+ - Conservation Genetics …, 2017   
+<li>D Singh, D Kabiraj, P Sharma, H Chetia, PV Mosahari, K Neog, U Bora. 
+The mitochondrial genome of Muga silkworm (Antheraea assamensis) and its comparative analysis with other lepidopteran insects.
+PloS one, 2017 <a href="http://dx.doi.org/10.1371/journal.pone.0188077" target="_blank">link</a>.
+</li>
+
+<li>H Okuyama, SJ Martin, J Takahashi. 
+Complete mitochondrial DNA sequence of the tropical hornet Vespa.
+Mitochondrial DNA Part B, 2017 <a href="http://dx.doi.org/10.1080/23802359.2017.1398622" target="_blank">link</a>.
+</li>
+
+<li>JN Macher, VMA Zizka, AM Weigand, F Leese. 
+A simple centrifugation protocol for metagenomic studies increases mitochondrial DNA yield by two orders of magnitude.
+Methods in Ecology and Evolution <a href="http://dx.doi.org/10.1111/2041-210X.12937" target="_blank">link</a>.
+</li>
+
+<li>PG Foster, TMP de Oliveira, ES Bergo, JE Conn, DC Sant’Ana, SS Nagaki, S Nihei, CE Lamas, C González, CC Moreira, . 
+Phylogeny of Anophelinae using mitochondrial protein coding genes.
+Royal Society Open Science, 2017 <a href="http://dx.doi.org/10.1098/rsos.170758 " target="_blank">link</a>.
+</li>
+
+<li>NH Kim, SJ Lim, HM Chae, YC Park. 
+Complete mitochondrial genome of the Amur hedgehog Erinaceus amurensis (Erinaceidae) and higher phylogeny of the family Erinaceidae.
+Genetics and molecular research: GMR, 2017 <a href="http://dx.doi.org/10.4238/gmr16019300" target="_blank">link</a>.
+</li>
+
+<li>L Yuan, X Song, B Ji, C Zhao and X Liu. 
+The Complete Mitogenome and Phylogenetic Analysis of Acrossocheilus wuyiensis (Osteichthyes Cyprinidae).
+Journal of Phylogenetics and Evolutionary Biology 2017, 5:2 <a href="http://dx.doi.org/10.4172/2329-9002.1000185" target="_blank">link</a>.
+</li>
+
+<li>V Duquesne, A Delcont, A Huleux, V Beven, F Touzain, M Ribière-Chabert.
+Complete Mitochondrial Genome Sequence of Aethina tumida (Coleoptera: Nitidulidae), a Beekeeping Pest.
+Genome Announcements, 2017 <a href="http://dx.doi.org/10.1128/genomeA.01165-17" target="_blank">link</a>.
+</li>
+
+<li>H Zou, I Jakovlić, R Chen, D Zhang, J Zhang, WX Li, GT Wang. 
+The complete mitochondrial genome of parasitic nematode Camallanus cotti: extreme discontinuity in the rate of mitogenomic architecture evolution within the Chromadorea class
+BMC Genomics, 2017 <a href="http://dx.doi.org/10.1186/s12864-017-4237-x" target="_blank">link</a>.
+</li>
+
+<li>Y Du, C Zhang, CH Dietrich, Y Zhang, W Dai.
+Characterization of the complete mitochondrial genomes of Maiestas dorsalis and Japananus hyalinus (Hemiptera: Cicadellidae) and comparison with other Membracoidea.
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-14703-3" target="_blank">link</a>.
+</li>
+
+<li>Y Milián-García, J Castellanos-Labarcena, MA Russello, G Amato. 
+Mitogenomic investigation reveals a cryptic lineage of Crocodylus in Cuba.
+Bulletin of Marine Science, 2017 <a href="http://dx.doi.org/10.5343/bms.2016.1134" target="_blank">link</a>.
+</li>
+
+<li>K Yoshizawa, KP Johnson, AD Sweet, I Yao, RL Ferreira, SL Cameron. 
+Mitochondrial phylogenomics and genome rearrangements in the barklice (Insecta: Psocodea).
+Molecular Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.10.014" target="_blank">link</a>.
+</li>
+
+<li>LE Wood, S De Grave, CJ van Heerden, SR Daniels. 
+Complete mitochondrial genome of the freshwater prawn Palaemon capensis (Crustacea: Palaemonidae).
+Mitochondrial DNA Part B - 2017 <a href="http://dx.doi.org/10.1080/23802359.2017.1390400" target="_blank">link</a>.
+</li>
+
+<li>N Liu, N Li, P Yang, C Sun, J Fang, S Wang. 
+The complete mitochondrial genome of Damora sagana and phylogenetic analyses of the family Nymphalidae.
+Genes & Genomics, 2017 <a href="https://link.springer.com/article/10.1007/s13258-017-0614-8" target="_blank">link</a>.
+</li>
+
+<li>Y Xu, B Wen, K Zhu, Z Du, X Bai. 
+The complete mitochondrial genome of Rhizomys sumatrensis (Rodentia: Spalacidae) and its phylogenetic implications.
+Conservation Genetics Resources, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0901-3" target="_blank">link</a>.
+</li>
+
+<li>MP Doane, D Kacev, S Harrington, K Levi, D Pande, A Vega, EA Dinsdale. 
+Mitochondrial recovery from shotgun metagenome sequencing enabling phylogenetic analysis of the common thresher shark (Alopias vulpinus).
+Meta Gene, 2017 <a href="http://dx.doi.org/10.1016/j.mgene.2017.10.003" target="_blank">link</a>.
+</li>
+
+<li>FF Liu, YP Li, I Jakovlic, XQ Yuan. 
+Tandem duplication of two tRNA genes in the mitochondrial genome of Tagiades vajuna (Lepidoptera: Hesperiidae).
+EJE, 2017 <a href="http://dx.doi.org/10.14411/eje.2017.052" target="_blank">link</a>.
+</li>
+
+<li>MP Doane et al. 
+Mitochondrial recovery from shotgun metagenome sequencing enabling phylogenetic analysis of the common thresher shark (Alopias vulpinus).
+ Meta Gene, 2017 <a href="http://dx.doi.org/10.1016/j.mgene.2017.10.003" target="_blank">link</a>.
+</li>
+
+<li>FF Liu et al. 
+Tandem duplication of two tRNA genes in the mitochondrial genome of Tagiades vajuna (Lepidoptera: Hesperiidae).
+European Journal of Entomology, 2017 <a href="http://dx.doi.org/10.14411/eje.2017.052" target="_blank">link</a>.
+</li>
+
+<li>D Zhang et al. 
+Sequencing of the complete mitochondrial genome of a fish-parasitic flatworm Paratetraonchoides inermis (Platyhelminthes: Monogenea): tRNA gene arrangement reshuffling and implications for phylogeny.
+Parasites & Vectors, 2017 <a href="http://dx.doi.org/10.1186/s13071-017-2404-1" target="_blank">link</a>.
+</li>
+
+<li>Q Wang et al. 
+The complete maternal mitochondrial genome sequence of Cuneopsis heudei (Bivalvia: Unionoida: Unionidae).
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0876-0" target="_blank">link</a>.
+</li>
+
+<li>Y Shinmura et al. 
+The complete mitochondrial genome and genetic distinction of the Taiwanese honeybee, Apis cerana (Hymenoptera: Apidae).
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0879-x" target="_blank">link</a>.
+</li>
+
+<li> Y Liu et al. 
+Compositional heterogeneity in true bug mitochondrial phylogenomics.
+Molecular Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.09.025" target="_blank">link</a>.
+</li>
+
+<li>W Tabasum et al. 
+The complete mitochondrial genome of Eld's deer (Rucervus eldii eldii) and its phylogenetic implications.
+Gene Reports, 2017 <a href="http://dx.doi.org/10.1016/j.genrep.2017.10.001" target="_blank">link</a>.
+</li>
+
+<li>K Sivasankaran et al. 
+Complete mitochondrial genome sequence of fruit-piercing moth Eudocima phalonia (Linnaeus, 1763)(Lepidoptera: Noctuoidea).
+Genomics Data, 2017 <a href="http://dx.doi.org/10.1016/j.gdata.2017.09.004" target="_blank">link</a>.
+</li>
+
+<li>Y Zhao, J Chen, Z Wang, Z Zhang, M Wu, L Yang. 
+The complete mitochondrial genome of the vulnerable megophryid frog Oreolalax rhodostigmatus (Anura, Megophryidae).
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0878-y" target="_blank">link</a>.
+</li>
+
+<li>A Sayadi, E Immonen, C Tellgren-Roth, G Arnqvist. 
+The Evolution of Dark Matter in the Mitogenome of Seed Beetles.
+Genome Biology and Evolution, 2017 <a href="http://dx.doi.org/10.1093/gbe/evx205" target="_blank">link</a>.
+</li>
+
+<li>Z du Toit et al. 
+Mitochondrial genomes of African pangolins and insights into evolutionary patterns and phylogeny of the family Manidae.
+BMC Genomics, 2017 <a href="http://dx.doi.org/10.1186/s12864-017-4140-5" target="_blank">link</a>.
+</li>
+
+<li>PV Pascoal et al. 
+ Sequenciamento do DNA mitocondrial de Chlamydomonas biconvexa revela um mitogenoma compacto.
+Embrapa Agroenergia-Artigo  <a href="https://www.alice.cnptia.embrapa.br/bitstream/doc/1075986/1/PaginasdeAnaisIVEnPI74753.pdf" target="_blank">link</a>.
+</li>
+
+<li>WT Tay, S Elfekih, KHJ Gordon, H Delatte, PJ De Barro. 
+The trouble with MEAM2: Implications of pseudogenes on species delimitation in the globally invasive Bemisia tabaci (Hemiptera: Aleyrodidae) cryptic species complex.
+Genome Biology and Evolution 2017 <a href="http://dx.doi.org/10.1093/gbe/evx173/4104954" target="_blank">link</a>.
+</li>
+
+<li>N Haddad, N Adjlane, W Loucif-Ayad, A Dash, S Naganeeswaran, B Rajashekar, KAA Al-Nakeeb, T Sicheritz-Pontén. 
+ Mitochondrial genome of the North African Sahara Honeybee, Apis mellifera sahariensis (Hymenoptera: Apidae).
+Mitochondrial Dna Part B, 2017 <a href="http://dx.doi.org/10.1080/23802359.2017.1365647" target="_blank">link</a>.
+</li>
+
+<li>J Fernández-Pérez, A Nantón, FJ Ruiz-Ruano, JPM Camacho, J Méndez. 
+First complete female mitochondrial genome in four bivalve species genus Donax and their phylogenetic relationships within the Veneroida order.
+PloS one, 2017 <a href="http://dx.doi.org/10.1371/journal.pone.0184464" target="_blank">link</a>.
+</li>
+
+<li>LL dos Santos, F Prosdocimi, NCB Lima, IR da Costa, DC Cardoso, MG Drummond.
+Comparative genomics and phylogenomics of Trichostrongyloidea mitochondria reveal insights for molecular diagnosis and evolutionary biology of nematode worms.
+Gene Reports, 2017 <a href="http://dx.doi.org/10.1016/j.genrep.2017.09.002" target="_blank">link</a>.
+</li>
+
+<li>DF Nacer, FR do Amaral.
+Striking pseudogenization in avian phylogenetics: numts are large and common in falcons.
+Molecular Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.07.002" target="_blank">link</a>.
+</li>
+
+<li>F Wu, L Kumagai, Y Cen, J Chen, CM Wallis, M Polek, J Jiang, Z Zheng, G Liang, and X Deng. 
+Analyses of Mitogenome Sequences Revealed that Asian Citrus Psyllids (Diaphorina citri) from California Were Related to Those from Florida.
+Scientific reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-10713-3" target="_blank">link</a>.
+</li>
+
+<li>K Wang, L Li, S Li, H Sun, G Bi. 
+Characterization of the complete mitochondrial genome of Podocnemis expansa (Pleurodira: Podocnemididae). 
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0853-7" target="_blank">link</a>.
+</li>
+
+<li>YW Chiu, CW Chang, HD Lin, KN Shen. 
+The complete mitogenome of the winged argonaut Argonauta hians and its phylogenetic relationships in Octopoda.
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0824-z" target="_blank">link</a>.
+</li>
+
+<li>F Ghiselli, L Milani, M Iannello, E Procopio, PL Chang, SV Nuzhdin, M Passamonti. 
+The complete mitochondrial genome of the grooved carpet shell, Ruditapes decussatus (Bivalvia, Veneridae).
+PeerJ, 2017 <a href="http://dx.doi.org/10.7717/peerj.3692" target="_blank">link</a>.
+</li>
+
+<li>M Laurito, AG Briscoe, WR AlmirÓn, RE Harbach. 
+Systematics of the Culex coronator complex (Diptera: Culicidae): morphological and molecular assessment.
+Zoological Journal of the Linnean Society, 2017 <a href="http://dx.doi.org/10.1093/zoolinnean/zlx053" target="_blank">link</a>.
+</li>
+
+<li>Y Zhao, H Meng, L Su. 
+The complete mitochondrial genome of the mixtured pygmy frog Microhyla mixtura (Anura, Microhylidae).
+Conservation Genetics Resources 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0841-y" target="_blank">link</a>.
+</li>
+
+<li>ZT Chen, L Lü, MX Lu, YZ Du. 
+Comparative mitogenomic analysis of Aposthonia borneensis and Aposthonia japonica (Embioptera: Oligotomidae) reveals divergent evolution of webspinners.
+Scientific Reports, 2017 <a href="http://dx.doi.org/ 10.1038/s41598-017-09003-9" target="_blank">link</a>.
+</li>
+
+<li>J Takahashi, T Sasaki, M Nishimoto, H Okuyama, T Nomura. 
+Characterization of the complete sequence analysis of mitochondrial DNA of Japanese rare bumblebee species Bombus cryptarum florilegus.
+Conservation Genetics …, 2017 <a href="https://link.springer.com/article/10.1007/s12686-017-0832-z" target="_blank">link</a>.
+</li>
+
+<li>KAM Sullivan, RN Platt, RD Bradley, DA Ray. 
+Whole mitochondrial genomes provide increased resolution and indicate paraphyly in deer mice.
+BMC Zoology, 2017 <a href="http://dx.doi.org/10.1186/s40850-017-0020-3" target="_blank">link</a>.
+</li>
+
+<li>J Doña, AD Sweet, KP Johnson, D Serrano, S Mironov, R Jovani. 
+Cophylogenetic analyses reveal extensive host-shift speciation in a highly specialized and host-specific symbiont system.
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.08.005" target="_blank">link</a>.
+</li>
+
+<li>YJ Hao, YL Zou, YR Ding, WY Xu, ZT Yan, XD Li, WB Fu, TJ Li, and B Chen. 
+Complete mitochondrial genomes of Anopheles stephensi and An. dirus and comparative evolutionary mitochondriomics of 50 mosquitoes.
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-07977-0" target="_blank">link</a>.
+</li>
+
+<li>A Poliseno, C Feregrino, S Sartoretto, D Aurelle, G Wörheide, CS McFadden, S Vargas. 
+Comparative mitogenomics, phylogeny and evolutionary history of Leptogorgia (Gorgoniidae).
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.08.001" target="_blank">link</a>.
+</li>
+
+<li>GC Cessa Rauch, J de Vries, C Woehle, SB Gould.
+ Mitochondrial Genome Assemblies of Elysia timida and Elysia cornigera and the Response of Mitochondrion-Associated Metabolism during Starvation.
+Genome Biology and Evolution, 2017 <a href="http://dx.doi.org/10.1093/gbe/evx129" target="_blank">link</a>.
+</li>
+
+<li>H Song, B Foquet, R Mariño-Pérez, DA Woller
+Phylogeny of locusts and grasshoppers reveals complex evolution of density-dependent phenotypic plasticity.
+Scientific reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-07105-y" target="_blank">link</a>.
+</li>
+
+<li>X Zhang, YL Shi, ZQ Wang, JY Duan, P Jiang, RD Liu, Jing Cui.
+Morphological and mitochondrial genomic characterization of eyeworms (Thelazia callipaeda) from clinical cases in central China.
+Frontiers in Microbiology, 2017 <a href="http://dx.doi.org/10.3389/fmicb.2017.01335" target="_blank">link</a>.
+</li>
+
+<li>JG Wang, D Zhang, I Jakovlić, WM Wang.
+Sequencing of the complete mitochondrial genomes of eight freshwater snail species exposes pervasive paraphyly within the Viviparidae family (Caenogastropoda).
+PloS one, 2017 <a href="http://dx.doi.org/10.1371/journal.pone.0181699" target="_blank">link</a>.
+</li>
+
+<li>XL Fan, YJ Gong, PY Chen, QQ Tan, JL Tan, SJ Wei.
+Next-generation sequencing of the mitochondrial genome of Dolichovespula panda (Hymenoptera: Vespidae) with a phylogenetic analysis of Vespidae.
+Journal of Asia-Pacific Entymology, 2017 <a href="http://dx.doi.org/10.1016/j.aspen.2017.07.009" target="_blank">link</a>.
+</li>
+
+<li>FC De Ré, LJ Robe, GL Wallau, ELS Loreto.
+Inferring the phylogenetic position of the Drosophila flavopilosa group: Incongruence within and between mitochondrial and nuclear multilocus datasets.
+Journal of Zoological Systematics and Evolutionary Research, 2017 <a href="http://dx.doi.org/10.1111/jzs.12170" target="_blank">link</a>.
+</li>
+
+<li>AP Brown, R Greenway, S Morgan, CR Quackenbush.
+Genome‐scale data reveals that endemic Poecilia populations from small sulfidic springs display no evidence of inbreeding.
+Molecular Ecology <a href="http://dx.doi.org/10.1111/mec.14249" target="_blank">link</a>.
+</li>
+
+<li>S Rutschmann, P Chen, C Zhou, MT Monaghan.
+ Mitochondrial genomes infer phylogenetic relationships among the oldest extant winged insects (Palaeoptera).
+bioRxiv, 2017 <a href="http://dx.doi.org/10.1101/164459" target="_blank">link</a>.
+</li>
+
+<li>A Rodríguez, JD Burgon, M Lyra, I Irisarri, D Baurain, L Blaustein, B Göçmen, S Künzel, BK Mable, AW Nolte, M Veith.
+Inferring the shallow phylogeny of true salamanders (Salamandra) by multiple phylogenomic approaches.
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.07.009" target="_blank">link</a>.
+</li>
+
+<li>MR Pie, PR Ströher, R Belmonte-Lopes, MR Bornschein, LF Ribeiro, BC Faircloth, JE McCormack.
+Phylogenetic relationships of diurnal, phytotelm-breeding Melanophryniscus (Anura: Bufonidae) based on mitogenomic data.
+Gene, 2017 <a href="http://dx.doi.org/10.1016/j.gene.2017.07.048" target="_blank">link</a>.
+</li>
+
+<li>A Sturm, G Carmona-Antoñanzas, M Bekaert, JL Humble, S Boyd, W Roy, DI Bassett, RD Houston, K Gharbi, JE Bron. 
+Maternal inheritance of deltamethrin resistance in the salmon louse Lepeophtheirus salmonis (Krøyer) is associated with unique mtDNA haplotypes.
+PLOS ONE, 201 <a href="http://dx.doi.org/10.1371/journal.pone.0180625" target="_blank">link</a>.
+</li>
+
+<li>SI Chi, SD Johansen.
+Zoantharian mitochondrial genomes contain unique complex group I introns and highly conserved intergenic regions.
+Gene, 2017 <a href="http://dx.doi.org/10.1016/j.gene.2017.07.023" target="_blank">link</a>.
+</li>
+
+<li>C Rauch, G Christa, J de Vries, C Woehle, SB Gould.
+Mitochondrial genome assemblies of Elysia timida and Elysia cornigera and the response of mitochondrion-associated metabolism during starvation.
+Genome Biology and Evolution <a href="http://dx.doi.org/10.1093/gbe/evx129" target="_blank">link</a>.
+</li>
+
+<li>S Pita, F Panzera, J Vela, P Mora, T Palomeque, and P Lorite.
+Complete mitochondrial genome of Triatoma infestans (Hemiptera, Reduviidae, Triatominae), main vector of Chagas disease.
+Infection, Genetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.meegid.2017.06.003" target="_blank">link</a>.
+</li>
+
+<li>RV Timbó, RC Togawa, MMC Costa, DA Andow, and DP Paula.
+Mitogenome sequence accuracy using different elucidation methods.
+PloS one, 2017 <a href="http://dx.doi.org/10.1371/journal.pone.0179971" target="_blank">link</a>.
+</li>
+
+<li>.A Faddeeva-Vakhrusheva, K Kraaijeveld, MFL Derks, SY Anvar, V Agamennone, W Suring, AA Kampfraath, J Ellers, GL Ngoc, CAM van Gestel, J Mariën, S Smit, NM van Straalen and D Roelofs.
+Coping with living in the soil: the genome of the parthenogenetic springtail Folsomia candida.
+BMC genomics, 2017 <a href="http://dx.doi.org/10.1186/s12864-017-3852-x" target="_blank">link</a>.
+</li>
+
+<li>S Fourdrilis, P Mardulyn, T Backeljau.
+Mitochondrial DNA hyperdiversity and population genetics in the periwinkle Melarhaphe neritoides (Mollusca: Gastropoda).
+PhD Thesis, Université Libre de Bruxelles, 2017.
+</li>
+
+<li>SK Kiran, VS Anoop, KC Sivakumar, R Dinesh, JP Mano, D Kaushik, G Sanil.
+An additional record of Fejervarya manoharani Garg and Biju from the Western Ghats with a description of its complete mitochondrial genome.
+Zootaxa, 2017 <a href="http://www.mapress.com/j/zt/article/view/zootaxa.4277.4.2" target="_blank">link</a>.
+</li>
+
+<li>WX Li, D Zhang, K Boyce, BW Xi, H Zou, SG Wu, M Li and GT Wang.
+The complete mitochondrial DNA of three monozoic tapeworms in the Caryophyllidea: a mitogenomic perspective on the phylogeny of eucestodes.
+Parasites & Vectors (2017) 10:314 <a href="http://dx.doi.org/10.1186/s13071-017-2245-y" target="_blank">link</a>.
+</li>
+
+<li>X Zhang, JY Duan, YL Shi, P Jiang, DJ Zeng, ZQ Wang, J Cui.
+Comparative mitochondrial genomics among Spirometra (Cestoda: Diphyllobothriidae) and the molecular phylogeny of related tapeworms.
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.06.003" target="_blank">link</a>.
+</li>
+
+<li>B Egger, L Bachmann, B Fromm.
+Atp8 is in the ground pattern of flatworm mitochondrial genomes.
+BMC Genomics, 2017 <a href="http://dx.doi.org/10.1186/s12864-017-3807-2" target="_blank">link</a>.
+</li>
+
+<li>J Dong, N Vincente, IC Chintauan-Marquier, C Ramadi, A Dettai, T Robillard.
+Complete mitochondrial genome and taxonomic revision of Cardiodactylus muiri Otte, 2007 (Gryllidae: Eneopterinae: Lebinthini).
+Zootaxa, 2017 <a href="http://mapress.com/j/zt/article/view/zootaxa.4268.1.6" target="_blank">link</a>.
+</li>
+
+<li>ZT Chen, YZ Du.
+First Mitochondrial Genome from Nemouridae (Plecoptera) Reveals Novel Features of the Elongated Control Region and Phylogenetic Implications.
+International Journal of Molecular Sciences, 2017 <a href="http://dx.doi.org/10.3390/ijms18050996" target="_blank">link</a>.
+</li>
+
+<li>J Takahashi, J Rai, T Wakamiya, H Okuyama.
+Characterization of the complete mitochondrial genome of the giant black Himalayan honeybee (Apis laboriosa) from Nepal.
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0765-6" target="_blank">link</a>.
+</li>
+
+<li>DA Moreira, PA Buckup, C Furtado, AL Val, R Schama, TE Parente.
+Reducing the information gap on Loricarioidei (Siluriformes) mitochondrial genomics.
+BMC Genomics, 2017 <a href="http://dx.doi.org/10.1186/s12864-017-3709-3" target="_blank">link</a>.
+</li>
+
+<li>K Xu, X Yu.
+The complete mitochondrial genome of the copperhead (Agkistrodon contortrix) and phylogenetic analyses of Crotalinae (Serpentes; Colubroidea; Viperidae)
+Conservation Genetics Resources, 2017. <a href="http://dx.doi.org/ 10.1007/s12686-017-0736-y" target="_blank">link</a>.
+</li>
+
+<li>F Grandjean, MH Tan, HM Gan, YP Lee, T Kawai, RJ Distefano, M Blaha, AJ Roles, CM Austin.
+Rapid recovery of nuclear and mitochondrial genes by genome skimming from Northern Hemisphere freshwater crayfish.
+Zoologica Scripta, 2017 <a href="http://dx.doi.org/10.1111/zsc.12247" target="_blank">link</a>.
+</li>
+
+<li>A Levivier.
+Incidence du processus de vieillissement et des traits d'histoire de vie sur l'évolution de l'ADN mitochondrial chez les bivalves.
+2016 <a href="http://semaphore.uqar.ca/1182/1/Aurore_Levivier_mars2016.pdf" target="_blank">link</a>.
+</li>
+
+<li>S Abalde, MJ Tenorio, CML Afonso, R Zardoya.
+Mitogenomic phylogeny of cone snails endemic to Senegal.
+Molecular Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.04.020" target="_blank">link</a>.
+</li>
+
+<li>F Cicconardi, P Marcatili, W Arthofer, BC Schlick-Steiner, FM Steiner.
+ Positive diversifying selection is a pervasive adaptive force throughout the Drosophila radiation.
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.04.023" target="_blank">link</a>.
+</li>
+
+<li>C Hu, C Zhang, L Sun, Y Zhang, W Xie, B Zhang, Q Chang.
+The mitochondrial genome of pin-tailed snipe Gallinago stenura, and its implications for the phylogeny of Charadriiformes.
+PloS one, 2017 <a href="http://dx.doi.org/10.1371/journal.pone.0175244" target="_blank">link</a>.
+</li>
+
+<li>H Okuyama, T Wakamiya, A Fujiwara, I Washitani, JI Takahashi.
+Complete mitochondrial genome of the honeybee Apis cerana native to two remote islands in Japan.
+Conservation Genetics Resources <a href="http://dx.doi.org/10.1007/s12686-017-0721-5" target="_blank">link</a>.
+</li>
+
+<li>WT Tay, S Elfekih, A Polaszek, LN Court, GA Evans, KHJ Gordon, PJ De Barro.
+Novel molecular approach to define pest species status and tritrophic interactions from historical Bemisia specimens.
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/s41598-017-00528-7" target="_blank">link</a>.
+</li>
+
+<li>DSJ Groenenberg, J Harl, E Duijm, E Gittenberger.
+The complete mitogenome of Orcula dolium (Draparnaud, 1801); ultra-deep sequencing from a single long-range PCR using the Ion-Torrent PGM.
+Hereditas, 2017 <a href="http://dx.doi.org/10.1186/s41065-017-0028-2" target="_blank">link</a>.
+</li>
+
+<li>F Prosdocimi, V Perini, ATN Dumans, C Furtado, D Cardoso de Carvalho.
+The complete mitochondrial genome of the surubim Pseudoplatystoma corruscans (Siluriformes: Pimelodidae) and mitochondrial phylogenomics of catfishes confirm monophyly of Siluriformes families.
+Conservation Genetics Resources 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0717-1" target="_blank">link</a>.
+</li>
+
+<li>JS Kim, JS Jeong, SY Jeong, MJ Kim, I Kim.
+Complete mitochondrial genome of the black‐tailed hornet, Vespa ducalis (Hymenoptera: Vespidae): Genomic comparisons in Vespoidea.
+Entomological Research, 2017 <a href="http://dx.doi.org/10.1111/1748-5967.12218" target="_blank">link</a>.
+</li>
+
+<li>ST Williams, PG Foster, C Hughes, EM Harper, JD Taylor, DTJ Littlewood, P Dyal, KP Hopkins, AG Briscoe.
+Curious bivalves: systematic utility and unusual properties of anomalodesmatan mitochondrial genomes.
+Molecular Phylogenetics and Evolution 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.03.004" target="_blank">link</a>.
+</li>
+
+<li>D Pu, H Liu, Y Gong, P Ji, Y Li, F Mou, S Wei.
+Mitochondrial genomes of the hoverflies Episyrphus balteatus and Eupeodes corollae (Diptera: Syrphidae), with a phylogenetic analysis of Muscomorpha.
+Scientific Reports 2017 <a href="http://dx.doi.org/10.1038/srep44300" target="_blank">link</a>.
+</li>
+
+<li>Conrado et al.
+The complete mitochondrial DNA sequence of the pant tropical earthworm Pontoscolex corethrurus (Rhinodrilidae, Clitellata): Mitogenome characterization and phylogenetic positioning.
+PeerJ 2017 <a href="http://dx.doi.org/10.7287/peerj.preprints.2847v1" target="_blank">link</a>.
+</li>
+
+<li>MH Tan, HM Gan, YP Lee, GCB Poore, CM Austin.
+Digging deeper: new gene order rearrangements and distinct patterns of codons usage in mitochondrial genomes among shrimps from the Axiidea, Gebiidea and Caridea (Crustacea: Decapoda).
+PeerJ, 2017 <a href="http://dx.doi.org/10.7717/peerj.2982" target="_blank">link</a>.
+</li>
+
+<li>MT Rosa, DS Oliveira, ELS Loreto.
+Characterization of the first mitochondrial genome of a catenulid flatworm: Stenostomum leucops (Platyhelminthes).
+Journal of Zoological Systematics and Systematic Research, 2017 <a href="http://dx.doi.org/10.1111/jzs.12164" target="_blank">link</a>.
+</li>
+
+<li>JH Kim, YR Lee, JR Koh, JW Jun, SS Giri, HJ Kim, C Chi, S Yun, SG Kim, SW Kim, HK Kim, DG Jeong, SC Park.
+Complete mitochondrial genome of the beluga whale Delphinapterus leucas (Cetacea: Monodontidae).
+Conservation Genetics Resources 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0705-5" target="_blank">link</a>.
+</li>
+
+<li>D Singh, D Kabiraj, H Chetia, P Sharma, K Neog, U Bora.
+Complete mitochondrial genome of golden silk producer Antheraea assamensis and its comparative analysis with other lepidopteran insects.
+bioRxiv 2017 <a href="http://dx.doi.org/10.1101/110031" target="_blank">link</a>.
+</li>
+
+<li>WC Chiang, CH Chang, HH Hsu, NH Jang-Liaw.
+Complete mitochondrial genome sequence for the green humphead parrotfish Bolbometopon muricatum.
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0692-6" target="_blank">link</a>.
+</li>
+
+<li>Y Shen, Q Kou, Z Zhong, X Li, L He, S He, X Gan.
+The first complete mitogenome of the South China deep-sea giant isopod Bathynomus sp.(Crustacea: Isopoda: Cirolanidae) allows insights into the early mitogenomic evolution of isopods.
+Ecology and Evolution, 2017 <a href="http://dx.doi.org/10.1002/ece3.2737" target="_blank">link</a>.
+</li>
+
+<li>XX Zhang, DL Guan, SQ Xu, WQ Wang.
+Characterization of the complete mitochondrial genome of the ecotoxicity indicator insect Aiolopus thalassinus (Orthoptera; Acrididae; Oedipodinae).
+Conservation Genetics Resources 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0702-8" target="_blank">link</a>.
+</li>
+
+<li>VS Anoop, KS Kumar, KC Sivakumar, D Reghunathan, P Manoj, K Deuti, S George.
+The complete mitochondrial genome of Euphlyctis karaavali (Amphibia: Anura) with a note on its range expansion.
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-017-0703-7" target="_blank">link</a>.
+</li>
+
+<li>PS Kelly, C Clarke, A Costello, C Monger, J Meiller, H Dhiman, N Borth, MJ Betenbaugh, M Clynesa, N Barron.
+Ultra-deep next generation mitochondrial genome sequencing reveals widespread heteroplasmy in Chinese hamster ovary cells.
+Metabolic Engineering, 2017 <a href="http://dx.doi.org/10.1016/j.ymben.2017.02.001" target="_blank">link</a>.
+</li>
+
+<li>JN Macher, V Zizka, AM Weigand, F Leese.
+ A simple centrifugation protocol leads to a 55-fold mitochondrial DNA enrichment and paves the way for future mitogenomic research.
+bioRxiv, 2017 <a href="http://dx.doi.org/10.1101/106583" target="_blank">link</a>.
+</li>
+
+<li>NCB Lima, F Prosdocimi.
+ The heavy strand dilemma of vertebrate mitochondria on genome sequencing age: number of encoded genes or G+ T content?.
+Mitochondrial DNA Part A <a href="http://dx.doi.org/10.1080/24701394.2016.1275603" target="_blank">link</a>.
+</li>
+
+<li>JE Palomares-Rius, C Cantalapiedra-Navarrete, A. Archidona-Yuste, VC Blok, and P Castillo.
+Mitochondrial genome diversity in dagger and needle nematodes (Nematoda: Longidoridae).
+Scientific Reports, 2017 <a href="http://dx.doi.org/10.1038/srep41813" target="_blank">link</a>.
+</li>
+
+<li>LC Vasques Villela, AL Alves, E Sousa Varela, ME Beleza Yamagishi, PF Giachetto, N Milagres Augusto da Silva, JM Ponzetto, S Rezende Paiva, AR Caetano.
+Complete mitochondrial genome from South American catfish Pseudoplatystoma reticulatum (Eigenmann & Eigenmann) and its impact in Siluriformes phylogenetic tree.
+Genetica 2017 <a href="http://dx.doi.org/10.1007/s10709-016-9945-7" target="_blank">link</a>.
+</li>
+
+<li>F Cicconardi, PAV Borges, D Strasberg, P Orom, H Lópe, AJ Pérez-Delgad, J Casquet, J Caujapé-Castells JM Fernández-Palacios,C Thébaud and BC Emers
+MtDNA metagenomics reveals large-scale invasion of belowground arthropod communities by introduced species.
+Mol Ecol. 2017 <a href="http://dx.doi.org/10.1111/mec.14037" target="_blank">link</a>.
+</li>
+
+<li>H Robertson, F Lapraz, M Telford, PH Schiffer.
+The mitochondrial genomes of the acoelomorph worms Paratomella rubra and Isodiametra pulchra.
+bioRxiv, 2017 <a href="http://dx.doi.org/10.1101/103556" target="_blank">link</a>.
+</li>
+
+<li>MR Pie, PR Ströher, MR Bornschein, LF Ribeiroi, BC Faircloth, JE McCormack.
+The mitochondrial genome of Brachycephalus brunneus (Anura: Brachycephalidae), with comments on the phylogenetic position of Brachycephalidae.
+Biochemical Systematics and Ecology 71:26-31, 2017 <a href="http://dx.doi.org/10.1016/j.bse.2016.12.009" target="_blank">link</a>.
+</li>
+
+<li>JM Strugnell, NE Hall, M Vecchione, D Fuchs, AL Allcock.
+Whole mitochondrial genome of the Ram's Horn squid shines light on the phylogenetic position of the monotypic order Spirulida (Haeckel, 1896).
+Phylogenetics and Evolution, 2017 <a href="http://dx.doi.org/10.1016/j.ympev.2017.01.011" target="_blank">link</a>.
+</li>
+
+<li>C Kehlmaier, A Barlow, AK Hastings, M Vamberger, JLA Paijmans, DW Steadman, NA Albury, R Franz, M Hofreiter, U Fritz.
+Tropical ancient DNA reveals relationships of the extinct Bahamian giant tortoise Chelonoidis alburyorum.
+Proc. R. Soc. B, 2017 <a href="http://dx.doi.org/10.1098/rspb.2016.2235" target="_blank">link</a>.
+</li>
+
+li>TE Parente, DA Moreira, MGP Magalhães, PCC de Andrade, C Furtado, BJ Haas, JJ Stegeman, ME Hahn.
+The liver transcriptome of suckermouth armoured catfish (Pterygoplichthys anisitsi, Loricariidae): Identification of expansions in defensome gene families.
+Marine Pollution Bulletin, 2017 <a href="http://dx.doi.org/10.1016/j.marpolbul.2016.12.012" target="_blank">link</a>.
+</li>
+
+<li>X Mu, Y Yang, Y Liu, D Luo, M Xu, H Wei, D Gu, H Song, and Y Hu.
+The complete mitochondrial genomes of two freshwater snails provide new protein-coding gene rearrangement models and phylogenetic implications.
+Parasites & Vectors, 2017 <a href="http://dx.doi.org/10.1186/s13071-016-1956-9" target="_blank">link</a>.
+</li>
+
+<li>YD Xu, DL Guan, SQ Xu.
+Characterization of the complete mitochondrial genome of the Chestnut weevil Curculio davidi (Insecta: Coleoptera: Curculionidae).
+Conservation Genetics Resources, 2017 <a href="http://dx.doi.org/10.1007/s12686-016-0674-0" target="_blank">link</a>.
+</li>
+
+<li>BM Robicheau, S Breton, DT Stewart.
+Sequence motifs associated with paternal transmission of mitochondrial DNA in the horse mussel, Modiolus modiolus (Bivalvia: Mytilidae).
+Gene, 2017 <a href="http://dx.doi.org/10.1016/j.gene.2016.12.025" target="_blank">link</a>.
+</li>
+
+<li>VC Seixas, CA de Moraes Russo, PC Paiva.
+Mitochondrial genome of the Christmas tree worm Spirobranchus giganteus (Annelida: Serpulidae) reveals a high substitution rate among annelids.
+Gene, 2017 <a href="http://dx.doi.org/10.1016/j.gene.2016.12.024" target="_blank">link</a>.
+</li>
+
+<li>R López-Wilchis, A Del Río-Portill, LM Guevara-Chumacero.
+Mitochondrial genome of Pteronotus personatus (Chiroptera: Mormoopidae): comparison with selected bats and phylogenetic considerations.
+Genetica 2016 <a href="http://dx.doi.org/10.1007/s10709-016-9943-9" target="_blank">link</a>.
+</li>
+
+<li>I Stöger, KM Kocot, AJ Poustka, NG Wilson, D Ivanov, KM Halanych and M Schr&ouml;dl.
+Monoplacophoran mitochondrial genomes: convergent gene arrangements and little phylogenetic signal.
+BMC Evolutionary Biology, 2016 <a href="http://dx.doi.org/10.1186/s12862-016-0829-3" target="_blank">link</a>.
+</li>
+
+<li>X Xiong, L Wu, T Xin, J Wang, Z Zou, B Xia.
+The complete mitochondrial genome of Diaphorina citri (Hemiptera: Psyllidae) and phylogenetic analysis.
+Biochemical Systematics and Ecology, 2017 <a href="http://dx.doi.org/10.1016/j.bse.2016.12.008" target="_blank">link</a>.
+</li>
+
+<li>S Yuan, Y Xia, Y Zheng, X Zeng .
+Next-generation sequencing of mixed genomic DNA allows efficient assembly of rearranged mitochondrial genomes in Amolops chunganensis and Quasipaa boulengeri.
+PeerJ, 2016 <a href="http://dx.doi.org/10.7717/peerj.2786" target="_blank">link</a>.
+</li>
+
+<li>EJG Wort, PB Fenberg, ST Williams.
+Testing the contribution of individual genes in mitochondrial genomes for assessing phylogenetic relationships in Vetigastropoda.
+Journal of Molluscan Studies, 2016 <a href="http://dx.doi.org/10.1093/mollus/eyw044" target="_blank">link</a>.
+</li>
+
+<li>BM Robicheau, AP Young, K Labutti, IV Grigoriev, AK Walker.
+The complete mitochondrial genome of the conifer needle endophyte, Phialocephala scopiformis DAOMC 229536 confirms evolutionary division within the fungal Phialocephala fortinii s.l. - Acephala appalanata species complex.
+Fungal Biology 2016 <a href="http://dx.doi.org/10.1016/j.funbio.2016.11.007" target="_blank">link</a>.
+</li>
+
+<li>Y Ogura, N Nakayama, T Hayashi, S Ueki.
+Mitochondrial Genome Sequences of Four Strains of the Bloom-Forming Raphidophyte Heterosigma akashiwo.
+Genome Announcements 2016 <a href="http://dx.doi.org/10.1128/genomeA.01288-16" target="_blank">link</a>.
+</li>
+
+<li>P Xiang, M Lin, Y Wang, G Audira, ST Liang, CD Hsiao.
+The complete mitogenome of sea slug, Nembrotha kubaryana (Mollusca: Polyceridae).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0663-3" target="_blank">link</a>.
+</li>
+
+<li>Y Dong, L Zhu, Y Bai, Y Ou, C Wang.
+The complete mitochondrial genomes of two flat-backed millipedes by next-generation sequencing (Diplopoda, Polydesmida)
+ZooKeys 2016 <a href="http://dx.doi.org/10.3897/zookeys.637.9909" target="_blank">link</a>.
+</li>
+
+<li>MGP Magalhães, DA Moreira, C Furtado, TE Parente.
+The mitochondrial genome of Hypancistrus zebra (Isbrücker & Nijssen, 1991)(Siluriformes: Loricariidae), an endangered ornamental fish from the Brazilian Amazon.
+Conservation Geneticsi Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0645-5" target="_blank">link</a>.
+</li>
+
+<li>JP Marques, G Sotelo, T Larsson, K Johannesson, M Panova, R Faria.
+Comparative mitogenomic analysis of three species of periwinkles: Littorina fabalis, L.obtusata and L. saxatilis.
+Marine Genomics 2016 <a href="http://dx.doi.org/10.1016/j.margen.2016.10.006" target="_blank">link</a>.
+</li>
+
+<li>RL Minton, MAM Cruz, ML Farman, KE Perez.
+Two complete mitochondrial genomes from Praticolella mexicana Perez, 2011 (Polygyridae) and gene order evolution in Helicoidea (Mollusca, Gastropoda).
+ZooKeys, 2016 <a href="http://dx.doi.org/10.3897/zookeys.626.9633" target="_blank">link</a>.
+</li>
+
+<li>N Song, H Li, F Song, W Cai.
+Molecular phylogeny of Polyneoptera (Insecta) inferred from expanded mitogenomic data.
+Scientific Reports, 2016 <a href="http://dx.doi.org/10.1038/srep36175" target="_blank">link</a>.
+</li>
+
+<li>X Guo, M Chu, X Ding, J Pei, P Yan.
+The complete mitochondrial genome of Chakouyi horse (Equus caballus).
+Conservation Genetics Resources, 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0639-3" target="_blank">link</a>.
+</li>
+
+<li>X Kang, Y Hu, J Hu, L Hu, F Wang, D Liu.
+The mitochondrial genome of the lepidopteran host cadaver (Thitarodes sp.) of Ophiocordyceps sinensis and related phylogenetic analysis.
+Gene, 2016 <a href="http://dx.doi.org/10.1016/j.gene.2016.10.036" target="_blank">link</a>.
+</li>
+
+<li>OV Popova, KV Mikhailov, MA Nikitin, MD Logacheva, AA Penin, MS Muntyan, OS Kedrova, NB Petrov, YV Panchin, VV Aleoshin.
+Mitochondrial Genomes of Kinorhyncha: trnM Duplication and New Gene Orders within Animals.
+PloS one, 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0165072" target="_blank">link</a>.
+</li>
+
+<li>GW Rouse, NG Wilson, JI Carvajal, RC Vrijenhoek.
+New deep-sea species of Xenoturbella and the position of Xenacoelomorpha.
+Nature, 2016 <a href="http://dx.doi.org/10.1038/nature16545" target="_blank">link</a>.
+</li>
+
+<li> ECM Nowack, DC Price, D Bhattacharya, A Singer, M Melkonian, and AR Grossman.
+Gene transfers from diverse bacteria compensate for reductive genome evolution in the chromatophore of Paulinella chromatophora.
+PNAS 2016 <a href="http://dx.doi.org/10.1073/pnas.1608016113" target="_blank">link</a>.
+</li>
+<li>PY Chen, BY Zheng, JX Liu, SJ Wei.
+Next-Generation Sequencing of Two Mitochondrial Genomes from Family Pompilidae (Hymenoptera: Vespoidea) Reveal Novel Patterns of Gene Arrangement.
+International Journal of Molecular Sciences, 2016 <a href="http://dx.doi.org/10.3390/ijms17101641" target="_blank">link</a>.
+</li>
+
+<li>ZN Chen, SQ Xu.
+The complete mitochondrial DNA genome sequence of a terrestrial grasshopper, Curvipennis wixiensis (Acrididae: Podismini).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0634-8" target="_blank">link</a>.
+</li>
+
+<li>Q Shi, Y Liu, HF Zhao .
+Characterization of the complete mitochondrial genome of slaty bunting Emberiza siemsseni (Passeriformes: Fringillidae).
+Conservation Genetics Resources <a href="http://dx.doi.org/10.1007/s12686-016-0632-x" target="_blank">link</a>.
+</li>
+
+<li>L Feng, J Yang, YP Zhang, GF Zhao.
+The complete mitochondrial genome of the Burmese roofed turtle (Batagur trivittata)(Testudines: Geoemydidae).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0629-5" target="_blank">link</a>.
+</li>
+
+<li>KS Kumar, KC Sivakumar, D Reghunathan, P Manoj, S George.
+The complete mitochondrial genome of Indirana semipalmata (Amphibia: Anura).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0625-9" target="_blank">link</a>.
+</li>
+
+<li>TH Le, NTB Nguyen, KT Nguyen, HTT Doan, DT Dung, D Blair.
+A complete mitochondrial genome from Echinochasmus japonicus supports the elevation of Echinochasminae Odhner, 1910 to family rank (Trematoda: Platyhelminthes).
+Infection, Genetics and Evolution 2016 <a href="http://dx.doi.org/10.1016/j.meegid.2016.09.024" target="_blank">link</a>.
+</li>
+
+<li>.H Lee, S Samadi, N Puillandre, MH Tsai, CF Dai, and WJ hen.
+Eight new mitogenomes for exploring the phylogeny and classification of Vetigastropoda.
+Journal of Molluscan Studies 2016 <a href="https://edoc.ub.uni-muenchen.de/19888/1/Poliseno_Angelo.pdf" target="_blank">link</a>.
+</li>
+
+<li>A Poliseno.
+Speciation, evolution and phylogeny of some shallow-water octocorals (Cnidaria: Anthozoa).
+PhD Thesis <a href="http://dx.doi.org/" target="_blank">link</a>.
+</li>
+
+<li>JA Anmarkrud, JT Lifjeld.
+Complete mitochondrial genomes of eleven extinct or possibly extinct bird species.
+Molecular Ecology Resources, 2016 <a href="http://dx.doi.org/10.1111/1755-0998.12600" target="_blank">link</a>.
+</li>
+
+<li>H Mao, H Liu, G Ma, Q Yang, X Guo, Z Lamaocao.
+The complete mitochondrial genome of Ovis ammon darwini (Artiodactyla: Bovidae).
+Conservation Genetics Resources <a href="http://dx.doi.org/10.1007/s12686-016-0620-1" target="_blank">link</a>.
+</li>
+
+<li>DC Carvalho, Vi da Rocha Perini, AS Bastos, IR da Costa, RK Luz, C Furtado, F Prosdocimi.
+The complete mitochondrial genome of the threatened Neotropical catfish Lophiosilurus alexandri (Silurifomes: Pseudopimelodidae) and phylogenomic analysis indicate monophyly of Pimelodoidea.
+Genetics and Molecular Biology, 2016 <a href="http://dx.doi.org/10.1590/1678-4685-GMB-2016-0007" target="_blank">link</a>.
+</li>
+
+<li>DS Oliveira, TMFF Gomes, ELS Loreto.
+The rearranged mitochondrial genome of Leptopilina boulardi (Hymenoptera: Figitidae), a parasitoid wasp of Drosophila.
+Genetics and Molecular Biology, 2016 <a href="http://dx.doi.org/10.1590/1678-4685-GMB-2016-0062" target="_blank">link</a>.
+</li>
+
+<li>JT Wagner, FH Chavez, JE Podrabsky.
+Mitochondrial DNA sequence and lack of response to anoxia in the annual killifish Austrofundulus limnaeus.
+Frontiers in Physiology, 2016 <a href="http://dx.doi.org/10.3389/fphys.2016.00379" target="_blank">link</a>.
+</li>
+
+<li>N Song, S An, X Yin, W Cai, H Li.
+Application of RNA-seq for mitogenome reconstruction, and reconsideration of long-branch artifacts in Hemiptera phylogeny.
+Scientific Reports, 2016 <a href="http://dx.doi.org/10.1038/srep33465" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, IW Suana, P Eamsobhana, PE Lim.
+Complete mitochondrial genome of Orthetrum dragonflies and molecular phylogeny of Odonata.
+Biochemical Systematics and Ecology 2016 <a href="http://dx.doi.org/10.1016/j.bse.2016.09.002" target="_blank">link</a>.
+</li>
+
+<li>J Song, Y Tian, DL Guan.
+Characterization of the complete mitochondrial genome of an endangered alpine toad, Scutiger ningshanensis (Amphibia: Anura: Megophryidae).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0611-2" target="_blank">link</a>.
+</li>
+
+<li>WS Phillips, AMV Brown, DK Howe, AB Peetz, VC Blok, DR Denver and IA Zasad.
+The mitochondrial genome of Globodera ellingtonae is composed of two circles with segregated gene content and differential copy numbers.
+BMC Genomics, 2016 <a href="http://dx.doi.org/10.1186/s12864-016-3047-x" target="_blank">link</a>.
+</li>
+
+<li>JT Lifjeld, JA Anmarkrud, P Calabuig, JEJ Cooper, LE Johannessen, A Johnsen, AM Kearns, RF Lachlan, T Laskemoen, G Marthinsen, E Stensrud, E Garcia-del-Rey.
+Species-level divergences in multiple functional traits between the two endemic subspecies of Blue Chaffinches Fringilla teydea in Canary Islands.
+BMC Zoololy (2016) 1: 4 <a href="http://dx.doi.org/10.1186/s40850-016-0008-4" target="_blank">link</a>.
+</li>
+
+<li>LL Pietan, TA Spradling, JW Demastes.
+The Mitochondrial Cytochrome Oxidase Subunit I Gene Occurs on a Minichromosome with Extensive Heteroplasmy in Two Species of Chewing Lice, Geomydoecus aurei and Thomomydoecus minor.
+PLOS ONE, 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0162248" target="_blank">link</a>.
+</li>
+
+<li>MT Aguado, S Richter, R Sontowski, A Golombek, TH Struck, and C Bleidorn.
+Syllidae mitochondrial gene order is unusually variable for Annelida.
+Gene 2016 <a href="http://dx.doi.org/j.gene.2016.08.050" target="_blank">link</a>.
+</liorg>
+
+<li>QX Zhang, DL Guan, Y Niu, LQ Sang, XX Zhang, SQ Xu.
+Characterization of the complete mitochondrial genome of the Asian planthopper Ricania speculum (Hemiptera: Fulgoroidea: Ricannidae).
+Conservation Genetics Resources <a href="http://dx.doi.org/10.1007/s12686-016-0600-5" target="_blank">link</a>.
+</li>
+
+<li>JT Lifjeld, JA Anmarkrud, P Calabuig, JEJ Cooper, LE Johannessen, A Johnsen, AM Kearns, RF Lachlan, T Laskemoen, G Marthinsen, E Stensrud, E Garcia-del-Rey.
+Species-level divergences in multiple functional traits between the two endemic subspecies of Blue Chaffinches Fringilla teydea in Canary Islands.
+BMC Zoology (2016) 1: 4 <a href="http://dx.doi.org/10.1186/s40850-016-0008-4" target="_blank">link</a>.
+</li> 
+
+<li>PE Romero, AM Weigand, M Pfenninger.
+Positive selection on panpulmonate mitogenomes provide new clues on adaptations to terrestrial life.
+BMC Evolutionary Biology, 2016 <a href="http://dx.doi.org/10.1186/s12862-016-0735-8" target="_blank">link</a>.
+</li>
+
+<li>S Zhao, YL Dang, HG Zhang, XH Guo, XH Su, LX Xing.
+The complete mitochondrial genome of the subterranean termite Reticulitermes flaviceps (Isoptera: Rhinotermitidae).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0594-z" target="_blank">link</a>.
+</li>
+
+<li>DR Palsaniye, SK Rai, P Sharma, PK Ghosh.
+Mitochondrial genome sequence of Oryza sativa indica cultivar RP Bio-226.
+Ciurrent Science, 2016.
+</li>
+
+<li>E Zarza, BC Faircloth, WLE Tsai, RW Bryson, J Klicka, and JE McCormack.
+Hidden histories of gene flow in highland birds revealed with genomic markers.
+Molecular Ecology 2016 <a href="http://dx.doi.org/10.1111/mec.13813" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, PE Lim, P Eamsobhana, IW Suana.
+Complete mitochondrial genome of Eurema blanda and phylogenetic relationship with its congener E. hecabe and other pierid butterflies.
+Meta Gene 2016 <a href="http://dx.doi.org/10.1016/j.mgene.2016.08.005" target="_blank">link</a>.
+</li>
+
+<li>HJ Song, JM Lee, L Graf, M Rho, H Qiu, D Bhattacharya, and HS Yoon.
+A novice’s guide to analyzing NGS-derived organelle and metagenome data.
+Algae 2016, <a href="http://dx.doi.org/10.4490/algae.2016.31.6.5" target="_blank">link</a>.
+</li>
+
+<li>DJ Schmidt, B Brockett, T Espinoza, M Connell, and JM Hughes.
+Complete mitochondrial genome of the endangered Mary River turtle (Elusor macrurus) and low mtDNA variation across the species' range.
+Australian Journal of Zoology, 2016 <a href="http://dx.doi.org/10.1071/ZO16013" target="_blank">link</a>.
+</li>
+
+
+<li>VL González, E Kayal, M Halloran, Y Shrestha, and MG Harasewych.
+The complete mitochondrial genome of the land snail Cerion incanum (Gastropoda: Stylommatophora) and the phylogenetic relationships of Cerionidae within Panpulmonata.
+Journal of Molluscan Studies, 2016 <a href="http://dx.doi.org/10.1093/mollus/eyw017" target="_blank">link</a>.
+</li>
+
+<li>T Kikuchi, T Afrin, M Yoshida.
+Complete mitochondrial genomes of four entomopathogenic nematode species of the genus Steinernema.
+Parasites & Vectors, 2016 <a href="http://dx.doi.org/10.1186/s13071-016-1730-z" target="_blank">link</a>.
+</li>
+
+<li>VC Seixas, PC Paiva, CA de Moraes Russo.
+Complete mitochondrial genomes are not necessarily more informative than individual mitochondrial genes to recover a well-established annelid phylogeny
+Gene Reports, 2016 <a href="http://dx.doi.org/10.1016/j.genrep.2016.07.011" target="_blank">link</a>.
+</li>
+
+<li>NP Araújo, GB Dias, BD Amaro, M Svartman.
+The complete mitochondrial genomes of two Atlantic spiny rats, genus Trinomys (Rodentia: Echimyidae), from low-pass shotgun sequencing.
+Gene Reports, 2016 <a href="http://dx.doi.org/10.1016/j.genrep.2016.08.003" target="_blank">link</a>.
+</li>
+
+<li>R Hari, IC Paterson, SW Choo.
+A new complete mitogenome of the critically endangered Chinese pangolin Manis pentadactyla.
+Conservation Genetics Resources, 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0586-z" target="_blank">link</a>.
+</li>
+
+<li>JE Uribe, D Colgan, LR Castro, Y Kano, R Zardoya.
+Phylogenetic relationships among superfamilies of Neritimorpha (Mollusca: Gastropoda)Molecular Phylogenetics and Evolution 2016.
+ <a href="http://dx.doi.org/10.1016/j.ympev.2016.07.021" target="_blank">link</a>.
+</li>
+
+<li>AG Briscoe, KP Hopkins, and A Waeschenbach. 
+High-Throughput Sequencing of Complete Mitochondrial Genomes.
+Marine Genomics: Methods and Protocols 2016: 45-64. <a href="http://dx.doi.org/10.1007/978-1-4939-3774-5_3" target="_blank">link</a>.
+</li>
+
+<li>AL Montiel, D Hail, JF Macias-Velasco, CM Powell, BR Bextine.
+The Mitochondrial Genome of the Potato Psyllid, Bactericera cockerelli Sulc., and Differences Among Potato Psyllid Populations of the United States.
+ Southwestern Entomologist 2016 <a href="http://dx.doi.org/10.3958/059.041.0211" target="_blank">link</a>.
+</li>
+
+<li>XY Peng, P Zhou, XY Duan, ZQ Qian.
+The mitochondrial genomes of twelve Anopheles.
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0565-4" target="_blank">link</a>.
+</li>
+
+<li>P Jiang, H Li, F Song, W Cai.
+Duplication and Remolding of tRNA Genes in the Mitochondrial Genome of Reduvius tenebrosus (Hemiptera: Reduviidae).
+International Journal of Molecular Sciences 17(6):951 2016 <a href="http://dx.doi.org/10.3390/ijms17060951" target="_blank">link</a>.
+</li>
+
+<li>S Maddock, AG Briscoe, M Wilkinson, D Gower.
+Next-Generation Mitogenomics: A Comparison of Approaches Applied to Caecilian Amphibian Phylogeny.
+PLoS ONE 11(6):e0156757 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0156757" target="_blank">link</a>.
+</li>
+
+<li>K Wang, X Li, S Ding, N Wang, M Mao, M Wang, D Yang.
+The complete mitochondrial genome of the Atylotus miser (Diptera: Tabanomorpha: Tabanidae), with mitochondrial genome phylogeny of lower Brachycera (Orthorrhapha).
+Gene 2016 <a href="http://dx.doi.org/10.1016/j.gene.2016.04.013" target="_blank">link</a>.
+</li>
+
+<li>XY Duan, XY Peng, ZQ Qian.
+The complete mitochondrial genomes of two globally invasive ants, the Argentine ant Linepithema humile and the little fire ant Wasmannia auropunctata.
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0555-6" target="_blank">link</a>.
+</li>
+
+<li>F Wu, Y Cen, CM Wallis, JT Trumble, S Prager, R Yokomi, Z Zheng, X Deng, J Chen, G Liang.
+The Complete Mitochondrial Genome Sequence of Bactericera cockerelli and Comparison with Three Other Psylloidea Species.
+PLOS ONE 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0155318" target="_blank">link</a>.
+</li>
+
+<li>Z Hu, DL Guan, BY Mao.
+Characterization of the complete mitochondrial genome of the Yunnan endemic grasshopper Yunnanacris yunnaneus (Insecta: Orthoptera: Acrididae).
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0552-9" target="_blank">link</a>.
+</li>
+
+<li>E Paviotti-Fischer, K Chávez-Congrains, ALJ Desbiez, PD de Freitas, PM Galetti Jr.
+Characterization of the complete mitochondrial genome for the Euphractus sexcinctus flavimanus (Mammalia, Xenarthra) subspecies.
+Conservation Genetics Resources 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0545-8" target="_blank">link</a>.
+</li>
+
+<li>PG Foster, MA Staleri, A Waeschenbach, TD Littlewood.
+High-throughput multiplexed mitogenomics for Metazoa: prospects and limitations.
+In Next Generation Systematics 2016 <a href="http://www.cambridge.org/catalogue/catalogue.asp?isbn=9781107028586" target="_blank">link</a>.
+</li>
+
+<li>AM Addamo, A Vertino, J Stolarski, R García-Jiménez.
+Merging scleractinian genera: the overwhelming genetic similarity between solitary Desmophyllum and colonial Lophelia.
+BMC Evolutionary Biology 2016 <a href="http://dx.doi.org/10.1186/s12862-016-0654-8" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, PE Lim, P Eamsobhana, J Tan.
+Complete mitochondrial genome and phylogeny of Microhyla butleri (Amphibia: Anura: Microhylidae).
+Biochemical Systematics and Ecology 2016 <a href="http://dx.doi.org/10.1016/j.bse.2016.04.004" target="_blank">link</a>.
+</li>
+
+<li>L Bachmann, B Fromm, LP de Azambuja, WA Boeger.
+The mitochondrial genome of the egg-laying flatworm Aglaiogyrodactylus forficulatus (Platyhelminthes: Monogenoidea).
+Parasites & Vectors 2016 <a href="http://dx.doi.org/10.1186/s13071-016-1586-2" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, P Eamsobhana, PE Lim.
+Complete mitochondrial genome of Angiostrongylus malaysiensis lungworm and molecular phylogeny of Metastrongyloid nematodes.
+Acta Tropica 2016 <a href="http://dx.doi.org/10.1016/j.actatropica.2016.05.002" target="_blank">link</a>.
+</li>
+
+<li>A Oceguera-Figueroa, A Manzano-Marín, S Kvist, A Moya, ME Siddall, A Latorre.
+Comparative Mitogenomics of Leeches (Annelida: Clitellata): Genome Conservation and Placobdella-Specific trnD Gene Duplication.
+PLOS ONE 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0155441" target="_blank">link</a>.
+</li>
+
+<li> TMP Oliveira, PG Foster, ES Bergo, MA Sallum.
+Mitochondrial Genomes of Anopheles ( Kerteszia ) (Diptera: Culicidae) From the Atlantic Forest, Brazil.
+Journal of Medical Entomology 2016 <a href="http://dx.doi.org/10.1093/jme/tjw001" target="_blank">link</a>.
+</li>
+
+<li>J Brabec, R Kuchta, T Scholz, DTJ Littlewood.
+Paralogues of nuclear ribosomal genes conceal phylogenetic signal within the invasive Asian fish tapeworm lineage: evidence from next generation sequencing data.
+International Journal for Parasitology 2016 <a href="http://dx.doi.org/10.1016/j.ijpara.2016.03.009" target="_blank">link</a>.
+</li>
+
+<li>A Srivathsan, A Ang, AP Vogler, R Meier.
+Fecal metagenomics for the simultaneous assessment of diet, parasites, and population genetics of an understudied primate.
+Frontiers in Zoology 2016 <a href="http://dx.doi.org/10.1186/s12983-016-0150-4" target="_blank">link</a>.
+</li>
+
+<li>S Bettinazzi, F Plazzi, M Passamonti.
+The Complete Female-and Male-Transmitted Mitochondrial Genome of Meretrix lamarckii.
+PLOS ONE 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0153631" target="_blank">link</a>.
+</li>
+
+<li>DA Moreira, PA Buckup, MR Britto, MGP Magalhães, PCC de Andrade, C Furtado, TE Parente.
+The complete mitochondrial genome of Corydoras nattereri (Callichthyidae: Corydoradinae).
+Neotropical Ichthyology 2016 <a href="http://dx.doi.org/10.1590/1982-0224-20150167" target="_blank">link</a>.
+</li>
+
+<li>EM Korkmaza, M Budaka, MN Ördeka, and HH Başıbüyük.
+The complete mitogenomes of Calameuta filiformis (Eversmann, 1847) and Calameuta idolon (Rossi, 1794) (Hymenoptera: Cephidae): The remarkable features of the elongated A+T rich region in Cephini.
+Gene 2016 <a href="http://dx.doi.org/10.1016/j.gene.2015.10.050" target="_blank">link</a>.
+</li>
+
+<li>DT Amarala, Y Mitani, Y Ohmiya, VR Viviani.
+Organization and comparative analysis of the mitochondrial genomes of bioluminescent Elateroidea (COLEOPTERA: POLYPHAGA).
+Conservation Genetics 2016 <a href="http://dx.doi.org/10.1016/j.gene.2016.04.009" target="_blank">link</a>.
+</li>
+
+<li>N Liu, XY Duan, ZQ Qian, XY Wang, XL Li, MY Ding.
+Characterization of the complete mitochondrial genome of the myrmicine ant Vollenhovia emeryi (Insecta: Hymenoptera: Formicidae).
+Conservation Genetics 2016 <a href="http://dx.doi.org/10.1007/s12686-016-0535-x" target="_blank">link</a>.
+</li>
+
+<li>A Crampton-Platt, WY Douglas, X Zhou, AP Vogler.
+Mitochondrial metagenomics: letting the genes out of the bottle.
+GigaScience 2016 <a href="http://dx.doi.org/10.1186/s13742-016-0120-y" target="_blank">link</a>.
+</li>
+
+<li>H-S Li, X-Y Liang, S-J Zou, Y Liu, P De Clercq, A Ślipiński, H Pang.
+Episodic positive selection at mitochondrial genome in an introduced biological control agent.
+Mitochondrion 2016 <a href="http://dx.doi.org/10.1016/j.mito.2016.03.005" target="_blank">link</a>.
+</li>
+
+<li>MM Rahman, KB Yoon, JY Kim, MZ Hussin, and YC Para.
+ Evaluating the Phylogenetic Status of the Extinct Japanese Otter on the Basis of Mitochondrial Genome Analysis.
+Animal Cells and Systems 2016 <a href="http://dx.doi.org/10.1080/19768354.2016.1150877" target="_blank">link</a>.
+</li>
+
+<li>D Waku, T Segawa, T Yonezawa, A Akiyoshi, T Ishige, M Ueda, H Ogawa, H Sasaki, M Ando, N Kohno, T Sasaki.
+Evaluating the Phylogenetic Status of the Extinct Japanese Otter on the Basis of Mitochondrial Genome Analysis.
+PLOS ONE, 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0149341" target="_blank">link</a>.
+</li>
+
+<li>D Zhang, L Yan, M Zhang, H Chu, J Cao, K Li, D Hu, T Pape.
+Phylogenetic inference of calyptrates, with the first 
+mitogenomes for Gasterophilinae (Diptera: Oestridae) 
+and Paramacronychiinae (Diptera: Sarcopha
+gidae).
+ International Journal of Biological Sciences, 2016, 12(5):489-504 <a href="http://dx.doi.org/10.7150/ijbs.12148" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, PE Lim, P Eamsobhana, IW Suana.
+Complete Mitochondrial Genome of Three Bactrocera Fruit Flies of Subgenus Bactrocera (Diptera: Tephritidae) and Their Phylogenetic Implications.
+PLoS One, 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0148201" target="_blank">link</a>.
+</li>
+
+<li>E Mofiz, T Seemann, M Bahlo, D Holt, BJ Currie, K Fischer, AT Papenfuss.
+Mitochondrial Genome Sequence of the Scabies Mite Provides Insight into the Genetic Diversity of Individual Scabies Infections.
+PLOS Negl Trop Dis, 2016 <a href="http://dx.doi.org/10.1371/journal.pntd.0004384" target="_blank">link</a>.
+</li>
+
+<li>SN Song, P Tang, SJ Wei, XX Chen.
+Comparative and phylogenetic analysis of the mitochondrial genomes in basal hymenopterans.
+Scientific Reports, 2016 <a href="http://dx.doi.org/10.1038/srep20972" target="_blank">link</a>.
+</li>
+
+<li>AG Briscoe, RA Bray, J Brabec, DTJ Littlewood.
+The mitochondrial genome and ribosomal operon of Brachycladium goliath (Digenea: Brachycladiidae) recovered from a stranded minke whale.
+Parasitology International, 2016 <a href="http://dx.doi.org/" target="_blank">link</a>.
+</li>
+
+<li>HS Yong, SL Song, PE Lim, P Eamsobhana, IW Suana.
+Complete Mitochondrial Genome of Three Bactrocera Fruit Flies of Subgenus Bactrocera (Diptera: Tephritidae) and Their Phylogenetic Implications.
+PLoS ONE 11(2):e0148201 2016 <a href="http://dx.doi.org/10.1371/journal.pone.0148201" target="_blank">link</a>.
+</li>
+
+<li>L Zhang, P Sechi, M Yuan, J Jiang, Y Dong, J Qiu.
+Fifteen new earthworm mitogenomes shed new light on phylogeny within the Pheretima complex.
+Scientific Reports 2016 <a href="http://dx.doi.org/10.1038/srep20096" target="_blank">link</a>.
+</li>
+
+<li>L Ma, WW Dong, GF Jiang, X Wang.
+The Complete Mitochondrial Genome of Brachmia macroscopa (Lepidoptera: Gelechiidae) and Its Related Phylogenetic Analysis.
+Journal of Insect Science 2016, 16(1):9  <a href="http://dx.doi.org/10.1093/jisesa/iev157" target="_blank">link</a>.
+</li>
+
+<li>V Ramírez-Ríos, ND Franco-Sierra, JC Alvarez, and DF Villanueva-Mejía.
+Mitochondrial genome characterization of tecia solanivora (Lepidoptera: Gelechiidae) and its phylogenetic relationship with other lepidopteran insects.
+Gene 2016 <a href="http://dx.doi.org/10.1016/j.gene.2016.01.031" target="_blank">link</a>.
+</li>
+
+<li>M Gazi, J Kim, M García‐Varela, C Park, DTJ Littlewood and JK Park.
+Mitogenomic phylogeny of Acanthocephala reveals novel Class relationships.
+Zoologica Scripta 2016 <a href="http://dx.doi.org/10.1111/zsc.12160" target="_blank">link</a>.
+</li>
+
+<li>Q Cong, NV Grishin.
+The complete mitochondrial genome of Lerema accius and its phylogenetic implications.
+PeerJ 2016 <a href="http://dx.doi.org/10.7717/peerj.1546" target="_blank">link</a>.
+</li>
+
+<li>ZL Wang, C Li, WY Fang, XP Yu.
+The Complete Mitochondrial Genome of two Tetragnatha Spiders (Araneae: Tetragnathidae): Severe Truncation of tRNAs and Novel Gene Rearrangements in Araneae.
+International Journal of Biological Sciences 2015 <a href="http://dx.doi.org/10.7150/ijbs.12358" target="_blank">link</a></li>     
+
+<li>M Sielaff, H Schmidt, TH Struck, D Rosenkranz, DB Mark Welch, Ts Hankeln, H Herlyn.
+Phylogeny of Syndermata (syn. Rotifera): Mitochondrial gene order verifies epizoic Seisonidea as sister to endoparasitic Acanthocephala within monophyletic Hemirotifera.
+Molecular Phylogenetics and Evolution 2015 <a href="http://dx.doi.org/10.1016/j.ympev.2015.11.017" target="_blank">link</a></li>     
+
+
+<li>SF Hiruta, S Hiruta.
+Description of a species of Fabaeformiscandona (Ostracoda, Crustacea) from Kushiro Marsh, Hokkaido, Japan, with the nearly complete mitochondrial genomic sequence.
+Biodiversity Data Journal 3: e7074 2015 <a href="http://dx.doi.org/10.3897/BDJ.3.e7074" target="_blank">link</a></li>     
+
+<li>M Uliano-Silva, JA Americo, I Costa, A Schomaker-Bastos, M de F Rebelo, F Prosdocimi.
+The complete mitochondrial genome of the golden mussel limnoperna fortunei and comparative mitogenomics of mytilidae.
+Gene 2015 <a href="http://dx.doi.org/10.1016/j.gene.2015.11.043" target="_blank">link</a></li>     
+
+<li>DJ Machado, ML Lyra, T Grant.
+Mitogenome assembly from genomic multiplex libraries: comparison of strategies and novel mitogenomes for five species of frogs.
+Molecular ecology resources 2015 <a href="http://dx.doi.org/10.1111/1755-0998.12492" target="_blank">link</a></li>     
+
+<li>S Richter, F Schwarz, L Hering, M Böggemann and C Bleidorn.
+The Utility of Genome Skimming for Phylogenomic Analyses as Demonstrated for Glycerid Relationships (Annelida, Glyceridae).
+Genome Biology and Evolution 2015 <a href="http://dx.doi.org/10.1093/gbe/evv224" target="_blank">link</a></li>     
+
+<li>MG Jeon, YC Park.
+The complete mitogenome of the wood-feeding cockroach Cryptocercus kyebangensis (Blattodea: Cryptocercidae) and phylogenetic relations among cockroach families.
+Animal Cells and Systems 2015 <a href="http://dx.doi.org/10.1080/19768354.2015.1105866" target="_blank">link</a></li>     
+
+ 
+<li>JE Uribe, Y Kano, J Templado and R Zardoya.
+Mitogenomics of Vetigastropoda: insights into the evolution of pallial symmetry.
+Zoologica Scripta 2015 <a href="http://dx.doi.org/10.1111/zsc.12146" target="_blank">link</a></li>     
+
+<li>H-S Yong, S-L Song, P-E Lim, K-G Chan, W-L Chow, and P Eamsobhana.
+Complete mitochondrial genome of Bactrocera arecae (Insecta: Tephritidae) by next-generation sequencing and molecular phylogeny of Dacini tribe.
+Scientific Reports 2015; 5: 15155 <a href="http://dx.doi.org/10.1038/srep15155" target="_blank">link</a></li>     
+
+<li>S Marková, K Filipi, JB Searle, P Kotlík.
+Mapping 3′ transcript ends in the bank vole (Clethrionomys glareolus) mitochondrial genome with RNA-Seq.
+BMC Genomics 2015 <a href="http://dx.doi.org/10.1186/s12864-015-2103-2" target="_blank">link</a></li>     
+
+<li> B Demari-Silva, PG Foster, TMP de Oliveira, E S Bergo, SS Sanabani, R Pessôa and MAM Sallum.
+Mitochondrial genomes and comparative analyses of Culex camposi, Culex coronator, Culex usquatus and Culex usquatissimus (Diptera:Culicidae), members of the coronator group.
+BMC Genomics 16:831, 2015. <a href="http://dx.doi.org/10.1186/s12864-015-1951-0" target="_blank">link</a></li>     
+
+<li>DA Moreira, C Furtado, TE Parente.
+Mitochondrial transcripts and associated heteroplasmies of Ancistrus spp.(Siluriformes: Loricariidae).
+Data in Brief 5:513-515, 2015. <a href="http://dx.doi.org/10.1016/j.dib.2015.09.010" target="_blank">link</a></li>     
+
+<li>C Han, Q Li, J Xu, X Li, J Huang.
+Characterization of Clarias gariepinus mitochondrial genome sequence and a comparative analysis with other catfishes.
+Biologia, 2015. <a href="http://dx.doi.org/10.1515/biolog-2015-0145" target="_blank">link</a></li>     
+
+<li>DA Moreira, C Furtado, TE Parente.
+The use of transcriptomic next-generation sequencing data to assemble mitochondrial genomes of Ancistrus spp.(Loricariidae).
+Gene, 2015. <a href="http://dx.doi.org/10.1016/j.gene.2015.08.059" target="_blank">link</a></li>
+
+<li>FR do Amaral, LG Neves, MFR Resende Jr, F Mobili, CY Miyaki, KCM Pellegrino, and C Biondo.
+Ultraconserved Elements Sequencing as a Low-Cost Source of Complete Mitochondrial Genomes and Microsatellite Markers in Non-Model Amniotes.
+PLOS ONE, 2015. <a href="http://dx.doi.org/10.1371/journal.pone.0138446" target="_blank">link</a></li>
+
+
+<li>MBF Hawash, LO Andersen, RB Gasser, CR Stensvold, P Nejsum.
+Mitochondrial Genome Analyses Suggest Multiple Trichuris Species in Humans, Baboons, and Pigs from Different Geographical Regions.
+PLOS ONE, 2015. <a href="http://dx.doi.org/10.1371/journal.pntd.0004059" target="_blank">link</a></li>
+
+<li>L Jiang, J Chen, P Wang, QQ Ren, J Yuan, CJ Qian, XH Hua, ZC Guo, L Zhang, JK Yang, Y Wang, Q Zhang, HW Ding, D Bi, and ZM Zhang Wang, QQ; Chen, DS; Kan, XZ.
+The Mitochondrial Genomes of Aquila fasciata and Buteo lagopus (Aves, Accipitriformes): Sequence, Structure and Phylogenetic Analyses.
+PLOS ONE, 10 (8) 2015. <a href="http://dx.doi.org/10.1371/journal.pone.0136297" target="_blank">link</a></li>
+
+<li>HS Yong, SL Song, P Eamsobhana, SY Goh, PE Lim.
+Complete mitochondrial genome reveals genetic diversity of Angiostrongylus cantonensis (Nematoda: Angiostrongylidae).
+Acta Tropica 2015. <a href="http://dx.doi.org/10.1016/j.actatropica.2015.09.001" target="_blank">link</a></li>
+
+<li>BD Wingfield, PK Ades, FA Al-Naemi, LA Beirn, W Bihon, JA Crouch, ZW de Beer, L De Vos, TA Duong, CJ Fields, G Fourie, AM Kanzi, M Malapi-Wight, SJ Pethybridge, O Radwan, G Rendon, B Slippers, QC Santana, ET Steenkamp, PWJ Taylor, N Vaghefi, NA van der Merwe, D Veltri, and MJ Wingfield.
+IMA Genome-F 4: Draft genome sequences of Chrysoporthe austroafricana, Diplodia scrobiculata, Fusarium nygamai, Leptographium lundbergii, Limonomyces culmigenus, Stagonosporopsis tanaceti, and Thielaviopsis punctulata.
+IMA Fungus 6(1): 233–248  2015. <a href="http://dx.doi.org/10.5598/imafungus.2015.06.01.15" target="_blank">link</a></li>
+
+
+<li>F Lopez-Osorio, A Perrard, KM Pickett, JM Carpenter, and I Agnarsson.
+Phylogenetic tests reject Emery's rule in the evolution of social parasitism in yellowjackets and hornets (Hymenoptera: Vespidae, Vespinae).
+ Royal Society Open Science 2015. <a href="http://dx.doi.org/10.1098/rsos.150159" target="_blank">link</a></li>
+
+<li>KE Herd, SC Barker and R Shao.
+The mitochondrial genome of the chimpanzee louse, Pediculus schaeffi: insights into the process of mitochondrial genome fragmentation in the blood-sucking lice of great apes.
+BMC Genomics 2015. <a href="http://dx.doi.org/10.1186/s12864-015-1843-3" target="_blank">link</a></li>
+
+<li>YJ Luo, N Satoh, K Endo.
+Mitochondrial gene order variation in the brachiopod Lingula anatina and its implications for mitochondrial evolution in lophotrochozoans.
+ Marine Genomics 2015. <a href="http://dx.doi.org/10.1016/j.margen.2015.08.005" target="_blank">link</a></li>
+
+<li>MT Aguado, C Grande, M Gerth, C Bleidorn, C Noreña.
+Characterization of the complete mitochondrial genomes from Polycladida (Platyhelminthes) using next-generation sequencing.
+Gene 2015. <a href="http://dx.doi.org/10.1016/j.gene.2015.08.054" target="_blank">link</a></li>
+
+<li>B Kahnt, M Gerth, RJ Paxton, C Bleidorn and M Husemann.
+The complete mitochondrial genome of the endemic and highly specialized South African bee species Rediviva intermixta (Hymenoptera: Melittidae), with a comparison with other bee mitogenomes.
+ Biological Journal of the Linnean Society 2015. <a href="http://dx.doi.org/10.1111/bij.12627" target="_blank">link</a></li>
+
+<li>I Atray, JS Bentur, S Nair.
+The Asian Rice Gall Midge (Orseolia oryzae) Mitogenome Has Evolved Novel Gene Boundaries and Tandem Repeats That Distinguish Its Biotypes.
+PLOS ONE 2015. <a href="http://dx.doi.org/10.1371/journal.pone.0134625" target="_blank">link</a></li>
+
+<li>A Weigert, A Golombek, M Gerth, F Schwarz, TH Struck, C Bleidorn.
+Evolution of mitochondrial gene order in Annelida.
+Molecular Phylogenetics and Evolution 2015. <a href="http://dx.doi.org/10.1016/j.ympev.2015.08.008" target="_blank">link</a></li>
+
+<li>L Zhang, J Jiang, Y Dong, and J Qiu.
+Complete mitochondrial genome of four pheretimoid earthworms (Clitellata: Oligochaeta) and their phylogenetic reconstruction.
+Gene 2015. <a href="http://dx.doi.org/10.1016/j.gene.2015.08.020" target="_blank">link</a></li>
+
+<li>MFL Derks, S Smit, L Salis, E Schijlen, A Bossers, C Mateman, AS Pijl, D de Ridder, MAM Groenen, ME Visser, HJ Megens.
+The genome of winter moth (Operophtera brumata) provides a genomic perspective on sexual dimorphism and phenology.
+Genome Biology and Evolution 2015. <a href="http://dx.doi.org/10.1093/gbe/evv145" target="_blank">link</a>
+</li>
+
+<li>C Jourda, S Santini, C Rocher, A Le Bivic, and JM Claverie.
+Mitochondrial Genome Sequence of the Glass Sponge Oopsacas minuta.
+Genome Announcements 2015. <a href="http://dx.doi.org/10.1128/genomeA.00823-15" target="_blank">link</a>
+</li>
+
+<li> AH Sahyoun, M Hölzer, F Jühling, C Höner zu Siederdissen, M Al-Arab, K Tout, M Marz, M Middendorf, PF Stadler, and M Bernt.
+Towards a comprehensive picture of alloacceptor tRNA remolding in metazoan mitochondrial genomes.
+Nucleic Acids Research 2015. <a href="http://dx.doi.org/10.1093/nar/gkv746" target="_blank">link</a>
+</li>
+
+<li> H Shen, A Braband, and G Scholtz.
+The complete mitogenomes of lobsters and crayfish (Crustacea: Decapoda: Astacidea) reveal surprising differences in closely related taxa and convergences to Priapulida.
+Journal of Zoological Systematics and Evolutionary Research 2015. <a href="http://dx.doi.org/10.1111/jzs.12106" target="_blank">link</a>
+</li>
+
+<li>H-S Yong, S-L Song, P Eamsobhana, S-Y Goh, P-E Lim, W-L Chow, K-G Chan, E Abrahams-Sandi.
+Mitochondrial Genome Supports Sibling Species of Angiostrongylus costaricensis (Nematoda: Angiostrongylidae).
+PLOS ONE 2015. <a href="http://dx.doi.org/10.1371/journal.pone.0134581" target="_blank">link</a>
+</li>
+
+
+<li> MT Aguado, CJ Glasby, PC Schroeder, A Weigert, and C Bleidorn. 
+The making of a branching annelid: an analysis of complete mitochondrial genome and ribosomal data of Ramisyllis multicaudata. 
+Scientific reports 5 2015. <a href="http://dx.doi.org/10.1038/srep12072" target="_blank">link</a>
+</li>
+
+<li>CH Chandler, M Badawi, B Moumen, P Grève, R Cordaux R.
+Multiple Conserved Heteroplasmic Sites in tRNA Genes in the Mitochondrial Genomes of Terrestrial Isopods (Oniscidea).
+G3 (Bethesda) 2015 24;5(7):1317-22 <a href="http://dx.doi.org/10.1534/g3.115.018283" target="_blank">link</a>
+</li>
+    
+
+<li>KB Yoon, CU Cho, YC Park.
+The mitochondrial genome of the Saunders's gull Chroicocephalus saundersi (Charadriiformes: Laridae) and a higher phylogeny of shorebirds (Charadriiformes).
+Gene 2015 <a href="http://dx.doi.org/10.1016/j.gene.2015.07.022" target="_blank">link</a>
+</li>
+    
+<li>AJ Williams-Newkirk, M Burroughs, SS Changayil, GA Dasch.
+The mitochondrial genome of the lone star tick (Amblyomma americanum).
+Ticks and Tick-borne Diseases 2015 <a href="http://dx.doi.org/10.1016/j.ttbdis.2015.07.006" target="_blank">link</a>
+</li>
+    
+<li>CM Bellas, AM Anesio, G Barker.
+Analysis of virus genomes from glacial environments reveals novel virus groups with unusual host interactions.
+Frontiers in Microbiology 2015 <a href="http://dx.doi.org/10.3389/fmicb.2015.00656" target="_blank">link</a>
+</li>
+  
+<li>YF Huang, M Midha, TH Chen, YT Wang, DG Smith, KJC Pei, and KP Chiu.
+Complete Taiwanese Macaque (Macaca cyclopis) Mitochondrial Genome: Reference-Assisted de novo Assembly with Multiple k-mer Strategy.
+PLOS One 2015 <a href="http://dx.doi.org/10.1371/journal.pone.0130673" target="_blank">link</a>
+</li>
+
+<li>JK McCooke, FD Guerrero, RA Barrero, M Black, A Hunter, C Bell, F Schilkey, RJ Miller, MI Bellgard.
+The mitochondrial genome of a Texas outbreak strain of the cattle tick, Rhipicephalus (Boophilus) microplus, derived from whole genome sequencing Pacific Biosciences and Illumina reads.
+Gene 2015 <a href="http://dx.doi.org/10.1016/j.gene.2015.06.060" target="_blank">link</a>
+</li>
+
+<li>S K Brown, C M Darwent, E J Wictum and B N Sacks.
+Using multiple markers to elucidate the ancient, historical and modern relationships among North American Arctic dog breeds.
+Heredity 2015 <a href="http://dx.doi.org/10.1038/hdy.2015.49" target="_blank">link</a>
+</li>
+
+<li>A Marín, T Fujimoto, K Arai.
+The mitochondrial genomes of Pecten albicans and Pecten maximus (Bivalvia: Pectinidae) reveal a novel gene arrangement with low genetic differentiation.
+Biochemical Systematics and Ecology 61:208-217, 2015 <a href="http://dx.doi.org/10.1016/j.bse.2015.06.015" target="_blank">link</a>
+</li>
+
+<li>J Brabec, A Kostadinova, DTJ Littlewood.
+Complete mitochondrial genomes and nuclear ribosomal RNA operons of two species of Diplostomum (Platyhelminthes: Trematoda): a molecular resource for taxonomy and molecular epidemiology of important fish pathogens.
+ Parasites & Vectors 2015 <a href="http://dx.doi.org/10.1186/s13071-015-0949-4" target="_blank">link</a>
+</li>
+
+<li>J Shen, Q Cong, NV Grishin.
+ The complete mitochondrial genome of Papilio glaucus and its phylogenetic implications.
+Meta Gene Volume 5 2015 <a href="http://dx.doi.org/10.1016/j.mgene.2015.05.002" target="_blank">link</a>
+</li>
+
+<li>B Kushwaha, R Kumar, S Agarwal, M Pandey, NS Nagpure, M Singh, S Srivastava, CG Joshi, P Das, L Sahoo, P Jayasankar, PK Meher, TM Shah, AB Patel, N Patel, P Koringa, SP Das, S Patnaik, A Bit, Sarika, MA Iquebal, D Kumar, JK Jena.
+Assembly and variation analyses of Clarias batrachus mitogenome retrieved from WGS data and its phylogenetic relationship with other catfishes.
+Meta Gene Volume 5 2015 <a href="http://dx.doi.org/10.1016/j.mgene.2015.05.002" target="_blank">link</a>
+</li>
+<li>JS Choudhary, N Naaz, CS Prabhakar, MS Rao, B Das.
+The mitochondrial genome of the peach fruit fly, Bactrocera zonata (Saunders) (Diptera: Tephritidae): Complete DNA sequence, genome organization, and phylogenetic analysis with other tephritids using next generation DNA sequencing.
+Gene 2015 <a href="http://dx.doi.org/10.1016/j.gene.2015.05.066" target="_blank">link</a>
+</li>
+
+<li>JG Groth, I Arbisser, NH Landman, GF Barrowclough.
+The Mitochondrial Genome of Allonautilus (Mollusca: Cephalopoda): Base Composition, Noncoding-Region Variation, and Phylogenetic Divergence.
+American Museum Novitates Number 3834 :1-13. 2015  <a href="http://dx.doi.org/10.1206/3834.1" target="_blank">link</a>
+</li>
+
+<li>AJ MacDonald, T Knopp, M Pepper, JS Keogh and SD Sarre.
+The first complete mitochondrial genome of Pygopodidae (Aprasia parapulchella Kluge).
+Australian Journal of Zoology <a href="http://dx.doi.org/10.1071/ZO14092" target="_blank">link</a>
+</li>
+
+<li>X Li, S Ding, SL Cameron, Z Kang, Y Wang, and D Yang.
+The First Mitochondrial Genome of the Sepsid Fly Nemopoda mamaevi Ozerov, 1997 (Diptera: Sciomyzoidea: Sepsidae), with Mitochondrial Genome Phylogeny of Cyclorrhapha.
+PLOS One 15(1):1124 <a href="http://dx.doi.org/10.1371/journal.pone.0123594" target="_blank">link</a>
+</li>
+
+<li>G Besnard, JAM Bertrand, B Delahaie, YXC Bourgeois, E Lhuillier, and C Thébaud.
+Valuing museum specimens: high-throughput DNA sequencing on historical collections of New Guinea crowned pigeons (Goura).
+Biological Journal of the Linnean Society, 2015 <a href="http://dx.doi.org/10.1111/bij.12494" target="_blank">link</a>
+</li>
+
+<li>E Solà, M Álvarez-Presas, C Frías-López, DTJ Littlewood, J Rozas, and M Riutort.
+Evolutionary analysis of mitogenomes from parasitic and free-living flatworms.
+PLOS One, 2015 <a href="http://dx.doi.org/10.1371/journal.pone.0120081" target="_blank">link</a>
+</li>
+
+<li>HE Robertson, F Lapraz, AC Rhodes, MJ Telford.
+The Complete Mitochondrial Genome of the Geophilomorph Centipede Strigamia maritima.
+PLOS One, 2015 <a href="http://dx.doi.org/10.1371/journal.pone.0121369" target="_blank">link</a>
+</li>
+
+<li>A Golombek, S Tobergte, TH Struck.
+Elucidating the phylogenetic position of Gnathostomulida and first mitochondrial genomes of Gnathostomulida, Gastrotricha and Polycladida (Platyhelminthes).
+Molecular Phylogenetics and Evolution, 2015 <a href="http://dx.doi.org/10.1016/j.ympev.2015.02.013" target="_blank">link</a>
+</li>
+
+<li>S Rutschmann.
+Evolutionary processes in mayflies (Ephemeroptera).
+PhD Thesis, FU Berlin, 2015 <a href="http://www.diss.fu-berlin.de/diss/receive/FUDISS_thesis_000000098796?lang=de" target="_blank">link</a>
+</li>
+
+<li>H Song, C Amédégnato, MM Cigliano, L Desutter-Grandcolas, SW Heads, Y Huang, D Otte and MF Whiting.
+300 million years of diversification: elucidating the patterns of orthopteran evolution based on comprehensive taxon and gene sampling.
+Cladistics, 2015 <a href="http://dx.doi.org/10.1111/cla.12116" target="_blank">link</a>
+</li>
+
+<li>MH Tan, HM Gan, MB Schultz, CM Austin.
+MitoPhAST, a new automated mitogenomic phylogeny tool in the post-genomic era with a case study of 89 decapod mitogenomes including eight new freshwater  crayfish mitogenomes.
+Molecular Phylogenetics and Evolution, 2015 <a href="http://dx.doi.org/10.1016/j.ympev.2015.02.009" target="_blank">link</a>
+</li>
+
+<li>Y Li, KM Kocot, C Schander, SR Santos, DJ Thornhill, and KM Halanych.
+Mitogenomics reveals phylogeny and repeated motifs in control regions of the deep-sea family Siboglinidae (Annelida).
+Phylogenetics and Evolution, 2015 <a href="http://dx.doi.org/10.1016/j.ympev.2015.02.008" target="_blank">link</a>
+</li>
+
+<li>MF Palopoli, S Minot, D Pei, A Satterly, and J Endrizzi.
+Complete mitochondrial genomes of the human follicle mites Demodex brevis and D. folliculorum: novel gene arrangement, truncated tRNA genes, and ancient divergence between species.
+BMC Genomics 2014 15(1):1124 <a href="http://dx.doi.org/10.1186/1471-2164-15-1124" target="_blank">link</a>
+</li>
+
+<li>DA Humphreys-Pereira and AA Elling.
+Mitochondrial genome plasticity among species of the nematode genus Meloidogyne (Nematoda: Tylenchina).
+Gene 2015 <a href="http://dx.doi.org/10.1016/j.gene.2015.01.065" target="_blank">link</a>
+</li>
+
+<li>C Ma, YY Wang, C Wu, L Kang, and CX Liu.
+The compact mitochondrial genome of Zorotypus medoensis provides insights into phylogenetic position of Zoraptera.
+BMC Genomics 2015 <a href="http://dx.doi.org/10.1186/1471-2164-15-1156" target="_blank">link</a>
+</li>
+
+<li>A Kocher, É Guilbert, É Lhuillier, J Murienne.
+Sequencing of the mitochondrial genome of the avocado lace bug Pseudacysta perseae (Heteroptera, Tingidae) using a genome skimming approach.
+Comptes Rendus Biologies 2015  <a href="http://dx.doi.org/10.1016/j.crvi.2014.12.004" target="_blank">link</a>
+</li>
+
+<li>A Saunier, P Garcia, V Becquet, N Marsaud, F Escudié, and E Pante.
+Mitochondrial genomes of the Baltic clam Macoma balthica (Bivalvia: Tellinidae): setting the stage for studying mito-nuclear incompatibilities.
+BMC Evolutionary Biology 2014, 14:259  <a href="http://dx.doi.org/10.1186/s12862-014-0259-z" target="_blank">link</a>
+</li>
+
+<li>KF Smith, CL Abbott, Y Saito, AE Fidler.
+Comparison of whole mitochondrial genome sequences from two clades of the invasive ascidian, <i>Didemnum vexillum</i>
+Marine Genomics, 2014  <a href="http://dx.doi.org/10.1016/j.margen.2014.11.007" target="_blank">link</a>
+</li>
+
+<li>
+FC De Ré, GL Wallau, LJ Robe, ELS Loreto.
+Characterization of the complete mitochondrial genome of flower-breeding Drosophila incompta (Diptera, Drosophilidae).
+Genetica 2014 <a href="http://dx.doi.org/10.1007/s10709-014-9799-9" target="_blank">link</a>.
+</li>
+
+<li>
+MP Ramakodi, B Singh, JD Wells, F Guerrero, DA Ray.
+A 454 sequencing approach to dipteran mitochondrial genomes research.
+Genomics 2014 <a href="http://dx.doi.org/10.1016/j.ygeno.2014.10.014" target="_blank">link</a>.
+</li>
+
+<li>
+I Irisarri, DJ Eernisse, and R Zardoya.
+Molecular phylogeny of Acanthochitonina (Mollusca: Polyplacophora: Chitonida): three new mitochondrial genomes, rearranged gene orders and systematics.
+Journal of Natural History 2014 <a href="http://dx.doi.org/10.1080/00222933.2014.963721" target="_blank">link</a>.
+</li>
+
+<li>
+M Schrödl and I Stöger.
+A review on deep molluscan phylogeny: old markers, integrative approaches, persistent problems.
+Journal of Natural History 2014 <a href="http://dx.doi.org/10.1080/00222933.2014.963184" target="_blank">link</a>.
+</li>
+
+<li>
+D Osca, I Irisarri, C Todt3, C Grande, and R Zardoya.
+The complete mitochondrial genome of Scutopus ventrolineatus (Mollusca: Chaetodermomorpha) supports the Aculifera hypothesis.
+BMC Evolutionary Biology 2014, 14:197 <a href="http://dx.doi.org/10.1186/s12862-014-0197-9" target="_blank">link</a>.
+</li>
+
+<li>
+A Kocher, M Kamilari, E Lhuillier, E Coissac, J Péneau, J Chave, J Murienne.
+Shotgun assembly of the assassin bug Brontostoma colossus mitochondrial genome (Heteroptera, Reduviidae).
+Gene 2014 <a href="http://dx.doi.org/10.1016/j.gene.2014.09.033" target="_blank">link</a>.
+</li>
+
+<li>
+JF Vilela, B Mello, CM Voloch, and CG Schrago.
+Sigmodontine rodents diversified in South America prior to the complete rise of the Panamanian Isthmus.
+Journal of Zoological Systematics and Evolutionary Research 2014 52 (3):249-256 <a href="http://dx.doi.org/10.1111/jzs.12057" target="_blank">link</a>.
+</li>
+
+<li>
+J Pons, MM Bauzà-Ribot, D Jaume, and C Juan.
+Next-generation sequencing, phylogenetic signal and comparative mitogenomic analyses in Metacrangonyctidae (Amphipoda: Crustacea).
+BMC Genomics 2014, 15:566 <a href="http://dx.doi.org/10.1186/1471-2164-15-566" target="_blank">link</a>.
+</li>
+
+<li>
+Biswal DK, Chatterjee A, Bhattacharya A, Tandon V.
+The mitochondrial genome of Paragonimus westermani (Kerbert, 1878), the Indian isolate of the lung fluke representative of the family Paragonimidae (Trematoda).
+PeerJ 2014 2:e484 <a href="http://dx.doi.org/10.7717/peerj.484" target="_blank">link</a>.
+</li>
+
+<li>
+Rees D and Glenner H.
+Control region sequences indicate that multiple externae represent multiple infections by Sacculina carcini (Cirripedia: Rhizocephala).
+Ecol Evol 2014 <a href="http://dx.doi.org/10.1002/ece3.1177" target="_blank">link</a>.
+</li>
+
+<li>
+Roux J, Privman E, Moretti S, Daub JT, Robinson-Rechavi M, Keller L.
+Patterns of positive selection in seven ant genomes.
+Mol Biol Evol 2014 31(7):1661-1685 <a href="http://dx.doi.org/10.1093/molbev/msu141" target="_blank">link</a>.
+</li>
+
+<li>
+Rivarola-Duarte L, Otto C, Jühling F, Schreiber S, Bedulina D, Jakob L, Gurkov A, Axenov-Gribanov D, Sahyoun A H, Lucassen M, Hackermüller J, Hoffmann S, Sartoris F, Pörtner H-O, Timofeyev M, Luckenbach T, Stadler P F.
+A first Glimpse at the genome of the Baikalian amphipod Eulimnogammarus verrucosus
+Journal of Experimental Zoology Part B: Molecular and Developmental Evolution 2014 322(3):1552-5015 <a href="http://dx.doi.org/10.1002/jez.b.22560" target="_blank">link</a>.
+</li>
+
+<li>
+Wares J.
+Mitochondrial cytochrome b sequence data are not an improvement for species identification in Scleractinian corals.
+PeerJ PrePrints (2014) 2:e429v2 <a href="http://dx.doi.org/10.7287/peerj.preprints.429v2" target="_blank">link</a>.
+</li>
+
+<li>
+D Santos-Garcia, A Latorre, A Moya, G Gibbs, V Hartung, K Dettner, S M Kuechler and F J. Silva.
+Small but powerful, the primary endosymbiont of moss bugs, Candidatus Evansia muelleri, holds a reduced genome with large biosynthetic capabilities.
+Genome Biology and Evolution 2014 <a href="http://dx.doi.org/10.1093/gbe/evu149" target="_blank">link</a>.
+</li>
+
+<li>R Ekblom and L Smeds and H Ellegren.
+Patterns of sequencing coverage bias revealed by ultra-deep sequencing of vertebrate mitochondria.
+BMC Genomics 2014, 15:467, <a href="http://dx.doi.org/10.1186/1471-2164-15-467" target="_blank">link</a>.
+</li>
+
+<li>D Osca, J Templado, and R Zardoya.
+The mitochondrial genome of Ifremeria nautilei and the phylogenetic position of the enigmatic deep-sea Abyssochrysoidea (Mollusca: Gastropoda).
+Gene 2014, <a href="http://dx.doi.org/10.1016/j.gene.2014.06.040" target="_blank">link</a>.
+</li>
+
+<li>JW Poelstra, N Vijay, CM Bossu, H Lantz, B Ryll, I Müller, V Baglione, P Unneberg, M Wikelski, MG Grabherr, and JBW Wolf.
+The genomic landscape underlying phenotypic integrity in the face of gene flow in crows.
+Science 2014: 344 (6190), <a href="http://dx.doi.org/10.1126/science.1253226" target="_blank">link</a>.
+</li>
+
+<li>
+L-W Wu, L-H Lin, DC Lees and Y-F Hsu.
+Mitogenomic sequences effectively recover relationships within brush-footed butterflies (Lepidoptera: Nymphalidae).
+BMC Genomics, 2014, 15(2014):468 <a href="http://dx.doi.org/10.1186/1471-2164-15-468" target="_blank">link</a>.
+</li>
+
+<li>F Prosdocimi, HM Souto, PA Ruschi, C Furtado, and W Jennings.
+Complete mitochondrial genome of the versicoloured emerald hummingbird Amazilia versicolor, a polymorphic species.
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007352" target="_blank">link</a>
+</li>
+
+<li>A Jarošová, V Půža, and M Žurovcová.
+The complete mitochondrial genome of the facultative entomopathogenic nematode Oscheius chongmingensis (Rhabditida: Rhabditidae).
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007288" target="_blank">link</a>
+</li>
+
+<li>J Lu, J Lu, XF Li, H Jiang.
+Complete mitochondrial genome of the Saker falcon, Falco cherrug (Falco, Falconidae).
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007358" target="_blank">link</a>
+</li>
+
+<li>U de Padua Pereira, AM Bonetti, LR Goulart, AR dos Santos, GC de Oliveira, S Cuadros-Orellana, and C Ueira-Vieira.
+Complete mitochondrial genome sequence of Melipona scutellaris, a Brazilian stingless bee.
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1018233" target="_blank">link</a>
+</li>
+
+<li>Yang, X Li, LG Cai, ZQ Qian.
+Characterization of the complete mitochondrial genome of Formica selysi (Insecta: Hymenoptera: Formicidae: Formicinae).
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1018229" target="_blank">link</a>
+</li>
+
+<li>C Chen, Y Qiang, XY Peng, ZQ Qian, ZZ Wang.
+The complete mitochondrial genome of the Sara Longwing Heliconius sara (Insecta: Lepidoptera: Nymphalidae).
+Mitochondrion, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007318" target="_blank">link</a>
+</li>
+
+<li>
+AH Sahyoun, M Bernt, PF Stadler, K Tout.
+GC Skew and Mitochondrial Origins of Replication.
+Mitochondrion, 2014 <a href="http://dx.doi.org/10.1016/j.mito.2014.05.009" target="_blank">link</a>
+</li>
+
+<li>
+MS Silverio, VR Rodovalho, AM Bonetti, G Oliveira, S Cuadros-Orellana, C Ueira-Vieira, AR Santos.
+Preliminary characterization of the mitochondrial genome of Melipona scutellaris, a Brazilian stingless bee.
+BioMed Resaerch International <a href="http://www.hindawi.com/journals/bmri/aip/927546" target="_blank">link</a>
+</li>
+
+<li>
+CdM Rodovalho, ML Lyra, M Ferro,  M Jr Bacci.
+The Mitochondrial Genome of the Leaf-Cutter Ant Atta laevigata: A Mitogenome with a Large Number of Intergenic Spacers.
+PLoS ONE 2014 9(5): e97117 <a href="http://dx.doi.org/10.1371/journal.pone.0097117" target="_blank">link</a>
+</li>
+
+<li>
+D. A. Humphreys-Pereira and A. A. Elling.
+Mitochondrial genomes of Meloidogyne chitwoodi and M. incognita (Nematoda: Tylenchina): Comparative analysis, gene order and phylogenetic relationships with other nematodes.
+Molecular and Biochemical Parasitology 2014 194(1–2):20-32  <a href="http://dx.doi.org/10.1016/j.molbiopara.2014.04.003" target="_blank">link</a>
+</li>
+
+<li>
+M.-M. Chen, Y. Li, M. Chen, H. Wang, Q. Li, R.-X. Xia, C.-Y. Zeng, Y.-P. Li, Y.-Q. Liu, L. Qin.
+Complete mitochondrial genome of the atlas moth, Attacus atlas (Lepidoptera: Saturniidae) and the phylogenetic relationship of Saturniidae species.
+Gene, 2014, <a href="http://dx.doi.org/10.1016/j.gene.2014.05.002" target="_blank">link</a>
+</li>
+
+
+<li>
+J. Melo-Ferreira, J. Vilela, M. M. Fonseca, R. R. da Fonseca, P. Boursot and P. C. Alves.
+The Elusive Nature of Adaptive Mitochondrial DNA Evolution of an Arctic Lineage Prone to Frequent Introgression.
+Genome Biology and Evolution 6(4): 886-896, 2014. <a href="http://dx.doi.org/10.1093/gbe/evu059" target="_blank">link</a>
+</li>
+
+<li>
+I. J. Tsai, E. Tanaka, H. Masuya, R. Tanaka, Y. Hirooka, R. Endoh, N. Sahashi, and T. Kikuchi.
+Comparative Genomics of Taphrina Fungi Causing Varying Degrees of Tumorous Deformity in Plants.
+Genome Biol Evol (2014) Vol. 6 861-872  <a href="http://dx.doi.org/10.1093/gbe/evu067" target="_blank">link</a>
+</li>
+
+<li>
+G. Besnard, F. Jühling, É. Chapuis, L. Zedane, É. Lhuillier, T. Mateille, S. Bellafiore.
+Fast assembly of the mitochondrial genome of a plant parasitic nematode (Meloidogyne graminicola) using next generation sequencing.
+Comptes Rendus Biologies 2014 <a href="http://dx.doi.org/10.1016/j.crvi.2014.03.003" target="_blank">link</a>
+</li>
+
+<li>
+B. S. Coates.
+Assembly and annotation of full mitochondrial genomes for the corn rootworm species, Diabrotica virgifera virgifera and Diabrotica barberi (Insecta: Coleoptera: Chrysomelidae), using Next Generation Sequence data.
+Gene 2014 <a href="http://dx.doi.org/10.1016/j.gene.2014.03.035" target="_blank">link</a>
+</li>
+
+<li>
+H. M. Gan, M. B. Schultz and C. M. Austin.
+Integrated shotgun sequencing and bioinformatics pipeline allows ultra-fast mitogenome recovery and confirms substantial gene rearrangements in Australian freshwater crayfishes.
+BMC Evolutionary Biology 2014, 14:19 <a href="http://dx.doi.org/10.1186/1471-2148-14-19" target="_blank">link</a>
+</li>
+
+<li>
+D. San Mauro, D. J. Gower, H. M&uuml;ller, S. P. Loader, R. Zardoya, R. A. Nussbaum, M. Wilkinson.
+Life-history evolution and mitogenomic phylogeny of caecilian amphibians.
+Molecular Phylogenetics and Evolution 2014 <a href="http://dx.doi.org/10.1016/j.ympev.2014.01.009" target="_blank">link</a>
+</li>
+
+<li>
+X-C Huang, J Rong, Y Liu, M-H Zhang, Y Wan, S. Ouyang, C-H Zhou, and X-P Wu.
+The Complete Maternally and Paternally Inherited Mitochondrial Genomes of the Endangered Freshwater Mussel Solenaia carinatus (Bivalvia: Unionidae) and Implications for Unionidae Taxonomy.
+PLoS ONE 2013 8(12): e84352 <a href="http://dx.doi.org/10.1371/journal.pone.0084352" target="_blank">link</a>
+</li>
+
+<li>
+H. Zhang, J. L.A. Paijmans, F. Chang, X. Wu, G. Chen, C. Lei, X. Yang, Z. Wei, D. G. Bradley, L. Orlando, T. O’Connor, and M. Hofreiter
+Morphological and genetic evidence for early Holocene cattle management in northeastern China
+Nature Communications 2013, 4(2755) <a href="http://dx.doi.org/10.1038/ncomms3755" target="_blank">link</a>
+</li>
+
+<li>
+S. T. Williams, P. G. Foster, and D. T. J. Littlewood.
+The complete mitochondrial genome of a turbinid vetigastropod from MiSeq Illumina sequencing of genomic DNA and steps towards a resolved gastropod phylogeny.
+Gene 2014, 533(1):38-47 <a href="http://dx.doi.org/10.1016/j.gene.2013.10.005" target="_blank">link</a>
+</li>
+
+<li>
+C. Hahn, L. Bachmann, and B. Chevreux.
+Reconstructing mitochondrial genomes directly from genomic next-generation sequencing reads - a baiting and iterative mapping approach.
+Nucleic Acids Research 2013, 41(13):e129 <a href="http://dx.doi.org/10.1093/nar/gkt371" target="_blank">link</a>
+</li>
+
+<li>
+M. Bernt, C. Bleidorn, A. Braband, J. Dambach, A. Donath, G. Fritzsch, A. Golombek, H. Hadrys, F. J&uuml;hling; K. Meusemann, M. Middendorf, B. Misof, M. Perseke, L. Podsiadlowski, B. von Reumont, B. Schierwater, M. Schlegel, M. Schr&ouml;dl, S. Simon, P. F. Stadler, I. St&ouml;ger, T. H. Struck.
+A comprehensive analysis of bilaterian mitochondrial genomes and animal phylogeny.
+Molecular Phylogenetics and Evolution 2013, 69(2):352-364 <a href="http://dx.doi.org/10.1016/j.ympev.2013.05.002" target="_blank">link</a>
+</li>
+
+<li>
+A. Golombek, S. Tobergte, M. P. Nesnidal, G. Purschke, T. H. Struck.
+Mitochondrial genomes to the rescue - Diurodrilidae in the myzostomid trap.
+Molecular Phylogenetics and Evolution 2013, 68(2):312-26 <a href="http://dx.doi.org/10.1016/j.ympev.2013.03.026" target="_blank">link</a>
+</li>
+
+<li>
+I. St&ouml;ger, M. Schr&ouml;dl.
+Mitogenomics does not resolve deep molluscan relationships (yet?).
+Molecular Phylogenetics and Evolution 2013, 69(2):376-92 <a href="http://dx.doi.org/10.1016/j.ympev.2012.11.017" target="_blank">link</a>
+</li>
+
+<li>
+H-J. Osigus, M. Eitel, M. Bernt, A. Donath, B. Schierwater.
+Mitogenomics at the base of Metazoa.
+Molecular Phylogenetics and Evolution 2013, 69(2):339-351 <a href="http://dx.doi.org/10.1016/j.ympev.2013.07.016" target="_blank">link</a>.
+
+<li>
+F. J&uuml;hling, J. P&uuml;tz, C. Florentz and P. F. Stadler.
+Armless mitochondrial tRNAs in Enoplea (Nematoda).
+RNA Biology 2012 9(9):1161-1166 <a href="http://dx.doi.org/10.4161/rna.21630" target="_blank">link</a>
+</li>
+
+<li>
+B. F. Lang, D. Lavrov, N. Beck, S. V. Steinberg.
+Mitochondrial tRNA Structure, Identity, and Evolution of the Genetic Code.
+Organelle Genetics 431-474 2012 <a href="http://dx.doi.org/10.1007/978-3-642-22380-8_17" target="_blank">link</a>.
+</li>
+
+<li>S-O Kolokotronis, J Foox, JA Rosenfeld, MR Brugler, D Reeves, JB Benoit, W Boot, G Robison, M Steffen, SR Palli, C Schal, S Richards, A Narechani, RH Baker, LN Sorkin, G Amato, CE Mason, ME Siddall, R DeSalle, and Z Sakas.
+The mitogenome of the bed bug Cimex lectularius (Hemiptera: Cimicidae).
+Mitochondrial DNA Part B: Resources  2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1180268" target="_blank">link</a>.
+</li>
+
+
+<li>H She, G Zhao, L Zhou, C Gu.
+Complete mitochondrial genome of Grey-headed Lapwing Vanellus cinereus (Ciconiiformes: Charadriidae).
+Mitochondrial DNA Part A 2016 <a href="http://dx.doi.org/10.3109/19401736.2015.1007293" target="_blank">link</a>.
+</li>
+
+<li>A Emami-Khoyi, DA Hartley, JG Ross, EC Murphy, AM Paterson, RH Cruickshank, and T-A Else.
+Complete mitochondrial genome of the stoat (Mustela erminea) and New Zealand fur seal (Arctocephalus forsteri) and their significance for mammalian phylogeny.
+Mitochondrial DNA Part A 2016 <a href="http://dx.doi.org/10.3109/19401736.2015.1101542" target="_blank">link</a>.
+</li>
+
+<li>C Andujar, P Arribas, B Linard, R Kundrata, L Bocak and AP Vogler.
+The mitochondrial genome of Iberobaenia (Coleoptera: Iberobaeniidae): first rearrangement of protein-coding genes in the beetles.
+Mitochondrial DNA Part A 2016 <a href="http://dx.doi.org/10.3109/19401736.2015.1115488" target="_blank">link</a>.
+</li>
+
+<li>S Yuan, Z Lu, X Wu, H Fu, D Bao, H Malqin, S Yang.
+Complete mitochondrial genome of Myospalax aspalax (Rodentia, Spalacidae).
+Mitochondrial DNA Part A 2016 <a href="http://dx.doi.org/10.3109/19401736.2015.1043532" target="_blank">link</a>.
+</li>
+
+<li>M Nowrousian.
+Complete Mitochondrial Genome Sequence of the Pezizomycete Pyronema confluens.
+Genome Announcement 2016 <a href="http://dx.doi.org/10.13039/501100001659" target="_blank">link</a>.
+</li>
+
+<li>KH Tisthammer, ZH Forsman, VL Sindorf, TL Massey, CR Bielecki, and RJ Toonen.
+The complete mitochondrial genome of the lobe coral Porites lobata (Anthozoa: Scleractinia) sequenced using ezRAD.
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1157770" target="_blank">link</a>.
+</li>
+
+<li>F Wu, Y Cen, X Deng, Z Zheng, J Chen, G Liang.
+The complete mitochondrial genome sequence of Diaphorina citri (Hemiptera: Psyllidae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1156491" target="_blank">link</a>.
+</li>
+
+<li>J Takahashi, M Nishimoto, T Wakamiya, M Takahashi, T Kiyoshi, K Tsuchida, and T Nomura.
+Complete mitochondrial genome of the Japanese bumblebee, Bombus hypocrita sapporensis (Insecta: Hymenoptera: Apidae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1155423" target="_blank">link</a>.
+</li>
+
+<li>MZ Karagozlu, JM Sung, JH Lee, T Kwon, CB Kim.
+ Complete mitochondrial genome sequences and phylogenetic relationship of Elysia ornata (Swainson, 1840)(Mollusca, Gastropoda, Heterobranchia, Sacoglossa).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1155427" target="_blank">link</a>.
+</li>
+
+<li>MZ Karagozlu, JM Sung, JH Lee, W Kwak, CB Kim.
+Complete sequences of mitochondrial genome of Hypselodoris festiva (A. Adams, 1861)(Mollusca, Gastropoda, Nudibranchia).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1159933" target="_blank">link</a>.
+</li>
+
+<li>A Nikitina, V Babenko, T Akopian, D Shirokov, V Manuvera, A Kurdyumov, E Kostryukova, and V Lazarev.
+ Draft mitochondrial genomes of Hirudo medicinalis and Hirudo verbana (Annelida, Hirudinea).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1157774" target="_blank">link</a>.
+</li>
+
+<li>JA Arnemann, TK Walsh, KHJ Gordon, H Brier, JVC Guedes, and WT Tay.
+Complete mitochondrial genome of the soybean stem fly Melanagromyza sojae (Diptera: Agromyzidae).
+Mitochondrial DNA 2016 <a href="http://dx.doi.org/10.3109/19401736.2015.1101550" target="_blank">link</a>.
+</li>
+
+<li>The complete mitochondrial genome of the Japanese honeybee, Apis cerana japonica (Insecta: Hymenoptera: Apidae).
+The complete mitochondrial genome of the Japanese honeybee, Apis cerana japonica (Insecta: Hymenoptera: Apidae).
+Mitochondrial DNA Part B, 2016 <a href="http://dx.doi.org/10.1080/23802359.2016.1144108" target="_blank">link</a>.
+</li>
+
+<li>T Strzała, R Grochowalska, B Najbar, P Mikulíček, D Jandzik, P Lymberakis, and D Jablonski.
+Complete mitochondrial genome of the endemic legless lizard Anguis cephallonica Werner, 1894 and its comparison with mitogenome of Anguis fragilis Linnaeus, 1758.
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137834" target="_blank">link</a></li>     
+
+<li>GM Lin, KN Shen, CD Hsiao.
+Next generation sequencing yields the complete mitogenome of nereid worm, Namalycastis abiuma (Annelida: Nereididae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137845" target="_blank">link</a></li>   
+
+<li>W Niu, R Lin, X Shi, CH Chen, KN Shen, CD Hsiao.
+ Next-generation sequencing yields the complete mitogenome of massive coral, Porites lutea (Cnidaria: Poritidae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137795" target="_blank">link</a></li>   
+
+<li>W Niu, H Huang, R Lin, CH Chen, KN Shen, CD Hsiao.
+The complete mitogenome of the Galaxy Coral, Galaxea fascicularis (Cnidaria: Oculinidae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137796" target="_blank">link</a></li>
+
+<li>P Xiang, M Lin, L Zhao, KN Shen, CD Hsiao.
+Low-coverage genome sequencing yields the complete mitogenome of Pyjama Slug, Chromodoris quadricolor (Mollusca: Chromodorididae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137841" target="_blank">link</a></li>   
+
+<li>P Xiang, M Lin, Y Wang, KN Shen, CD Hsiao.
+The complete mitogenome of sea slug, Phyllidia ocellata (Mollusca: Phyllidiidae).
+Mitochondrial DNA Part B 2016 <a href="http://dx.doi.org/10.1080/23802359.2015.1137842" target="_blank">link</a></li>   
+
+
+<li>SS Hunter, ML Settles, DD New, CE Parent, and AT Gerritsen.
+Mitochondrial Genome Sequence of the Galápagos Endemic Land Snail Naesiotus nux.
+Genome Announcements 4(1):e01362-15 2016 <a href="http://dx.doi.org/10.1128/genomeA.01362-15" target="_blank">link</a></li>     
+
+<li>AT Gerritsen, DD New, BD Robison, A Rashed, P Hohenlohe, L Forney, M Rashidi, CM Wilson, and ML Settles.
+Full Mitochondrial Genome Sequence of the Sugar Beet Wireworm Limonius californicus (Coleoptera: Elateridae), a Common Agricultural Pest.
+Genome Announcements 4(1):e01628-15 2016 <a href="http://dx.doi.org/10.1128/genomeA.01628-15" target="_blank">link</a></li>   
+
+<li>M Sveinsdóttir, L Guðmundsdóttir, KP Magnússon.
+Complete mitochondrial genome of the gyrfalcon Falco rusticolus (Aves, Falconiformes, Falconidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1126827" target="_blank">link</a></li>     
+
+<li>SR Kolora, R Faria, A Weigert, S Schaffer, A Grimm, K Henle, AH Sahyoun, PF Stadler, K Nowick, C Bleidorn and M Schlegel.
+The complete mitochondrial genome of Lacerta bilineata and comparison with its closely related congener L. Viridis.
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1111349" target="_blank">link</a></li>     
+
+<li>L Wen, X Yang, J Liao, Y Fu, B Dai.
+The complete mitochondrial genome of the fulvous parrotbill Paradoxornis fulvifrons (Passeriformes: Muscicapidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1111362" target="_blank">link</a></li>     
+
+<li>P da Silva Lemos, HA de Oliveira Monteiro, FC Castro, CPS de Lima, DEA da Silva, JM de Vasconcelos, LF de Oliveira, SP da Silva, JF Cardoso, JL da Silva Gonçalves Vianez Júniora and  MRT Nunesa.
+Characterization of mitochondrial genome of Haemagogus janthinomys (Diptera: Culicidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1110793" target="_blank">link</a></li>     
+
+<li>DC Yang, Y Sun, CH Lu.
+The complete mitochondrial genome of Zosterops japonicas (Aves, Zosteropidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1101581" target="_blank">link</a></li>     
+
+ 
+<li>B Linard, P Arribas, C Andújar, A Crampton-Platt and AP Vogler.
+The mitogenome of Hydropsyche pellucidula (Hydropsychidae): first gene arrangement in the insect order Trichoptera.
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1110803" target="_blank">link</a></li>     
+
+<li>PG de Sá, A Veras, CS Fontana, A Aleixo, T Burlamaqui, CV Mello, AT Ribeiro de Vasconcelos, F Prosdocimi, R Ramos, M Schneider and A Silva.
+The assembly and annotation of the complete Rufous-bellied thrush mitochondrial genome.
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1115855" target="_blank">link</a></li>     
+
+<li>AG Briscoe, D Sivell, RE Harbach.
+The complete mitochondrial genome of Dixella aestivalis (Diptera: Nematocera: Dixidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1110809" target="_blank">link</a></li>     
+
+<li>L Wen, Y Wang, Y Fu, B Dai.
+The complete mitochondrial genome of the white-browed laughingthrush Garrulax sannio (Passeriformes: Leiothrichidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1106525" target="_blank">link</a></li>     
+
+<li>P Li, M Yang, S Ni, L Zhou, Z Wang, S Wei, Q Qin.
+Complete mitochondrial genome sequence of the pelagic chaetognath, sagitta ferox.
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1106508" target="_blank">link</a></li>     
+
+<li>F Kong, JY Wu, JM Guo.
+The complete mitochondrial genome of the small-toothed forest hedgehog Mesechinus miodon (Eulipotyphla: Erinaceidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1106514" target="_blank">link</a></li>     
+
+<li>LF Peng, DC Yang, CH Lu.
+Complete mitochondrial genome sequence of Eurasian blackbird, Turdus merula (Aves: Turdidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1101580" target="_blank">link</a></li>     
+
+<li>X Tian, J Liu, Y Cui, P Dong, Y Zhu.
+Mitochondrial genome of one kind of giant Asian mantis, Hierodula formosana (Mantodea: Mantidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1106519" target="_blank">link</a></li>     
+
+<li>S Kim, H Kim, SC Shin.
+Complete mitochondrial genome of the Antarctic midge Parochlus steinenii (Diptera: Chironomidae).
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1066355" target="_blank">link</a></li>     
+
+
+<li>BR de Souza, WT Tay, C Czepak, S Elfekih, TK Walsh.
+The complete mitochondrial DNA genome of a Chloridea (Heliothis) subflexa (Lepidoptera: Noctuidae) morpho-species.
+Mitochondrial DNA 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1101549" target="_blank">link</a></li>     
+
+<li>JF Domínguez-Contreras, A Munguia-Vega, BP Ceballos-Vázquez, FJ García-Rodriguez, and M Arellano-Martinez.
+The complete mitochondrial genome of Octopus bimaculatus Verrill, 1883 from the Gulf of California.
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1101575" target="_blank">link</a></li>
+     
+<li>Z Chang, QQ Shen.
+The complete mitochondrial genome of the navel orangeworm Amyelois transitella (Insecta: Lepidoptera: Pyralidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1101564" target="_blank">link</a></li>
+     
+<li>XX Teng, ZH Xie, Y Zhang.
+The complete mitochondrial genome of the common buckeye Junonia coenia (Insecta: Lepidoptera: Nymphalidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1089496" target="_blank">link</a></li>
+     
+<li>MC Piper, M van Helden, LN Court, WT Tay.
+Complete mitochondrial genome of the European Grapevine moth (EGVM) Lobesia botrana (Lepidoptera: Tortricidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079893" target="_blank">link</a></li>
+
+<li>APV Martins, AO do Carmo, FO Mesquita, RJG Pimenta, AT de Azevedo Chagas, and E Kalapothakis.
+Many unique characteristics revealed by the complete mitochondrial genome of the scorpion Tityus serrulatus (Lutz e Mello 1922)(Chelicerata; Arachnida).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079828" target="_blank">link</a></li>
+
+<li>DA Moreira, MGP Magalhães, PCC de Andrade, C Furtado, AL Val, and TE Parente.
+An RNA-based approach to sequence the mitogenome of Hypoptopoma incognitum (Siluriformes: Loricariidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079903" target="_blank">link</a></li>
+
+<li>L Chhakchhuak, S De Mandal, G Gurusubramanian, N Sudalaimuthu, C Gopalakrishnan, RC Mugasimangalam, Vanramliana, and NS Kumar.
+Complete mitochondrial genome of the Himalayan honey bee, Apis laboriosa.
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079891" target="_blank">link</a></li>
+
+<li>J Fuchs, JM Pons, E Pasquet, C Bonillo.
+Complete mitochondrial genomes of the white-browed piculet (Sasia ochracea, Picidae) and pale-billed woodpecker (Campephilus guatemalensis, Picidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079834" target="_blank">link</a></li>
+
+<li>A MacLeod, I Irisarri, M Vences, S Steinfartz.
+The complete mitochondrial genomes of the Galápagos iguanas, Amblyrhynchus cristatus and Conolophus subcristatus.
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079863" target="_blank">link</a></li>
+
+<li>Characterization of the complete mitochondrial genome of the Scarlet Tiger moth Callimorpha dominula (Insecta: Lepidoptera: Arctiidae).
+XY Peng, XY Duan, Y Qiang.
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079888" target="_blank">link</a></li>
+
+<li>M Stokkan, JA Jurado-Rivera, C Juan, D Jaume, and J Pons.
+Mitochondrial genome rearrangements at low taxonomic levels: three distinct mitogenome gene orders in the genus Pseudoniphargus (Crustacea: Amphipoda).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079821" target="_blank">link</a></li>
+
+<li>KN Shen, CW Chang, YF Chan, ZH Lin, SY Tsai, CH Chen, and CD Hsiao.
+Complete mitogenomes of Woodhead's angelfish (Centropyge woodheadi) and Herald's angelfish (Centropyge heraldi)(Teleostei: Pomacanthidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079849" target="_blank">link</a></li>
+
+<li>KN Shen, CW Chang, ZH Lin, YF Chan, SY Tsai, CH Chen, and CD Hsiao.
+Complete mitogenomes of Cocos lemonpeel angelfish (Centropyge flavissima) and Eibl's angelfish (Centropyge eibli)(Teleostei: Pomacanthidae).
+Mitochondrial DNA 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1079868" target="_blank">link</a></li>
+
+<li>KN Shen, CW Chang, CH Chen, CD Hsiao.
+Complete mitogenomes of Armitage angelfish (Apolemichthys armitagei) and Griffisi angelfish (Apolemichthys griffisi)(Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015. <a href="http://dx.doi.org/10.3109/19401736.2015.1043542" target="_blank">link</a>
+</li>
+
+<li>T Tsunashima, R Yamada, K Abe, S Noguchi, S Itoi, S Nakai, N Takai, and H Sugita. 
+Phylogenetic position of Scombropidae within teleostei: the complete mitochondrial genome of the gnomefish, Scombrops gilberti.
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1063135" target="_blank">link</a> </li>
+</li> 
+
+<li>CD Hsiao, KN Shen, YF Chan, ZH Lin, SY Tsai, CH Chen, and CW Chang. 
+Complete mitogenomes of Spotbreast angelfish (Genicanthus melanospilos) and Blackstriped angelfish (Genicanthus lamarck)(Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1060464" target="_blank">link</a> </li>
+</li> 
+
+<li>C Zhou, M Tan, S Du, R Zhang, R Machida, X Zhou. 
+The mitochondrial genome of the winter stonefly Apteroperla tikumana (Plecoptera, Capniidae)
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1063120" target="_blank">link</a> </li>
+</li> 
+
+<li>CJ Yao, CH Chen, CD Hsiao. 
+The complete mitogenome of Ginkgo-toothed beaked whale (Mesoplodon ginkgodens)(Chordata: Ziphiidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053122" target="_blank">link</a> </li>
+</li> 
+
+<li>KN Shen, CW Chang, ZH Lin, YF Chan, SY Tsai, CH Chen, and CD Hsiao. 
+Complete mitogenomes of Whitetail angelfish (Centropyge flavicauda) and Orangeback angelfish (Centropyge acanthops)(Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1060456" target="_blank">link</a> </li>
+</li> 
+
+<li>KN Shen, CW Chang, SY Tsai, ZH Lin, YF Chan, CH Chen, and CD Hsiao. 
+Complete mitogenomes of Barred angelfish (Paracentropyge multifasciata) and Purplemask angelfish (Paracentropyge venusta)(Teleostei: Pomacanthidae)
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1060453" target="_blank">link</a> </li>
+</li> 
+
+<li>KN Shen, CW Chang, CH Chen, CD Hsiao. 
+Complete mitogenomes of King angelfish (Holacanthus passer) and Queen angelfish (Holacanthus ciliaris)(Teleostei: Pomacanthidae). 
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053081" target="_blank">link</a> </li>
+</li> 
+
+
+<li>J-H Song, S Kim, S Shin, and G-S Min.
+The complete mitochondrial genome of the mysid shrimp, Neomysis japonica (Crustacea, Malacostraca, Mysida). 
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053064" target="_blank">link</a> </li>
+</li> 
+
+<li>K-N Shen, C-H Chen, and C-D Hsiao. 
+Complete mitogenomes of Guinean angelfish (Holacanthus africanus) and Rock beauty (Holacanthus tricolor) (Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053057" target="_blank">link</a> </li>
+</li>
+ 
+<li>K-N Shen, C-W Chang, C-H Chen, and C-D Hsiao. 
+Complete mitogenomes of Multicolor angelfish (Centropyge multicolor) and Yellowhead angelfish (Centropyge joculator) (Teleostei: Pomacanthidae). 
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053077" target="_blank">link</a> </li>
+</li> 
+
+<li>C Vanlalruati, SD Mandal, G Gurusubramanian, NS Kumar. 
+<li>JH Grau, JJ Nuñez, J Plötner, AJ Poustka.
+The complete mitochondrial genome of Telmatobufo australis (Amphibia: Anura: Calyptocephalellidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053082" target="_blank">link</a> </li>
+
+<li>KN Shen, CW Chang, CH Chen, CD Hsiao.
+Complete mitogenomes of Multicolor angelfish (Centropyge multicolor) and Yellowhead angelfish (Centropyge joculator)(Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1053077" target="_blank">link</a> </li>
+
+<li>C Vanlalruati, SD Mandal, G Gurusubramanian, NS Kumar.
+Complete mitochondrial genome of Chocolate Pansy, Junonia iphita (Lepidoptera: Nymphalidae: Nymphalinae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1033701" target="_blank">link</a> </li>
+</li>
+
+<li>C Galván-Tirado, MA del Río-Portilla, R Delgado-Vega, and FJ García-De León.
+Genetic variability between complete mitochondrion genomes of the sablefish, Anoplopoma fimbria (Pallas, 1814).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1030628" target="_blank">link</a> </li>
+</li>
+
+<li>K-N Shen, C-W Chang, S-Y Tsai, S-C Wu, Z-H Lin, Y-F Chan, C-H Chen, C-D Hsiao, and P Borsa.
+Next generation sequencing yields complete mitogenomes of Leopard whipray (Himantura leoparda) and Blue-spotted stingray (Neotrygon kuhlii) (Chondrichthyes: Dasyatidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1041119" target="_blank">link</a> </li>
+</li>
+
+<li>K-H Loh, K-T Shao, C-H Chen, H-M Chen, Amy Y-H Then, P-L Loo, P-E Lim, V-C Chong, K-N Shen, and C-D Hsiao.
+Complete mitogenome of two moray eels of Gymnothorax formosus and Scuticaria tigrina (Anguilliformes: Muraenidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1043530" target="_blank">link</a> </li>
+
+</li> <li>C-D Hsiao, K-N Shen, S-Y Tsai, S-C Wu, C-H Chen, and C-W Chang.
+The complete mitogenome of Japanese swallow angelfish (Genicanthus semifasciatus) and Ornate angelfish (Genicanthus bellus) (Teleostei: Pomacanthidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1041126" target="_blank">link</a> </li>
+</li>
+
+<li>C Quezada-Romegialli, D Véliz, F Docmac, C Harrod.
+The complete mitochondrial genome of the rocky reef fish Cheilodactylus variegatus Valenciennes, 1833 (Teleostei: Cheilodactylidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1025263" target="_blank">link</a> </li>
+</li>
+
+<li>X Li, J Lu, J Lu, X Hu, Z Huang.
+The complete mitochondrial genome of the American crow, Corvus brachyrhynchos (Passeriformes, Corvidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1022745" target="_blank">link</a> </li>
+
+<li>H-Y Lin, C-H Chang, H-C Ho, and K-T Shao.
+The complete mitochondrial genome of Wanieso lizardfish Saurida wanieso Shindo & Yamada, 1972 (Aulopiformes: Synodontidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.982620 " target="_blank">link</a> </li>
+
+<li>JC Day, RK Broughton, SA Hinsley.
+Sequence and organization of the complete mitochondrial genome of the marsh tit Poecile palustris (Aves: Paridae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007351" target="_blank">link</a> </li>
+
+<li>JJ Dong, DL Guan, SQ Xu.
+Complete mitogenome of the semi-aquatic grasshopper Oxya intricate (Stål.)(Insecta: Orthoptera: Catantopidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007361" target="_blank">link</a> </li>
+
+<li>The mitochondrial genome of the Arizona Snowfly Mesocapnia arizonensis (Plecoptera, Capniidae).
+V Elbrecht, and F Leese.
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1018223" target="_blank">link</a> </li>
+
+<li>HM Gan, MH Tan, HY Gan, YP Lee, CM Austin.
+The complete mitogenome of the Norway lobster Nephrops norvegicus (Linnaeus, 1758)(Crustacea: Decapoda: Nephropidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007325" target="_blank">link</a> </li>
+
+<li>X Zeng, T Huiwu, D Wang, X Duan, D Chen.
+The complete mitochondrial genome of Xenophysogobio nudicorpa (Teleostei, Cypriniformes, Cyprinidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.982584" target="_blank">link</a> </li>
+
+<li>
+R Yang, DL Guan, SQ Xu.
+Complete mitochondrial genome of the Chinese endemic grasshopper Fruhstorferiola kulinga (Orthoptera: Acrididae: Podismini).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2015.1007364" target="_blank">link</a> </li>
+
+<li>
+XY Peng, P Zhou, Y Qiang, ZQ Qian.
+Characterization of the complete mitochondrial genome of Bombyx huttoni (Lepidoptera: Bombycidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.1003868" target="_blank">link</a> </li>
+
+<li>
+M Uliano-Silva, J Americo, AS Bastos, C Furtado, M de Freitas Rebelo, and F Prosdocimi.
+Complete mitochondrial genome of the brown mussel Perna perna (Bivalve, Mytilidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.989502" target="_blank">link</a> </li>
+
+<li>
+MG León-Pech, AY Castillo-Páez, CI Bisbal-Pardo, A Rocha-Olivares, and MA del Río-Portilla.
+Complete mitochondrial genome of the beaubrummel Damselfish, Stegastes flavilatus (Pisces: Perciformes, Pomacentridae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.1003880" target="_blank">link</a> </li>
+
+<li>
+DL Guan, SQ Xu.
+The complete mitogenome of the Asiatic Salamander Batrachuperus tibetanus (Amphibia: Caudata: Hynobiidae).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.1003839" target="_blank">link</a> </li>
+
+<li>
+EV Romanova, KV Mikhailov, MD Logacheva, RM Kamaltynov, VV Aleoshin, and DY. Sherbakov.
+The complete mitochondrial genome of a deep-water Baikalian amphipoda Brachyuropus grewingkii (Dybowsky, 1874).
+Mitochondrial DNA, 2015 <a href="http://dx.doi.org/10.3109/19401736.2014.1003891" target="_blank">link</a> </li>
+
+
+<li>
+The complete validated mitochondrial genome of the yellownose skate Zearaja chilensis (Guichenot 1848) (Rajiformes, Rajidae).
+C Vargas-Caro, C Bustamante, MB Bennett, and JR Ovenden.
+Mitochondrial DNA 2014  <a href="http://dx.doi.org/10.3109/19401736.2014.945530" target="_blank">link</a>
+</li>
+
+<li>
+The complete mitogenome of Xenophysogobio boulengeri (Cypriniformes; Cyprinidae).
+W Tao and H Zhao.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945557" target="_blank">link</a>
+</li>
+
+<li>
+HY Gan, HM Gan, YP Lee, and CM Austin.
+The complete mitochondrial genome of the bass yabby Trypaea australiensis Dana 1852, (Crustacea; Decapoda; Callianassidae) - a new gene order for the Decapoda.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.989516" target="_blank">link</a>
+</li>
+
+<li>
+N Restrepo-Escobar, JF Alzate, and EJ Márquez.
+Mitochondrial genome of the Trans-Andean shovelnose catfish Sorubim cuspicaudus (Siluriformes, Pimelodidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.989506" target="_blank">link</a>
+</li>
+
+
+<li>
+F Camarena-Rosales, MA Del Río-Portilla, G Ruiz-Campos, and FJ García-De-León.
+Entire mitochondrion genome sequence of the Desert Pupfish, Cyprinodon macularius Baird & Girard, 1853.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.987251" target="_blank">link</a>
+</li>
+
+<li>
+T Tsunashima, S Itoi, K Abe, T Takigawa, S Inoue, T Kozen, N Ono, S Noguchi, S Nakai, N Takai, M-C Huang, and H Sugita.
+The complete mitochondrial genome of the gnomefish Scombrops boops (Teleostei, Perciformes, Scombropidae) from the Pacific Ocean off the Japanese Islands.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.987242" target="_blank">link</a>
+</li>
+
+<li>
+CC Dietrich, A Brune.
+The complete mitogenomes of six higher termite species reconstructed from metagenomic datasets  (Cornitermes sp., Cubitermes ugandensis, Microcerotermes parvus, Nasutitermes corniger, Neocapritermes taracua, and Termes hospes).
+ Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.987257" target="_blank">link</a>
+</li>
+
+<li>
+F Morinha, C Clemente, JA Cabral, MM Lewicka, P Travassos, D Carvalho, JA Dávila, M Santos, G Blanco, and E Bastos.
+Next-generation sequencing and comparative analysis of Pyrrhocorax pyrrhocorax and Pyrrhocorax graculus (Passeriformes: Corvidae) mitochondrial genomes.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.984179" target="_blank">link</a>
+</li>
+
+<li>
+X Nan, C Wei, H He.
+The complete mitogenome of Eucryptorrhynchus brandti (Harold)(Insecta: Coleoptera: Curculionidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.982556" target="_blank">link</a>
+</li>
+
+<li>
+N Restrepo-Escobar, JF Alzate, EJ Márquez.
+Mitochondrial genome of the Neotropical catfish Ageneiosus pardalis, Lütken 1874 (Siluriformes, Auchenipteridae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.982613" target="_blank">link</a>
+</li>
+
+<li>
+RM Landínez-García, JF Alzate, EJ Márquez.
+Mitochondrial genome of the Neotropical trans-Andean fish Ichthyoelephas longirostris, Steindachner 1879 (Characiformes, Prochilodontidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.982622" target="_blank">link</a>
+</li>
+
+<li>
+RM Landínez-García, JF Alzate, EJ Márquez.
+Mitochondrial genome of the Neotropical detritivore fish Curimata mivartii Steindachner 1878 (Characiformes, Curimatidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.982623" target="_blank">link</a>
+</li>
+
+<li>
+RM Landínez-García, JF Alzate, EJ Márquez.
+Complete mitogenome of the Neotropical fish Brycon henni, Eigenmann 1913 (Characiformes, Bryconidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.984170" target="_blank">link</a>
+</li>
+
+<li>
+JP Isaza, JF Alzate, JA Maldonado-Ocampo.
+Complete mitochondrial genome sequence of Grundulus bogotensis (Humboldt, 1821).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.982563" target="_blank">link</a>
+</li>
+
+<li>
+The complete mitochondrial genome of the crocodile shark, Pseudocarcharias kamoharai (Chondrichthyes, Lamnidae).
+C-H Chang, K-T Shao, Y-S Lin, and H-C Ho.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.971301" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial DNA of the Pacific Geoduck clam (Panopea generosa).
+C I Bisbal-Pardo, M A del Río-Portilla, and A Rocha-Olivares.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.971304" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial genome of Heliconius pachinus (Insecta: Lepidoptera: Nymphalidae).
+Z-H Huang, P-F Dai, and G-F Zhao.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945542" target="_blank">link</a>.
+</li>
+
+<li>
+Shotgun assembly of the complete mitochondrial genome of the neotropical cracker butterfly Hamadryas epinome.
+S Cally, E Lhuillier, A Iribar, I Garzón-Orduña, E Coissac, and J Murienne.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.971262" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial genome of the giant electric ray, Narcine entemedor (Elasmobranchii: Torpediniformes).
+A Castillo-Páez, M A del Río-Portilla, and A Rocha-Olivares.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.963800" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial genome of Baikalian amphipoda Eulimnogammarus vittatus Dybowsky, 1874.
+E V. Romanova, K V. Mikhailov, M D. Logacheva, R M. Kamaltynov, V V. Aleoshin, and D Yu Sherbakov.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.963817" target="_blank">link</a>.
+</li>
+
+<li>
+Complete mitochondrial DNA genome of Bemisia tabaci cryptic pest species complex Asia I (Hemiptera: Aleyrodidae).
+WT Tay, S Elfekih, L Court, KH Gordon, and PJ De Barro.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.926511" target="_blank">link</a>.
+</li>
+
+<li>
+The mitochondrial genome of the banded guitarfish, Zapteryx exasperata (Jordan and Gilbert, 1880), possesses a non-coding duplication remnant region.
+A Castillo-Páez, M A del Río-Portilla, E Oñate-González, and A Rocha-Olivares.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.958721" target="_blank">link</a>.
+</li>
+
+<li>
+Complete mitochondrial genome of Salminus brasiliensis (Characiformes, Characidae).
+PFP Brandão-Dias, A Oliveira do Carmo, A P V Martins, R J G Pimenta, C B M Alves, and E Kalapothakis.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.958676" target="_blank">link</a>.
+</li>
+
+<li>
+K. F. Bennett, A. W. Bailey, D. J. Brambert, E. W. Ferhati, C. A. Karson, U. Nafasat, J. K. Wadleigh, and A. H. Wright.
+The F type mitochondrial genome of the scorched mussel: Brachidontes exustus,(Mytiloida, Mytilidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.953111" target="_blank">link</a>.
+</li>
+
+<li>
+Next generation sequencing yields the complete mitochondrial genome of the Endangered Chilean silverside Basilichthys microlepidotus (Jenyns, 1841) (Teleostei, Atherinopsidae), validated with RNA-seq
+D. Véliz, C. Vega-Retter, and C. Quezada-Romegialli.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.953113" target="_blank">link</a>.
+</li>
+
+<li>
+Lionfish, Pterois volitans Linnaeus 1758, the complete mitochondrial DNA of an invasive species.
+M. A. Del Río-Portilla, C. E. Vargas-Peralta, S. Machkour-M'Rabet, Y. Hénaut, and F. J. García-De-León.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.953075" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial DNA of the endemic shortfin silverside, Chirostoma humboldtianum (Valenciennes, 1835).
+I. de los A. Barriga-Sosa, F. J. García De León, and M. A. Del Río-Portilla.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.953130" target="_blank">link</a>.
+</li>
+
+<li>
+ZQ Qian.
+The complete mitogenome of the Cydno Longwing Heliconius cydno (Insecta: Lepidoptera: Nymphalidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.953089" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitogenome of Gnathopogon polytaenia (Cypriniformes; Cyprinidae).
+W Tao, H Zhao.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945569" target="_blank">link</a>.
+</li>
+
+<li>
+MA Del Río-Portilla, CE Vargas-Peralta, C Farfán, I de los A Barriga-Sosa, and FJ García-De-León.
+The complete mitochondrial DNA of the bay snook, Petenia splendida, a native Mexican cichlid.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.947590" target="_blank">link</a>.
+</li>
+
+<li>
+MH Tan, HM Gan, YP Lee, CM Austin.
+The complete mitogenome of the stone crab Myomenippe fornasinii (Bianconi, 1851)(Crustacea: Decapoda: Menippidae).
+Mitochondrial DNA, 2014  <a href="http://dx.doi.org/10.3109/19401736.2014.947587" target="_blank">link</a>.
+</li>
+
+<li>
+CM Austin, MH Tan, YP Lee, LJ Croft, MG Meekan and HM Gan.
+The complete mitogenome of the cow tail ray Pastinachus atrus (Macleay, 1883)(Elasmobranchii; Myliobatiformes; Dasyatidae).
+Mitochondrial DNA, 2014  <a href="http://dx.doi.org/10.3109/19401736.2014.947586" target="_blank">link</a>.
+</li>
+
+<li>
+MH Tan, HM Gan, YP Lee, CM Austin.
+The complete mitogenome of the moon crab Ashtoret lunaris (Forskal, 1775),(Crustacea; Decapoda; Matutidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945572" target="_blank">link</a>.
+</li>
+
+<li>
+XH Huang, FS Zhong, WN Li, JB Chen, AX Zhang, and QF Yao.
+Complete mitochondrial genome of the Wuhua three-yellow chicken (Gallus gallus domesticus).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945571" target="_blank">link</a>.
+</li>
+
+<li>
+The complete mitochondrial genome sequence of Heliconius hecale (Insecta: Lepidoptera: Nymphalidae).
+QQ Shen, L Wang.
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945561" target="_blank">link</a>.
+</li>
+
+<li>
+L Wang, XJ Du, XF Li.
+The complete mitogenome of the Common Mormon Papilio polytes (Insecta: Lepidoptera: Papilionoidea).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945550" target="_blank">link</a>.
+</li>
+
+<li>
+Y Zhang, J Sun, X Li, JW Qiu.
+The mitochondrial genome of the deep-sea glass sponge Lophophysema eversa (Porifera, Hexacinellida, Hyalonematidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.945552" target="_blank">link</a>.
+</li>
+
+<li>
+Christopher M A, Mun H T, Laurence J C, and Han M G.
+The complete mitogenome of the freshwater crayfish Cherax cainii (Crustacea: Decapoda: Parastacidae).
+Mitochondrial DNA 2014. <a href="http://dx.doi.org/10.3109/19401736.2013.878907" target="_blank">link</a>.
+</li>
+
+<li>
+Z-Q Qian.
+The complete mitogenome of the dampwood termite Zootermopsis nevadensis (Insecta: Isoptera: Termopsidae).
+Mitochondrial DNA 2014.  <a href="http://dx.doi.org/10.3109/19401736.2014.936419" target="_blank">link</a>
+</li>
+
+<li>
+L. Taillebois, D. Crook, T. Saunders, and J. Ovenden.
+The complete mitochondrial genome of the golden snapper Lutjanus johnii (Perciformes: Lutjanidae).
+Mitochondrial DNA 2014. <a href="http://dx.doi.org/10.3109/19401736.2014.919457" target="_blank">link</a>
+</li>
+
+<li>
+L. Taillebois, D. Crook, T. Saunders, and J. Ovenden.
+The complete mitochondrial genome of the black jewfish Protonibea diacanthus (Perciformes: Sciaenidae).
+Mitochondrial DNA 2014. <a href="http://dx.doi.org/10.3109/19401736.2014.915538" target="_blank">link</a>
+</li>
+
+<li>
+H. M. Souto, P. A. Ruschi, C. Furtado, W. B. Jennings, and F. Prosdocimi.
+The complete mitochondrial genome of the ruby-topaz hummingbird Chrysolampis mosquitus through Illumina sequencing.
+Mitochondrial DNA 2014. <a href="http://dx.doi.org/10.3109/19401736.2014.915533" target="_blank">link</a>
+</li>
+
+<li>
+Dean C. Blower and Jennifer R. Ovenden.
+The complete mitochondrial genome of the sandbar shark Carcharhinus plumbeus.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.926487" target="_blank">link</a>
+´</li>
+
+<li>
+Del Río-Portilla, M. A., Vargas-Peralta, C. E., Paz-García, D. A., Lafarga De La Cruz, F., Balart, E. F., & García-de-León, F. J.
+The complete mitochondrial DNA of endemic Eastern Pacific coral (Porites panamensis).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.913166" target="_blank">link</a>
+</li>
+
+<li>
+C. M. Austin, M. H. Tan, Y. P. Lee, L. J. Croft, M. G. Meekan, S. J. Pierce, and H. M. Gan.
+The complete mitogenome of the whale shark parasitic copepod Pandarus rhincodonicus norman, Newbound & Knott (Crustacea; Siphonostomatoida; Pandaridae) – a new gene order for the copepoda.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.913147" target="_blank">link</a>
+</li>
+<li>
+C.-H. Chang, W.-C. Chiang, Y.-S. Lin, N.-H. Jang-Liaw, and K.-T. Shao.
+Complete mitochondrial genome of the longfin mako shark, Isurus paucus (Chondrichthyes, Lamnidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.913145" target="_blank">link</a>
+</li>
+<li>
+C. M. Austin, M. H. Tan, Y. P. Lee, L. J. Croft, and H. M. Gan.
+The complete mitogenome of the Murray Cod, Maccullochella peelii (Mitchell, 1838) (Teleostei: Percichthyidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.913162" target="_blank">link</a>
+</li>
+
+<li>P. Liao and Y. Jin.
+The complete mitochondrial genome of the toad-headed lizard subspecies, Phrynocephalus theobaldi orientalis (Reptilia, Squamata, Agamidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.905857" target="_blank">link</a>
+</li>
+
+<li>M. A. D. Río-Portilla1, C. E. Vargas-Peralta, F. Lafarga-De La Cruz, L. Arias-Rodriguez, R. Delgado-Vega, C. G.-Tirado, and F. J. García-de-León.
+The complete mitochondrial DNA of the tropical gar (Atractosteus tropicus).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.905856" target="_blank">link</a>
+</li>
+
+<li>V. da Rocha Perini, D. C. de Carvalho, L. B. Beheregaray, and F. Prosdocimi.
+The complete mitochondrial genome of the southern purple-spotted gudgeon Mogurnda adspersa (Perciformes: Eleotridae) through pyrosequencing.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.895995" target="_blank">link</a>
+</li>
+
+<li>N. A. Robinson, N. E. Hall, E. M. Ross, I. R. Cooke, B. P. Shiel, A. J. Robinson, and J. M. Strugnell.
+The complete mitochondrial genome of Haliotis laevigata (Gastropoda: Haliotidae) using MiSeq and HiSeq sequencing.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.900611" target="_blank">link</a>
+</li>
+
+<li>V. da Rocha Perini, D. C. de Carvalho, L. B. Beheregaray, and F. Prosdocimi.
+The complete mitochondrial genome of the southern purple-spotted gudgeon Mogurnda adspersa (Perciformes: Eleotridae) through pyrosequencing.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.89599" target="_blank">link</a>
+</li>
+
+<li>C.-H. Chang, N.-H. Jang-Liaw, Y.-S. Lin, A. Carlisle, H. H. Hsu, Y.-C. Liao, and K.-T. Shao.
+The complete mitochondrial genome of the salmon shark, Lamna ditropis (Chondrichthyes, Lamnidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.892095" target="_blank">link</a>
+</li>
+
+<li>
+C. Bustamante and J. R. Ovenden.
+The complete validated mitochondrial genome of the silver gemfish Rexea solandri (Cuvier, 1832) (Perciformes, Gempylidae).
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.898279" target="_blank">link</a>
+</li>
+
+<li>
+The complete mitogenome of the marine bivalve Lutraria rhynchaena Jonas 1844 (Heterodonta: Bivalvia: Mactridae).
+H. M. Gan, M. H. Tan, B. T. Thai, and C. M. Austin.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.892104" target="_blank">link</a>
+</li>
+
+<li>
+Complete mitochondrial genome of Polymastia littoralis (Demospongiae, Polymastiidae).
+C. del Cerro, A. Peñalver, C. Cuevas, F. de la Calle, B. Galán, and J. L. García.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.892092" target="_blank">link</a>
+</li>
+
+<li>
+Complete mitochondrial genome sequence of a phytophagous ladybird beetle, Henosepilachna pusillanima (Mulsant) (Coleoptera: Coccinellidae).
+G. T. Behere, D. M. Firake, W. T. Tay, N. S. A. Thakur, and S. V. Ngachan.
+Mitochondrial DNA 2014 <a href="http://dx.doi.org/10.3109/19401736.2014.892082" target="_blank">link</a>
+</li>
+
+
+<li>
+C-H. Chang, R. W. Jabado, Y-S. Lin, and K-T. Shao.
+The complete mitochondrial genome of the sand tiger shark, Carcharias taurus (Chondrichthyes, Odontaspididae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2013.845761" target="_blank">link</a>
+</li>
+
+<li>
+T. K. Walsh.
+Characterization of the complete mitochondrial genome of the Australian Heliothine moth, Australothis rubrescens (Lepidoptera: Noctuidae).
+Mitochondrial DNA, 2014 <a href="http://dx.doi.org/10.3109/19401736.2013.878927" target="_blank">link</a>
+</li>
+
+<li>
+N. E. Hall, J. Hanzak, A. L. Allcock, I. R. Cooke, A. Ogura, and J M. Strugnell.
+The complete mitochondrial genome of the pygmy squid, Idiosepius (Cephalopoda: Decapodiformes): the first representative from the family Idiosepiidae.
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.865180" target="_blank">link</a>
+</li>
+
+<li>
+S. R. Doyle, I. S. Griffith, N. P. Murphy, and J. M. Strugnell.
+Low-coverage MiSeq next generation sequencing reveals the mitochondrial genome of the Eastern Rock Lobster, Sagmariasus verreauxi.
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.855921" target="_blank">link</a>
+</li>
+
+<li>
+J. Hester, K. Atwater, A. Bernard, M. Francis, and M. S. Shivji.
+The complete mitochondrial genome of the basking shark Cetorhinus maximus (Chondrichthyes, Cetorhinidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.845762" target="_blank">link</a>
+</li>
+
+
+<li>
+F. Li, K.-T. Shao, Y.-S. Lin, C.-H. Chang.
+The complete mitochondrial genome of the Rhodeus shitaiensis (Teleostei, Cypriniformes, Acheilognathidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.825785" target="_blank">link</a>
+</li>
+
+<li>
+C.-H. Chang, K.-T. Shao, Y.-S. Lin, A.-Y. Tsai, P.-X. Su, H.-C. Ho.
+The complete mitochondrial genome of the shortfin mako, Isurus oxyrinchus (Chondrichthyes, Lamnidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.834430" target="_blank">link</a>
+</li>
+
+<li>
+C.-H. Chang, K.-T. Shao, Y.-S. Lin, Y.-C. Fang, H.-C. Ho.
+The complete mitochondrial genome of the great white shark, Carcharodon carcharias (Chondrichthyes, Lamnidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.803092" target="_blank">link</a>
+</li>
+
+<li>
+C.-H. Chang, K.-T. Shao, Y.-S. Lin, W.-C. Chiang, and N.-H. Jang-Liaw.
+Complete mitochondrial genome of the megamouth shark Megachasma pelagios (Chondrichthyes, Megachasmidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.792068" target="_blank">link</a>
+</li>
+
+<li>
+C.-H. Chang, K.-T. Shao, Y.-S. Lin, H.-C. Ho, and Y.-C. Liao.
+The complete mitochondrial genome of the big-eye thresher shark, Alopias superciliosus (Chondrichthyes, Alopiidae).
+Mitochondrial DNA <a href="http://dx.doi.org/10.3109/19401736.2013.792072" target="_blank">link</a>
+</li>
+
+<li>
+D. C. Blower, J. P. Hereward, and J. R. Ovenden.
+The complete mitochondrial genome of the dusky shark Carcharhinus obscurus.
+Mitochondrial DNA 2013, 24(6):619-621 <a href="http://dx.doi.org/10.3109/19401736.2013.772154" target="_blank">link</a>
+</li>
+
+<li>
+J. Li, X. Guo, D. Chen, and Y. Wang.
+The complete mitochondrial genome of the Yarkand toad-headed agama, Phrynocephalus axillaris (Reptilia, Squamata, Agamidae).
+Mitochondrial DNA 2013, 24(3):234-236 <a href="http://dx.doi.org/10.3109/19401736.2012.752477" target="_blank">link</a>
+</li>
+</ol>
+
+</div>
+
+<br>
+<h2 id = "otheruses">Other studies citing <b>MITOS</b></h2>
+<div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+
+<ol reversed="reversed">
+
+<li>M Al Arab, CH zu Siederdissen, K Tout, AH Sahyoun, PF Stadler, M Bernt.
+Accurate Annotation of Protein-Coding Genes in Mitochondrial Genomes.
+Molecular Phylogenetics and Evolution 2016 <a href="http://dx.doi.org/10.1016/j.ympev.2016.09.024" target="_blank">link</a>.
+</li>
+
+<li>AE García-Guerrero, A Zamudio-Ochoa, Y Camacho-Villasana, R García-Villegas, A Reyes-Prieto, X Pérez-Martínez.
+Evolution of Translation in Mitochondria.
+In Evolution of the Protein Synthesis Machinery and Its Regulation <a href="http://dx.doi.org/10.1007/978-3-319-39468-8_6" target="_blank">link</a>.
+</li>
+
+<li>
+C Florentz , J Pütz, F Jühling, H Schwenzer, PF Stadler, B Lorber, C Sauter, M Sissler.
+Translation in Mammalian Mitochondria: Order and Disorder Linked to tRNAs and Aminoacyl-tRNA Synthetases.
+ 2014 <a href="http://dx.doi.org/10.1016/10.1007/978-3-642-39426-3_3" target="_blank">link</a>
+</li>
+
+<li>
+Mitogenomic phylogenetics of the bank vole Clethrionomys glareolus, a model system for studying end-glacial colonization of Europe.
+K Filipi, S Marková, J B Searle, P Kotlík.
+Molecular Phylogenetics and Evolution 2014 <a href="http://dx.doi.org/10.1016/j.ympev.2014.10.016" target="_blank">link</a>
+</li>
+
+<li>
+S. L. Cameron.
+How to sequence and annotate insect mitochondrial genomes for systematic and comparative genomics research.
+Systematic Entomology. 2014 <a href="http://dx.doi.org/10.1111/syen.12071" target="_blank">link</a>
+</li>
+
+<li>
+Stadler, Peter F.
+Class-Specific Prediction of ncRNAs.
+RNA Sequence, Structure, and Function: Computational and Bioinformatic Methods. Humana Press, 2014. 199-213. <a href="http://dx.doi.org/10.1007/978-1-62703-709-9_10" target="_blank">link</a>
+</li>
+<li>
+R. L. V. Moritz, M. Bernt, M. Middendorf.
+Local Similarity Search to Find Gene Indicators in Mitochondrial Genomes.
+Biology 2014, 3(1), 220-242 <a href="http://www.mdpi.com/2079-7737/3/1/220/" target="_blank">link</a>
+</li>
+<li>
+J. L. Huot, L. Enkler, C. Megel, L. Karim, D. Laporte, H. Becker, A.-M. Duchêne, M. Sissler, L. Maréchal-Drouard.
+Idiosyncrasies in decoding mitochondrial genomes.
+Biochimie <a href="http://dx.doi.org/10.1016/j.biochi.2014.01.004" target="_blank">link</a>
+</li>
+<li>
+M. Bernt, A. Braband, B. Schierwater, P. F. Stadler.
+Genetic aspects of mitochondrial genome evolution.
+Molecular Phylogenetics and Evolution 2013, 69(2):328-338 <a href="http://dx.doi.org/10.1016/j.ympev.2012.10.020" target="_blank">link</a>
+</li>
+<li>
+M. Bernt, A. Braband, M. Middendorf, B. Misof, O. Rota-Stabelli, and P. F. Stadler.
+Bioinformatics methods for the comparative analysis of metazoan mitochondrial genome sequences.
+Molecular Phylogenetics and Evolution 2013, 69(2):320-327 <a href="http://dx.doi.org/10.1016/j.ympev.2012.09.019" target="_blank">link</a>
+</li>
+<li>
+R. L. V. Moritz, M. Bernt, and M. Middendorf.
+Annotation guided local similarity search in multiple sequences and its application to mitochondrial genomes.
+Bioinformatics &amp; Bioengineering (BIBE), 2012 IEEE 12th International Conference on <a href="http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6399666" target="_blank">link</a>
+</li>
+
+<li>
+T. Soru, und A.-C. Ngonga Ngomo.
+Rapid execution of weighted edit distances.
+Proceedings of the Ontology Matching Workshop 2013
+</li>
+</ol>
+</div>
+
+<h2 id = "privacy">Privacy</h2>
+<div style="text-align: justify; margin-top: 10px; margin-left: 20px; margin-bottom: 10px;">
+
+Submitted sequence data is not shared with others.
+Sequence data and results are deleted after one month.
+<br><br>
+
+
+The MITOS webserver collects usage data.
+We do not share this data with others and we respect the <a href="http://de.wikipedia.org/wiki/Do_Not_Track">do not track</a> option of your browser.
+Independent of this we give you the possibility to activate / deactivate tracking for this site:<br>
+
+<iframe frameborder="no" width="600px" height="200px" src="http://piwikmitos.bioinf.uni-leipzig.de/index.php?module=CoreAdminHome&action=optOut&language=en"></iframe>
+</div>
+</div>
