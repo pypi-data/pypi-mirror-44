@@ -1,0 +1,48 @@
+<div>
+    <p>
+        The following EBS volumes are not attached to an instance.
+        Please consider deleting them to reduce cost and risks related to retaining old data.
+    </p>
+    <p>
+        If you are confident these unattached volumes should remain, you can tag the volumes as configured by your
+        system administrator. The default tag is <span style="font-family: DejaVu Sans Mono, Courier, monospace !important;">probator:ignore</span>
+    </p>
+
+    <div>
+        <h2>Issues</h2>
+        <table style="border: 0; border-spacing: 0;">
+            <thead>
+            <tr>
+                <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 250px; text-align: left; padding: 4px;">Volume</th>
+                <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 150px; text-align: left; padding: 4px;">Account</th>
+                <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; width: 125px; text-align: left; padding: 4px;">Region</th>
+                <th style="border-bottom: solid #aaaaaa 2px; background-color: #eeeeee; text-align: left; padding: 4px;">Notes</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for issue in issues %}
+            <tr>
+                <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                    {{issue.volume_id}}
+                </td>
+                <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                    {{issue.account_id | account_name_from_id}}
+                </td>
+                <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                    {{issue.location}}
+                </td>
+                <td style="padding: 2px; background-color: {{loop.cycle('transparent', '#efefef') }};">
+                    {% if issue.notes %}
+                    {% for note in issue.notes %}
+                    <p>{{note}}</p>
+                    {% endfor %}
+                    {% else %}
+                    <i>No Notes</i>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

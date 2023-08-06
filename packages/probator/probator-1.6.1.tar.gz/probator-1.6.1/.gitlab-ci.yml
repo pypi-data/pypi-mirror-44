@@ -1,0 +1,29 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  BUILD_CONTAINER: bunjiboys/probator:py-build
+
+stages:
+  - lint
+  - build
+
+lint:
+  stage: lint
+  image: $BUILD_CONTAINER
+  script:
+    - flake8
+
+build:
+  stage: build
+  image: $BUILD_CONTAINER
+
+  only:
+    - tags
+
+  script:
+    - python setup.py build sdist
+    - twine check dist/*
+    - twine upload --repository-url https://upload.pypi.org/legacy/ -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
