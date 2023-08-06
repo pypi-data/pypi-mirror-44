@@ -1,0 +1,10 @@
+#!/bin/sh
+# Copyright 2018, 2019 Felix Krull
+# Licensed under the MIT license, see LICENSE for details.
+set -eu
+
+mkdir -p $1/$(readlink $1/home)
+
+chroot $1 userdel ${DEPLOY_OSTREE_username} 2> /dev/null || true
+chroot $1 useradd -m -s "${DEPLOY_OSTREE_shell:-}" ${DEPLOY_OSTREE_username}
+echo ${DEPLOY_OSTREE_username}:${DEPLOY_OSTREE_password} | chroot $1 chpasswd
