@@ -1,0 +1,172 @@
+Metadata-Version: 2.1
+Name: zxpath2
+Version: 1.1.1
+Summary: 操作更方便的xpath, 使用方法类似于Beautiful Soup4, 但是比他更快速, 功能更强大
+Home-page: https://pypi.org/project/zxpath2/
+Author: zlyuan
+Author-email: 1277260932@qq.com
+License: GNU GENERAL PUBLIC LICENSE
+Platform: all
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown
+Requires-Dist: lxml
+
+# 操作更方便的xpath
+
+### 使用方法类似于Beautiful Soup4, 但是比他更快速, 功能更强大
+
+```python
+import zxpath2
+
+def find(name=None, class_=None, text=None, deep=True, index: None or int = None, **attrs):
+    '''
+    查询节点
+    :param name: 元素名, 如果不是str类型则查找所有元素
+    :param class_: class属性
+    :param text: 文本值
+    :param deep: 是否深度查询孙节点
+    :param index: 取出第几个结果
+    :param attrs: 匹配元素的属性值, 属性值为True, 表示存在该属性的元素, 属性名前加下划线_表示否定, 如_id=True表示不存在id的元素, _id='t1'表示id不是t1的元素
+    :return: index为整数时: 成功返回Element对象, 失败返回None, index为其他:返回包含_Element对象的列表
+    '''
+    pass
+
+zx = zxpath2.load('etree对象或者html源码') #加载
+
+zx.find('div', id='content') #查询id为'content'的所有div, 返回包含_Element对象的列表
+zx.find('div', id=False, index=0) #查询不存在id的第一个div, 返回_Element对象
+zx.find('div', _id='content', deep=False) #在当前节点中查询id不为'content'的所有div, 返回包含_Element对象的列表
+zx.find('div', id='content', index=-1) #查询id为'content'的最后一个div, 返回_Element对象
+
+zx('div', id='content') #_Element对象可以作为函数名直接调用find
+```
+
+### Element对象属性
+属性名|返回类型|描述
+--|:--:|--
+name | str | 返回元素节点的标签名, 如 a, div, h1, p, span等
+base | etree.\_Element对象 | 返回原始的etree.\_Element
+id | int | 返回base的id值
+is_element | bool | 返回是否为一个element节点, 始终返回True
+is_node_element | bool | 返回是否为一个元素节点, 始终返回True
+is_text_element | bool | 返回是否为一个文本节点, 始终返回False
+is_comment | bool | 返回当前节点是否为注释节点
+string | str | 返回当前节点下所有的文本连接在一起的字符串, 没有文本返回空字符串
+text | str | 返回当前节点下的第一个文本, 没有文本返回空字符串
+html | str | 将当前节点序列化为html源码
+attrs | dict | 获取当前节点的所有属性
+pre | | 返回当前节点的之前的一个同级对象, 没有时返回None
+pres | Element\_List | 返回当前节点之前的所有同级对象, 没有时返回空列表
+pre_node | | 返回当前节点的之前的一个同级元素节点, 没有时返回None
+pres_node | Element\_List | 返回当前节点之前的所有同级元素节点, 没有时返回空列表
+next | | 返回当前节点的之后的一个同级对象, 没有时返回None
+nexts | Element\_List | 返回当前节点之后的所有同级对象, 没有时返回空列表
+next_node | | 返回当前节点的之后的一个同级元素节点, 没有时返回None
+nexts_node | Element\_List | 返回当前节点之后的所有同级元素节点, 没有时返回空列表
+child | | 返回当前节点的第一个子对象, 没有时返回None
+childs | Element\_List | 返回当前节点的所有子对象, 没有时返回空列表
+child_node | | 返回当前节点的第一个子元素节点, 没有时返回None
+childs_node | Element\_List | 返回当前节点的所有子元素节点, 没有时返回空列表
+parent | Element | 返回当前节点的父节点, 没有时返回None
+ancestor | Element | 返回当前节点的第一个父辈, 没有时返回None
+ancestors | Element\_List | 返回当前节点的所有父辈, 没有时返回空列表
+
+### Element.xpath方法
+> 使用原生xpath代码查询
+
+参数名|数据类型|默认值|描述
+--|:--:|:--:|--
+code | str | | 原生xpath代码, 如 //div/a,  //div/h1/text()
+index | None<br>int | None | <li>None: 返回一个列表, 包含所有符合条件的节点</li><li>int: 返回指定位置(从0开始)的一个节点</li>
+
+### Element.css方法
+> 使用原生css代码查询
+
+参数名|数据类型|默认值|描述
+--|:--:|:--:|--
+code | str | | 原生css代码, 如 .class1,  div>a
+index | None<br>int | None | <li>None: 返回一个列表, 包含所有符合条件的节点</li><li>int: 返回指定位置(从0开始)的一个节点</li>
+
+### Element.child_in方法
+> 接收一个参数, 返回当前节点是否为传入对象的子节点
+
+###  Element.remove_attr方法
+> 从节点中删除当前节点的某一个属性, 无此属性则忽略
+
+###  Element.remove_self方法
+> 从节点树中删除当前节点
+
+### Element.remove方法
+> 接收一个参数, 从节点树中删除当前节点的一个子节点, 如果传入的对象不是当前节点的子节点会报错, 不能删除文本节点
+
+### Element.find方法
+> 查询当前节点下的对象
+
+参数名|数据类型|默认值|描述
+--|:--:|:--:|--
+name | str | None | 要查找的对象名, 表示html中的标签名, 如div,a,li, 如果设为None或空字符串表示查询所有对象
+class\_ | str | None | 要查找元素的类名<br>None: 不关心class<br>True: 任何存在class属性的元素<br>False: 不存在class属性的元素<br>str: class属性为设置字符串的元素
+text | str | None | 要查找对象的文本值<br>None: 不关心文本<br>True: 任何存在文本的元素<br>False: 没有文本的元素<br>str: 文本为设置字符串的元素
+deep | bool | True | 是否深度查询<br>True: 遍历搜索当前节点下的所有对象<br>False: 只搜索当前节点下的子对象
+index | None<br>int<br>str | None | <li>None: 返回一个列表, 包含所有符合条件的节点</li><li>int: 返回指定位置(从0开始)的一个节点</li><li>str:使用xpath原生索引代码, 如last(), position()>2</li>
+其他属性名 | str | | 你也可以选择html的其他属性名, 如href, src, style等
+带下划线的属性名 | str | | 如果属性名之前带了下划线, 如 \_class_, \_text, \_href, \_src等, 表示搜索的元素的这个属性不为设置的值<br>如 _text="123" 表示元素的文本不等于123, _src=True 表示元素没有src属性
+
+### Element.其他查找方法
+> 这些方法的属性参考find方法
+
+方法名 | 描述
+--|--
+find_pre | 查找当前节点之前的同级对象
+find_pre_node | 查找当前节点之前的同级元素节点
+find_next | 查找当前节点之后的同级对象
+find_next_node | 查找当前节点之后的同级元素节点
+find_child | 查找当前节点的子对象
+find_child_node | 查找当前节点的子元素节点
+
+### Element高级使用方法
+> 有一个html源码如下
+```html
+<div>
+    <a id="a1" class="c1">1</a>
+    <a id="a2">2</a>
+    <a class="c1"></a>
+    <a class="c4">4</a>
+    <b id='b5' class="c1">bbb</b>
+</div>
+```
+##### 你可以使用如下代码查询
+```python
+zx = zxpath2.load('html源码')
+zx('div')               # 直接将对象作为方法使用, 参数参考find方法
+zx.div                  # 遍历搜索当前节点下的第一个div元素
+node = zx.div.span.a    # 链式查询第一个div下的第一个span下的第一个a元素
+node.href               # 获取当前节点的href属性, 如果没有这个属性则返回None
+node.class_             # 获取class属性
+node['href']            # 获取href属性, 如果没有这个属性则报错
+node['class']           # 获取class属性
+node in zx              # 判断两个对象是否指向html中的同一个位置 或 node是否为zx的子孙节点
+node == zx              # 判断两个对象是否指向html中的同一个位置
+zx.find('a', id=True)   # 查找存在id的a元素
+zx.find('a', id=False)  # 查找不存在id的a元素
+zx.find(class_='c1')    # 查找class为c1的任何元素
+zx.find('a', _class='c1', text=True) #查找class不为c1并且存在文本的a元素
+```
+
+
+### 更新日志
+发布时间|版本|发布说明
+--|:--:|---
+19-04-03 | 1.1.1 | <li>新增方法css(code, index: None or int = None), 现在可以使用css代码选择对象了</li><li>新增方法remove_attr(key: str)用于删除当前对象的某个属性</li>
+19-03-19 | 1.1.0 | <li>取消\_\_init__.py中的from . import xxx</li><li>将下划线开始的模块名去掉下划线</li><li>将所有搜索接口中的index重构, 不再将index解析为值传到原生xpath代码中, 仅作为字面意思从列表中提取第几个结果</li>
+19-01-30 | 1.0.3 | <li>现在_Element_List的str结果也被重载了</li><li>现在可以用==判断两个_Element或列表是否相等</li><li>修复了获取元素节点html时会将元素节点后面的文字也放入html的bug</li>
+19-01-21 | 1.0.2 | <li>重载了str()的结果</li><li>现在可以用child_in判断是否为另一个_Element的子孙了</li><li>可以使用in来判断一个_Element对象是否为另一个的子孙或和另个一对象相等</li>
+19-01-18 | 1.0.1 | 修复获取所有父辈节点时会报错的bug
+
+- - -
+本项目仅供所有人学习交流使用, 禁止用于商业用途
+
+
