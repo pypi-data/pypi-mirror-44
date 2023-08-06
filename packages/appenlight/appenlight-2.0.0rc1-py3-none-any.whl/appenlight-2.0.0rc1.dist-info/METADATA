@@ -1,0 +1,190 @@
+Metadata-Version: 2.1
+Name: appenlight
+Version: 2.0.0rc1
+Summary: appenlight
+Home-page: http://rhodecode.com
+Author: RhodeCode GmbH
+License: Apache 2.0
+Keywords: web wsgi bfg pylons pyramid flask django monitoring apm instrumentation appenlight
+Platform: UNKNOWN
+Classifier: Framework :: Pyramid
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: System :: Monitoring
+Classifier: Topic :: Software Development
+Classifier: Topic :: Software Development :: Bug Tracking
+Classifier: Topic :: Internet :: Log Analysis
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
+Requires-Python: >=3.5
+Description-Content-Type: text/markdown
+Requires-Dist: repoze.sendmail (==4.4.1)
+Requires-Dist: pyramid (==1.10.2)
+Requires-Dist: pyramid-tm (==2.2.1)
+Requires-Dist: pyramid-debugtoolbar
+Requires-Dist: pyramid-authstack (==1.0.1)
+Requires-Dist: SQLAlchemy (==1.2.18)
+Requires-Dist: alembic (==1.0.8)
+Requires-Dist: webhelpers2 (==2.0)
+Requires-Dist: transaction (==2.4.0)
+Requires-Dist: zope.sqlalchemy (==1.1)
+Requires-Dist: pyramid-mailer (==0.15.1)
+Requires-Dist: redis (==3.2.1)
+Requires-Dist: redlock-py (==1.0.8)
+Requires-Dist: pyramid-jinja2 (==2.8)
+Requires-Dist: psycopg2-binary (==2.7.7)
+Requires-Dist: wtforms (==2.2.1)
+Requires-Dist: celery (==4.2.1)
+Requires-Dist: formencode (==1.3.1)
+Requires-Dist: psutil (==5.6.1)
+Requires-Dist: ziggurat-foundations (==0.8.3)
+Requires-Dist: bcrypt (==3.1.6)
+Requires-Dist: appenlight-client
+Requires-Dist: markdown (==3.0.1)
+Requires-Dist: colander (==1.7)
+Requires-Dist: defusedxml (==0.5.0)
+Requires-Dist: dogpile.cache (==0.7.1)
+Requires-Dist: pyramid-redis-sessions (==1.0.1)
+Requires-Dist: simplejson (==3.16.0)
+Requires-Dist: waitress (==1.2.1)
+Requires-Dist: gunicorn (==19.9.0)
+Requires-Dist: uwsgi (==2.0.18)
+Requires-Dist: requests (==2.21.0)
+Requires-Dist: requests-oauthlib (==1.2.0)
+Requires-Dist: gevent (==1.4.0)
+Requires-Dist: pygments (==2.3.1)
+Requires-Dist: lxml (==4.3.2)
+Requires-Dist: paginate (==0.5.6)
+Requires-Dist: paginate-sqlalchemy (==0.3.0)
+Requires-Dist: elasticsearch (<7.0.0,>=6.0.0)
+Requires-Dist: mock (==1.0.1)
+Requires-Dist: itsdangerous (==1.1.0)
+Requires-Dist: camplight (==0.9.6)
+Requires-Dist: jira (==1.0.7)
+Requires-Dist: python-dateutil (==2.5.3)
+Requires-Dist: authomatic (==0.1.0.post1)
+Requires-Dist: cryptography (==2.6.1)
+Provides-Extra: dev
+Requires-Dist: coverage ; extra == 'dev'
+Requires-Dist: pytest ; extra == 'dev'
+Requires-Dist: pyramid ; extra == 'dev'
+Requires-Dist: tox ; extra == 'dev'
+Requires-Dist: mock ; extra == 'dev'
+Requires-Dist: pytest-mock ; extra == 'dev'
+Requires-Dist: webtest ; extra == 'dev'
+Provides-Extra: lint
+Requires-Dist: black ; extra == 'lint'
+
+AppEnlight
+-----------
+
+Performance, exception, and uptime monitoring for the Web
+
+![AppEnlight image](https://raw.githubusercontent.com/AppEnlight/appenlight/gh-pages/static/appenlight.png)
+
+Automatic Installation
+======================
+
+Use the ansible scripts in the `automation` repository to build complete instance of application
+You can also use `packer` files in `automation/packer` to create whole VM's for KVM and VMWare.
+
+Manual Installation
+===================
+
+To run the app you need to have meet prerequsites:
+
+- python 3.5+ (currently 3.6 tested)
+- running elasticsearch (6.6.2 tested)
+- running postgresql (9.5+ required, tested 9.6 and 10.6)
+- running redis
+
+Install the app by performing
+
+    pip install -r requirements.txt
+
+    python setup.py develop
+
+Install the appenlight uptime plugin (`ae_uptime_ce` package from `appenlight-uptime-ce` repository).
+
+For production usage you can do:
+
+    pip install appenlight
+    pip install ae_uptime_ce
+
+
+After installing the application you need to perform following steps:
+
+1. (optional) generate production.ini (or use a copy of development.ini)
+
+        appenlight-make-config production.ini
+
+2. Setup database structure:
+
+       appenlight-migratedb -c FILENAME.ini
+
+3. To configure elasticsearch:
+
+       appenlight-reindex-elasticsearch -t all -c FILENAME.ini
+
+4. Create base database objects 
+
+   (run this command with help flag to see how to create administrator user)
+
+       appenlight-initializedb -c FILENAME.ini
+
+5. Generate static assets
+
+       appenlight-static -c FILENAME.ini
+
+Running application
+===================
+
+To run the main app:
+
+    pserve development.ini
+
+To run celery workers:
+
+    celery worker -A appenlight.celery -Q "reports,logs,metrics,default" --ini FILENAME.ini
+
+To run celery beat:
+
+    celery beat -A appenlight.celery --ini FILENAME.ini
+
+To run appenlight's uptime plugin:
+
+    appenlight-uptime-monitor -c FILENAME.ini
+
+Real-time Notifications
+=======================
+
+You should also run the `channelstream websocket server for real-time notifications
+
+    channelstream -i filename.ini
+
+Additional documentation
+========================
+
+Visit  https://getappenlight.com for additional server and client documentation.
+
+Testing
+=======
+
+To run test suite:
+
+    py.test appenlight/tests/tests.py --cov appenlight (this looks for testing.ini in repo root)
+
+
+Development
+===========
+
+To develop appenlight frontend:
+
+    cd frontend
+    npm install
+    grunt watch
+
+
+

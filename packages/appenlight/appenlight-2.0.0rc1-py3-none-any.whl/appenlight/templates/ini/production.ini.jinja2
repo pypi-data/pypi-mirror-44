@@ -1,0 +1,183 @@
+[app:appenlight]
+use = egg:appenlight
+reload_templates = false
+debug_authorization = false
+debug_notfound = false
+debug_routematch = false
+debug_templates = false
+default_locale_name = en
+sqlalchemy.url = {{ appenlight_dbstring }}
+sqlalchemy.pool_size = 10
+sqlalchemy.max_overflow = 50
+sqlalchemy.echo = false
+jinja2.directories = appenlight:templates
+jinja2.filters = nl2br = appenlight.lib.jinja2_filters.nl2br
+
+appenlight.disable_registration = false
+
+#includes
+appenlight.includes =
+
+#redis
+redis.url = redis://localhost:6379/0
+redis.redlock.url = redis://localhost:6379/3
+
+#elasticsearch
+elasticsearch.nodes = http://127.0.0.1:9200
+
+#dirs
+webassets.dir = %(here)s/webassets/
+
+# encryption
+encryption_secret = {{appenlight_encryption_secret}}
+
+#authtkt
+# uncomment if you use SSL
+# authtkt.secure = true
+authtkt.secret = {{appenlight_authtkt_secret}}
+# session settings
+redis.sessions.secret = {{appenlight_redis_session_secret}}
+redis.sessions.timeout = 86400
+
+# session cookie settings
+redis.sessions.cookie_name = appenlight
+redis.sessions.cookie_max_age = 2592000
+redis.sessions.cookie_path = /
+redis.sessions.cookie_domain =
+# uncomment if you use SSL
+# redis.sessions.cookie_secure = True
+redis.sessions.cookie_httponly = True
+redis.sessions.cookie_on_exception = True
+redis.sessions.prefix = appenlight:session:
+
+#mailing
+mailing.app_url = https://{{appenlight_domain}}
+mailing.from_name = AppEnlight
+mailing.from_email = no-reply@{{appenlight_domain}}
+
+###
+# Authomatic configuration
+###
+
+authomatic.secret =
+authomatic.pr.facebook.app_id =
+authomatic.pr.facebook.secret =
+authomatic.pr.twitter.key =
+authomatic.pr.twitter.secret =
+authomatic.pr.google.key =
+authomatic.pr.google.secret =
+authomatic.pr.github.key =
+authomatic.pr.github.secret =
+authomatic.pr.github.scope  =
+authomatic.pr.bitbucket.key =
+authomatic.pr.bitbucket.secret =
+
+#ziggurat
+ziggurat_foundations.model_locations.User = appenlight.models.user:User
+ziggurat_foundations.sign_in.username_key = sign_in_user_name
+ziggurat_foundations.sign_in.password_key = sign_in_user_password
+ziggurat_foundations.sign_in.came_from_key = came_from
+
+#cometd
+cometd.server = http://127.0.0.1:8088
+cometd.secret = secret
+# change to # ws:// for development
+cometd.ws_url = wss://{{appenlight_domain}}/channelstream
+
+# for celery
+appenlight.api_key =
+appenlight.transport_config =
+appenlight.public_api_key =
+
+# celery
+celery.broker_type = redis
+celery.broker_url = redis://localhost:6379/3
+celery.concurrency = 2
+celery.timezone = UTC
+
+# tasks
+
+# how often run alerting tasks (60s default)
+tasks.notifications_reports.interval = 60
+
+[filter:paste_prefix]
+use = egg:PasteDeploy#prefix
+
+
+[filter:appenlight_client]
+use = egg:appenlight_client
+appenlight.api_key =
+
+# appenlight.transport_config = http://127.0.0.1:6543?threaded=1&timeout=5&verify=0
+# by default uses api.appenlight.com server
+appenlight.transport_config =
+appenlight.report_local_vars = true
+appenlight.report_404 = true
+appenlight.timing.dbapi2_psycopg2 = 0.3
+
+
+
+[pipeline:main]
+pipeline = paste_prefix
+           appenlight_client
+           appenlight
+
+
+
+[server:main]
+use = egg:gunicorn#main
+host = 0.0.0.0:6543, unix:/tmp/appenlight.sock
+workers = 2
+timeout = 90
+max_requests = 10000
+
+[server:api]
+use = egg:gunicorn#main
+host = 0.0.0.0:6553, unix:/tmp/api.appenlight.sock
+workers = 2
+max_requests = 10000
+
+
+# Begin logging configuration
+
+[loggers]
+keys = root, appenlight, sqlalchemy
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic, json
+
+[logger_root]
+level = WARN
+handlers = console
+
+[logger_appenlight]
+level = WARN
+handlers =
+qualname = appenlight
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+# "level = INFO" logs SQL queries.
+# "level = DEBUG" logs SQL queries and results.
+# "level = WARN" logs neither.  (Recommended for production systems.)
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = json
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s
+
+# json string will land as "message" key of format string
+[formatter_json]
+class=appenlight.lib.logging.JSONFormatter
+format = %(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)s][%(threadName)s] %(message)s
+
+# End logging configuration
