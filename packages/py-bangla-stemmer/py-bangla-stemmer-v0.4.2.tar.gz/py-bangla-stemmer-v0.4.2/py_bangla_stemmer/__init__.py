@@ -1,0 +1,1 @@
+from py_bangla_stemmer.stemmer.stemmer import BengaliStemmer
