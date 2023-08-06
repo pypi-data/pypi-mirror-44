@@ -1,0 +1,10 @@
+- name: Setup hosts file
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '\t{{ item }}\t# added by idevops$'
+    line: "{{ hostvars[item].ansible_host }}\t{{ item }}\t# added by idevops"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items:
+    - "{{ groups.master }}"
+    - "{{ groups.slave }}"
