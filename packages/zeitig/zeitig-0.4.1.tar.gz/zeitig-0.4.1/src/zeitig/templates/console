@@ -1,0 +1,34 @@
+{%- macro from_start() -%}
+{% if report.start %} from {{c.white(report.start.format("dddd D MMMM YYYY"), bold=True)}}
+{%- endif %}
+{%- endmacro -%}
+{%- macro until_end() -%}
+{% if report.end %} until {{c.white(report.end.format("dddd D MMMM YYYY"), bold=True)}}
+{% endif %}
+{%- endmacro -%}
+Working times for {{c.white(report.group, bold=True)}}{{from_start()}}{{until_end()}}
+{%- for event in events.pipeline(
+    report.source,
+    events.Summary.aggregate,
+    events.filter_no_breaks,
+    events.DatetimeChange.aggregate,
+    events.DatetimeStats.aggregate
+)
+-%}
+    {%- if py.isinstance(event, events.DatetimeChange) -%}
+        {%- if event.is_new_week -%}
+            {{- '\nWeek: ' }}{{c.white('{}'.format(event.now.week_of_year), bold=True)}}
+        {% endif -%}
+    {%- endif -%}
+    {%- if py.isinstance(event, events.Work) -%}
+        {{- '\t'}}{{event.local_start.to_datetime_string()}} - {% if event.is_last %}{{c.green(event.local_end.to_time_string())}}{% else %}{{event.local_end.to_time_string()}}{% endif %} - {{'{0:.2f}'.format(event.local_period.total_hours())-}}
+        {%- if event.tags %} - {{", ".join(event.tags)}}{%- else %}{%- endif %}
+    {% endif -%}
+    {% if py.isinstance(event, events.Summary) -%}
+        {{ '\nTotal hours: ' }}{{c.white('{0:.2f}'.format(event.works.total_hours()), bold=True)}}
+    {%- endif -%}
+    {% if py.isinstance(event, events.DatetimeStats) -%}
+        {{ '\nTotal days: ' }}{{c.white('{0}'.format(event.working_days|count), bold=True)-}}
+        {{ '\nHours per day: ' }}{{c.white('{0:.2f}'.format(event.hours_per_working_day), bold=True)}}
+    {%- endif -%}
+{%- endfor -%}
