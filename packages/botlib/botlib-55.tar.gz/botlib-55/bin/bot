@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import os, sys ; sys.path.insert(0, os.getcwd())
+
+import readline
+
+from bot import __version__
+from bot.kernel import kernel
+from obj.shell import Shell, startup, reset
+
+startup()
+
+try:
+    shell = Shell()
+    shell.walk("obj.cmds", False)
+    shell.walk("bot", False)
+    kernel.start("bot", [shell,], version=__version__)
+    kernel.wait()
+except (KeyboardInterrupt, EOFError):
+    print("")
+
+reset()
+os._exit(0)
