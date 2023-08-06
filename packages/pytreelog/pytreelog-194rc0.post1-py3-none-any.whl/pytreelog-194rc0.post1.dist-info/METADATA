@@ -1,0 +1,486 @@
+Metadata-Version: 2.1
+Name: pytreelog
+Version: 194rc0.post1
+Summary: Tree-like logging util for python
+Home-page: https://gitlab.com/runsun/pytreelog
+Author: runsun
+Author-email: runsun@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+# pyTreeLog: tree-like logging tool for python
+
+This tool allows python users to log entries in **layers of blocks** that are displayed in a **tree-like** structure:
+
+```
+-start 
+.-----------------------
+|* f(x="test")
+| -x = test
+| .-----------------------
+| :* Start loop:
+| : -i=0
+| : -i=1
+| : -i=2
+| :* end loop
+| '-----------------------
+'-----------------------
+-done
+``` 
+
+Features:
+
+* Displayed python logging entries in **tree-like** structure;
+* Easily log the entry/exit of a function;
+* Output can be displayed in console or saved to a variable or a file
+
+Note: this `README.md` file is both a doc and the source of doctest (see section **Test** for details).
+
+
+## Installation 
+
+Simply 
+
+`pip install pytreelog`
+
+Or for likely the most updated one:
+
+`pip install git+https://gitlab.com/runsun/pytreelog.git`
+
+Or, if you don't want to have this doc and don't want to do tests, you can simmply 
+copy the file `pytreelog/pytreelog.py` to wherever you desire.  
+
+
+## Quick Preview
+
+```python
+from pytreelog.pytreelog import TreeLog   
+tl = TreeLog()
+tl(x)    # log x
+
+2 block types: *user block* and *func block* (See `Decorator Approach` below). 
+
+tl.b(x)  # Beging a new *user block*. 'x' is optional. If not given, 
+         # x will be assigned the function call arg values.  
+
+tl.e(x)  # End the current block. 'x' is optional. If x not given
+         # for a function that return something, it will show the
+         # returned value
+
+tl.data    # list of lines of the logged data
+tl.text()  # returns the data as a string
+tl.reset() # reset the data and block info to start anew 
+```
+
+## Turn on/off
+
+You can turn logging on/off with either :
+
+```python
+tl.on()
+tl.off()
+```
+
+or 
+
+```python
+tl._on = True
+tl._on = False
+```
+
+default: on
+
+## Basic usage 
+
+```
+>>> from pytreelog.pytreelog import TreeLog
+>>> tl = TreeLog()
+>>> def f(x):
+...   tl.b('BEG')              ## <== New block
+...   tl("test line "+str(x))  ## <== Any string
+...   tl.e('END')              ## <== End of a block
+>>> f(1)      
+
+>>> print(tl.text()) # doctest: +NORMALIZE_WHITESPACE     
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|* BEG
+| -test line 1
+|* END
+'-----------------------
+
+```    
+
+#### Beginning/End of a block : `tl.b()`, `tl.e()`
+
+```
+>>> def f(x):
+...   tl.b()
+...   tl("test line "+str(x))
+...   tl.e()
+>>> f(2)      
+
+>>> print(tl.text()) # doctest: +NORMALIZE_WHITESPACE     
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|* BEG
+| -test line 1
+|* END
+'-----------------------
+.-----------------------
+|* f(x=2)
+| -test line 2
+'----------------------- 
+
+```
+
+Note: `tl.b()` logs function name and input value, `tl.e()` logs nothing. Also note that the output is appended to previous result. 
+
+Another example:
+
+```
+>>> tl.reset()                    
+>>> tl('start test')    ## log a single line 
+>>> def f(x):
+...  a=0
+...  tl.b()               ## Begin a block, logs func name and input value(s)
+...  tl('x = '+str(x))    ## Log a line
+...  tl.b('Starting loop:')  ## Begin of another block
+...
+...  for i in range(3):
+...    tl('i='+str(i))       ## Log i
+...
+...  tl.e('end loop')        ## End of block
+...  tl.e()               ## End of block
+>>> f('test')
+>>> tl('done')
+
+>>> print(tl.text())  # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+-start test
+.-----------------------
+|* f(x="test")
+| -x = test
+| .-----------------------
+| :* Starting loop:
+| : -i=0
+| : -i=1
+| : -i=2
+| :* end loop
+| '-----------------------
+'-----------------------
+-done
+
+```    
+
+
+## Decorator Approach
+
+The logging approach below to indicate a function block:
+
+```python
+def ff():               
+   tl.b()	 
+   ...
+   tl.e()    
+```
+
+can be done in a *Decorator Aproach* by using the TreeLog instance, `tl`, as the decorator to track the entry/exit of the function `ff` below:                         
+
+```python
+@tl
+def ff():                
+   ...
+```
+
+This allows:
+
+* Automatically log the entry and exit point of a function;
+* Log the return value of a function:  
+
+#### Log function return 
+
+The *Decorator Approach* automatically logs the return of a function:   
+
+```
+>>> tl.reset()
+>>> @tl
+... def test(a,b=0):
+...   tl.b('User-block beg')
+...   tl('Inside test()')
+...   tl.e('User-block end')
+...   return a+b
+>>> test(3,4)
+7
+
+>>> print(tl.text())        # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|> test(a=3, b=4)
+| .-----------------------
+| :* User-block beg
+| : -Inside test()
+| :* User-block end
+| '-----------------------
+|< 7
+'-----------------------
+
+```
+
+Note that, with *Decorator Arrpoach*, the symbols of *function block head/tail* (i.e., `>` and `<`) are different from those logged with `tl.b()` and `tl.e()` (i.e., `*`). This allows the log to tell *function block* and *user-defined block* apart:
+
+* *function block*:  `>` and `<`
+* *user-defined block*: `*` and `*`
+
+Both of them can be customized (See **Customizable API** below).
+
+
+#### Decorator Approach for one-time use
+
+If just want to track nothing but entry/exit of a function, use an unbound instance for one-time use:  
+
+```python
+>>> @TreeLog()
+... def test3():
+...     ...     
+
+```      
+
+More example:
+
+```            
+>>> tl.reset()
+>>> @tl
+... def test(a,b=0):
+...   tl.l('Inside test()')
+...   @tl
+...   def inside(a,b):
+...      return a+b
+...   return inside(a,b)*2
+>>> test(3,4)
+14
+
+>>> print(tl.text())        # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|> test(a=3, b=4)
+| -Inside test()
+| .-----------------------
+| :> a.inside(b=4)
+| :< 7
+| '-----------------------
+|< 14
+'-----------------------
+
+```
+#### Use decorator approach in classes
+
+Example of using `TreeLog` in classes:  
+
+```
+>>> log= TreeLog()
+>>> class Cls(object):
+...    @log
+...    def __init__(self): 
+...         self.clsname = 'CLS'
+...         self.setname( prefix='I am ')  ## run inside __init__
+...    @log
+...    def setname(self, prefix): 
+...         self.name= prefix + self.clsname
+...    @log 
+...    def getname(self): 
+...         return self.name
+
+>>> cc = Cls()           ## run __init__, logging __init__ and setname.     
+>>> cc.getname()
+'I am CLS'
+
+>>> cc.setname('This is ') ## run outside __init__. 
+                           ## Note the user arg ('This is ') is logged.
+>>> cc.getname()
+'This is CLS'
+
+>>> print(BR.join( log.data )) # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|> self.__init__()
+| .-----------------------
+| :> self.setname(prefix="I am ")
+| '-----------------------
+'-----------------------
+.-----------------------
+|> cc.getname()
+|< "I am CLS"
+'-----------------------
+.-----------------------
+|> cc.setname(prefix="This is ")
+'-----------------------
+.-----------------------
+|> cc.getname()
+|< "This is CLS"
+'-----------------------
+
+```
+
+Note that:
+
+1. instance name, cc, is logged;
+2. setname is logged twice, one bound to self and the other to cc. 
+3. getname has a return, which is logged, too. 
+
+
+
+## Output
+
+`tl.data` is a list containing the logged strings. `tl.text()` returns a single string. 
+You can also log to external variable/file :
+
+#### Log to an external variable 
+
+Use the `external` argument for `TreeLog` to save output to a variable, which
+is a dict contains a `data` key, `{'data':[]}`:
+
+```
+>>> external={'data':[]}     
+>>> p = TreeLog(external=external)
+>>> p.b('start')       
+>>> @p
+... def g(name):
+...   p.l('test')
+>>> g('g')
+>>> p.e('stop')
+
+>>> for x in external['data']: print(x)  # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+|* start
+| .-----------------------
+| :> g(name="g")
+| : -test
+| '-----------------------
+|* stop
+'-----------------------
+
+```
+
+#### Log to a file 
+
+You can log to a file:    
+
+```python
+pp= TreeLog(logfile='./pytreelog.log')
+```    
+
+
+## Customizable API
+
+Defaults of the `TreeLog()` module:
+
+```python
+ TreeLog( header    = '='*45+BR+'TreeLog output'+ BR+'='*45
+        , _on       = True
+        , block_beg = '* '
+        , block_end = '* '
+        , func_beg  = '> '
+        , func_end  = '< '
+        , indent    = 1
+        , blockline = '-----------------------'
+        , blocksymbols= '|:'   
+        , external  = None    # External var ( {'data':[]} ) to which the data is logged
+        , logfile   = ''
+        )
+```
+
+`blocksymbols`: a str containing symbols of the left-border of all layers. The default is `|:`, means the symbols of left-border will be `|` and `:`, alternatively. 
+
+The following example shows alternative symbols of 3 (i.e., `[=!`):
+
+```
+>>> tl= TreeLog(blocksymbols= '[=!')
+>>> @tl
+... def f():
+...   tl.b('1st layer')
+...   for i in (1,2):
+...     tl.b('2nd layer')
+...     for j in (3,4):
+...       tl.b('3rd layer') 
+...       for k in (5,6):
+...         tl( str( (i,j,k) ) )
+...       tl.e()
+...     tl.e()
+...   tl.e()
+>>> f()
+
+>>> print(BR.join( tl.data )) # doctest: +NORMALIZE_WHITESPACE
+=============================================
+TreeLog output
+=============================================
+.-----------------------
+[> f()
+[ .-----------------------
+[ =* 1st layer
+[ = .-----------------------
+[ = !* 2nd layer
+[ = ! .-----------------------
+[ = ! [* 3rd layer
+[ = ! [ -(1, 3, 5)
+[ = ! [ -(1, 3, 6)
+[ = ! '-----------------------
+[ = ! .-----------------------
+[ = ! [* 3rd layer
+[ = ! [ -(1, 4, 5)
+[ = ! [ -(1, 4, 6)
+[ = ! '-----------------------
+[ = '-----------------------
+[ = .-----------------------
+[ = !* 2nd layer
+[ = ! .-----------------------
+[ = ! [* 3rd layer
+[ = ! [ -(2, 3, 5)
+[ = ! [ -(2, 3, 6)
+[ = ! '-----------------------
+[ = ! .-----------------------
+[ = ! [* 3rd layer
+[ = ! [ -(2, 4, 5)
+[ = ! [ -(2, 4, 6)
+[ = ! '-----------------------
+[ = '-----------------------
+[ '-----------------------
+'-----------------------
+
+```
+
+
+## Test
+
+All tests are written in this `README.md` (which means, this `README.md` is both a doc and tests). The content of this file is loaded by `pytreelog.test()` and assigned to `TreeLog.__doc__` then tests are carried out by `doctest.testmod()` (See the code in `pytreelog.test()` for details). 
+
+```python
+\>>> from pytreelog import pytreelog
+\>>> pytreelog.test()
+--- Loading "C:\python37\lib\site-packages\pytreelog\README.md" for doctest:
+--- Tests done.
+```
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)
+
