@@ -1,0 +1,147 @@
+Metadata-Version: 2.1
+Name: road-agent
+Version: 1.0.1
+Summary: Object-oriented framework for modeling of mobile agents.
+Home-page: http://gitlab.com/rgarcia-herrera/road-agent
+Author: Rodrigo Garcia
+Author-email: rgarcia@iecologia.unam.mx
+License: GPLv3
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Requires-Dist: LatLon
+Requires-Dist: requests
+Requires-Dist: sklearn
+Requires-Dist: osmnx
+
+==========
+Road Agent
+==========
+
+A Python framework for modeling mobile agents.
+
+Create simulations of mobile agents, to be run on real-world maps. Like 
+the game of tag described in the docs, some of whose frames are shown below.
+
+The Road Agent framework is distributed with two router alternatives:
+ 1. NXRouter, wich uses shortest paths computed with the NetworkX library.
+ 2. BRouter wich uses a BRouter server to query routes.
+
+NXRouter is simpler but easier to run. BRouter is very robust but it
+requires the installation and running of the BRouter server which is a
+java program and maybe a long download, but routes are more realistic.
+
+Read the `full documentation`__.
+
+.. __: https://road-agent.readthedocs.io/
+
+
+.. image:: https://readthedocs.org/projects/road-agent/badge/?version=latest
+
+.. image:: https://badge.fury.io/py/road-agent.svg
+    :target: https://badge.fury.io/py/road-agent
+
+.. image:: https://road-agent.readthedocs.io/en/latest/_images/frames.png
+
+
+Short example simulation
+========================
+
+This is a veery short stub just to show the main feature of the agent
+class, which is to navigate a map, in this case using routes computed
+using `NetworkX`__'s *shortest_path*.
+
+.. __: https://networkx.github.io/
+
+To create a simulation one must extend the Agent class with the behaviours under
+study. This example just does an empty extension.
+
+A more interesting simulation is included in this `Jupyter Notebook`__.
+
+Maybe this binder will work:
+
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gl/rgarcia-herrera%2Froad-agent/master?filepath=doc%2Fjupyter_tutorial_NXRouter.ipynb
+
+.. __: https://road-agent.readthedocs.io/en/latest/jupyter_tutorial_BRouter.html
+
+::
+
+  from LatLon import LatLon
+  from road_agent import Agent
+  from road_agent.router import NXRouter
+  import osmnx as ox
+
+  G = ox.graph_from_point((19.3838,-99.1758), distance=1000)
+  router = NXRouter(G)
+  r = router.get_route(points=points, speed=3)
+
+  # extend Agent class to code behaviours specific to your mobile agent
+  class Bike(Agent):
+      pass
+
+  point = LatLon(19.3881769, -99.1794493)
+  dest = LatLon(19.3858363, -99.1767216)
+
+  # create bike instance
+  b = Bike(point=point, dest=dest)
+
+  # create route using NetworkX
+  b.update_route()
+
+  # traverse agent's route, step by step
+  for t in range(len(b.route)):
+      b.step()
+
+
+
+
+Installation
+============
+
+Install library using pip::
+
+  $ pip install road-agent
+
+
+Install optional dependency: BRouter
+____________________________________
+
+Agents may use `BRouter`__ for routing, which can use several different profiles for
+routing and is specially good creating routes for riding bikes. It is a java 
+program, which runs in a web server. Here's how to install a local server.
+
+.. __: http://brouter.de/brouter/
+
+BRouters needs data files for its routing algorithm. Download `data
+files`__ (rd5) into segments4 dir. You may copy-paste these steps to
+download them all, but beware: it's about 5.2 gigabytes:  ::
+
+  mkdir -p ~/opt/brouter/segments4
+  cd ~/opt/brouter/segments4
+  wget https://gitlab.com/rgarcia-herrera/road-agent/raw/master/get_segments.sh
+  wget https://gitlab.com/rgarcia-herrera/road-agent/raw/master/segments.txt
+  chmod +x get_segments.sh
+  ./get_segments.sh
+
+
+.. __: http://brouter.de/brouter/segments4/
+
+
+Download and unzip BRouter (replace ~/opt/ with your preferred install
+dir and 1_4_11 with latest version)::
+
+  cd ~/opt/brouter
+  wget http://brouter.de/brouter_bin/brouter_1_4_11.zip
+  unzip brouter_1_4_11.zip
+  chmod +x ./standalone/server.sh
+
+
+Run server.sh to start BRouter server.
+
+
+
+
