@@ -1,0 +1,2022 @@
+-- Test cases for the new semantic analyzer
+
+[case testNewAnalyzerEmpty]
+
+[case testNewAnalyzerSimpleAssignment]
+x = 1
+x.y # E: "int" has no attribute "y"
+y # E: Name 'y' is not defined
+
+[case testNewAnalyzerSimpleAnnotation]
+x: int = 0
+y: str = 0 \
+    # E: Incompatible types in assignment (expression has type "int", variable has type "str")
+
+[case testNewAnalyzerSimpleClass]
+class A:
+    x: int
+a: A
+a.x
+a.y # E: "A" has no attribute "y"
+
+[case testNewAnalyzerErrorInClassBody]
+class A:
+    x # E: Name 'x' is not defined
+
+[case testNewAnalyzerTypeAnnotationForwardReference]
+class A:
+    b: B
+class B:
+    a: A
+a: A
+b: B
+a.b = a # E: Incompatible types in assignment (expression has type "A", variable has type "B")
+a.b = b
+b.a = a
+b.a = b # E: Incompatible types in assignment (expression has type "B", variable has type "A")
+
+[case testNewAnalyzerTypeAnnotationCycle1]
+import b
+[file a.py]
+import b
+class A: pass
+y: b.B
+y() # E: "B" not callable
+[file b.py]
+import a
+class B: pass
+x: a.A
+reveal_type(x) # E: Revealed type is 'a.A'
+
+[case testNewAnalyzerTypeAnnotationCycle2]
+import a
+[file a.py]
+from b import B
+class A: pass
+y: B
+y()
+[file b.py]
+from a import A
+class B: pass
+x: A
+x()
+[out]
+tmp/b.py:4: error: "A" not callable
+tmp/a.py:4: error: "B" not callable
+
+[case testNewAnalyzerTypeAnnotationCycle3]
+import b
+[file a.py]
+from b import bad # E: Module 'b' has no attribute 'bad'
+[file b.py]
+from a import bad2 # E: Module 'a' has no attribute 'bad2'
+
+[case testNewAnalyzerTypeAnnotationCycle4]
+import b
+[file a.py]
+# TODO: Could we generate an error here as well?
+from b import bad
+[file b.py]
+from a import bad # E: Module 'a' has no attribute 'bad'
+
+[case testNewAnalyzerExportedValuesInImportAll]
+from m import *
+_ = a
+_ = b
+_ = c
+_ = d
+_e = e
+_f = f # E: Name 'f' is not defined
+_ = _g # E: Name '_g' is not defined
+reveal_type(_e)  # E: Revealed type is 'm.A'
+[file m.py]
+__all__ = ['a']
+__all__ += ('b',)
+__all__.append('c')
+__all__.extend(('d', 'e'))
+
+a = b = c = d = _g = 1
+e: 'A'
+f: 'A'
+
+class A: ...
+[builtins fixtures/module_all.pyi]
+
+[case testNewAnalyzerSimpleFunction]
+def f(x: int) -> str:
+    return 'x'
+
+def g(x: int) -> int:
+    y = f(1)
+    return y # E: Incompatible return value type (got "str", expected "int")
+
+[case testNewAnalyzerSimpleMethod]
+class A:
+    def __init__(self, x: int) -> None:
+        self.x = x
+
+    def f(self) -> str:
+        return self.x # E: Incompatible return value type (got "int", expected "str")
+
+    def g(self) -> int:
+        return self.f() # E: Incompatible return value type (got "str", expected "int")
+
+[case testNewAnalyzerFunctionForwardRef]
+def f() -> None:
+    x = g(1) # E: Argument 1 to "g" has incompatible type "int"; expected "str"
+    reveal_type(x) # E: Revealed type is 'builtins.str'
+
+def g(x: str) -> str:
+    return x
+
+[case testNewAnalyzerExportedImportThreePasses]
+import b
+
+[file a.py]
+from b import b1 as a2
+from b import b2 as a3
+
+def a1() -> int: pass
+
+reveal_type(a3()) # E: Revealed type is 'builtins.int'
+
+[file b.py]
+from a import a1 as b2
+from a import a2 as b3
+
+def b1() -> str: pass
+
+reveal_type(b3()) # E: Revealed type is 'builtins.str'
+
+[case testNewAnalyzerBool]
+reveal_type(True) # E: Revealed type is 'builtins.bool'
+reveal_type(False) # E: Revealed type is 'builtins.bool'
+
+[case testNewAnalyzerNewTypeMultiplePasses]
+import b
+
+[file a.py]
+from typing import NewType
+import b
+class A: pass
+N2 = NewType('N2', b.N1)
+def f1(x: A) -> None: pass
+def f2(x: b.N1) -> None: pass
+def f3(x: N2) -> None: pass
+a = A()
+n1 = b.N1(a)
+n2 = N2(n1)
+f1(a)
+f1(n1)
+f1(n2)
+f2(a) # E: Argument 1 to "f2" has incompatible type "A"; expected "N1"
+f2(n1)
+f2(n2)
+f3(a) # E: Argument 1 to "f3" has incompatible type "A"; expected "N2"
+f3(n1) # E: Argument 1 to "f3" has incompatible type "N1"; expected "N2"
+f3(n2)
+
+# Test N2 etc.
+
+[file b.py]
+from typing import NewType
+import a
+N1 = NewType('N1', a.A)
+
+[case testNewAnalyzerInheritanceForwardRef]
+class C(B):
+    pass
+class B(A):
+    pass
+class A:
+    def __init__(self, x: str) -> None: pass
+    def f(self, x: int) -> None: pass
+
+C(1) # E: Argument 1 to "C" has incompatible type "int"; expected "str"
+B(1) # E: Argument 1 to "B" has incompatible type "int"; expected "str"
+C('').f('') # E: Argument 1 to "f" of "A" has incompatible type "str"; expected "int"
+B('').f('') # E: Argument 1 to "f" of "A" has incompatible type "str"; expected "int"
+
+[case testNewAnalyzerInheritanceMROInCycle]
+import a
+
+[file a.py]
+from b import A
+import b
+
+class B(A):
+    b: int
+
+class D(b.C):
+    d: int
+
+d = D()
+reveal_type(d.a) # E: Revealed type is 'builtins.int'
+reveal_type(d.b) # E: Revealed type is 'builtins.int'
+reveal_type(d.c) # E: Revealed type is 'builtins.int'
+reveal_type(d.d) # E: Revealed type is 'builtins.int'
+
+[file b.py]
+from a import B
+
+class A:
+    a: int
+
+class C(B):
+    c: int
+
+[case testNewAnalyzerTypedDictClass]
+from mypy_extensions import TypedDict
+import a
+class T1(TypedDict):
+    x: A
+class A: pass
+reveal_type(T1(x=A())) # E
+
+[file a.py]
+from mypy_extensions import TypedDict
+from b import TD1 as TD2, TD3
+class T2(TD3):
+    x: int
+reveal_type(T2(x=2)) # E
+
+[file b.py]
+from a import TypedDict as TD1
+from a import TD2 as TD3
+
+[out]
+tmp/a.py:5: error: Revealed type is 'TypedDict('a.T2', {'x': builtins.int})'
+main:6: error: Revealed type is 'TypedDict('__main__.T1', {'x': __main__.A})'
+
+
+[case testNewAnalyzerTypedDictClassInheritance]
+from mypy_extensions import TypedDict
+
+class T2(T1):
+    y: int
+
+class T1(TypedDict):
+    x: str
+
+class T3(TypedDict):
+    x: str
+
+class T4(T3):
+    y: A
+
+class A: pass
+
+T2(x=0, y=0) # E: Incompatible types (expression has type "int", TypedDict item "x" has type "str")
+x: T2
+reveal_type(x) # E: Revealed type is 'TypedDict('__main__.T2', {'x': builtins.str, 'y': builtins.int})'
+y: T4
+reveal_type(y) # E: Revealed type is 'TypedDict('__main__.T4', {'x': builtins.str, 'y': __main__.A})'
+
+[case testNewAnalyzerRedefinitionAndDeferral]
+import a
+
+[file a.py]
+from b import x as y
+x = 0
+
+def y(): pass # E: Name 'y' already defined on line 2
+reveal_type(y) # E: Revealed type is 'builtins.int'
+
+y2 = y
+class y2: pass # E: Name 'y2' already defined on line 7
+reveal_type(y2) # E: Revealed type is 'builtins.int'
+
+y3, y4 = y, y
+from b import f as y3 # E: Incompatible import of "y3" (imported name has type "Callable[[], Any]", local name has type "int")
+reveal_type(y3) # E: Revealed type is 'builtins.int'
+
+[file b.py]
+from a import x
+
+def f(): pass
+
+[case testNewAnalyzerRedefinitionAndDeferral2]
+import a
+
+[file a.py]
+from b import C as C2
+class C: pass
+
+class C2: pass # E: Name 'C2' already defined on line 2
+[file b.py]
+from a import C
+
+[case testNewAnalyzerRedefinitionAndDeferral3]
+import a
+
+[file a.py]
+from b import f as g
+def f(): pass
+
+a, *b = g()
+class b(): pass # E: Name 'b' already defined on line 4
+reveal_type(b) # E: Revealed type is 'Any'
+
+[file b.py]
+from a import f
+
+[case testNewAnalyzerImportStarForwardRef]
+import a
+
+[file a.py]
+x: A
+reveal_type(x) # E: Revealed type is 'b.A'
+
+from b import *
+
+class A: pass # E: Name 'A' already defined (possibly by an import)
+
+[file b.py]
+class A: pass
+from a import x
+
+[case testNewAnalyzerClassInFunction]
+def main() -> None:
+    x: C
+    class C:
+        def __init__(self) -> None:
+            self.x: A
+            x()  # E: "C" not callable
+    reveal_type(x.x)  # E: Revealed type is '__main__.A@8'
+    class A: pass
+
+[case testNewAnalyzerMutuallyRecursiveFunctions]
+def main() -> None:
+    def f() -> int:
+        reveal_type(g())  # E: Revealed type is 'builtins.str'
+        return int()
+    def g() -> str:
+        reveal_type(f())  # E: Revealed type is 'builtins.int'
+        return str()
+
+[case testNewAnalyzerMissingNamesInFunctions]
+def main() -> None:
+    def f() -> None:
+        x  # E: Name 'x' is not defined
+        class C:
+            x  # E: Name 'x' is not defined
+
+[case testNewAnalyzerCyclicDefinitions]
+gx = gy  # E: Cannot resolve name "gy" (possible cyclic definition)
+gy = gx
+def main() -> None:
+    class C:
+        def meth(self) -> None:
+            lx = ly  # E: Cannot resolve name "ly" (possible cyclic definition)
+            ly = lx
+
+[case testNewAnalyzerCyclicDefinitionCrossModule]
+import b
+[file a.py]
+import b
+x = b.x  # E: Cannot determine type of 'x'
+[file b.py]
+import a
+x = a.x  # E: Cannot resolve attribute "x" (possible cyclic definition) \
+         # E: Module has no attribute "x"
+[builtins fixtures/module.pyi]
+
+[case testNewAnalyzerMutuallyRecursiveOverloadedFunctions]
+from typing import overload, Union
+
+def main() -> None:
+    @overload
+    def f(x: int) -> int: ...
+    @overload
+    def f(x: str) -> str: ...
+    def f(x: Union[int, str]) -> Union[int, str]:
+        reveal_type(g(str()))  # E: Revealed type is 'builtins.str'
+        return x
+    @overload
+    def g(x: int) -> int: ...
+    @overload
+    def g(x: str) -> str: ...
+    def g(x: Union[int, str]) -> Union[int, str]:
+        reveal_type(f(int()))  # E: Revealed type is 'builtins.int'
+        return float()  # E: Incompatible return value type (got "float", expected "Union[int, str]")
+
+[case testNewAnalyzerNestedClassInMethod]
+class C:
+    class D:
+        def meth(self) -> None:
+            x: Out.In
+            reveal_type(x.t)  # E: Revealed type is 'builtins.int'
+            class Out:
+                class In:
+                    def meth(self) -> None:
+                        self.t: int
+
+[case testNewAnalyzerDeeplyNestedFunctions]
+class Out:
+    class In:
+        def meth(self) -> None:
+            x: C.D
+            reveal_type(x.t)  # E: Revealed type is '__main__.Test@10'
+            class C:
+                class D:
+                    def meth(self) -> None:
+                        self.t: Test
+                        class Test:
+                            def test(self) -> None:
+                                def one() -> int:
+                                    reveal_type(other())  # E: Revealed type is 'builtins.str'
+                                    return int()
+                                def other() -> str:
+                                    reveal_type(one())  # E: Revealed type is 'builtins.int'
+                                    return str()
+
+[case testNewAnalyzerNestedClass1]
+class A:
+    class B:
+        x: int
+
+        def __init__(self, x: int) -> None:
+            self.x = x
+
+        def f(self) -> str:
+            return self.x # E: Incompatible return value type (got "int", expected "str")
+
+b: A.B
+b = A.B('') # E: Argument 1 to "B" has incompatible type "str"; expected "int"
+reveal_type(b) # E: Revealed type is '__main__.A.B'
+reveal_type(b.x) # E: Revealed type is 'builtins.int'
+reveal_type(b.f()) # E: Revealed type is 'builtins.str'
+
+[case testNewAnalyzerNestedClass2]
+b: A.B
+b = A.B('') # E: Argument 1 to "B" has incompatible type "str"; expected "int"
+reveal_type(b) # E: Revealed type is '__main__.A.B'
+reveal_type(b.x) # E: Revealed type is 'builtins.int'
+reveal_type(b.f()) # E: Revealed type is 'builtins.str'
+
+class A:
+    class B:
+        x: int
+
+        def __init__(self, x: int) -> None:
+            self.x = x
+
+        def f(self) -> str:
+            return self.x # E: Incompatible return value type (got "int", expected "str")
+
+[case testNewAnalyzerGenerics]
+from typing import TypeVar, Generic
+
+c: C[int]
+c2: C[int, str] # E: "C" expects 1 type argument, but 2 given
+c3: C
+c = C('') # E: Argument 1 to "C" has incompatible type "str"; expected "int"
+reveal_type(c.get()) # E: Revealed type is 'builtins.int*'
+reveal_type(c2) # E: Revealed type is '__main__.C[Any]'
+reveal_type(c3) # E: Revealed type is '__main__.C[Any]'
+
+T = TypeVar('T')
+
+class C(Generic[T]):
+    def __init__(self, x: T) -> None:
+        self.x = x
+
+    def get(self) -> T:
+        return self.x
+
+[case testNewAnalyzerGenericsTypeVarForwardRef]
+from typing import TypeVar, Generic
+
+class C(Generic[T]):
+    def __init__(self, x: T) -> None:
+        self.x = x
+
+    def get(self) -> T:
+        return self.x
+
+T = TypeVar('T')
+
+c: C[int]
+reveal_type(c) # E: Revealed type is '__main__.C[builtins.int]'
+c = C('') # E: Argument 1 to "C" has incompatible type "str"; expected "int"
+reveal_type(c.get()) # E: Revealed type is 'builtins.int*'
+
+[case testNewAnalyzerTypeAlias]
+from typing import Union, TypeVar, Generic
+
+C2 = C
+U = Union[C, int]
+G = D[T, C]
+
+c: C2
+reveal_type(c) # E: Revealed type is '__main__.C'
+u: U
+reveal_type(u) # E: Revealed type is 'Union[__main__.C, builtins.int]'
+g: G[int]
+reveal_type(g) # E: Revealed type is '__main__.D[builtins.int, __main__.C]'
+
+class C: pass
+
+T = TypeVar('T')
+S = TypeVar('S')
+class D(Generic[T, S]): pass
+
+[case testNewAnalyzerTypeAlias2]
+from typing import Union
+
+class C(D): pass
+
+A = Union[C, int]
+x: A
+reveal_type(x) # E: Revealed type is 'Union[__main__.C, builtins.int]'
+
+class D: pass
+
+[case testNewAnalyzerBuiltinTypeAliases]
+from typing import List
+
+x: List[C]
+reveal_type(x) # E: Revealed type is 'builtins.list[__main__.C]'
+
+class C: pass
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerVersionCheck]
+import sys
+
+if sys.version_info[0] < 2:
+    1()
+    import nonexistent
+else:
+    def f(x: int) -> None: pass
+
+f('') # E: Argument 1 to "f" has incompatible type "str"; expected "int"
+
+def g() -> None:
+    if sys.version_info[0] < 3:
+        import nonexistent2
+    else:
+        1() # E: "int" not callable
+[builtins fixtures/ops.pyi]
+
+[case testNewAnalyzerVersionCheck2]
+import sys
+
+assert sys.version_info[0] == 3
+1() # E: "int" not callable
+assert sys.version_info[0] < 3
+''()
+[builtins fixtures/ops.pyi]
+
+[case testNewAnalyzerOverload]
+from typing import overload, Union
+
+@overload
+def f(x: int) -> int: ...
+@overload
+def f(x: str) -> str: ...
+def f(x: Union[int, str]) -> Union[int, str]:
+    return 1.0 # E: Incompatible return value type (got "float", expected "Union[int, str]")
+
+f(1)
+f('')
+f(1.0) # E: No overload variant of "f" matches argument type "float" \
+       # N: Possible overload variants: \
+       # N:     def f(x: int) -> int \
+       # N:     def f(x: str) -> str
+
+[case testNewAnalyzerOverload2]
+from typing import overload, Union
+
+class A:
+    @overload
+    def f(self, x: int) -> int: ...
+    @overload
+    def f(self, x: str) -> str: ...
+    def f(self, x: Union[int, str]) -> Union[int, str]:
+        return 1.0 # E: Incompatible return value type (got "float", expected "Union[int, str]")
+
+a = A()
+a.f(1)
+a.f('')
+a.f(1.0) # E: No overload variant of "f" of "A" matches argument type "float" \
+         # N: Possible overload variants: \
+         # N:     def f(self, x: int) -> int \
+         # N:     def f(self, x: str) -> str
+
+[case testNewAnalyzerPromotion]
+y: int
+f(y)
+f(1)
+def f(x: float) -> None: pass
+[builtins fixtures/primitives.pyi]
+
+[case testNewAnalyzerFunctionDecorator]
+from typing import Callable
+
+@dec
+def f1(x: int) -> int:
+    return '' # E: Incompatible return value type (got "str", expected "int")
+
+def dec(f: Callable[[int], int]) -> Callable[[str], str]: ...
+
+@dec
+def f2(x: int) -> int:
+    return '' # E: Incompatible return value type (got "str", expected "int")
+
+f1(1) # E: Argument 1 to "f1" has incompatible type "int"; expected "str"
+reveal_type(f1('')) # E: Revealed type is 'builtins.str'
+f2(1) # E: Argument 1 to "f2" has incompatible type "int"; expected "str"
+
+[case testNewAnalyzerTypeVarForwardReference]
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+XY = TypeVar('XY', X, Y)
+
+class C(Generic[T]): pass
+
+class D(C[XY], Generic[XY]): pass
+
+class X: pass
+class Y: pass
+
+x: D[int]  # E: Value of type variable "XY" of "D" cannot be "int"
+y: D[Y]
+
+[case testNewAnalyzerTypeVarForwardReference2]
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+XY = TypeVar('XY', X, Y)
+
+class C(Generic[T]): pass
+
+class D(C[XY]): pass
+
+class X: pass
+class Y: pass
+
+x: D[int]  # E: Value of type variable "XY" of "D" cannot be "int"
+y: D[Y]
+
+[case testNewAnalyzerTypeVarForwardReferenceValuesDeferred]
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+XY = TypeVar('XY', X, Y)
+
+class C(Generic[T]): pass
+
+class D(C[XY], Generic[XY]): pass
+
+class X(Defer): pass
+class Y(Defer): pass
+class Defer: ...
+
+x: D[int]  # E: Value of type variable "XY" of "D" cannot be "int"
+y: D[Y]
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerTypeVarForwardReferenceBoundDeferred]
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+TY = TypeVar('TY', bound=Y)
+
+class C(Generic[T]): pass
+
+class D(C[TY], Generic[TY]): pass
+
+class Y(Defer): pass
+class Defer: ...
+
+x: D[int]  # E: Type argument "builtins.int" of "D" must be a subtype of "__main__.Y"
+y: D[Y]
+
+[case testNewAnalyzerTypeVarForwardReferenceErrors]
+from typing import TypeVar, Generic
+
+class C(Generic[T]):
+    def __init__(self, x: T) -> None: ...
+def func(x: U) -> U: ...
+
+U = TypeVar('U', asdf, asdf)  # E: Name 'asdf' is not defined
+T = TypeVar('T', bound=asdf)  # E: Name 'asdf' is not defined
+
+reveal_type(C)  # E: Revealed type is 'def [T <: Any] (x: T`1) -> __main__.C[T`1]'
+reveal_type(func)  # E: Revealed type is 'def [U in (Any, Any)] (x: U`-1) -> U`-1'
+
+[case testNewAnalyzerSubModuleInCycle]
+import a
+[file a.py]
+MYPY = False
+if MYPY:
+    from b.c import x
+[file b/__init__.pyi]
+import b.c
+[file b/c.pyi]
+x = 0
+import a
+
+[case testNewAnalyzerBaseClassSelfReference]
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+
+class A(Generic[T]): pass
+
+a1: A[C] = C()
+a2: A[D] = C() \
+    # E: Incompatible types in assignment (expression has type "C", variable has type "A[D]")
+
+class C(A[C]):
+    pass
+
+class D(A[D]):
+    pass
+
+[case testNewAnalyzerTypeVarBoundForwardRef]
+from typing import TypeVar
+
+T = TypeVar('T', bound='C')
+
+class C: pass
+class D(C): pass
+class E: pass
+
+def f(x: T) -> T:
+    return x
+
+reveal_type(f(D())) # E: Revealed type is '__main__.D*'
+f(E()) # E: Value of type variable "T" of "f" cannot be "E"
+
+[case testNewAnalyzerNameExprRefersToIncompleteType]
+import a
+
+[file a.py]
+from b import f
+
+class C(D): pass
+class D: pass
+
+[file b.py]
+from a import C
+reveal_type(C()) # E: Revealed type is 'a.C'
+def f(): pass
+
+[case testNewAnalyzerMemberExprRefersToIncompleteType]
+import a
+
+[file a.py]
+from b import f
+
+class C(D): pass
+class D: pass
+
+[file b.py]
+import a
+reveal_type(a.C()) # E: Revealed type is 'a.C'
+def f(): pass
+
+[case testNewAnalyzerNamedTupleCall]
+from typing import NamedTuple
+
+o: Out
+i: In
+
+Out = NamedTuple('Out', [('x', In), ('y', Other)])
+
+reveal_type(o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.Out]'
+reveal_type(o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.Other, fallback=__main__.In]'
+reveal_type(o.y)  # E: Revealed type is '__main__.Other'
+reveal_type(o.x.t)  # E: Revealed type is '__main__.Other'
+reveal_type(i.t)  # E: Revealed type is '__main__.Other'
+
+In = NamedTuple('In', [('s', str), ('t', Other)])
+class Other: pass
+
+[case testNewAnalyzerNamedTupleClass]
+from typing import NamedTuple
+
+o: Out
+i: In
+
+class Out(NamedTuple):
+    x: In
+    y: Other
+
+reveal_type(o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.Out]'
+reveal_type(o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.Other, fallback=__main__.In]'
+reveal_type(o.y)  # E: Revealed type is '__main__.Other'
+reveal_type(o.x.t)  # E: Revealed type is '__main__.Other'
+reveal_type(i.t)  # E: Revealed type is '__main__.Other'
+
+class In(NamedTuple):
+    s: str
+    t: Other
+class Other: pass
+
+[case testNewAnalyzerNamedTupleCallNested]
+from typing import NamedTuple
+
+o: C.Out
+i: C.In
+
+reveal_type(o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.C.Other, fallback=__main__.C.In], __main__.C.Other, fallback=__main__.C.Out]'
+reveal_type(o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.C.Other, fallback=__main__.C.In]'
+reveal_type(o.y)  # E: Revealed type is '__main__.C.Other'
+reveal_type(o.x.t)  # E: Revealed type is '__main__.C.Other'
+reveal_type(i.t)  # E: Revealed type is '__main__.C.Other'
+
+class C:
+    Out = NamedTuple('Out', [('x', In), ('y', Other)])
+    In = NamedTuple('In', [('s', str), ('t', Other)])
+    class Other: pass
+
+
+[case testNewAnalyzerNamedTupleClassNested]
+from typing import NamedTuple
+
+o: C.Out
+i: C.In
+
+reveal_type(o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.C.Other, fallback=__main__.C.In], __main__.C.Other, fallback=__main__.C.Out]'
+reveal_type(o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.C.Other, fallback=__main__.C.In]'
+reveal_type(o.y)  # E: Revealed type is '__main__.C.Other'
+reveal_type(o.x.t)  # E: Revealed type is '__main__.C.Other'
+reveal_type(i.t)  # E: Revealed type is '__main__.C.Other'
+
+class C:
+    class Out(NamedTuple):
+        x: C.In
+        y: C.Other
+    class In(NamedTuple):
+        s: str
+        t: C.Other
+    class Other: pass
+
+[case testNewAnalyzerNamedTupleCallNestedMethod]
+from typing import NamedTuple
+
+c = C()
+reveal_type(c.o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other@12, fallback=__main__.C.In@11], __main__.Other@12, fallback=__main__.C.Out@10]'
+reveal_type(c.o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.Other@12, fallback=__main__.C.In@11]'
+
+class C:
+    def get_tuple(self) -> None:
+        self.o: Out
+        Out = NamedTuple('Out', [('x', In), ('y', Other)])
+        In = NamedTuple('In', [('s', str), ('t', Other)])
+        class Other: pass
+
+[case testNewAnalyzerNamedTupleClassNestedMethod]
+from typing import NamedTuple
+
+c = C()
+reveal_type(c.o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other@18, fallback=__main__.C.In@15], __main__.Other@18, fallback=__main__.C.Out@11]'
+reveal_type(c.o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.Other@18, fallback=__main__.C.In@15]'
+reveal_type(c.o.method())  # E: Revealed type is 'Tuple[builtins.str, __main__.Other@18, fallback=__main__.C.In@15]'
+
+class C:
+    def get_tuple(self) -> None:
+        self.o: Out
+        class Out(NamedTuple):
+            x: In
+            y: Other
+            def method(self) -> In: ...
+        class In(NamedTuple):
+            s: str
+            t: Other
+        class Other: pass
+
+[case testNewAnalyzerNamedTupleClassForwardMethod]
+from typing import NamedTuple
+
+n: NT
+reveal_type(n.get_other())  # E: Revealed type is 'Tuple[builtins.str, fallback=__main__.Other]'
+reveal_type(n.get_other().s)  # E: Revealed type is 'builtins.str'
+
+class NT(NamedTuple):
+    x: int
+    y: int
+    def get_other(self) -> Other: pass
+
+class Other(NamedTuple):
+    s: str
+
+[case testNewAnalyzerNamedTupleSpecialMethods]
+from typing import NamedTuple
+
+o: SubO
+
+reveal_type(SubO._make)  # E: Revealed type is 'def (iterable: typing.Iterable[Any], *, new: Any =, len: Any =) -> Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.SubO]'
+reveal_type(o._replace(y=Other()))  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.SubO]'
+
+class SubO(Out): pass
+
+Out = NamedTuple('Out', [('x', In), ('y', Other)])
+In = NamedTuple('In', [('s', str), ('t', Other)])
+class Other: pass
+
+[case testNewAnalyzerNamedTupleBaseClass]
+from typing import NamedTuple
+
+o: Out
+reveal_type(o)  # E: Revealed type is 'Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.Out]'
+reveal_type(o.x)  # E: Revealed type is 'Tuple[builtins.str, __main__.Other, fallback=__main__.In]'
+reveal_type(o.x.t)  # E: Revealed type is '__main__.Other'
+reveal_type(Out._make)  # E: Revealed type is 'def (iterable: typing.Iterable[Any], *, new: Any =, len: Any =) -> Tuple[Tuple[builtins.str, __main__.Other, fallback=__main__.In], __main__.Other, fallback=__main__.Out]'
+
+class Out(NamedTuple('Out', [('x', In), ('y', Other)])):
+    pass
+
+class In(NamedTuple):
+    s: str
+    t: Other
+class Other: pass
+
+[case testNewAnalyzerIncompleteRefShadowsBuiltin1]
+import a
+
+[file a.py]
+from typing import TypeVar, Generic
+
+from b import C as int
+
+x: int[str]
+
+reveal_type(x) # E: Revealed type is 'a.C[builtins.str]'
+
+T = TypeVar('T')
+class C(Generic[T]): pass
+
+[file b.py]
+from a import C
+
+[case testNewAnalyzerIncompleteRefShadowsBuiltin2]
+import b
+
+[file a.py]
+import b
+
+int = b.C
+
+class C: pass
+
+x: int
+reveal_type(x) # E: Revealed type is 'b.C'
+
+[file b.py]
+import a
+
+int = a.C
+
+class C: pass
+
+x: int
+reveal_type(x) # E: Revealed type is 'a.C'
+
+[case testNewAnalyzerNamespaceCompleteness]
+import a
+
+[file a.py]
+import b
+
+x: b.C
+
+[file b.py]
+from c import *
+class C: pass
+
+[file c.py]
+import a
+from b import C
+
+[case testNewAnalyzerIncompleteFixture]
+from typing import Tuple
+
+x: Tuple[int]  # E: Name 'tuple' is not defined
+[builtins fixtures/complex.pyi]
+
+[case testNewAnalyzerMetaclass1]
+class A(metaclass=B):
+    pass
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+[case testNewAnalyzerMetaclass2]
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+class A(metaclass=B):
+    pass
+
+class AA(metaclass=C): # E: Metaclasses not inheriting from 'type' are not supported
+    pass
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+class C: pass
+
+[case testNewAnalyzerMetaclassPlaceholder]
+class B(C): pass
+
+class A(metaclass=B):
+    pass
+
+class C(type):
+    def f(cls) -> int:
+        return 0
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+[case testNewAnalyzerMetaclassSix1]
+import six
+
+class A(six.with_metaclass(B)):
+    pass
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+[case testNewAnalyzerMetaclassSix2]
+import six
+
+@six.add_metaclass(B)
+class A:
+    pass
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+[case testNewAnalyzerMetaclassSix3]
+import six
+
+class A(six.with_metaclass(B, Defer)):
+    pass
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+class Defer:
+    x: str
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+reveal_type(A.x) # E: Revealed type is 'builtins.str'
+
+[case testNewAnalyzerMetaclassSix4]
+import six
+
+class B(type):
+    def f(cls) -> int:
+        return 0
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+reveal_type(A.x) # E: Revealed type is 'builtins.str'
+
+class A(six.with_metaclass(B, Defer)):
+    pass
+
+class Defer:
+    x: str
+
+[case testNewAnalyzerMetaclass1_python2]
+class A:
+    __metaclass__ = B
+
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+class B(type):
+    def f(cls):
+        # type: () -> int
+        return 0
+
+[case testNewAnalyzerMetaclass2_python2]
+reveal_type(A.f()) # E: Revealed type is 'builtins.int'
+
+class A:
+    __metaclass__ = B
+
+class AA:
+    __metaclass__ = C  # E: Metaclasses not inheriting from 'type' are not supported
+
+class B(type):
+    def f(cls):
+        # type: () -> int
+        return 0
+
+class C: pass
+
+[case testNewAnalyzerFinalDefiningModuleVar]
+from typing import Final
+
+x: Final = C()
+y: Final[C] = D()
+bad: Final[D] = C()  # E: Incompatible types in assignment (expression has type "C", variable has type "D")
+
+reveal_type(x)  # E: Revealed type is '__main__.C'
+reveal_type(y)  # E: Revealed type is '__main__.C'
+class D(C): ...
+class C: ...
+
+[case testNewAnalyzerFinalDefiningInstanceVar]
+from typing import Final
+
+class C:
+    def __init__(self, x: D) -> None:
+        self.x: Final = x
+        self.y: Final[C] = E(D())
+reveal_type(C(D()).x)  # E: Revealed type is '__main__.D'
+reveal_type(C(D()).y)  # E: Revealed type is '__main__.C'
+
+class D: ...
+class E(C): ...
+
+[case testNewAnalyzerFinalReassignModuleVar]
+from typing import Final
+
+x: Final = A()
+x = A()  # E: Cannot assign to final name "x"
+
+x2: Final = A()
+def f2() -> None:
+    global x2
+    def f() -> None:
+        g()
+    x2 = A()  # E: Cannot assign to final name "x2"
+    def g() -> None:
+        f()
+
+class A: ...
+
+[case testNewAnalyzerFinalReassignModuleReexport]
+import a
+[file a.py]
+from b import ID, A
+
+class C(A): ...
+ID = C()  # E: Cannot assign to final name "ID"
+[file b.py]
+from typing import Final
+from a import C
+
+class A:
+    x: C
+
+ID: Final = A()
+
+[case testNewAnalyzerFinalOverrideInSubclass]
+from typing import Final
+
+class B:
+    def __init__(self, x: int) -> None:
+        self.x: Final = x
+
+class C(B):
+    x = 1  # E: Cannot assign to final name "x"
+
+[case testNewAnalyzerAssignmentAfterStarImport]
+import a
+[file a.py]
+from b import *
+
+x = 1
+def f(): ...
+[file b.py]
+from a import f
+x: int
+
+[case testNewAnalyzerClassLevelImport]
+# flags: --ignore-missing-imports
+class Test:
+    import a
+    def __init__(self) -> None:
+        some_module = self.a
+
+[case testNewAnalyzerAliasToNotReadyClass]
+import a
+[file a.py]
+from b import B
+
+x: A
+A = B
+[file b.py]
+from typing import List
+from a import x
+
+class B(List[B]): pass
+
+reveal_type(x[0][0])  # E: Revealed type is 'b.B*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyClass2]
+from typing import List
+
+x: A
+
+class A(List[B]): pass
+B = A
+
+reveal_type(x[0][0])  # E: Revealed type is '__main__.A*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyClass3]
+from typing import List
+
+x: B
+B = A
+A = C
+class C(List[B]): pass
+
+reveal_type(x[0][0])  # E: Revealed type is '__main__.C*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyNestedClass]
+import a
+[file a.py]
+from b import Out
+
+x: A
+A = Out.B
+[file b.py]
+from typing import List
+from a import x
+
+class Out:
+    class B(List[B]): pass
+
+reveal_type(x[0][0])  # E: Revealed type is 'b.Out.B*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyNestedClass2]
+from typing import List
+
+x: Out.A
+
+class Out:
+    class A(List[B]): pass
+B = Out.A
+
+reveal_type(x[0][0])  # E: Revealed type is '__main__.Out.A*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyClassGeneric]
+import a
+[file a.py]
+from typing import Tuple
+from b import B, T
+
+x: A[int]
+A = B[Tuple[T, T]]
+[file b.py]
+from typing import List, Generic, TypeVar
+from a import x
+
+class B(List[B], Generic[T]): pass
+T = TypeVar('T')
+reveal_type(x)  # E: Revealed type is 'b.B[Tuple[builtins.int, builtins.int]]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyClassInGeneric]
+import a
+[file a.py]
+from typing import Tuple
+from b import B
+
+x: A
+A = Tuple[B, B]
+[file b.py]
+from typing import List
+from a import x
+
+class B(List[B]): pass
+
+reveal_type(x)  # E: Revealed type is 'Tuple[b.B, b.B]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyClassDoubleGeneric]
+from typing import List, TypeVar, Union
+
+T = TypeVar('T')
+
+x: B[int]
+B = A[List[T]]
+A = Union[int, T]
+class C(List[B[int]]): pass
+
+reveal_type(x)  # E: Revealed type is 'Union[builtins.int, builtins.list[builtins.int]]'
+reveal_type(y[0])  # E: Revealed type is 'Union[builtins.int, builtins.list[builtins.int]]'
+y: C
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerForwardAliasFromUnion]
+from typing import Union, List
+
+A = Union['B', 'C']
+
+class D:
+    x: List[A]
+
+    def test(self) -> None:
+        reveal_type(self.x[0].y)  # E: Revealed type is 'builtins.int'
+
+class B:
+    y: int
+class C:
+    y: int
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyTwoDeferrals]
+from typing import List
+
+x: B
+B = List[C]
+A = C
+class C(List[A]): pass
+
+reveal_type(x)  # E: Revealed type is 'builtins.list[__main__.C]'
+reveal_type(x[0][0])  # E: Revealed type is '__main__.C*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyDirectBase]
+from typing import List
+
+x: B
+B = List[C]
+class C(B): pass
+
+reveal_type(x)  # E: Revealed type is 'builtins.list[__main__.C]'
+reveal_type(x[0][0])  # E: Revealed type is '__main__.C*'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyTwoDeferralsFunction]
+import a
+[file a.py]
+from typing import List
+from b import D
+
+def f(x: B) -> List[B]: ...
+B = List[C]
+A = C
+class C(List[A]): pass
+[file b.py]
+from a import f
+class D: ...
+reveal_type(f)  # E: Revealed type is 'def (x: builtins.list[a.C]) -> builtins.list[builtins.list[a.C]]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyDirectBaseFunction]
+import a
+[file a.py]
+from typing import List
+from b import D
+
+def f(x: B) -> List[B]: ...
+B = List[C]
+class C(B): pass
+
+[file b.py]
+from a import f
+class D: ...
+reveal_type(f)  # E: Revealed type is 'def (x: builtins.list[a.C]) -> builtins.list[builtins.list[a.C]]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasToNotReadyMixed]
+from typing import List, Union
+x: A
+
+A = Union[B, C]
+
+class B(List[A]): pass
+class C(List[A]): pass
+
+reveal_type(x)  # E: Revealed type is 'Union[__main__.B, __main__.C]'
+reveal_type(x[0])  # E: Revealed type is 'Union[__main__.B, __main__.C]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerListComprehension]
+from typing import List
+a: List[A]
+a = [x for x in a]
+b: List[B] = [x for x in a] # E: List comprehension has incompatible type List[A]; expected List[B]
+class A: pass
+class B: pass
+[builtins fixtures/for.pyi]
+
+[case testNewAnalyzerDictionaryComprehension]
+from typing import Dict, List, Tuple
+abd: Dict[A, B]
+abl: List[Tuple[A, B]]
+abd = {a: b for a, b in abl}
+x: Dict[B, A] = {a: b for a, b in abl} # E: Key expression in dictionary comprehension has incompatible type "A"; expected type "B" \
+  # E: Value expression in dictionary comprehension has incompatible type "B"; expected type "A"
+y: A = {a: b for a, b in abl} # E: Incompatible types in assignment (expression has type "Dict[A, B]", variable has type "A")
+class A: pass
+class B: pass
+[builtins fixtures/dict.pyi]
+
+[case testNewAnalyzerTypeArgBoundCheck]
+from typing import TypeVar, Generic
+
+class F(E): pass
+class E: pass
+T = TypeVar('T', bound=E)
+class C(Generic[T]): pass
+
+class D(B): pass
+
+x: C[D] # E: Type argument "__main__.D" of "C" must be a subtype of "__main__.E"
+y: C[F]
+
+class B: pass
+
+[case testNewAnalyzerTypeArgValueRestriction]
+from typing import TypeVar, Generic
+
+class F(E): pass
+class E: pass
+T = TypeVar('T', E, str)
+class C(Generic[T]): pass
+
+class D(B): pass
+
+x: C[D] # E: Value of type variable "T" of "C" cannot be "D"
+y: C[E]
+z: C[str]
+
+class B: pass
+
+[case testNewAnalyzerTypeArgBoundCheckWithContext]
+# flags: --show-error-context
+import a
+[file a.py]
+from typing import TypeVar, Generic
+
+T = TypeVar('T', bound=int)
+class C(Generic[T]): pass
+
+def f(x: C[str]) -> None: # E
+    y: C[str] # E
+class A(C[str]): # E
+    z: C[str] # E
+    def g(self, x: C[str]) -> None: # E
+        a: C[str] # E
+[out]
+main:2: note: In module imported here:
+tmp/a.py: note: In function "f":
+tmp/a.py:6: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+tmp/a.py:7: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+tmp/a.py: note: In class "A":
+tmp/a.py:8: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+tmp/a.py:9: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+tmp/a.py: note: In member "g" of class "A":
+tmp/a.py:10: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+tmp/a.py:11: error: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+
+[case testNewAnalyzerTypeArgBoundCheckDifferentNodes]
+from typing import TypeVar, Generic, NamedTuple, NewType, Union, Any, cast, overload
+from mypy_extensions import TypedDict
+
+T = TypeVar('T', bound=int)
+class C(Generic[T]): pass
+class C2(Generic[T]): pass
+
+A = C[str] # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int" \
+           # E: Value of type variable "T" of "C" cannot be "str"
+B = Union[C[str], int] # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+S = TypeVar('S', bound=C[str]) # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+U = TypeVar('U', C[str], str) # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+N = NamedTuple('N', [
+    ('x', C[str])]) # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+class N2(NamedTuple):
+    x: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+class TD(TypedDict):
+    x: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+class TD2(TD):
+    y: C2[str]  # E: Type argument "builtins.str" of "C2" must be a subtype of "builtins.int"
+NT = NewType('NT',
+             C[str]) # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+class D(
+        C[str]): # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+    pass
+
+TD3 = TypedDict('TD3', {'x': C[str]}) # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+
+a: Any
+for i in a: # type: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+    pass
+
+with a as w: # type: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+    pass
+
+cast(C[str], a)  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+C[str]()  # E: Value of type variable "T" of "C" cannot be "str"
+
+def f(s: S, y: U) -> None: pass  # No error here
+
+@overload
+def g(x: C[str]) -> int: ...  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+@overload
+def g(x: int) -> int: ...
+def g(x: Union[C[str], int]) -> int:  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+    y: C[object]  # E: Type argument "builtins.object" of "C" must be a subtype of "builtins.int"
+    return 0
+
+[case testNewAnalyzerTypeArgBoundCheckWithStrictOptional]
+# flags: --config-file tmp/mypy.ini
+import a
+
+[file b.py]
+from typing import TypeVar, Generic
+
+x: C[None]
+y: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+z: C[int]
+
+T = TypeVar('T', bound=int)
+class C(Generic[T]):
+    pass
+
+[file a.py]
+from b import C
+
+x: C[None]  # E: Type argument "None" of "C" must be a subtype of "builtins.int"
+y: C[str]  # E: Type argument "builtins.str" of "C" must be a subtype of "builtins.int"
+z: C[int]
+
+[file mypy.ini]
+[[mypy-a]
+strict_optional = True
+[[mypy-b]
+strict_optional = False
+
+-- ]]
+
+[case testNewAnalyzerProperty]
+class A:
+    @property
+    def x(self) -> B:
+        return 0  # E: Incompatible return value type (got "int", expected "B")
+
+    @property
+    def y(self) -> B:
+        pass
+
+    @y.setter
+    def y(self, x: B) -> None:
+        pass
+
+class B: pass
+
+a = A()
+reveal_type(a.x)  # E: Revealed type is '__main__.B'
+a.y = 1  # E: Incompatible types in assignment (expression has type "int", variable has type "B")
+[builtins fixtures/property.pyi]
+
+[case testNewAnalyzerAliasesFixedFew]
+from typing import List, Generic, TypeVar
+
+def func(x: List[C[T]]) -> T:
+    ...
+x: A
+A = List[C]
+
+reveal_type(x)  # E: Revealed type is 'builtins.list[__main__.C[Any]]'
+reveal_type(func(x))  # E: Revealed type is 'Any'
+class C(Generic[T]):
+    ...
+
+T = TypeVar('T')
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerAliasesFixedMany]
+from typing import List, Generic, TypeVar
+
+def func(x: List[C[T]]) -> T:
+    ...
+
+x: A
+A = List[C[int, str]]  # E: "C" expects 1 type argument, but 2 given
+
+reveal_type(x)  # E: Revealed type is 'builtins.list[__main__.C[Any]]'
+reveal_type(func(x))  # E: Revealed type is 'Any'
+
+class C(Generic[T]):
+    ...
+T = TypeVar('T')
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerBuiltinAliasesFixed]
+from typing import List, Optional
+x: Optional[List] = None
+y: List[str]
+
+reveal_type(x)  # E: Revealed type is 'Union[builtins.list[Any], None]'
+x = ['a', 'b']
+reveal_type(x)  # E: Revealed type is 'builtins.list[Any]'
+x.extend(y)
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerImportPriosB]
+import b
+[file a.py]
+from b import x
+reveal_type(x)  # E: Revealed type is 'Tuple[builtins.int, builtins.int]'
+[file b.py]
+import a
+x = (1, 2)
+
+[case testNewAnalyzerImportPriosA]
+import a
+[file a.py]
+from b import x
+reveal_type(x)  # E: Revealed type is 'Tuple[builtins.int, builtins.int]'
+[file b.py]
+import a
+x = (1, 2)
+
+[case testNewAnalyzerConditionalFunc]
+if int():
+    def f(x: int) -> None:
+        pass
+    def g(x: int) -> None:
+        pass
+elif bool():
+    def f(x: int) -> None:
+        1()  # E: "int" not callable
+    def g(x: str) -> None:  # E: All conditional function variants must have identical signatures
+        pass
+else:
+    def f(x: int) -> None:
+        ''()  # E: "str" not callable
+
+reveal_type(g) # E: Revealed type is 'def (x: builtins.int)'
+
+[case testNewAnalyzerConditionalFuncDefer]
+if int():
+    def f(x: A) -> None:
+        pass
+    def g(x: A) -> None:
+        pass
+else:
+    def f(x: A) -> None:
+        1()  # E: "int" not callable
+    def g(x: str) -> None:  # E: All conditional function variants must have identical signatures
+        pass
+
+reveal_type(g) # E: Revealed type is 'def (x: __main__.A)'
+
+class A: pass
+
+[case testNewAnalyzerConditionalDecoratedFunc]
+from typing import Callable
+
+def dec(f: Callable[[int], None]) -> Callable[[str], None]:
+    pass
+
+if int():
+    from m import f
+else:
+    @dec
+    def f(x: int) -> None:
+        1()  # E: "int" not callable
+reveal_type(f) # E: Revealed type is 'def (x: builtins.str)'
+[file m.py]
+def f(x: str) -> None: pass
+
+[case testNewAnalyzerConditionallyDefineFuncOverVar]
+from typing import Callable
+
+if int():
+    f: Callable[[str], None]
+else:
+    def f(x: str) -> None:
+        ...
+reveal_type(f) # E: Revealed type is 'def (builtins.str)'
+
+[case testNewAnalyzerConditionallyDefineFuncOverClass]
+class C:
+    1()  # E: "int" not callable
+def C() -> None:  # E: Name 'C' already defined on line 1
+    ''()  # E: "str" not callable
+
+[case testNewAnalyzerTupleIteration]
+from typing import Union, Tuple, NamedTuple
+
+class T(Tuple[B, C]):
+    pass
+
+class A: pass
+class B(A): pass
+class C(A): pass
+
+class NTInt(NamedTuple):
+    x: int
+    y: int
+
+class NTStr(NamedTuple):
+    x: str
+    y: str
+
+t1: T
+reveal_type(t1.__iter__) # E: Revealed type is 'def () -> typing.Iterator[__main__.A*]'
+
+t2: NTInt
+reveal_type(t2.__iter__) # E: Revealed type is 'def () -> typing.Iterator[builtins.int*]'
+nt: Union[NTInt, NTStr]
+reveal_type(nt.__iter__) # E: Revealed type is 'Union[def () -> typing.Iterator[builtins.int*], def () -> typing.Iterator[builtins.str*]]'
+for nx in nt:
+    reveal_type(nx) # E: Revealed type is 'Union[builtins.int*, builtins.str*]'
+
+t: Union[Tuple[int, int], Tuple[str, str]]
+for x in t:
+    reveal_type(x) # E: Revealed type is 'Union[builtins.int*, builtins.str*]'
+[builtins fixtures/for.pyi]
+[out]
+
+[case testNewAnalyzerFallbackUpperBoundCheckAndFallbacks]
+from typing import TypeVar, Generic, Tuple
+
+class A: pass
+class B: pass
+class C(B): pass
+
+S = TypeVar('S', bound=Tuple[G[A], ...])
+
+class GG(Generic[S]): pass
+
+g: GG[Tuple[G[B], G[C]]] \
+  # E: Type argument "__main__.B" of "G" must be a subtype of "__main__.A" \
+  # E: Type argument "__main__.C" of "G" must be a subtype of "__main__.A" \
+  # E: Type argument "Tuple[__main__.G[__main__.B], __main__.G[__main__.C]]" of "GG" must be a subtype of "builtins.tuple[__main__.G[__main__.A]]"
+
+T = TypeVar('T', bound=A, covariant=True)
+
+class G(Generic[T]): pass
+
+t: Tuple[G[B], G[C]] # E: Type argument "__main__.B" of "G" must be a subtype of "__main__.A" \
+                     # E: Type argument "__main__.C" of "G" must be a subtype of "__main__.A"
+reveal_type(t.__iter__) # E: Revealed type is 'def () -> typing.Iterator[__main__.G*[__main__.B]]'
+[builtins fixtures/tuple.pyi]
+
+[case testNewAnalyzerClassKeywordsForward]
+class C(B, other=A): ...
+class B: ...
+class A: ...
+
+[case testNewAnalyzerClassKeywordsCyclic]
+from typing import List
+
+class C(List[C], other=C): ...
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerClassKeywordsError]
+class C(other=asdf): ...  # E: Name 'asdf' is not defined
+
+[case testNewAnalyzerMissingImport]
+# flags: --ignore-missing-imports
+import non_existing
+
+x: C
+class C: ...
+
+[case testNewAnalyzerMissingImportFrom]
+# flags: --ignore-missing-imports
+from non_existing import stuff
+
+x: C
+class C: ...
+
+[case testNewAnalyzerFollowSkip]
+# flags: --follow-imports=skip
+from other import y
+x: C
+class C: ...
+[file other.py]
+y = 1
+
+[case testNewAnalyzerMissingImportErrors]
+# flags: --ignore-missing-imports
+from non_existing import stuff, other_stuff
+
+stuff = 1  # OK
+other_stuff: int = 1  # E: Name 'other_stuff' already defined (possibly by an import)
+
+x: C
+class C: ...
+
+[case testNewAnalyzerMissingImportErrorsRedefinition]
+# flags: --ignore-missing-imports
+
+class Other: ...
+from non_existing import Other  # E: Name 'Other' already defined on line 3
+from non_existing import Cls
+class Cls: ...  # E: Name 'Cls' already defined (possibly by an import)
+
+x: C
+class C: ...
+
+[case testNewAnalyzerTupleInit]
+from typing import Tuple
+
+c: C
+class C(Tuple[int, str]):
+    def __init__(self) -> None: pass
+
+[case testNewAnalyzerNotAnAlias]
+class Meta(type):
+    x = int()
+
+y = C.x
+reveal_type(y)  # E: Revealed type is 'builtins.int'
+
+class C(metaclass=Meta):
+    pass
+
+[case testNewAnalyzerFunctionError]
+def f(x: asdf) -> None:  # E: Name 'asdf' is not defined
+    pass
+
+[case testNewAnalyzerEnumRedefinition]
+from enum import Enum
+
+A = Enum('A', ['x', 'y'])
+A = Enum('A', ['z', 't'])  # E: Name 'A' already defined on line 3
+
+[case testNewAnalyzerNewTypeRedefinition]
+from typing import NewType
+
+A = NewType('A', int)
+A = NewType('A', str)  # E: Cannot redefine 'A' as a NewType \
+                       # E: Name 'A' already defined on line 3
+
+[case testNewAnalyzerNewTypeForwardClass]
+from typing import NewType, List
+
+x: C
+reveal_type(x[0])  # E: Revealed type is '__main__.C*'
+
+C = NewType('C', B)
+
+class B(List[C]):
+    pass
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerNewTypeForwardClassAlias]
+from typing import NewType, List
+
+x: D
+reveal_type(x[0])  # E: Revealed type is '__main__.C*'
+
+D = C
+C = NewType('C', B)
+
+class B(List[D]):
+    pass
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerNewTypeForwardClassAliasReversed]
+from typing import NewType, List
+
+x: D
+reveal_type(x[0][0])  # E: Revealed type is '__main__.C*'
+
+D = C
+C = NewType('C', List[B])
+
+class B(List[C]):
+    pass
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerNewTypeForwardClassAliasDirect]
+from typing import NewType, List
+
+x: D
+reveal_type(x[0][0])  # E: Revealed type is '__main__.C*'
+
+D = List[C]
+C = NewType('C', B)
+
+class B(D):
+    pass
+[builtins fixtures/list.pyi]
+
+-- Copied from check-classes.test (tricky corner cases).
+[case testNewAnalyzerNoCrashForwardRefToBrokenDoubleNewTypeClass]
+from typing import Any, Dict, List, NewType
+
+Foo = NewType('NotFoo', int)  # type: ignore
+Foos = NewType('Foos', List[Foo])
+
+x: C
+class C:
+    def frob(self, foos: Dict[Any, Foos]) -> None:
+        foo = foos.get(1)
+        dict(foo)
+[builtins fixtures/dict.pyi]
+
+[case testNewAnalyzerForwardTypeAliasInBase]
+from typing import List, Generic, TypeVar, NamedTuple
+T = TypeVar('T')
+
+class C(A, B):
+    pass
+class G(Generic[T]): pass
+A = G[C]
+class B(NamedTuple):
+    x: int
+
+y: C
+reveal_type(y.x)  # E: Revealed type is 'builtins.int'
+reveal_type(y[0])  # E: Revealed type is 'builtins.int'
+x: A
+reveal_type(x)  # E: Revealed type is '__main__.G[Tuple[builtins.int, fallback=__main__.C]]'
+[builtins fixtures/list.pyi]
+
+[case testNewAnalyzerCastForward1]
+from typing import cast
+
+x = cast('C', None)
+class A:
+    def foo(self) -> None:
+        self.x = cast('C', None)
+
+reveal_type(x)  # E: Revealed type is '__main__.C'
+reveal_type(A().x)  # E: Revealed type is '__main__.C'
+
+class C(A): ...
+
+[case testNewAnalyzerCastForward2]
+from typing import cast
+
+x = cast('C', None)
+
+reveal_type(x)  # E: Revealed type is 'builtins.int'
+
+C = int
+
+[case testNewAnalyzerCastForward2]
+from typing import cast, NamedTuple
+
+x = cast('C', None)
+
+reveal_type(x)  # E: Revealed type is 'Tuple[builtins.int, fallback=__main__.C]'
+reveal_type(x.x)  # E: Revealed type is 'builtins.int'
+
+C = NamedTuple('C', [('x', int)])
+
+[case testNewAnalyzerApplicationForward1]
+from typing import Generic, TypeVar
+
+x = C[int]()
+reveal_type(x)  # E: Revealed type is '__main__.C[builtins.int*]'
+
+T = TypeVar('T')
+class C(Generic[T]): ...
+
+[case testNewAnalyzerApplicationForward2]
+from typing import Generic, TypeVar
+
+T = TypeVar('T')
+class C(Generic[T]): ...
+
+x = C['A']()
+reveal_type(x)  # E: Revealed type is '__main__.C[__main__.A*]'
+
+class A: ...
+
+[case testNewAnalyzerApplicationForward3]
+from typing import Generic, TypeVar
+
+x = C[A]()
+reveal_type(x)  # E: Revealed type is '__main__.C[__main__.A*]'
+
+T = TypeVar('T')
+class C(Generic[T]): ...
+
+class A: ...
+
+[case testNewAnalyzerApplicationForward4]
+from typing import Generic, TypeVar
+
+x = C[A]()  # E: Value of type variable "T" of "C" cannot be "A"
+reveal_type(x)  # E: Revealed type is '__main__.C[__main__.A*]'
+
+T = TypeVar('T', bound='D')
+class C(Generic[T]): ...
+
+class A: ...
+class D: ...
