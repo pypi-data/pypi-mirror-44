@@ -1,0 +1,28 @@
+from setuptools import setup, find_packages
+from codecs import open
+from os import path
+
+here = path.abspath(path.dirname(__file__))
+
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
+setup(
+    name='kwargs',
+    version='1.0.1',
+    description='Python micro-framework',
+    long_description=long_description,
+    url='https://github.com/JakubTesarek/kwargs',
+    author='Jakub Tesárek',
+    author_email='jakub@tesarek.me',
+    license='GNU GPL v2',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+    ],
+    keywords='framework',
+    packages=find_packages(),
+    extras_require={
+        'test': ['pytest', 'pylint', 'pytest-cov'],
+    }
+)
