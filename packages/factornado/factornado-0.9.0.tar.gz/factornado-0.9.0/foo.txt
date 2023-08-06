@@ -1,0 +1,119 @@
+running pytest
+running egg_info
+writing dependency_links to factornado.egg-info/dependency_links.txt
+writing top-level names to factornado.egg-info/top_level.txt
+writing requirements to factornado.egg-info/requires.txt
+writing factornado.egg-info/PKG-INFO
+reading manifest file 'factornado.egg-info/SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+writing manifest file 'factornado.egg-info/SOURCES.txt'
+running build_ext
+============================= test session starts ==============================
+platform linux -- Python 3.5.4, pytest-3.2.1, py-1.4.34, pluggy-0.4.0 -- /home/journois/miniconda/envs/test-factornado-35/bin/python
+cachedir: .cache
+rootdir: /home/journois/sandbox/factornado, inifile: setup.cfg
+collecting ... collected 18 items
+
+tests/test_examples.py::test_minimal PASSED
+tests/test_examples.py::test_minimal_logs PASSED
+tests/test_examples.py::test_registry_hello PASSED
+tests/test_examples.py::test_registry_register PASSED
+tests/test_examples.py::test_registry_heartbeat PASSED
+tests/test_examples.py::test_registry_minimal PASSED
+tests/test_examples.py::test_tasks_hello PASSED
+tests/test_examples.py::test_tasks_action_simple PASSED
+tests/test_examples.py::test_tasks_action_priority PASSED
+tests/test_examples.py::test_tasks_force_simple PASSED
+tests/test_examples.py::test_tasks_force_priority PASSED
+tests/test_examples.py::test_tasks_assignOne_simple PASSED
+tests/test_examples.py::test_tasks_assignOne_double PASSED
+tests/test_examples.py::test_get_by_key PASSED
+tests/test_examples.py::test_get_by_status PASSED
+tests/test_examples.py::test_periodic_task FAILED
+tests/test_factornado.py::test_true PASSED
+tests/test_logger.py::test_stream_logger PASSED
+
+=================================== FAILURES ===================================
+______________________________ test_periodic_task ______________________________
+
+self = <class 'test_examples.self.<locals>.s'>
+
+    def test_periodic_task(self):
+        url = 'http://127.0.0.1:{port}/periodictask'.format(port=registry.app.get_port())
+    
+        # We call '/latest' in a loop till at least 3 documents have been created.
+        timeout = pd.Timestamp.utcnow() + pd.Timedelta(60, 's')
+        while True:
+            r = requests.get(url + '/latest')
+            r.raise_for_status()
+            if r.text != 'null':
+                doc = r.json()
+                if doc['nb'] > 3:
+                    break
+                elif pd.Timestamp.utcnow() > timeout:
+>                   raise TimeoutError('Timout reached with {} docs only'.format(doc['nb']))
+E                   TimeoutError: Timout reached with 1 docs only
+
+tests/test_examples.py:434: TimeoutError
+----------------------------- Captured stdout call -----------------------------
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+{"_id":"5b345f3ac49dea203ef8d902","dt":"2018-06-28T04:08:26.646000","nb":1}
+===================== 1 failed, 17 passed in 63.85 seconds =====================
