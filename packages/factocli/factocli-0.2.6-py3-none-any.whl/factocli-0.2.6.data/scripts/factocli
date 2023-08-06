@@ -1,0 +1,68 @@
+#!python
+
+
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function, unicode_literals
+from PyInquirer import style_from_dict, Token, prompt, Separator
+from examples import custom_style_1
+from examples import custom_style_2
+from examples import custom_style_3
+from pprint import pprint
+import os, errno
+import wget
+import urllib.request
+import shutil
+from pathlib import Path
+import subprocess
+
+#Custom Made Imports
+
+from custom_imports import install_server
+from custom_imports import update_server
+from custom_imports import remove_server
+
+
+
+
+
+def ask_what_to_do():
+    what_to_do_prompt = {
+        'type': 'list',
+        'name': 'mainoption',
+        'message': 'What do you want to do?',
+        'choices': [
+            Separator(),
+            'Install Latest Stable Server',
+            'Install Latest Experimental Server', 
+            Separator(),
+            'Update Existing Server',
+            Separator(), 
+            'Install Webserver. Communicates with a TCP Socket (Socket IO)',
+            'Install HTTP API. For Developers',
+            Separator(),
+            'Install Socket IO Android App API. Required for the android app!'
+            ]
+    }
+    answers = prompt(what_to_do_prompt, style=custom_style_3)
+    return answers['mainoption']
+
+
+
+def main():
+    option = ask_what_to_do()
+    if(option == 'Install Latest Experimental Server'):
+        install_server.experimental_server_main()
+
+        
+    if(option == 'Update Existing Server'):
+        update_server.update_main()
+
+    
+    if(option == 'Get Installed Server Version'):
+        print("Getting the installed server version")
+        
+
+
+if __name__ == '__main__':
+    main()
