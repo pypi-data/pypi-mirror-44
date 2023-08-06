@@ -1,0 +1,77 @@
+---
+- project:
+    check:
+      jobs:
+        - kolla-build-centos-binary
+        - kolla-build-centos-source
+        - kolla-ansible-centos-source
+        - kolla-ansible-centos-binary
+        - kolla-ansible-centos-source-upgrade
+        - tripleo-build-containers-centos-7:
+            voting: true
+            files:
+              - ^.zuul.d/centos.yaml$
+              - ^docker/.*$
+              - ^kolla/.*$
+              - ^requirements.txt$
+              - ^setup.cfg$
+              - ^setup.py$
+        - kolla-ansible-bifrost-centos-source:
+            files: ^docker\/bifrost\/.*
+    gate:
+      jobs:
+        - kolla-build-centos-source
+        - tripleo-build-containers-centos-7:
+            voting: true
+            files:
+              - ^.zuul.d/centos.yaml$
+              - ^docker/.*$
+              - ^kolla/.*$
+              - ^requirements.txt$
+              - ^setup.cfg$
+              - ^setup.py$
+    periodic:
+      jobs:
+        - kolla-publish-centos-source
+        - kolla-publish-centos-binary
+    release:
+      jobs:
+        - kolla-publish-centos-source
+        - kolla-publish-centos-binary
+
+- job:
+    name: kolla-build-centos-binary
+    parent: kolla-base
+    nodeset: kolla-centos
+    voting: false
+    vars:
+      action: build
+      base_distro: centos
+      install_type: binary
+
+- job:
+    name: kolla-publish-centos-binary
+    parent: kolla-build-centos-binary
+    post-run: tests/playbooks/publish.yml
+    vars:
+      publisher: true
+    secrets:
+      - kolla_dockerhub_creds
+
+- job:
+    name: kolla-build-centos-source
+    parent: kolla-base
+    nodeset: kolla-centos
+    vars:
+      action: build
+      base_distro: centos
+      install_type: source
+
+- job:
+    name: kolla-publish-centos-source
+    parent: kolla-build-centos-source
+    post-run: tests/playbooks/publish.yml
+    vars:
+      publisher: true
+    secrets:
+      - kolla_dockerhub_creds
