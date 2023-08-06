@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if form.errors %}
+  <div class="errornotice">
+    <p>{% trans "There were errors processing your form." %}</p>
+    {% for error in form.non_field_errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+    {% for field in form %}
+      {% if field.is_hidden and field.errors %}
+        <p>
+          {% for error in field.errors %}
+          {% blocktrans with name=field.name %}(Hidden field {{name}}) {{ error }}{% endblocktrans %}
+          {% if not forloop.last %}<br>{% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+{% for field in form %}
+  {% if field.is_hidden %}
+    {{ field }}
+  {% else %}
+    {% include "gadjo/widget.html" with field=field %}
+  {% endif %}
+{% endfor %}
