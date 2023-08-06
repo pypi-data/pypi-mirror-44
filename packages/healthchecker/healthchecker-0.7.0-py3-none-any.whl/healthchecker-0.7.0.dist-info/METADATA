@@ -1,0 +1,296 @@
+Metadata-Version: 2.1
+Name: healthchecker
+Version: 0.7.0
+Summary: Check sites health and publish results in a file in Github
+Home-page: https://git.rlab.be/sysadmins/healthchecker
+Author: HacKan
+Author-email: hackan@rlab.be
+License: GPLv3+
+Download-URL: https://git.rlab.be/sysadmins/healthchecker/releases
+Keywords: check ping response monitoring
+Platform: POSIX :: Linux
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: System :: Monitoring
+Classifier: Topic :: Utilities
+Classifier: Typing :: Typed
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Requires-Dist: PyGithub (~=1.43)
+Requires-Dist: requests (~=2.21)
+
+# HealthChecker
+
+A very simple python script to check the *health* of a service: make a GET request to it and if it answers it on time, then it's alive.  
+Additionally, it can write the result of the operation in a git repo hosted on Github. Or notify dead services through a POST.
+
+Actions are logged using Python's standard logger and displayed according to the log level set.
+
+This app was thought mainly for our [status page](https://github.com/rlyehlab/infra-mantenimiento/).
+
+## Requirements
+
+* Python 3.7+
+* PyGithub 1.43+
+* requests 2.21+
+
+## Milestones
+
+- [x] Asynchronous GET requests to services.
+- [x] Create/update files in Github.
+- [x] CLI.
+- [x] Dockerize.
+- [x] Complete instructions on how to deploy it.
+- [x] Allow configurable simple extra checks on services' response body.
+- [x] Make a package.
+
+## Usage
+
+```
+usage: healthchecker [-h] [--repo REPO] [--filename FILENAME]
+                     [--branch BRANCH] [--token TOKEN] [--email EMAIL]
+                     [--notify-url NOTIFY_URL]
+                     [--notify-payload NOTIFY_PAYLOAD]
+                     [--notify-header NOTIFY_HEADER] [--validation VALIDATION]
+                     [url [url ...]]
+
+HealthChecker v0.6.1 by HacKan (https://hackan.net) FOSS under GNU GPL v3.0 or
+newer. Checks URLs through HTTP GET requests to verify their availability.
+Optionally writes the status result to a file in Github. Using Github requires
+the repository name, the filename and an API token. Besides the ones listed
+below, the following env vars exist: HEALTHCHECKER_LOG_LEVEL sets the minimal
+logging level and defaults to info (can be: debug, info, warning, error,
+critical); HEALTHCHECKER_REQUESTS_TIMEOUT sets the amount of time in seconds
+to wait for services to respond and defaults to 10 seconds (setting a very low
+value might cause several false positives). Note: command-line parameters will
+always supersede env vars.
+
+positional arguments:
+  url                   (HEALTHCHECKER_URLS (comma-separated)) URL to check
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --notify-url NOTIFY_URL
+                        (HEALTHCHECKER_NOTIFY_URL) URL to POST the status
+                        notification
+  --notify-payload NOTIFY_PAYLOAD
+                        (HEALTHCHECKER_NOTIFY_PAYLOAD) payload to send to the
+                        notify URL: it is prepended to the comma-separated
+                        list of URLs that failed validation, unless that it
+                        contains the string HEALTHCHECKER_FAILED_URLS (case
+                        sensitive), where it will replace that string by the
+                        comma-separated list of URLs, and send the entire
+                        payload
+  --notify-header NOTIFY_HEADER
+                        (HEALTHCHECKER_NOTIFY_HEADER (comma-separated)) header
+                        to send to the notify URL, which must be specified as
+                        name and value separated by a semicolon: <header
+                        name>:<header value> (this parameter can be repeated
+                        as needed)
+  --validation VALIDATION
+                        (HEALTHCHECKER_URLS_VALIDATION (comma-separated))
+                        string to find in the body of a request to an URL as a
+                        validation, one per URL (or the last one is used for
+                        the remaining URLs) (this parameter can be repeated as
+                        needed)
+
+github options:
+  --repo REPO           (HEALTHCHECKER_GITHUB_REPO) repository in the form of
+                        <user|org>/<repo> (case insensitive), i.e.:
+                        HacKanCuBa/b2rsum
+  --filename FILENAME   (HEALTHCHECKER_GITHUB_FILENAME) filename to modify
+                        (include path if it is in a subdir such as
+                        path/to/file.ext)
+  --branch BRANCH       (HEALTHCHECKER_GITHUB_BRANCH) branch where commits are
+                        done (defaults to master)
+  --token TOKEN         (HEALTHCHECKER_GITHUB_API_TOKEN) API token or
+                        client_id,client_secret (bypasses the one supplied
+                        through the environment)
+  --email EMAIL         (HEALTHCHECKER_GITHUB_COMMITTER_EMAIL) git committer
+                        email (the committer name is hardcoded to
+                        HealthChecker)
+```
+
+### Environment variables
+
+* `HEALTHCHECKER_GITHUB_REPO`: repository in the form of <user|org>/<repo> (case insensitive), i.e.: HacKanCuBa/b2rsum.
+* `HEALTHCHECKER_GITHUB_FILENAME`: filename to modify (include path if it is in a subdir such as path/to/file.ext).
+* `HEALTHCHECKER_GITHUB_BRANCH`: branch where commits are done (defaults to master).
+* `HEALTHCHECKER_GITHUB_API_TOKEN`: API token or client_id,client_secret (bypasses the one supplied through the environment).
+* `HEALTHCHECKER_GITHUB_COMMITTER_EMAIL`: git committer email (the committer name is hardcoded to HealthChecker).
+* `HEALTHCHECKER_URLS`: URLs to check, comma-separated.
+* `HEALTHCHECKER_LOG_LEVEL`: minimal logging level, defaults to info (can be: debug, info, warning, error, critical).
+* `HEALTHCHECKER_REQUESTS_TIMEOUT`: amount of time in decimal seconds to wait for services to respond and defaults to 10 seconds (setting a very low value might cause several false positives).
+* `HEALTHCHECKER_NOTIFY_URL`: URL to send failed checks via POST as notification, comma-separated.
+* `HEALTHCHECKER_URLS_VALIDATION`: comma-separated list of validations to run on given URLs.
+* `HEALTHCHECKER_NOTIFY_PAYLOAD`: payload to send to the notify URL: it is prepended to the comma-separated list of URLs that failed validation, unless that it contains the string `HEALTHCHECKER_FAILED_URLS` (case sensitive), where it will replace that string by the comma-separated list of URLs, and send the entire payload.
+  * Example 1: `HEALTHCHECKER_NOTIFY_PAYLOAD=here comes the failed urls...`
+  * Example 2: `HEALTHCHECKER_NOTIFY_PAYLOAD={"data": "HEALTHCHECKER_FAILED_URLS"}`
+* `HEALTHCHECKER_NOTIFY_HEADERS`: headers to send to the notify URL, which must be specified as name and value separated by a semicolon: `header name`:`header value`, and successive headers separated by comma.
+  * Example 1: `HEALTHCHECKER_NOTIFY_HEADERS=X-Auth:4c18a291d7d8e7946cb9db9cbb3e1f49`
+  * Example 2: `HEALTHCHECKER_NOTIFY_HEADERS=Content-Type:application/json,X-MyVal:1`
+
+### Examples
+
+Simply print checks result:
+
+```
+:~$ healthchecker https://rlab.be adm.rlab.be
+INFO 2019-04-09 01:06:37 Begin checking URL https://rlab.be...
+INFO 2019-04-09 01:06:37 Begin checking URL http://adm.rlab.be...
+INFO 2019-04-09 01:06:37 Finish checking URL https://rlab.be: alive and OK
+INFO 2019-04-09 01:06:37 Finish checking URL http://adm.rlab.be: alive and OK
+```
+
+Notify failed services to an endpoint: `healthchecker --notify-url https://eoc.rlab.be/api/v1/status/ https://rlab.be http://wiki.rlab.be`
+
+Write to a file in Github and be very verbose:
+
+```
+:~$ HEALTHCHECKER_LOG_LEVEL=debug healthchecker --repo rlyehlab/sysadmins --filename data/healthcheck.json --token ab410...2cc https://git.rlab.be
+INFO 2019-04-09 01:07:32 Begin checking URL https://git.rlab.be...
+ERROR 2019-04-09 01:07:32 Error GETing data from/to https://git.rlab.be: ConnectionError(MaxRetryError("HTTPConnectionPool(host='git.rlab.be', port=80): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x6ac59ffbd001>: Failed to establish a new connection: [Errno -2] Name or service not known'))"))
+DEBUG 2019-04-09 01:07:32 Request to https://git.rlab.be took 0.18 seconds
+INFO 2019-04-09 01:07:32 Finish checking URL http://git.rlab.be: dead
+INFO 2019-04-09 01:07:33 Getting repository information...
+INFO 2019-04-09 01:07:38 File data/healthcheck.json updated: 0335a8088f5aff42f078a9396916c8adbcc1a6c3
+```
+
+Parameters can be passed through env vars and/or through command-line indistinctly (command-line parameters will always supersede env vars):
+
+```
+:~$ HEALTHCHECKER_URLS_VALIDATION="Services | Administration,Adventurous writings by R'lyeh Sysadmins" healthchecker --notify-url 127.0.0.1:8000 https://adm.rlab.be https://blog.adm.rlab.be
+INFO 2019-04-09 00:59:44 Begin checking URL https://adm.rlab.be...
+INFO 2019-04-09 00:59:44 Begin checking URL https://blog.adm.rlab.be...
+INFO 2019-04-09 00:59:44 Finish checking URL https://blog.adm.rlab.be: alive and OK
+INFO 2019-04-09 00:59:44 Finish checking URL https://adm.rlab.be: alive and OK
+```
+
+All checks were OK, but should one fail...:
+
+```
+HEALTHCHECKER_LOG_LEVEL=debug HEALTHCHECKER_URLS_VALIDATION="Services | Administration,Adventurous writings by R'lyeh Sysadmins" python -m healthchecker --validation "non-existent string" --notify-url 127.0.0.1:8000 https://adm.rlab.be https://blog.adm.rlab.be
+INFO 2019-04-09 01:03:39 Begin checking URL https://adm.rlab.be...
+INFO 2019-04-09 01:03:39 Begin checking URL https://blog.adm.rlab.be...
+DEBUG 2019-04-09 01:03:40 Request to https://blog.adm.rlab.be took 0.18 seconds
+INFO 2019-04-09 01:03:40 Finish checking URL https://blog.adm.rlab.be: alive but not OK
+DEBUG 2019-04-09 01:03:40 Request to https://adm.rlab.be took 0.30 seconds
+INFO 2019-04-09 01:03:40 Finish checking URL https://adm.rlab.be: alive but not OK
+DEBUG 2019-04-09 01:03:40 Notifying http://127.0.0.1:8000 with headers: {} and payload: https://adm.rlab.be,https://blog.adm.rlab.be
+ERROR 2019-04-09 01:03:40 Error POSTing data from/to http://127.0.0.1:8000: ConnectionError(MaxRetryError("HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f49d9767f28>: Failed to establish a new connection: [Errno 111] Connection refused'))"))
+DEBUG 2019-04-09 01:03:40 Request to http://127.0.0.1:8000 took 0.00 seconds
+ERROR 2019-04-09 01:03:40 Could not notify http://127.0.0.1:8000
+```
+
+Note that nobody was listening at `127.0.0.1:8000` so the notification failed as well.
+
+## Run
+
+Clone this repo and install requirements:
+
+* installing requirements with *pip*: `pip install -r requirements`.
+* installing requirements with *pipenv* (recommended): `pipenv install`. Then start virtualenv with `pipenv shell`.
+
+Then run as `python -m healthchecker`. Or install (to your (virtual)environment) with `./setup.py install`. Additionally, you can skip cloning and installing requirements with `pip install healthchecker`.
+
+Alternatively use *Docker*.
+
+### Docker
+
+#### Build
+
+Build locally with `docker build --compress --pull --rm --tag registry.rlab.be/sysadmins/healthchecker:latest .`
+
+#### Pull
+
+You can pull from our registry with `docker pull registry.rlab.be/sysadmins/healthchecker:latest`
+
+#### Run
+
+Run with `docker run --rm registry.rlab.be/sysadmins/healthchecker:latest ...`
+
+Alternatively, use env vars by creating an env file and passing it to docker:
+
+```
+cp env .env
+vim .env  # edit and populate vars
+docker run --rm --env-file .env registry.rlab.be/sysadmins/healthchecker:latest
+```
+
+## Deploy
+
+This can be deployed in a server creating a SystemD service and timer (the image will be pulled by Docker on first run):
+
+1. Service
+
+Create an env file where ever you want, as in `/srv/healthchecker/.env` (protect access to it with linux permissions). It can be anywhere with any name, just point it in the parameter `--env-file` in the service file. Then create the service file `/etc/systemd/system/healthchecker.service`:
+
+```
+[Unit]
+Description=HealthChecker Service
+Requires=docker.service
+After=network.target docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/docker run --rm --env-file /srv/healthchecker/.env registry.rlab.be/sysadmins/healthchecker:latest
+User=root
+Group=docker
+```
+
+Alternatively, you can skip env file usage and write every parameter in the `ExecStart` line, but writing the API token there means it will be visible in the process list which is usually not a good idea.
+
+2. Timer:
+
+Create the timer file `/etc/systemd/system/healthchecker.timer` (use the same name as the service but with the `.timer` extension):
+
+```
+[Unit]
+Description=HealthChecker Service Timer
+
+[Timer]
+OnBootSec=600
+OnUnitActiveSec=5m
+
+[Install]
+WantedBy=multi-user.target
+```
+
+This sample is set to run the service 5 minutes after boot and then every 5 minutes. Read the [documentation](https://wiki.archlinux.org/index.php/Systemd/Timers) if you need to set different parameters.
+
+3. Reload SystemD services: `systemctl daemon-reload`
+4. Enable the timer: `systemctl enable healthchecker.timer`
+5. Start it: `systemctl start healthchecker.timer`
+
+Tip: you can see the execution log with `journalctl -u healthchecker` (or the service name used). Check journalctl help for additional filtering options.
+
+*Thanks @snkisuke for your help with this section*.
+
+## License
+
+**HealthChecker** is made by [HacKan](https://hackan.net) under GNU GPL v3.0+. You are free to use, share, modify and share modifications under the terms of that [license](LICENSE).
+
+    Copyright (C) 2019 HacKan (https://hackan.net)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
