@@ -1,0 +1,89 @@
+Metadata-Version: 2.1
+Name: upysm
+Version: 0.3.9
+Summary: Versatile and flexible Python State Machine library - Micropython Port
+Home-page: https://github.com/pgularski/pysm
+Author: Piotr Gularski
+Author-email: piotr.gularski@gmail.com
+License: MIT
+Description: # upysm
+        Versatile and flexible Python State Machine library - Micropython Port
+        
+        This repository is basically a set of tools to build and deploy (to pypi) the
+        Micropython Port of the [pysm](https://github.com/pgularski/pysm) library.
+        
+        It's successfully tested against the ESP-32S ESP-WROOM-32 NodeMCU board.
+        
+        # Installation
+        
+        ```python
+        import upip
+        upip.install('upysm')
+        ```
+        
+        # Usage
+        Basic usage:
+        
+        ```python
+        import machine
+        import time
+        from pysm import State, StateMachine, Event
+        
+        led = machine.Pin(2, machine.Pin.OUT)
+        
+        
+        def on_enter(state, event):
+            led.value(1)
+            time.sleep(0.1)
+        
+        def on_exit(state, event):
+            led.value(0)
+            time.sleep(0.1)
+        
+        on = State('on')
+        off = State('off')
+        
+        sm = StateMachine('sm')
+        sm.add_state(on, initial=True)
+        sm.add_state(off)
+        
+        sm.add_transition(on, off, events=['off'])
+        sm.add_transition(off, on, events=['on'])
+        
+        on.handlers = {'enter': on_enter, 'exit': on_exit}
+        off.handlers = {'enter': on_enter, 'exit': on_exit}
+        
+        sm.initialize()
+        
+        assert sm.state == on
+        sm.dispatch(Event('off'))
+        assert sm.state == off
+        sm.dispatch(Event('on'))
+        assert sm.state == on
+        
+        ```
+        
+        For more examples and API description refer to the [pysm documentation](http://pysm.readthedocs.io/).
+        
+Keywords: finite state machine automaton fsm hsm pda micropython
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: Implementation :: MicroPython
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: Telecommunications Industry
+Classifier: Natural Language :: English
+Classifier: Topic :: Software Development
+Classifier: Topic :: Software Development :: Libraries
+Description-Content-Type: text/markdown
