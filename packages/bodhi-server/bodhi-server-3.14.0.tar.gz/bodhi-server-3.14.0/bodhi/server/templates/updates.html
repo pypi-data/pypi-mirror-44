@@ -1,0 +1,50 @@
+<%!
+def inherit(context):
+  if context.get('chrome'):
+    return 'master.html'
+  return None
+%>
+<%inherit file="${inherit(context)}"/>
+
+<%namespace name="tables" file="tables.html"/>
+
+<link rel="alternate" type="application/atom+xml" title="New Updates" href="${request.route_url('updates_rss') + '?' + request.query_string}"/>
+
+% if chrome:
+<div class="container p-t-2">
+  <div class="row">
+    <div class="col-md-12">
+      <h3>Updates <small>
+        % if page == 1:
+        <a href="${request.route_url('updates_rss') + '?' + request.query_string}">
+          <span class="fa fa-rss"></span>
+        </a>
+        % endif
+        </small>
+      </h3>
+      ${self.pager.render(page, pages)}
+  % endif
+      ${tables.updates(updates, display_user, display_request)}
+  % if chrome:
+      ${self.pager.render(page, pages)}
+  % if active_releases:
+    <p>
+      <a href="${request.route_url('updates') + '?' \
+        + request.query_string.split('active_releases', 1)[0] \
+        + (request.query_string.split('active_releases', 1)[1].partition('&')[2] or '')}"
+         class="btn btn-sm btn-secondary">
+        Include old releases
+      </a>
+    </p>
+  % else:
+    <p>
+      <a href="${request.route_url('updates') + '?active_releases=true&' + request.query_string}"
+         class="btn btn-sm btn-secondary">
+        Exclude old releases
+      </a>
+    </p>
+  % endif
+    </div>
+  </div>
+</div>
+% endif
