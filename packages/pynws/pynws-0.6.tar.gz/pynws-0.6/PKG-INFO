@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: pynws
+Version: 0.6
+Summary: Python library to retrieve observations and forecasts from NWS/NOAA
+Home-page: https://github.com/MatthewFlamm/pynws
+Author: Matthew Flamm
+Author-email: matthewflamm0@gmail.com
+License: MIT License
+Description: # pynws
+        
+        A python library to asynchronously retrieve weather observation from NWS/NOAA.
+        
+        ## Example
+        
+        ```python
+        import asyncio
+        import aiohttp
+        import pynws
+        
+        PHILLY = (39.95, -75.16)
+        USERID = 'testing@address.xyz'
+        
+        async def defaults():
+            async with aiohttp.ClientSession() as session:
+                nws = pynws.Nws(session, latlon=PHILLY, userid=USERID)
+                stations = await nws.stations()
+                nws.station = stations[0]
+                observations = await nws.observations()
+                forecast = await nws.forecast()
+        
+        loop = asyncio.get_event_loop()
+        nws = loop.run_until_complete(defaults())
+        ```
+        
+        
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Description-Content-Type: text/markdown
