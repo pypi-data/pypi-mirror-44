@@ -1,0 +1,908 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" uuid="{af7bb3af-52b0-4ecd-adc7-e7a86e65ba2a}">
+  <label></label>
+  <ports/>
+  <node id="org.sysess.sympathy.data.json.removekeyjson" port_format="1.1" uuid="{0f460d8c-71ad-4dea-97c4-45d7b27be24e}" x="2475.0" y="2050.0">
+    <label>Remove key JSON</label>
+    <version>0.1</version>
+    <description></description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "all": {
+        "editor": null,
+        "label": "Remove all",
+        "order": 1,
+        "type": "boolean",
+        "value": false
+      },
+      "key": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "JSON key",
+        "list": ["address", "first_name", "last_name", "number", "numbers", "root", "street"],
+        "mode": "selected",
+        "order": 0,
+        "type": "list",
+        "value": [0],
+        "value_names": ["address"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="json" uuid="{f14876fe-9f0d-4e55-91ff-008ad242f12b}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="json" type_base="json" uuid="{eb18ce40-7fc5-4728-88ac-c2745a0319a2}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.create.createtable" port_format="1.1" uuid="{1ba71ee4-3ac5-4fbe-b4a9-5a3d58e25e71}" x="2775.0" y="1800.0">
+    <label>Manually Create Table</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "json_table": {
+        "editor": null,
+        "label": "GUI",
+        "order": 0,
+        "type": "string",
+        "value": "[[\"first_name\", \"U\", [\"Karin\", \"Dan\"]], [\"last_name\", \"U\", [\"Boye\", \"Andersson\"]], [\"number[0]\", \"U\", [\"031-66788\", \"0515-66788\"]], [\"number[1]\", \"U\", [\"031-100567\", \"0500-100567\"]], [\"street\", \"U\", [\"\", \"Tynneredsv\\u00e4gen 16\"]]]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{7bd30ea1-b27b-4fd0-8556-bdeea057397b}">
+        <label>Manually created table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{45c22e6e-0a9d-453c-8c36-75b93dec36b0}" x="2900.0" y="2000.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! The JSON split did not produce 2 JSONs"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: len(arg)!=2"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="[json]" type_base="&lt;a&gt;" uuid="{56117e06-ac60-41db-9e88-de2436d8db5d}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="[json]" type_base="&lt;a&gt;" uuid="{40883cc4-cc2e-45d1-b8d0-4f97dd05042f}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{493176eb-46bc-4ac4-bb30-7af56d36270c}" x="2625.0" y="1900.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! - the JSON structure contains \"root\""
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: \"root\" in arg.get() "
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{4507b925-b8fc-43bb-9980-47a669d09ac8}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{732fbdc8-b75b-4fea-8f43-e76b6b170bc2}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{4f1c5940-1385-4c75-b531-7feb6e1f03e0}" x="1950.0" y="1950.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! - the read XML does contain \"root\""
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: \"root\" not in arg.get() "
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{73269b7d-5cb6-4e45-930a-e984abe355c2}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{b86ead28-e528-487c-b634-c4a3c958f279}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.json.importjson" port_format="1.1" uuid="{575b1dd5-87d1-45c5-bdc5-aa9652f22f0a}" x="1800.0" y="1950.0">
+    <label>JSON</label>
+    <version>0.1</version>
+    <description></description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "active_importer": {
+        "editor": null,
+        "label": "Importer",
+        "order": 0,
+        "type": "string",
+        "value": "Auto"
+      },
+      "custom_importer_data": {
+        "Auto": {
+          "label": "",
+          "order": 0,
+          "type": "group"
+        },
+        "JSON": {
+          "label": "",
+          "type": "group"
+        },
+        "XML": {
+          "label": "",
+          "type": "group"
+        },
+        "label": "",
+        "order": 1,
+        "type": "group"
+      },
+      "fail_strategy": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Action on import failure",
+        "list": ["Exception", "Create Empty Entry"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Exception"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="" scheme="text" type="datasource" type_base="datasource" uuid="{42d20068-96ac-4e74-88a0-7fac72d63ec6}">
+        <label>Datasource</label>
+      </input>
+      <output key="port1" scheme="hdf5" type="json" type_base="json" uuid="{c2eb2a65-b087-4e2d-a21e-feed1c001e01}">
+        <label>Imported Json</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{63642378-0980-4024-bacf-16611ba95683}" x="2625.0" y="2050.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! \"root\" does contain \"address\""
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: \"address\" in arg.get()[\"root\"]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{ead3437c-a7f8-4cb0-88e8-e426019effe6}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{d8d6ae8e-6cfd-49c0-9076-fb575c5428f8}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.datasources.filedatasource" port_format="1.1" uuid="{72a2c2c8-0ca6-437b-b911-6c1424365584}" x="1675.0" y="1950.0">
+    <label>Datasource</label>
+    <version>1.1</version>
+    <description>Select a data source.</description>
+    <author>Alexander Busck</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "datasource_type": {
+        "editor": null,
+        "label": "Datasource type",
+        "list": ["File", "Database"],
+        "mode": "selected",
+        "order": 9,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["File"]
+      },
+      "db_connection_string": {
+        "editor": null,
+        "label": "Connection string",
+        "order": 8,
+        "type": "string",
+        "value": ""
+      },
+      "db_databasename": {
+        "editor": null,
+        "label": "Database name",
+        "order": 5,
+        "type": "string",
+        "value": ""
+      },
+      "db_driver": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Database driver",
+        "list": ["SQL Server"],
+        "mode": "selected",
+        "order": 3,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["SQL Server"]
+      },
+      "db_method": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": ["ODBC", "SQLAlchemy"],
+          "type": "combobox"
+        },
+        "label": "Database connection method",
+        "order": 2,
+        "type": "string",
+        "value": "ODBC"
+      },
+      "db_password": {
+        "editor": null,
+        "label": "Password",
+        "order": 7,
+        "type": "string",
+        "value": ""
+      },
+      "db_servername": {
+        "editor": null,
+        "label": "Server name",
+        "order": 4,
+        "type": "string",
+        "value": ""
+      },
+      "db_sqlalchemy_engine_url": {
+        "editor": null,
+        "label": "SQLAlchemy engine URL",
+        "order": 1,
+        "type": "string",
+        "value": "mssql+pyodbc:///"
+      },
+      "db_user": {
+        "editor": null,
+        "label": "User",
+        "order": 6,
+        "type": "string",
+        "value": ""
+      },
+      "filename": {
+        "editor": {
+          "filter": ["Any files (*)"],
+          "states": null,
+          "type": "filename"
+        },
+        "label": "Filename",
+        "order": 0,
+        "type": "string",
+        "value": "example.xml"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{452cccf7-e3fb-469f-8031-dc4100039b1b}">
+        <label>Datasource with path to file</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.json.splitonkeyjson" port_format="1.1" uuid="{81cfcbad-a37b-45db-913b-6a95fa300437}" x="2775.0" y="2000.0">
+    <label>Split on key JSON</label>
+    <version>0.1</version>
+    <description>Split a JSON structure into multiple JSONs</description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "key": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "JSON key",
+        "list": ["&lt;root&gt;", "number", "numbers"],
+        "mode": "selected",
+        "order": 0,
+        "type": "list",
+        "value": [1],
+        "value_names": ["number"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="json" uuid="{370fb24c-5043-4e60-8c4d-947e93eb255a}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="[json]" type_base="[json]" uuid="{41a6930c-7a1d-4320-882e-045ad71245d6}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{9375483f-7bfc-43d8-ae83-0db4af3de4b0}" x="2900.0" y="1900.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! The JSON split did not produce 2 JSONs"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: len(arg)!=2"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="[json]" type_base="&lt;a&gt;" uuid="{92b7d6be-0de5-4f96-929b-aad69786f2dc}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="[json]" type_base="&lt;a&gt;" uuid="{8487e5d0-2f88-4719-8edc-4a2918662626}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.json.selectkeyjson" port_format="1.1" uuid="{aa6888c1-692b-4edb-94ef-c7335a4625ee}" x="2475.0" y="1900.0">
+    <label>Select key JSON</label>
+    <version>0.1</version>
+    <description></description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "key": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "JSON key",
+        "list": ["number", "root", "numbers", "address"],
+        "mode": "selected",
+        "order": 0,
+        "passthrough": false,
+        "type": "list",
+        "value": [3],
+        "value_names": ["address"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="json" uuid="{0fda5bf2-1b51-4b85-91a4-64630d42392c}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="json" type_base="json" uuid="{3d6320c8-d75d-4abb-87dc-c93ac092f27e}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.json.jsontotable" port_format="1.1" uuid="{aabfc937-7864-49d9-9241-912af7209f31}" x="2775.0" y="1700.0">
+    <label>JSON to Table</label>
+    <version>0.1</version>
+    <description></description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "minimize_col_names": {
+        "editor": null,
+        "label": "Minimize colum names",
+        "order": 1,
+        "type": "boolean",
+        "value": true
+      },
+      "nomask": {
+        "editor": null,
+        "label": "Use zero-like values instead of masks",
+        "order": 2,
+        "type": "boolean",
+        "value": true
+      },
+      "table_kind": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "Multiple rows"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="json" uuid="{cbc4c731-9ce5-44bd-a722-d807a1b7c47c}">
+        <label>Input JSON object</label>
+      </input>
+      <output key="output" scheme="hdf5" type="table" type_base="table" uuid="{3c009272-9ebd-43b3-a99a-c917e2b83cb7}">
+        <label>Output table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{db542dd0-72ae-4916-9338-a44e895ba094}" x="2100.0" y="1950.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! \"root\" does not contain \"address\""
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: \"address\" not in arg.get()[\"root\"]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{7f440243-4643-4dd9-82be-fc3595848b1c}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{9580c64f-a741-4444-8116-bea69c1a0f87}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.json.splitonkeyjson" port_format="1.1" uuid="{e41ed92e-b0f9-4dea-bfa5-d1e6fa0d68f9}" x="2775.0" y="1900.0">
+    <label>Split on key JSON</label>
+    <version>0.1</version>
+    <description>Split a JSON structure into multiple JSONs</description>
+    <author>Samuel Genheden</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "key": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "JSON key",
+        "list": ["&lt;root&gt;", "number", "numbers"],
+        "mode": "selected",
+        "order": 0,
+        "type": "list",
+        "value": [0],
+        "value_names": ["&lt;root&gt;"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="json" uuid="{5f84b497-5471-47e8-af73-50c42ed3a68e}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="[json]" type_base="[json]" uuid="{e44f0635-cea0-41c6-b3d8-1b6cfdbe95ab}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.assertequaltable" port_format="1.1" uuid="{e4f24d02-3050-4dbc-9e66-dd3e0e17f71e}" x="2975.0" y="1725.0">
+    <label>Assert Equal Table</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "abs_tol": {
+        "editor": null,
+        "label": "Absolute tolerance",
+        "order": 6,
+        "type": "float",
+        "value": 1e-08
+      },
+      "col_attrs": {
+        "editor": null,
+        "label": "Compare column attributes",
+        "order": 1,
+        "type": "boolean",
+        "value": true
+      },
+      "col_order": {
+        "editor": null,
+        "label": "Compare column order",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "inexact_float": {
+        "editor": null,
+        "label": "Approximate comparison of floats",
+        "order": 4,
+        "type": "boolean",
+        "value": false
+      },
+      "rel_tol": {
+        "editor": null,
+        "label": "Relative tolerance",
+        "order": 5,
+        "type": "float",
+        "value": 1e-05
+      },
+      "tbl_attrs": {
+        "editor": null,
+        "label": "Compare table attributes",
+        "order": 3,
+        "type": "boolean",
+        "value": true
+      },
+      "tbl_names": {
+        "editor": null,
+        "label": "Compare table names",
+        "order": 2,
+        "type": "boolean",
+        "value": true
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="table1" scheme="hdf5" type="table" type_base="table" uuid="{71e8bd04-3cff-45a5-b9b9-aa74b751ca69}">
+        <label>Table A</label>
+      </input>
+      <input key="table2" scheme="hdf5" type="table" type_base="table" uuid="{01a5636b-0b58-4784-834b-19e07f4a1e08}">
+        <label>Table B</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="table" uuid="{ae840ae1-7603-4d31-8b4c-7d7da29ef27b}">
+        <label>Output Table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{f8bc4fd4-56e9-4f74-a1a0-c4c84784f8fe}" x="2250.0" y="1950.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2018, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error! There are not 2 address in the JSON"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: len(arg.get()[\"root\"][\"address\"]) != 2"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{5e70bd07-1455-44a2-9829-341f32bd69d9}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{59a2c273-d905-4822-9997-64a4981f951c}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <connection type="json" uuid="{302508de-2c11-4ea6-80d6-db3ff7eeb08e}">
+    <source node="{493176eb-46bc-4ac4-bb30-7af56d36270c}" port="{732fbdc8-b75b-4fea-8f43-e76b6b170bc2}"/>
+    <destination node="{81cfcbad-a37b-45db-913b-6a95fa300437}" port="{370fb24c-5043-4e60-8c4d-947e93eb255a}"/>
+  </connection>
+  <connection type="json" uuid="{52707c6a-2508-4c86-93dd-0167396bb531}">
+    <source node="{f8bc4fd4-56e9-4f74-a1a0-c4c84784f8fe}" port="{59a2c273-d905-4822-9997-64a4981f951c}"/>
+    <destination node="{0f460d8c-71ad-4dea-97c4-45d7b27be24e}" port="{f14876fe-9f0d-4e55-91ff-008ad242f12b}"/>
+  </connection>
+  <connection type="json" uuid="{5441ea7f-c830-4a4b-bf31-13525e6f8281}">
+    <source node="{575b1dd5-87d1-45c5-bdc5-aa9652f22f0a}" port="{c2eb2a65-b087-4e2d-a21e-feed1c001e01}"/>
+    <destination node="{4f1c5940-1385-4c75-b531-7feb6e1f03e0}" port="{73269b7d-5cb6-4e45-930a-e984abe355c2}"/>
+  </connection>
+  <connection type="json" uuid="{577eec03-adde-4182-b750-503c4f69729a}">
+    <source node="{493176eb-46bc-4ac4-bb30-7af56d36270c}" port="{732fbdc8-b75b-4fea-8f43-e76b6b170bc2}"/>
+    <destination node="{aabfc937-7864-49d9-9241-912af7209f31}" port="{cbc4c731-9ce5-44bd-a722-d807a1b7c47c}"/>
+  </connection>
+  <connection type="table" uuid="{579e3e62-9d94-46d6-abff-5dd1cd40c353}">
+    <source node="{aabfc937-7864-49d9-9241-912af7209f31}" port="{3c009272-9ebd-43b3-a99a-c917e2b83cb7}"/>
+    <destination node="{e4f24d02-3050-4dbc-9e66-dd3e0e17f71e}" port="{71e8bd04-3cff-45a5-b9b9-aa74b751ca69}"/>
+  </connection>
+  <connection type="[json]" uuid="{5b5e98ce-1e06-41a7-9615-3c9a308f717a}">
+    <source node="{81cfcbad-a37b-45db-913b-6a95fa300437}" port="{41a6930c-7a1d-4320-882e-045ad71245d6}"/>
+    <destination node="{45c22e6e-0a9d-453c-8c36-75b93dec36b0}" port="{56117e06-ac60-41db-9e88-de2436d8db5d}"/>
+  </connection>
+  <connection type="table" uuid="{84573b8f-d21d-451b-81ba-a5822016ae42}">
+    <source node="{1ba71ee4-3ac5-4fbe-b4a9-5a3d58e25e71}" port="{7bd30ea1-b27b-4fd0-8556-bdeea057397b}"/>
+    <destination node="{e4f24d02-3050-4dbc-9e66-dd3e0e17f71e}" port="{01a5636b-0b58-4784-834b-19e07f4a1e08}"/>
+  </connection>
+  <connection type="json" uuid="{84a7526f-7a0a-455f-b161-264f0ca04876}">
+    <source node="{493176eb-46bc-4ac4-bb30-7af56d36270c}" port="{732fbdc8-b75b-4fea-8f43-e76b6b170bc2}"/>
+    <destination node="{e41ed92e-b0f9-4dea-bfa5-d1e6fa0d68f9}" port="{5f84b497-5471-47e8-af73-50c42ed3a68e}"/>
+  </connection>
+  <connection type="json" uuid="{9b8d1011-0e69-4b21-98ed-20676a63fd68}">
+    <source node="{0f460d8c-71ad-4dea-97c4-45d7b27be24e}" port="{eb18ce40-7fc5-4728-88ac-c2745a0319a2}"/>
+    <destination node="{63642378-0980-4024-bacf-16611ba95683}" port="{ead3437c-a7f8-4cb0-88e8-e426019effe6}"/>
+  </connection>
+  <connection type="datasource" uuid="{9dbeb362-c081-4c34-b6bc-4442b5303d4e}">
+    <source node="{72a2c2c8-0ca6-437b-b911-6c1424365584}" port="{452cccf7-e3fb-469f-8031-dc4100039b1b}"/>
+    <destination node="{575b1dd5-87d1-45c5-bdc5-aa9652f22f0a}" port="{42d20068-96ac-4e74-88a0-7fac72d63ec6}"/>
+  </connection>
+  <connection type="[json]" uuid="{ade2d0e7-bbd1-4cfc-990d-cdf09b9a16b2}">
+    <source node="{e41ed92e-b0f9-4dea-bfa5-d1e6fa0d68f9}" port="{e44f0635-cea0-41c6-b3d8-1b6cfdbe95ab}"/>
+    <destination node="{9375483f-7bfc-43d8-ae83-0db4af3de4b0}" port="{92b7d6be-0de5-4f96-929b-aad69786f2dc}"/>
+  </connection>
+  <connection type="json" uuid="{b030b07f-1da3-43d1-ba77-2a2beb2a6782}">
+    <source node="{db542dd0-72ae-4916-9338-a44e895ba094}" port="{9580c64f-a741-4444-8116-bea69c1a0f87}"/>
+    <destination node="{f8bc4fd4-56e9-4f74-a1a0-c4c84784f8fe}" port="{5e70bd07-1455-44a2-9829-341f32bd69d9}"/>
+  </connection>
+  <connection type="json" uuid="{cff7c78f-77fb-4d5d-b1bf-d3e6ef5a3c65}">
+    <source node="{aa6888c1-692b-4edb-94ef-c7335a4625ee}" port="{3d6320c8-d75d-4abb-87dc-c93ac092f27e}"/>
+    <destination node="{493176eb-46bc-4ac4-bb30-7af56d36270c}" port="{4507b925-b8fc-43bb-9980-47a669d09ac8}"/>
+  </connection>
+  <connection type="json" uuid="{d721a85a-0bc9-45cc-9ac2-b7b1b0b6b9e7}">
+    <source node="{4f1c5940-1385-4c75-b531-7feb6e1f03e0}" port="{b86ead28-e528-487c-b634-c4a3c958f279}"/>
+    <destination node="{db542dd0-72ae-4916-9338-a44e895ba094}" port="{7f440243-4643-4dd9-82be-fc3595848b1c}"/>
+  </connection>
+  <connection type="json" uuid="{ddbcb883-380d-4bc2-98ee-cc50dd4abb50}">
+    <source node="{f8bc4fd4-56e9-4f74-a1a0-c4c84784f8fe}" port="{59a2c273-d905-4822-9997-64a4981f951c}"/>
+    <destination node="{aa6888c1-692b-4edb-94ef-c7335a4625ee}" port="{0fda5bf2-1b51-4b85-91a4-64630d42392c}"/>
+  </connection>
+</flow>

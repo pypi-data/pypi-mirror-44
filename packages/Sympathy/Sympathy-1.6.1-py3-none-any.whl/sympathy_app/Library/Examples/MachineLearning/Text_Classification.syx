@@ -1,0 +1,827 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" height="50.0" uuid="{bd186dbb-b9d2-43a6-bc02-eda17cabfd45}" width="50.0" x="0.0" y="0.0" id="">
+  <label></label>
+  <description></description>
+  <author></author>
+  <copyright></copyright>
+  <version></version>
+  <min_version></min_version>
+  <icon/>
+  <aggregation type="json">null</aggregation>
+  <libraries type="json">[]</libraries>
+  <pythonpaths type="json">[]</pythonpaths>
+  <environment type="json">{"NO_TEST": ""}</environment>
+  <parameters type="json">{"environment": {"NO_TEST": ""}}</parameters>
+  <ports/>
+  <flow cls="Flow" height="50.0" uuid="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" width="50.0" x="720.0" y="1572.0" id="">
+    <label>Create bag-of-words</label>
+    <description></description>
+    <author></author>
+    <copyright></copyright>
+    <version></version>
+    <min_version></min_version>
+    <icon/>
+    <aggregation type="json">{"selected_uuids": ["{91e6ed6a-2814-4d9a-a01f-58bfb7996514}"], "conf_view": "TabBuilder", "override": true}</aggregation>
+    <libraries type="json">[]</libraries>
+    <pythonpaths type="json">[]</pythonpaths>
+    <parameters type="json">{}</parameters>
+    <ports>
+      <input index="0" key="Texts" optional="False" parent="True" scheme="hdf5" type="[text]" uuid="{1f65e0f7-597a-4c28-aebf-c4934026bf7d}" x="660.0" y="1572.0">
+        <label>Texts</label>
+        <description>Texts</description>
+      </input>
+      <input index="1" key="Category" optional="False" parent="True" scheme="hdf5" type="table" uuid="{80161f67-c7bd-4eee-a083-09ac163e1da6}" x="660.0" y="1644.0">
+        <label>Category</label>
+        <description>Category</description>
+      </input>
+      <output index="0" key="Transformed data" optional="False" parent="True" scheme="hdf5" type="table" uuid="{3b9bd8d4-66b3-4d72-ab55-20d57a726706}" x="1284.0" y="1560.0">
+        <label>Transformed data</label>
+        <description>Transformed data</description>
+      </output>
+      <output index="1" key="Vocabulary" optional="False" parent="True" scheme="hdf5" type="[table]" uuid="{bc66dc8c-ab42-42d4-9d96-e18f470e4326}" x="1284.0" y="1476.0">
+        <label>Vocabulary</label>
+        <description>Vocabulary</description>
+      </output>
+      <output index="2" key="Category" optional="False" parent="True" scheme="hdf5" type="table" uuid="{deb8414a-3224-4868-bc53-16117b26aa7e}" x="1284.0" y="1644.0">
+        <label>Category</label>
+        <description>Category</description>
+      </output>
+    </ports>
+    <node id="org.sysess.sympathy.machinelearning.transform_text" uuid="{1f8fc013-cab6-404f-b04b-a771e7918995}" x="1092.0" y="1560.0">
+      <label>Transform text</label>
+      <description>Applies a transformation model to the given text data</description>
+      <author>Mathias Broxvall</author>
+      <copyright>(C) 2017 System Engineering Software Society</copyright>
+      <version>0.1</version>
+      <parameters type="json">{"type": "group", "names method": {"description": "Method used to generate output names", "label": "Output names", "order": 0, "type": "string", "value": "From model", "editor": {"type": "combobox", "options": ["By index", "From model"]}}, "transpose": {"description": "Transposes output data, suitable for large number of features (eg. word counts)", "editor": null, "label": "Transpose output", "order": 1, "type": "boolean", "value": false}}</parameters>
+      <ports>
+        <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{2e39c966-bab3-4862-9754-a91238538e43}">
+          <label>Input model</label>
+          <description>Input model</description>
+        </input>
+        <input key="X" scheme="hdf5" type="[text]" type_base="[text]" uuid="{7e32413b-d98f-4273-8c6c-c3fbd4c59da2}">
+          <label>X</label>
+          <description>X</description>
+        </input>
+        <output key="output" scheme="hdf5" type="table" type_base="table" uuid="{a4aa61e2-a79d-458d-afc6-d84d8706dbc0}">
+          <label>Output table</label>
+          <description>Output table</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.machinelearning.fit_text" port_format="1.1" uuid="{7bd9a81a-eb87-4b5e-8874-416c95d0a7bb}" x="996.0" y="1476.0">
+      <label>Fit Texts</label>
+      <description>Fits a model using lists of texts. Use "Create Input Port &gt; Y" for supervised training</description>
+      <author>Mathias Broxvall</author>
+      <copyright>(C) 2017 System Engineering Software Society</copyright>
+      <version>0.1</version>
+      <parameters type="json">{"type": "group"}</parameters>
+      <ports>
+        <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{ead78197-cabd-410f-bd93-3455652ec6c8}">
+          <label>Input model</label>
+          <description>Input model</description>
+        </input>
+        <input key="X" scheme="hdf5" type="[text]" type_base="[text]" uuid="{eb31de63-1d2a-4ad0-b511-61d24eb977a4}">
+          <label>X</label>
+          <description>X</description>
+        </input>
+        <output key="out-model" scheme="hdf5" type="model" type_base="model" uuid="{f07647cb-6d14-4047-9774-e2d9d7c3a4f2}">
+          <label>Output model</label>
+          <description>Output model</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.machinelearning.count_vectorizer" uuid="{91e6ed6a-2814-4d9a-a01f-58bfb7996514}" x="852.0" y="1416.0">
+      <label>Count vectorizer (text)</label>
+      <description>Convert a collection of text documents to a matrix of token counts</description>
+      <author>Mathias Broxvall</author>
+      <copyright>(C) 2017 System Engineering Software Society</copyright>
+      <version>0.1</version>
+      <parameters type="json">{"type": "group", "encoding": {"description": "If bytes or files are given to analyze, this encoding is used to\ndecode.\n", "editor": null, "label": "encoding", "order": 0, "type": "string", "value": "utf-8"}, "decode_error": {"description": "Instruction on what to do if a byte sequence is given to analyze that\ncontains characters not of the given `encoding`. By default, it is\n'strict', meaning that a UnicodeDecodeError will be raised. Other\nvalues are 'ignore' and 'replace'.\n", "editor": null, "label": "decode_error", "order": 1, "type": "string", "value": "strict"}, "strip_accents": {"description": "Remove accents and perform other character normalization\nduring the preprocessing step.\n'ascii' is a fast method that only works on characters that have\nan direct ASCII mapping.\n'unicode' is a slightly slower method that works on any characters.\nNone (default) does nothing.\n\nBoth 'ascii' and 'unicode' use NFKD normalization from\n:func:`unicodedata.normalize`.\n", "editor": null, "label": "strip_accents", "order": 2, "type": "string", "value": "None"}, "analyzer": {"description": "Whether the feature should be made of word or character n-grams.\nOption 'char_wb' creates character n-grams only from text inside\nword boundaries; n-grams at the edges of words are padded with space.\n\nIf a callable is passed it is used to extract the sequence of features\nout of the raw, unprocessed input.\n", "editor": null, "label": "analyzer", "order": 3, "type": "string", "value": "word"}, "ngram_range": {"description": "The lower and upper boundary of the range of n-values for different\nn-grams to be extracted. All values of n such that min_n &lt;= n &lt;= max_n\nwill be used.\n", "editor": null, "label": "ngram_range", "order": 4, "type": "string", "value": "1, 2"}, "stop_words": {"description": "If 'english', a built-in stop word list for English is used.\nThere are several known issues with 'english' and you should\nconsider an alternative (see stop_words).\n\nIf a list, that list is assumed to contain stop words, all of which\nwill be removed from the resulting tokens.\nOnly applies if ``analyzer == 'word'``.\n\nIf None, no stop words will be used. max_df can be set to a value\nin the range [0.7, 1.0) to automatically detect and filter stop\nwords based on intra corpus document frequency of terms.\n", "editor": null, "label": "stop_words", "order": 5, "type": "string", "value": "english"}, "lowercase": {"description": "Convert all characters to lowercase before tokenizing.\n", "editor": null, "label": "lowercase", "order": 6, "type": "string", "value": "True"}, "max_df": {"description": "When building the vocabulary ignore terms that have a document\nfrequency strictly higher than the given threshold (corpus-specific\nstop words).\nIf float, the parameter represents a proportion of documents, integer\nabsolute counts.\nThis parameter is ignored if vocabulary is not None.\n", "editor": null, "label": "max_df", "order": 7, "type": "string", "value": "0.5"}, "min_df": {"description": "When building the vocabulary ignore terms that have a document\nfrequency strictly lower than the given threshold. This value is also\ncalled cut-off in the literature.\nIf float, the parameter represents a proportion of documents, integer\nabsolute counts.\nThis parameter is ignored if vocabulary is not None.\n", "editor": null, "label": "min_df", "order": 8, "type": "string", "value": "20"}, "max_features": {"description": "If not None, build a vocabulary that only consider the top\nmax_features ordered by term frequency across the corpus.\n\nThis parameter is ignored if vocabulary is not None.\n", "editor": null, "label": "max_features", "order": 9, "type": "string", "value": "2000"}, "binary": {"description": "If True, all non zero counts are set to 1. This is useful for discrete\nprobabilistic models that model binary events rather than integer\ncounts.\n", "editor": null, "label": "binary", "order": 10, "type": "string", "value": "False"}}</parameters>
+      <ports>
+        <output key="model" scheme="hdf5" type="model" type_base="model" uuid="{2b2b6262-0159-4f5b-b591-672ad3f7060a}">
+          <label>Model</label>
+          <description>Model</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.machinelearning.extract_attributes" uuid="{f8194851-06f8-455a-8ea5-94ecc53df520}" x="1164.0" y="1476.0">
+      <label>Extract attributes</label>
+      <description>Extract attributes from a fitted model, requires model dependent name for the attribute</description>
+      <author>Mathias Broxvall</author>
+      <copyright>(C) 2017 System Engineering Software Society</copyright>
+      <version>0.1</version>
+      <parameters type="json">{"type": "group", "attribute": {"description": "Name of attribute to extract", "editor": null, "label": "attribute", "order": 0, "type": "string", "value": "vocabulary_"}}</parameters>
+      <ports>
+        <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{6e7180fa-69f5-411f-979e-b677b45d19d2}">
+          <label>Input model</label>
+          <description>Input model</description>
+        </input>
+        <output key="out" scheme="hdf5" type="[table]" type_base="[table]" uuid="{5ee32095-52ea-427d-bb82-59a34b0c199f}">
+          <label>Attributes</label>
+          <description>Attributes</description>
+        </output>
+      </ports>
+    </node>
+    <connection type="model" uuid="{34db0f37-b706-47db-b500-8a383ef4942b}">
+      <source node="{91e6ed6a-2814-4d9a-a01f-58bfb7996514}" port="{2b2b6262-0159-4f5b-b591-672ad3f7060a}"/>
+      <destination node="{7bd9a81a-eb87-4b5e-8874-416c95d0a7bb}" port="{ead78197-cabd-410f-bd93-3455652ec6c8}"/>
+    </connection>
+    <connection type="table" uuid="{58cc4777-d375-4f71-903d-a9c8d65f2b5f}">
+      <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{80161f67-c7bd-4eee-a083-09ac163e1da6}"/>
+      <destination node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{deb8414a-3224-4868-bc53-16117b26aa7e}"/>
+    </connection>
+    <connection type="[text]" uuid="{72d369b9-51b4-41a1-8367-205c4b09e5e9}">
+      <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{1f65e0f7-597a-4c28-aebf-c4934026bf7d}"/>
+      <destination node="{1f8fc013-cab6-404f-b04b-a771e7918995}" port="{7e32413b-d98f-4273-8c6c-c3fbd4c59da2}"/>
+    </connection>
+    <connection type="[table]" uuid="{9db1abef-cf46-4364-ad05-ea93c557aeba}">
+      <source node="{f8194851-06f8-455a-8ea5-94ecc53df520}" port="{5ee32095-52ea-427d-bb82-59a34b0c199f}"/>
+      <destination node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{bc66dc8c-ab42-42d4-9d96-e18f470e4326}"/>
+    </connection>
+    <connection type="table" uuid="{c4e288a2-305d-4eaa-a1a9-503e48ff7939}">
+      <source node="{1f8fc013-cab6-404f-b04b-a771e7918995}" port="{a4aa61e2-a79d-458d-afc6-d84d8706dbc0}"/>
+      <destination node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{3b9bd8d4-66b3-4d72-ab55-20d57a726706}"/>
+    </connection>
+    <connection type="model" uuid="{de2da76d-fbe4-4bc7-9169-081287472075}">
+      <source node="{7bd9a81a-eb87-4b5e-8874-416c95d0a7bb}" port="{f07647cb-6d14-4047-9774-e2d9d7c3a4f2}"/>
+      <destination node="{f8194851-06f8-455a-8ea5-94ecc53df520}" port="{6e7180fa-69f5-411f-979e-b677b45d19d2}"/>
+    </connection>
+    <connection type="model" uuid="{f87920e2-7036-4c3f-8b3d-e3f588617537}">
+      <source node="{7bd9a81a-eb87-4b5e-8874-416c95d0a7bb}" port="{f07647cb-6d14-4047-9774-e2d9d7c3a4f2}"/>
+      <destination node="{1f8fc013-cab6-404f-b04b-a771e7918995}" port="{2e39c966-bab3-4862-9754-a91238538e43}"/>
+    </connection>
+    <connection type="[text]" uuid="{fdfba82e-f554-4a9f-9a1c-18a3d73817ad}">
+      <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{1f65e0f7-597a-4c28-aebf-c4934026bf7d}"/>
+      <destination node="{7bd9a81a-eb87-4b5e-8874-416c95d0a7bb}" port="{eb31de63-1d2a-4ad0-b511-61d24eb977a4}"/>
+    </connection>
+  </flow>
+  <flow cls="Flow" height="50.0" uuid="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" width="50.0" x="518.6666666666666" y="1569.3333333333333" id="">
+    <label>Prepare dataset</label>
+    <description></description>
+    <author></author>
+    <copyright></copyright>
+    <version></version>
+    <min_version></min_version>
+    <icon/>
+    <aggregation type="json">{"selected_uuids": ["{add75699-f8a1-43f0-a37d-b33480f6739b}"], "conf_view": "TabBuilder", "override": true}</aggregation>
+    <libraries type="json">[]</libraries>
+    <pythonpaths type="json">[]</pythonpaths>
+    <parameters type="json">{}</parameters>
+    <ports>
+      <output index="0" key="Port" optional="False" parent="True" scheme="hdf5" type="[text]" uuid="{a89a5416-7f0e-4a4e-a13e-7600bc16d1ff}" x="1056.0" y="1656.0">
+        <label>Port</label>
+        <description>Port</description>
+      </output>
+      <output index="1" key="Port" optional="False" parent="True" scheme="hdf5" type="table" uuid="{5220b5bb-6404-4ac1-a6b3-bda05a36a280}" x="1056.0" y="1572.0">
+        <label>Port</label>
+        <description>Port</description>
+      </output>
+    </ports>
+    <flow cls="Flow" height="50.0" uuid="{fa4a1e23-5437-4a54-9c56-eaaec80d1516}" width="50.0" x="276.0" y="1644.0" id="">
+      <label>Download archive</label>
+      <description></description>
+      <author></author>
+      <copyright></copyright>
+      <version></version>
+      <min_version></min_version>
+      <icon/>
+      <aggregation type="json">null</aggregation>
+      <libraries type="json">[]</libraries>
+      <pythonpaths type="json">[]</pythonpaths>
+      <parameters type="json">{}</parameters>
+      <ports>
+        <output index="0" key="Port" optional="False" parent="True" scheme="text" type="[datasource]" uuid="{9e0ea003-0a14-4568-80d4-c6bb07c3fcbc}" x="1020.0" y="1572.0">
+          <label>Port</label>
+          <description>Port</description>
+        </output>
+      </ports>
+      <node id="org.sysess.sympathy.datasources.filedatasource" uuid="{1cfdcfc1-a679-4c25-9969-a970df8bb87d}" x="396.0" y="1572.0">
+        <label>Datasource</label>
+        <description>Select a data source.</description>
+        <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+        <copyright>(C) 2013 System Engineering Software Society</copyright>
+        <version>1.1</version>
+        <parameters type="json">{"type": "group", "filename": {"description": "A filename including path if needed", "label": "Filename", "order": 0, "type": "string", "value": "", "editor": {"states": null, "type": "filename", "filter": ["Any files (*)"]}}, "db_sqlalchemy_engine_url": {"description": "SQLAlchemy engine URL for connecting to the database", "editor": null, "label": "SQLAlchemy engine URL", "order": 1, "type": "string", "value": "mssql+pyodbc:///"}, "db_method": {"description": "Select which Database connection method that you want to use.", "label": "Database connection method", "order": 2, "type": "string", "value": "ODBC", "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": ["ODBC", "SQLAlchemy"]}}, "db_driver": {"description": "Database driver to use.", "label": "Database driver", "mode": "selected", "order": 3, "type": "list", "list": ["SQL Server"], "value": [0], "value_names": ["SQL Server"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}, "db_servername": {"description": "A valid name to a database server.", "editor": null, "label": "Server name", "order": 4, "type": "string", "value": ""}, "db_databasename": {"description": "The name of the database.", "editor": null, "label": "Database name", "order": 5, "type": "string", "value": ""}, "db_user": {"description": "A valid database user.", "editor": null, "label": "User", "order": 6, "type": "string", "value": ""}, "db_password": {"description": "A valid password for the selected user.", "editor": null, "label": "Password", "order": 7, "type": "string", "value": ""}, "db_connection_string": {"description": "A connection string that will override other settings.", "editor": null, "label": "Connection string", "order": 8, "type": "string", "value": ""}, "url_str": {"description": "Uniform Resource Locator (URL) string", "editor": null, "label": "URL string", "order": 9, "type": "string", "value": "http://qwone.com/~jason/20Newsgroups/20news-18828.tar.gz"}, "url_env": {"description": "Environment for URL. Used as headers in case of HTTP URL. Input as a Python expression that evaluates to.", "label": "Url environment", "order": 10, "type": "json", "value": [], "editor": {"type": "table", "headers": ["Name", "Value"], "types": ["text", "text"], "unique": ["Name"]}}, "datasource_type": {"description": "Type of datasource.", "editor": null, "label": "Datasource type", "mode": "selected", "order": 11, "type": "list", "list": ["File", "Database", "Url"], "value": [2], "value_names": ["Url"]}}</parameters>
+        <ports>
+          <output key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{a53665fe-bcc6-40c8-af53-60768e0b42b2}">
+            <label>Datasource with path to file</label>
+            <description>Datasource with path to file</description>
+          </output>
+        </ports>
+      </node>
+      <node id="org.sysess.sympathy.files.downloadfile" uuid="{4075a8f7-01a2-45b0-85a7-6b06f54d4101}" x="528.0" y="1572.0">
+        <label>Download URL to file</label>
+        <description>Copy files to another location. It is possible to name the copies using a regular expression.</description>
+        <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;, </author>
+        <copyright>(C) 2018 System Engineering Software Society</copyright>
+        <version>1.0</version>
+        <parameters type="json">{"type": "group", "filename": {"description": "Manually enter a filename, if not using a regular expression", "label": "Filename", "order": 0, "type": "string", "value": "dataset2.tar.gz", "editor": {"states": null, "type": "savename", "filter": ["Any files (*)"]}}, "if_exists": {"description": "What to do if the file already exists", "label": "If file already exists", "order": 1, "type": "string", "value": "Skip file", "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": ["Skip file", "Overwrite", "Raise exception"]}}}</parameters>
+        <ports>
+          <input key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{8cde2dca-d294-49a1-bbda-b9479459a4fb}">
+            <label>Datasource pointing to data to read</label>
+            <description>Datasource pointing to data to read</description>
+          </input>
+          <output key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{c98be10a-ca25-4773-baf4-fce3288657d9}">
+            <label>Datasource of resulting file</label>
+            <description>Datasource of resulting file</description>
+          </output>
+        </ports>
+      </node>
+      <node id="org.sysess.sympathy.export.exportdatasources" uuid="{e47db45f-f631-4766-9a30-dd332624474f}" x="768.0" y="1572.0">
+        <label>Archive files</label>
+        <description>Compress/decompress Datasources</description>
+        <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+        <copyright>(C) 2013, 2017, System Engineering Software Society</copyright>
+        <version>1.0</version>
+        <parameters type="json">{"type": "group", "active_exporter": {"description": "Select data format exporter. Each data format has its own exporter with its own special configuration, see exporter information. The selection of exporter do also suggest filename extension.", "editor": null, "label": "Exporter", "order": 0, "type": "string", "value": "GZIP Extractor"}, "custom_exporter_data": {"label": "", "order": 1, "type": "group", "GZIP Compressor": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "gz"}}, "GZIP Extractor": {"label": "", "type": "group"}, "TAR Archiver": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "tar"}}, "TAR Extractor": {"label": "", "type": "group"}, "ZIP Compressor": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "zip"}}, "ZIP Extractor": {"label": "", "type": "group"}}, "directory": {"description": "Select the directory where to export the files.", "label": "Output directory", "order": 2, "type": "string", "value": ".", "editor": {"states": null, "type": "dirname"}}, "filename": {"description": "Filename without extension.", "editor": null, "label": "Filename", "order": 3, "type": "string", "value": ""}}</parameters>
+        <ports>
+          <input key="port0" scheme="hdf5" type="[datasource]" type_base="[datasource]" uuid="{e8909f7c-2638-47bd-9bf0-566f99a2ccb2}">
+            <label>Datasources to be exported</label>
+            <description>Datasources to be exported</description>
+          </input>
+          <output key="port0" scheme="text" type="[datasource]" type_base="[datasource]" uuid="{f6b57bb9-d569-4882-80dc-f8bc86a127c8}">
+            <label>Datasources of exported files</label>
+            <description>Datasources of exported files</description>
+          </output>
+        </ports>
+      </node>
+      <node id="org.sysess.sympathy.export.exportdatasources" uuid="{fa55d966-548f-4c75-b17b-200e1cfa42c9}" x="900.0" y="1572.0">
+        <label>Archive files</label>
+        <description>Compress/decompress Datasources</description>
+        <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+        <copyright>(C) 2013, 2017, System Engineering Software Society</copyright>
+        <version>1.0</version>
+        <parameters type="json">{"type": "group", "active_exporter": {"description": "Select data format exporter. Each data format has its own exporter with its own special configuration, see exporter information. The selection of exporter do also suggest filename extension.", "editor": null, "label": "Exporter", "order": 0, "type": "string", "value": "TAR Extractor"}, "custom_exporter_data": {"label": "", "order": 1, "type": "group", "GZIP Compressor": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "gz"}}, "GZIP Extractor": {"label": "", "type": "group"}, "TAR Archiver": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "tar"}}, "TAR Extractor": {"label": "", "type": "group"}, "ZIP Compressor": {"label": "", "type": "group", "filename_extension": {"description": "", "editor": null, "label": "Filename extension", "type": "string", "value": "zip"}}, "ZIP Extractor": {"label": "", "type": "group"}}, "directory": {"description": "Select the directory where to export the files.", "label": "Output directory", "order": 2, "type": "string", "value": ".", "editor": {"states": null, "type": "dirname"}}, "filename": {"description": "Filename without extension.", "editor": null, "label": "Filename", "order": 3, "type": "string", "value": ""}}</parameters>
+        <ports>
+          <input key="port0" scheme="text" type="[datasource]" type_base="[datasource]" uuid="{93c3187e-a6ba-4547-bfb4-b686909b263d}">
+            <label>Datasources to be exported</label>
+            <description>Datasources to be exported</description>
+          </input>
+          <output key="port0" scheme="text" type="[datasource]" type_base="[datasource]" uuid="{68025cf3-4683-4322-9b30-f1c2396a0f9c}">
+            <label>Datasources of exported files</label>
+            <description>Datasources of exported files</description>
+          </output>
+        </ports>
+      </node>
+      <node id="org.sysess.sympathy.list.itemtolist" uuid="{fdfdbb1f-c9ca-41d9-b9bf-790fa538b3a9}" x="660.0" y="1572.0">
+        <label>Item to List</label>
+        <description></description>
+        <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+        <copyright>(C) 2015 System Engineering Software Society</copyright>
+        <version>1.0</version>
+        <parameters type="json">{"type": "group", "n": {"description": "Choose number of times to repeat items.", "editor": null, "label": "Repeat number of times", "order": 0, "type": "integer", "value": 1}}</parameters>
+        <ports>
+          <input key="item" scheme="text" type="datasource" type_base="&lt;a&gt;" uuid="{fda0b586-f6ac-4c23-9779-69faff6363d9}">
+            <label>Input Item</label>
+            <description>Input Item</description>
+          </input>
+          <output key="list" scheme="hdf5" type="[datasource]" type_base="[&lt;a&gt;]" uuid="{7515869f-5e11-447a-a2c9-b13d55e2d639}">
+            <label>Item as List</label>
+            <description>Item as List</description>
+          </output>
+        </ports>
+      </node>
+      <connection type="datasource" uuid="{10aff78b-d664-4186-8014-ac9b3d564e67}">
+        <source node="{4075a8f7-01a2-45b0-85a7-6b06f54d4101}" port="{c98be10a-ca25-4773-baf4-fce3288657d9}"/>
+        <destination node="{fdfdbb1f-c9ca-41d9-b9bf-790fa538b3a9}" port="{fda0b586-f6ac-4c23-9779-69faff6363d9}"/>
+      </connection>
+      <connection type="[datasource]" uuid="{173a81be-85be-4e34-aba3-9749a32a5aab}">
+        <source node="{e47db45f-f631-4766-9a30-dd332624474f}" port="{f6b57bb9-d569-4882-80dc-f8bc86a127c8}"/>
+        <destination node="{fa55d966-548f-4c75-b17b-200e1cfa42c9}" port="{93c3187e-a6ba-4547-bfb4-b686909b263d}"/>
+      </connection>
+      <connection type="[datasource]" uuid="{516b32e8-0e5b-44fc-9973-3fa39a49499c}">
+        <source node="{fa55d966-548f-4c75-b17b-200e1cfa42c9}" port="{68025cf3-4683-4322-9b30-f1c2396a0f9c}"/>
+        <destination node="{fa4a1e23-5437-4a54-9c56-eaaec80d1516}" port="{9e0ea003-0a14-4568-80d4-c6bb07c3fcbc}"/>
+      </connection>
+      <connection type="[datasource]" uuid="{6941ec5e-f5f3-4dd7-a3cc-41c08a9bf7ce}">
+        <source node="{fdfdbb1f-c9ca-41d9-b9bf-790fa538b3a9}" port="{7515869f-5e11-447a-a2c9-b13d55e2d639}"/>
+        <destination node="{e47db45f-f631-4766-9a30-dd332624474f}" port="{e8909f7c-2638-47bd-9bf0-566f99a2ccb2}"/>
+      </connection>
+      <connection type="datasource" uuid="{c4ef2df8-e7a6-4bd8-959c-640b7880877d}">
+        <source node="{1cfdcfc1-a679-4c25-9969-a970df8bb87d}" port="{a53665fe-bcc6-40c8-af53-60768e0b42b2}"/>
+        <destination node="{4075a8f7-01a2-45b0-85a7-6b06f54d4101}" port="{8cde2dca-d294-49a1-bbda-b9479459a4fb}"/>
+      </connection>
+    </flow>
+    <node id="org.sysess.sympathy.data.text.importtexts" uuid="{19fc1486-85ad-46d2-b323-6771d343d666}" x="960.0" y="1656.0">
+      <label>Texts</label>
+      <description>Data source as Texts</description>
+      <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+      <copyright>(C) 2013 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "active_importer": {"description": "Select data format importer", "editor": null, "label": "Importer", "order": 0, "type": "string", "value": "Text"}, "custom_importer_data": {"label": "", "order": 1, "type": "group", "Auto": {"label": "", "order": 0, "type": "group"}, "Text": {"label": "", "type": "group", "source_coding": {"description": "Encoding used to decode file", "label": "Encoding", "type": "string", "value": "Western (ISO 8859-1)", "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": ["Western (ASCII)", "Western (ISO 8859-1)", "Western (ISO 8859-15)", "Western (Windows 1252)", "UTF-16 BE", "UTF-16 LE", "UTF-16", "UTF-8"]}}}}, "fail_strategy": {"description": "Decide how failure to import a file should be handled.", "label": "Action on import failure", "mode": "selected", "order": 2, "type": "list", "list": ["Exception", "Create Empty Entry", "Skip File"], "value": [0], "value_names": ["Exception"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+      <ports>
+        <input key="input" scheme="hdf5" type="[datasource]" type_base="[datasource]" uuid="{fcd5bed0-c053-41cf-9c80-3d2108e8ea17}">
+          <label>Datasources</label>
+          <description>Datasources</description>
+        </input>
+        <output key="port1" scheme="hdf5" type="[text]" type_base="[text]" uuid="{f5ce365d-fe1b-4449-a186-0294b656eae5}">
+          <label>Imported Texts</label>
+          <description>Imported Texts</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.calculatorgeneric" uuid="{aa0b008c-d77d-4392-a325-6e707ffa8ee8}" x="756.0" y="1572.0">
+      <label>Calculate
+categories</label>
+      <description>Performs user-defined python calculations</description>
+      <author>Greger Cronquist &lt;greger.cronquist@sysess.org&gt;, Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;, Sara Gustafzelius &lt;sara.gustafzelius@combine.se&gt;, Benedikt Ziegler &lt;benedikt.ziegler@combine.se&gt;</author>
+      <copyright>(c) 2016 System Engineering Software Society</copyright>
+      <version>3.0</version>
+      <parameters type="json">{"type": "group", "calc_list": {"description": "List of calculations.", "editor": null, "label": "List of calculations", "mode": "selected", "order": 0, "type": "list", "list": ["category = [os.path.split(os.path.split(s)[0])[1] for s in arg['filepaths']] #ENABLED:1"], "value": [], "value_names": []}, "calc_attrs_dict": {"description": "Calculation attributes as json dict-list-string!", "editor": null, "label": "", "order": 1, "type": "string", "value": "[]"}, "copy_input": {"description": "If enabled the incoming data will be copied to the output before running the calculations. This requires that the results will all have the same length. An exception will be raised if the lengths of the outgoing results differ.", "editor": null, "label": "Copy input", "order": 2, "type": "boolean", "value": false}, "fail_strategy": {"description": "Decide how a failed calculation should be handled", "label": "Action on calculation failure", "mode": "selected", "order": 3, "type": "list", "list": ["Exception", "Skip calculation"], "value": [0], "value_names": ["Exception"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+      <ports>
+        <input key="port0" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{174e5be0-2106-4e51-ae34-095d9636112d}">
+          <label>Generic Input</label>
+          <description>Generic Input</description>
+        </input>
+        <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{07394c46-0f01-4af2-8cc5-329fed4dc3f2}">
+          <label>Table with results from the calculations.</label>
+          <description>Table with results from the calculations.</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.selecttablerows" uuid="{ac6cbaa3-abd0-47c0-a66d-c06071c34690}" x="960.0" y="1572.0">
+      <label>Select rows in Table</label>
+      <description>Reduction of rows in Table according to specified filter.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+      <copyright>(C) 2014 System Engineering Software Society</copyright>
+      <version>1.1</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns for comparison relation", "label": "Columns to filter", "mode": "selected", "order": 0, "type": "list", "list": ["filepaths", "category"], "value": [1], "value_names": ["category"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}, "exist": {"description": "Constraint must be satisfied in: Any selected column or All selected columns.", "label": "Constraint must be satisfied in", "order": 1, "type": "string", "value": "all", "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": ["all", "any"]}}, "relation": {"description": "Select comparison operator for relation", "label": "Relation", "mode": "selected", "order": 2, "type": "list", "list": ["equal", "less than", "less than or equal", "greater than", "greater than or equal", "not equal"], "value": [0], "value_names": ["equal"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}, "constraint": {"description": "Specify constraint value for comparison relation", "editor": null, "label": "Filter constraint", "order": 3, "type": "string", "value": "x"}, "use_custom_predicate": {"description": "Select to use custom filter", "editor": null, "label": "Use custom filter", "order": 4, "type": "boolean", "value": true}, "predicate": {"description": "Write a custom filter as a Python lambda function", "editor": null, "label": "Custom filter", "order": 5, "type": "string", "value": "lambda x: x == x"}, "limit": {"description": "Rows to display", "label": "Preview rows", "order": 6, "type": "integer", "value": 100, "editor": {"max": 10000, "min": 0, "step": 1, "type": "spinbox"}}}</parameters>
+      <ports>
+        <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{1d04bda9-9572-4fa6-a427-5f905102f84d}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{2a775137-db00-4069-b715-f9b2f5240bf7}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.slice.slicelist" uuid="{add75699-f8a1-43f0-a37d-b33480f6739b}" x="396.0" y="1644.0">
+      <label>Limit data-size</label>
+      <description></description>
+      <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+      <copyright>(C) 2015 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "slice": {"description": "Use standard Python syntax to define pattern for slice operation, [start:stop:step]", "editor": null, "label": "Slice", "order": 0, "type": "string", "value": "[:5000]"}, "limit": {"description": "Specify the maximum number of rows in the preview table", "label": "Limit preview to", "order": 1, "type": "integer", "value": 100, "editor": {"max": 10000, "min": 0, "step": 1, "type": "spinbox"}}}</parameters>
+      <ports>
+        <input key="list" scheme="text" type="[datasource]" type_base="[&lt;a&gt;]" uuid="{01c8a7ba-9f5d-4139-906d-17efdd31701a}">
+          <label>Input List</label>
+          <description>Input List</description>
+        </input>
+        <output key="list" scheme="hdf5" type="[datasource]" type_base="[&lt;a&gt;]" uuid="{28d8aca5-1d0d-4d96-9e9d-30aafca9ad13}">
+          <label>Sliced output List</label>
+          <description>Sliced output List</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.dsrcstotable" uuid="{af9a291a-3cb2-443c-b90d-7f5be8dc3d71}" x="624.0" y="1572.0">
+      <label>Datasources to Table</label>
+      <description>Converts a list of data sources into a table of filenames.</description>
+      <author>Magnus Sanden &lt;magnus.sanden@combine.se&gt;</author>
+      <copyright>(c) 2013, 2017, System Engineering Software Society</copyright>
+      <version>1.1</version>
+      <parameters type="json">{"type": "group", "relpath": {"description": "If ticked, an attempt will be made to convert all paths to relative paths regarding the top flow.", "editor": null, "label": "Force relative paths", "order": 0, "type": "boolean", "value": false}, "subpath": {"description": "If ticked, an attempt will be made to convert all paths to relative paths regarding the current subflow.", "editor": null, "label": "Force relative paths to current subflow", "order": 1, "type": "boolean", "value": false}}</parameters>
+      <ports>
+        <input key="in" scheme="hdf5" type="[datasource]" type_base="[datasource]" uuid="{df88c8fc-a104-4fa2-b64e-bf3d40c81a24}">
+          <label>Datasources with filepaths</label>
+          <description>Datasources with filepaths</description>
+        </input>
+        <output key="out" scheme="hdf5" type="table" type_base="table" uuid="{f25f9ee3-54c7-4462-ac2b-9f7b4fa96bf0}">
+          <label>Table with a single column with a filepath</label>
+          <description>Table with a single column with a filepath</description>
+        </output>
+      </ports>
+    </node>
+    <connection type="[text]" uuid="{1b0d642b-ac70-4e84-8248-17896372f763}">
+      <source node="{19fc1486-85ad-46d2-b323-6771d343d666}" port="{f5ce365d-fe1b-4449-a186-0294b656eae5}"/>
+      <destination node="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" port="{a89a5416-7f0e-4a4e-a13e-7600bc16d1ff}"/>
+    </connection>
+    <connection type="[datasource]" uuid="{24cb7513-981e-4863-ab0c-42a25a966292}">
+      <source node="{add75699-f8a1-43f0-a37d-b33480f6739b}" port="{28d8aca5-1d0d-4d96-9e9d-30aafca9ad13}"/>
+      <destination node="{19fc1486-85ad-46d2-b323-6771d343d666}" port="{fcd5bed0-c053-41cf-9c80-3d2108e8ea17}"/>
+    </connection>
+    <connection type="table" uuid="{2a64ea3f-e476-4afa-a006-c9a18372734a}">
+      <source node="{ac6cbaa3-abd0-47c0-a66d-c06071c34690}" port="{2a775137-db00-4069-b715-f9b2f5240bf7}"/>
+      <destination node="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" port="{5220b5bb-6404-4ac1-a6b3-bda05a36a280}"/>
+    </connection>
+    <connection type="[datasource]" uuid="{3fa0d679-9af5-4655-8d2e-9fe639384f29}">
+      <source node="{add75699-f8a1-43f0-a37d-b33480f6739b}" port="{28d8aca5-1d0d-4d96-9e9d-30aafca9ad13}"/>
+      <destination node="{af9a291a-3cb2-443c-b90d-7f5be8dc3d71}" port="{df88c8fc-a104-4fa2-b64e-bf3d40c81a24}"/>
+    </connection>
+    <connection type="table" uuid="{8c539771-0882-4f01-975a-c3964283a991}">
+      <source node="{aa0b008c-d77d-4392-a325-6e707ffa8ee8}" port="{07394c46-0f01-4af2-8cc5-329fed4dc3f2}"/>
+      <destination node="{ac6cbaa3-abd0-47c0-a66d-c06071c34690}" port="{1d04bda9-9572-4fa6-a427-5f905102f84d}"/>
+    </connection>
+    <connection type="[datasource]" uuid="{92f9af2e-17ea-4b94-b491-92ef0cffd1f7}">
+      <source node="{fa4a1e23-5437-4a54-9c56-eaaec80d1516}" port="{9e0ea003-0a14-4568-80d4-c6bb07c3fcbc}"/>
+      <destination node="{add75699-f8a1-43f0-a37d-b33480f6739b}" port="{01c8a7ba-9f5d-4139-906d-17efdd31701a}"/>
+    </connection>
+    <connection type="table" uuid="{d27152d7-25bb-41f9-9885-a625f7cab001}">
+      <source node="{af9a291a-3cb2-443c-b90d-7f5be8dc3d71}" port="{f25f9ee3-54c7-4462-ac2b-9f7b4fa96bf0}"/>
+      <destination node="{aa0b008c-d77d-4392-a325-6e707ffa8ee8}" port="{174e5be0-2106-4e51-ae34-095d9636112d}"/>
+    </connection>
+    <text color="Beige" height="96.0" uuid="{e39ed1c5-1f82-47b0-9759-31a70b9217d3}" width="492.0" x="528.0" y="1440.0">Keeps the first X files from the archive and uses the filepath to determine which category (news group)  it belongs to.</text>
+  </flow>
+  <flow cls="Flow" height="50.0" uuid="{afd03714-8a10-47c1-94ac-18fd356a0190}" width="50.0" x="1188.0" y="1548.0" id="">
+    <label>Test dataset</label>
+    <description></description>
+    <author></author>
+    <copyright></copyright>
+    <version></version>
+    <min_version></min_version>
+    <icon/>
+    <aggregation type="json">null</aggregation>
+    <libraries type="json">[]</libraries>
+    <pythonpaths type="json">[]</pythonpaths>
+    <parameters type="json">{}</parameters>
+    <ports>
+      <input index="0" key="Test X" optional="False" parent="True" scheme="hdf5" type="table" uuid="{e1d0e6d2-4b37-45bb-8775-d4087e5a71e8}" x="1728.0" y="1968.0">
+        <label>Test X</label>
+        <description>Test X</description>
+      </input>
+      <input index="1" key="Test Y" optional="False" parent="True" scheme="hdf5" type="table" uuid="{d659e4a3-8f3c-41d0-907e-69abb1ea7c3e}" x="1728.0" y="2052.0">
+        <label>Test Y</label>
+        <description>Test Y</description>
+      </input>
+      <output index="0" key="Test X" optional="False" parent="True" scheme="hdf5" type="table" uuid="{39c4a8cf-7ea5-48d8-9955-36640240a972}" x="1896.0" y="1968.0">
+        <label>Test X</label>
+        <description>Test X</description>
+      </output>
+      <output index="1" key="Test Y" optional="False" parent="True" scheme="hdf5" type="table" uuid="{622eec56-9e74-411c-9d78-c43b78488efa}" x="1896.0" y="2052.0">
+        <label>Test Y</label>
+        <description>Test Y</description>
+      </output>
+    </ports>
+    <connection type="table" uuid="{5e2e9324-2d5e-4cfe-821c-a16dd2a3e529}">
+      <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{d659e4a3-8f3c-41d0-907e-69abb1ea7c3e}"/>
+      <destination node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{622eec56-9e74-411c-9d78-c43b78488efa}"/>
+    </connection>
+    <connection type="table" uuid="{a598c8f3-c39e-468f-bfec-166e11a8a1a9}">
+      <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{e1d0e6d2-4b37-45bb-8775-d4087e5a71e8}"/>
+      <destination node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{39c4a8cf-7ea5-48d8-9955-36640240a972}"/>
+    </connection>
+  </flow>
+  <node id="org.sysess.sympathy.data.table.renamesingletablecolumns" uuid="{2778c378-0c38-40ea-bcf0-75613c20f713}" x="1656.0" y="1692.0">
+    <label>rename</label>
+    <description>Rename the Table columns by using regular expressions.</description>
+    <author>Greger Cronquist &lt;greger.cronquist@sysess.org&gt;</author>
+    <copyright>(c) 2013 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "src_expr": {"description": "Specify the regular expression which will be replaced", "editor": null, "label": "Search expression", "order": 0, "type": "string", "value": "category"}, "dst_expr": {"description": "Specify the regular expression for replacement", "editor": null, "label": "Replacement expression", "order": 1, "type": "string", "value": "Ypred"}}</parameters>
+    <ports>
+      <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{fea89210-6fda-4d69-9d74-ecfe0108c05a}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{c0aec16b-e436-4259-b1fb-e3d3b37b2e3f}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.calculatortable" uuid="{3e19972c-d003-40e9-a571-dd7051c616f2}" x="1872.0" y="1692.0">
+    <label>check err</label>
+    <description>Performs user-defined python calculations</description>
+    <author>Greger Cronquist &lt;greger.cronquist@sysess.org&gt;, Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;, Sara Gustafzelius &lt;sara.gustafzelius@combine.se&gt;, Benedikt Ziegler &lt;benedikt.ziegler@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <version>3.0</version>
+    <parameters type="json">{"type": "group", "calc_list": {"description": "List of calculations.", "editor": null, "label": "List of calculations", "mode": "selected", "order": 0, "type": "list", "list": ["${Correct} = table.col('category').data == table.col('Ypred').data #ENABLED:1"], "value": [], "value_names": ["${Error} = table.col('category').data != table.col('Ypred').data #ENABLED:1"]}, "same_length_res": {"description": "Gather all the results generated from an incoming data into a common output table. This requires that the results all have the same length. An error will be given if the lengths of the outgoing results differ.", "editor": null, "label": "Put results in common outputs.", "order": 1, "type": "boolean", "value": true}, "copy_input": {"description": "If enabled the incoming data will be copied to the output before running the calculations. This requires that the results will all have the same length. An exception will be raised if the lengths of the outgoing results differ.", "editor": null, "label": "Copy input", "order": 1, "type": "boolean", "value": true}, "fail_strategy": {"description": "Decide how a failed calculation should be handled", "label": "Action on calculation failure", "mode": "selected", "order": 2, "type": "list", "list": ["Exception", "Skip calculation"], "value": [0], "value_names": ["Exception"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="port0" scheme="hdf5" type="table" type_base="table" uuid="{30b1853a-eb73-48a3-a278-c0623f92fb59}">
+        <label>Input Table</label>
+        <description>Input Table</description>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{e8e8fa68-3313-45a4-94e2-32c76a7a83db}">
+        <label>Table with results from the calculations.</label>
+        <description>Table with results from the calculations.</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.hjointable" uuid="{51f1ca76-c1a9-418d-8ee1-f57619ddf1fc}" x="1776.0" y="1692.0">
+    <label>HJoin Table</label>
+    <description>Horizontal join of two Tables</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <version>1.1</version>
+    <parameters type="json">{"type": "group", "mask": {"description": "Select if columns that are not represented in all Tables should be complemented with masked values", "editor": null, "label": "Complement missing rows", "order": 0, "type": "boolean", "value": true}, "name": {"description": "Select which port decides the output table(s) names", "label": "Input port name for joined table", "mode": "selected", "order": 1, "passthrough": false, "type": "list", "list": ["Lower", "Upper"], "value": [0], "value_names": [], "editor": {"type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{91be3cc3-5ed9-4c6d-81d0-a0fccf52782a}">
+        <label>Input Table 1</label>
+        <description>Input Table 1</description>
+      </input>
+      <input key="port2" scheme="hdf5" type="table" type_base="table" uuid="{06fba6c5-8d86-4ed4-8246-705b15ffe477}">
+        <label>Input Table 2</label>
+        <description>Input Table 2</description>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{2d4b2d40-65ec-48fb-a10d-891c0b5fdf73}">
+        <label>Table with horizontally joined data</label>
+        <description>Table with horizontally joined data</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.simple_split" uuid="{59733e96-e2dc-4469-afc8-8fab1728945d}" x="984.0" y="1488.0">
+    <label>Simple train-test partitioning</label>
+    <description>Splits input data into a training and a test dataset</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group", "test_size": {"description": "Size of test data as fraction (&lt; 1) of all data", "editor": null, "label": "Test size", "order": 0, "type": "float", "value": 0.25}, "stratify": {"description": "Stratify data using Y as class labels", "editor": null, "label": "Stratify", "order": 1, "type": "boolean", "value": false}}</parameters>
+    <ports>
+      <input key="X" scheme="hdf5" type="table" type_base="table" uuid="{7e08e2d4-ba07-4a2a-ae06-d718a71c3ce7}">
+        <label>X</label>
+        <description>X</description>
+      </input>
+      <input key="Y" scheme="hdf5" type="table" type_base="table" uuid="{aee53721-c9c3-45b2-bebc-99be395c3106}">
+        <label>Y</label>
+        <description>Y</description>
+      </input>
+      <output key="X_train" scheme="hdf5" type="table" type_base="table" uuid="{3239204b-156c-471f-ab5b-604b814ad0be}">
+        <label>X_train</label>
+        <description>X_train</description>
+      </output>
+      <output key="Y_train" scheme="hdf5" type="table" type_base="table" uuid="{e479626e-7651-424c-beef-8706704199b5}">
+        <label>Y_train</label>
+        <description>Y_train</description>
+      </output>
+      <output key="X_test" scheme="hdf5" type="table" type_base="table" uuid="{7d4efa1a-0749-4e51-8937-058977581696}">
+        <label>X_test</label>
+        <description>X_test</description>
+      </output>
+      <output key="Y_test" scheme="hdf5" type="table" type_base="table" uuid="{48f42078-cb8c-42ef-bd32-2627996b56b9}">
+        <label>Y_test</label>
+        <description>Y_test</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.predict" uuid="{648248bf-c147-48fb-9587-c8ab23238151}" x="1512.0" y="1392.0">
+    <label>Predict</label>
+    <description>Uses a model to predict Y given X</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{f24b6da6-aa67-484e-9626-406e4a91937a}">
+        <label>Input model</label>
+        <description>Input model</description>
+      </input>
+      <input key="X" scheme="hdf5" type="table" type_base="table" uuid="{b8a0e06f-a791-42c1-a04b-8a9ac8d21a43}">
+        <label>X</label>
+        <description>X</description>
+      </input>
+      <output key="Y" scheme="hdf5" type="table" type_base="table" uuid="{5bb86911-8604-42bf-8544-4f24b6fde79a}">
+        <label>Y</label>
+        <description>Y</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.score" uuid="{a523c74d-47a4-4d92-8b5c-c12202cd0325}" x="1620.0" y="1536.0">
+    <label>Score</label>
+    <description>Scores the model using given X and Y data. Exact semantics
+depends on the type of model (classifier, regressor, etc).</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{da1361d5-c900-4459-b710-58fc3c8fff46}">
+        <label>Input model</label>
+        <description>Input model</description>
+      </input>
+      <input key="X" scheme="hdf5" type="table" type_base="table" uuid="{a25dc5dd-2912-491d-b017-18dac577338b}">
+        <label>X</label>
+        <description>X</description>
+      </input>
+      <input key="Y" scheme="hdf5" type="table" type_base="table" uuid="{0df97002-be52-41bf-ba49-4dcdc585ed9a}">
+        <label>Y</label>
+        <description>Y</description>
+      </input>
+      <output key="Score" scheme="hdf5" type="table" type_base="table" uuid="{04e4d811-ced0-4d5e-9d5b-feccd389cf3f}">
+        <label>Score</label>
+        <description>Score</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.fit" uuid="{cc8ad429-257e-4772-8b35-506beb2aea52}" x="1188.0" y="1416.0">
+    <label>Fit</label>
+    <description>Trains a model. Use "Create Input Port &gt; Y" for supervised training</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{6e6c7533-23ee-4990-a665-003daed17f29}">
+        <label>Input model</label>
+        <description>Input model</description>
+      </input>
+      <input key="X" scheme="hdf5" type="table" type_base="table" uuid="{20ecb3ed-db4a-490f-b665-9c4bd8093244}">
+        <label>X</label>
+        <description>X</description>
+      </input>
+      <input key="Y0" scheme="hdf5" type="table" type_base="table" uuid="{3722d0e0-f30d-4dc8-8c88-d195a5f52bd4}">
+        <label>Y</label>
+        <description>Y</description>
+      </input>
+      <output key="out-model" scheme="hdf5" type="model" type_base="model" uuid="{75f5277e-fc33-4866-86a1-09a95048ffa6}">
+        <label>Output model</label>
+        <description>Output model</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.predict" uuid="{cd043e9c-f69b-4857-b344-6836c0aaef11}" x="1560.0" y="1692.0">
+    <label>Predict</label>
+    <description>Uses a model to predict Y given X</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="in-model" scheme="hdf5" type="model" type_base="model" uuid="{f892b2e5-2bdd-4bec-80bb-8c0ba76f9540}">
+        <label>Input model</label>
+        <description>Input model</description>
+      </input>
+      <input key="X" scheme="hdf5" type="table" type_base="table" uuid="{d40af608-2c02-4404-b73f-5b84648cfe3e}">
+        <label>X</label>
+        <description>X</description>
+      </input>
+      <output key="Y" scheme="hdf5" type="table" type_base="table" uuid="{d461af0b-1670-4ee6-8655-1fc5716dd749}">
+        <label>Y</label>
+        <description>Y</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.tuple.tuple2" uuid="{cd8d2b4b-0b66-4921-a250-7cb34b294faf}" x="2004.0" y="1692.0">
+    <label>Show texts
+and their classifications</label>
+    <description></description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="[text]" type_base="&lt;a&gt;" uuid="{906fb798-2acb-4d02-894f-0b7b377f7428}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <input key="input" scheme="hdf5" type="table" type_base="&lt;b&gt;" uuid="{500131db-2ae4-4c18-9de5-bfc329df7fef}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="output" scheme="hdf5" type="([text], table)" type_base="(&lt;a&gt;, &lt;b&gt;)" uuid="{c3435b55-643d-4da2-a109-f5c3b67ffbd1}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.random_forest_classifier" uuid="{f3c67d2d-0fdb-457d-8d1d-21a13d502a41}" x="984.0" y="1344.0">
+    <label>Random Forest Classifier</label>
+    <description>A random forest is a meta estimator that fits a number of decision tree classifiers on various sub-samples of the dataset and use averaging to improve the predictive accuracy and control over-fitting. The sub-sample size is always the same as the original input sample size but the samples are drawn with replacement if bootstrap is True (default).</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group", "n_estimators": {"description": "The number of trees in the forest.\n\n.. versionchanged:: 0.20\n   The default value of ``n_estimators`` will change from 10 in\n   version 0.20 to 100 in version 0.22.\n", "editor": null, "label": "n_estimators", "order": 0, "type": "string", "value": "99"}, "criterion": {"description": "The function to measure the quality of a split. Supported criteria are\n\"gini\" for the Gini impurity and \"entropy\" for the information gain.\nNote: this parameter is tree-specific.\n", "editor": null, "label": "criterion", "order": 1, "type": "string", "value": "gini"}, "bootstrap": {"description": "Whether bootstrap samples are used when building trees.\n", "editor": null, "label": "bootstrap", "order": 2, "type": "string", "value": "True"}, "oob_score": {"description": "Whether to use out-of-bag samples to estimate\nthe generalization accuracy.\n", "editor": null, "label": "oob_score", "order": 3, "type": "string", "value": "False"}, "n_jobs": {"description": "The number of jobs to run in parallel for both `fit` and `predict`.\n``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.\n``-1`` means using all processors. See n_jobs\nfor more details.\n", "editor": null, "label": "n_jobs", "order": 4, "type": "string", "value": "-1"}, "max_features": {"description": "The number of features to consider when looking for the best split:\n\n- If int, then consider `max_features` features at each split.\n- If float, then `max_features` is a fraction and\n  `int(max_features * n_features)` features are considered at each\n  split.\n- If \"auto\", then `max_features=sqrt(n_features)`.\n- If \"sqrt\", then `max_features=sqrt(n_features)` (same as \"auto\").\n- If \"log2\", then `max_features=log2(n_features)`.\n- If None, then `max_features=n_features`.\n\nNote: the search for a split does not stop until at least one\nvalid partition of the node samples is found, even if it requires to\neffectively inspect more than ``max_features`` features.\n", "editor": null, "label": "max_features", "order": 5, "type": "string", "value": "None"}, "max_depth": {"description": "The maximum depth of the tree. If None, then nodes are expanded until\nall leaves are pure or until all leaves contain less than\nmin_samples_split samples.\n", "editor": null, "label": "max_depth", "order": 6, "type": "string", "value": "None"}, "min_samples_split": {"description": "The minimum number of samples required to split an internal node:\n\n- If int, then consider `min_samples_split` as the minimum number.\n- If float, then `min_samples_split` is a fraction and\n  `ceil(min_samples_split * n_samples)` are the minimum\n  number of samples for each split.\n\n.. versionchanged:: 0.18\n   Added float values for fractions.\n", "editor": null, "label": "min_samples_split", "order": 7, "type": "string", "value": "2"}, "min_samples_leaf": {"description": "The minimum number of samples required to be at a leaf node.\nA split point at any depth will only be considered if it leaves at\nleast ``min_samples_leaf`` training samples in each of the left and\nright branches.  This may have the effect of smoothing the model,\nespecially in regression.\n\n- If int, then consider `min_samples_leaf` as the minimum number.\n- If float, then `min_samples_leaf` is a fraction and\n  `ceil(min_samples_leaf * n_samples)` are the minimum\n  number of samples for each node.\n\n.. versionchanged:: 0.18\n   Added float values for fractions.\n", "editor": null, "label": "min_samples_leaf", "order": 8, "type": "string", "value": "1"}, "min_weight_fraction_leaf": {"description": "The minimum weighted fraction of the sum total of weights (of all\nthe input samples) required to be at a leaf node. Samples have\nequal weight when sample_weight is not provided.\n", "editor": null, "label": "min_weight_fraction_leaf", "order": 9, "type": "string", "value": "0.0"}, "max_leaf_nodes": {"description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.\nBest nodes are defined as relative reduction in impurity.\nIf None then unlimited number of leaf nodes.\n", "editor": null, "label": "max_leaf_nodes", "order": 10, "type": "string", "value": "None"}, "min_impurity_split": {"description": "Threshold for early stopping in tree growth. A node will split\nif its impurity is above the threshold, otherwise it is a leaf.\n\n.. deprecated:: 0.19\n   ``min_impurity_split`` has been deprecated in favor of\n   ``min_impurity_decrease`` in 0.19 and will be removed in 0.21.\n   Use ``min_impurity_decrease`` instead.\n", "editor": null, "label": "min_impurity_split", "order": 11, "type": "string", "value": "1e-07"}, "min_impurity_decrease": {"description": "A node will be split if this split induces a decrease of the impurity\ngreater than or equal to this value.\n\nThe weighted impurity decrease equation is the following::\n\n    N_t / N * (impurity - N_t_R / N_t * right_impurity\n                        - N_t_L / N_t * left_impurity)\n\nwhere ``N`` is the total number of samples, ``N_t`` is the number of\nsamples at the current node, ``N_t_L`` is the number of samples in the\nleft child, and ``N_t_R`` is the number of samples in the right child.\n\n``N``, ``N_t``, ``N_t_R`` and ``N_t_L`` all refer to the weighted sum,\nif ``sample_weight`` is passed.\n\n.. versionadded:: 0.19\n", "editor": null, "label": "min_impurity_decrease", "order": 12, "type": "string", "value": "0"}, "random_state": {"description": "If int, random_state is the seed used by the random number generator;\nIf RandomState instance, random_state is the random number generator;\nIf None, the random number generator is the RandomState instance used\nby `np.random`.\n", "editor": null, "label": "random_state", "order": 13, "type": "string", "value": "None"}, "warm_start": {"description": "When set to ``True``, reuse the solution of the previous call to fit\nand add more estimators to the ensemble, otherwise, just fit a whole\nnew forest. See warm_start.\n", "editor": null, "label": "warm_start", "order": 14, "type": "string", "value": "False"}}</parameters>
+    <ports>
+      <output key="model" scheme="hdf5" type="model" type_base="model" uuid="{220e865b-b83c-42eb-ad3c-c9489deb5ece}">
+        <label>Model</label>
+        <description>Model</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.machinelearning.confusion" uuid="{f9a6355a-62cf-4b6e-a328-1a1dd3156e12}" x="1620.0" y="1392.0">
+    <label>Confusion matrix</label>
+    <description>Computes the confusion matrix given predictions and true Y-values.</description>
+    <author>Mathias Broxvall</author>
+    <copyright>(C) 2017 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group", "include heading": {"description": "Adds a columns with used class names", "editor": null, "label": "include heading", "order": 0, "type": "string", "value": "True"}, "labels": {"description": "List of labels to index the matrix. This may be used to reorder\nor select a subset of labels.\nIf none is given, those that appear at least once\nin ``y_true`` or ``y_pred`` are used in sorted order.\n", "editor": null, "label": "labels", "order": 1, "type": "string", "value": ""}}</parameters>
+    <ports>
+      <input key="Y-pred" scheme="hdf5" type="table" type_base="table" uuid="{3d21cceb-71dd-44a9-b804-dfc859b8a4fa}">
+        <label>Y-pred</label>
+        <description>Y-pred</description>
+      </input>
+      <input key="Y-true" scheme="hdf5" type="table" type_base="table" uuid="{e6236f4d-bb45-4fae-b79d-7c59d36a48c8}">
+        <label>Y-true</label>
+        <description>Y-true</description>
+      </input>
+      <output key="confusion-matrix" scheme="hdf5" type="table" type_base="table" uuid="{02dc03d8-ae5e-4c4b-8f6c-0238f7070772}">
+        <label>confusion-matrix</label>
+        <description>confusion-matrix</description>
+      </output>
+    </ports>
+  </node>
+  <connection type="model" uuid="{0a7f1b2e-5185-4237-9cdb-620b57f06888}">
+    <source node="{f3c67d2d-0fdb-457d-8d1d-21a13d502a41}" port="{220e865b-b83c-42eb-ad3c-c9489deb5ece}"/>
+    <destination node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{6e6c7533-23ee-4990-a665-003daed17f29}"/>
+  </connection>
+  <connection type="table" uuid="{1a8e8016-6f15-4657-bfba-477634e4f742}">
+    <source node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{7d4efa1a-0749-4e51-8937-058977581696}"/>
+    <destination node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{e1d0e6d2-4b37-45bb-8775-d4087e5a71e8}"/>
+  </connection>
+  <connection type="table" uuid="{1d3ea29c-99ec-409b-bd8a-84b5c3354704}">
+    <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{622eec56-9e74-411c-9d78-c43b78488efa}"/>
+    <destination node="{a523c74d-47a4-4d92-8b5c-c12202cd0325}" port="{0df97002-be52-41bf-ba49-4dcdc585ed9a}"/>
+  </connection>
+  <connection type="table" uuid="{2dbe3029-7a6b-46ad-a366-f6d83df9d11b}">
+    <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{deb8414a-3224-4868-bc53-16117b26aa7e}"/>
+    <destination node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{aee53721-c9c3-45b2-bebc-99be395c3106}"/>
+  </connection>
+  <connection type="model" uuid="{33f3754e-6401-4c0a-9107-e43051d4d915}">
+    <source node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{75f5277e-fc33-4866-86a1-09a95048ffa6}"/>
+    <destination node="{a523c74d-47a4-4d92-8b5c-c12202cd0325}" port="{da1361d5-c900-4459-b710-58fc3c8fff46}"/>
+    <route x="1284.0" y="1536.0"/>
+  </connection>
+  <connection type="table" uuid="{3669a7f7-a47f-4469-9553-d27ff7dfef56}">
+    <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{39c4a8cf-7ea5-48d8-9955-36640240a972}"/>
+    <destination node="{a523c74d-47a4-4d92-8b5c-c12202cd0325}" port="{a25dc5dd-2912-491d-b017-18dac577338b}"/>
+  </connection>
+  <connection type="table" uuid="{3954147f-3bad-44bf-aa5b-f4ee0e21e028}">
+    <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{39c4a8cf-7ea5-48d8-9955-36640240a972}"/>
+    <destination node="{648248bf-c147-48fb-9587-c8ab23238151}" port="{b8a0e06f-a791-42c1-a04b-8a9ac8d21a43}"/>
+    <route x="1440.0" y="1428.0"/>
+  </connection>
+  <connection type="table" uuid="{46777501-584a-4dc9-be07-0894d16c005a}">
+    <source node="{cd043e9c-f69b-4857-b344-6836c0aaef11}" port="{d461af0b-1670-4ee6-8655-1fc5716dd749}"/>
+    <destination node="{2778c378-0c38-40ea-bcf0-75613c20f713}" port="{fea89210-6fda-4d69-9d74-ecfe0108c05a}"/>
+  </connection>
+  <connection type="table" uuid="{4dad1f93-5584-4eaf-a90c-73b31417137c}">
+    <source node="{3e19972c-d003-40e9-a571-dd7051c616f2}" port="{e8e8fa68-3313-45a4-94e2-32c76a7a83db}"/>
+    <destination node="{cd8d2b4b-0b66-4921-a250-7cb34b294faf}" port="{500131db-2ae4-4c18-9de5-bfc329df7fef}"/>
+  </connection>
+  <connection type="table" uuid="{512913d0-4708-459b-b13d-9fb95e30aa24}">
+    <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{deb8414a-3224-4868-bc53-16117b26aa7e}"/>
+    <destination node="{51f1ca76-c1a9-418d-8ee1-f57619ddf1fc}" port="{06fba6c5-8d86-4ed4-8246-705b15ffe477}"/>
+    <route x="972.0" y="1764.0"/>
+    <route x="1728.0" y="1776.0"/>
+  </connection>
+  <connection type="model" uuid="{57a14179-b2d7-446c-85dc-e287315b7ace}">
+    <source node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{75f5277e-fc33-4866-86a1-09a95048ffa6}"/>
+    <destination node="{648248bf-c147-48fb-9587-c8ab23238151}" port="{f24b6da6-aa67-484e-9626-406e4a91937a}"/>
+    <route x="1296.0" y="1416.0"/>
+  </connection>
+  <connection type="[text]" uuid="{5866318b-47a0-46fb-a507-7225d3791654}">
+    <source node="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" port="{a89a5416-7f0e-4a4e-a13e-7600bc16d1ff}"/>
+    <destination node="{cd8d2b4b-0b66-4921-a250-7cb34b294faf}" port="{906fb798-2acb-4d02-894f-0b7b377f7428}"/>
+    <route x="756.0" y="1800.0"/>
+    <route x="1920.0" y="1812.0"/>
+  </connection>
+  <connection type="[text]" uuid="{5f6e1fb9-a1db-4c9d-8d2c-26f31b660410}">
+    <source node="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" port="{a89a5416-7f0e-4a4e-a13e-7600bc16d1ff}"/>
+    <destination node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{1f65e0f7-597a-4c28-aebf-c4934026bf7d}"/>
+  </connection>
+  <connection type="model" uuid="{6ce16c58-24dd-42b9-a930-bb6098b984f3}">
+    <source node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{75f5277e-fc33-4866-86a1-09a95048ffa6}"/>
+    <destination node="{cd043e9c-f69b-4857-b344-6836c0aaef11}" port="{f892b2e5-2bdd-4bec-80bb-8c0ba76f9540}"/>
+    <route x="1284.0" y="1536.0"/>
+    <route x="1512.0" y="1536.0"/>
+  </connection>
+  <connection type="table" uuid="{7ffe9444-f7ed-4dd8-aeb4-023cc031de5c}">
+    <source node="{648248bf-c147-48fb-9587-c8ab23238151}" port="{5bb86911-8604-42bf-8544-4f24b6fde79a}"/>
+    <destination node="{f9a6355a-62cf-4b6e-a328-1a1dd3156e12}" port="{3d21cceb-71dd-44a9-b804-dfc859b8a4fa}"/>
+  </connection>
+  <connection type="table" uuid="{95d42e6b-c74a-4bef-9916-369c962f41ff}">
+    <source node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{48f42078-cb8c-42ef-bd32-2627996b56b9}"/>
+    <destination node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{d659e4a3-8f3c-41d0-907e-69abb1ea7c3e}"/>
+  </connection>
+  <connection type="table" uuid="{997362c0-0de7-4d6b-a4c0-d3a92543f22e}">
+    <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{3b9bd8d4-66b3-4d72-ab55-20d57a726706}"/>
+    <destination node="{cd043e9c-f69b-4857-b344-6836c0aaef11}" port="{d40af608-2c02-4404-b73f-5b84648cfe3e}"/>
+    <route x="972.0" y="1716.0"/>
+  </connection>
+  <connection type="table" uuid="{9af4cba1-aafc-40e4-9718-ca1cfafd6eff}">
+    <source node="{2778c378-0c38-40ea-bcf0-75613c20f713}" port="{c0aec16b-e436-4259-b1fb-e3d3b37b2e3f}"/>
+    <destination node="{51f1ca76-c1a9-418d-8ee1-f57619ddf1fc}" port="{91be3cc3-5ed9-4c6d-81d0-a0fccf52782a}"/>
+  </connection>
+  <connection type="table" uuid="{9e43aaf3-8d8e-4b07-93f6-6d6fca7f1bfd}">
+    <source node="{afd03714-8a10-47c1-94ac-18fd356a0190}" port="{622eec56-9e74-411c-9d78-c43b78488efa}"/>
+    <destination node="{f9a6355a-62cf-4b6e-a328-1a1dd3156e12}" port="{e6236f4d-bb45-4fae-b79d-7c59d36a48c8}"/>
+    <route x="1440.0" y="1464.0"/>
+    <route x="1572.0" y="1464.0"/>
+  </connection>
+  <connection type="table" uuid="{a5367623-b46f-4f01-a4a2-1d31e141096a}">
+    <source node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{e479626e-7651-424c-beef-8706704199b5}"/>
+    <destination node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{3722d0e0-f30d-4dc8-8c88-d195a5f52bd4}"/>
+  </connection>
+  <connection type="table" uuid="{afbe1c75-e93b-48a3-985b-4db0eb0e3e82}">
+    <source node="{410ff7ca-0af5-4cef-b4dd-095fd01020b0}" port="{5220b5bb-6404-4ac1-a6b3-bda05a36a280}"/>
+    <destination node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{80161f67-c7bd-4eee-a083-09ac163e1da6}"/>
+  </connection>
+  <connection type="table" uuid="{b4945a40-4218-495e-b3a5-fe8ef9a28989}">
+    <source node="{51f1ca76-c1a9-418d-8ee1-f57619ddf1fc}" port="{2d4b2d40-65ec-48fb-a10d-891c0b5fdf73}"/>
+    <destination node="{3e19972c-d003-40e9-a571-dd7051c616f2}" port="{30b1853a-eb73-48a3-a278-c0623f92fb59}"/>
+  </connection>
+  <connection type="table" uuid="{b9cd0915-24c2-477d-97b7-82d40c78e15c}">
+    <source node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{3239204b-156c-471f-ab5b-604b814ad0be}"/>
+    <destination node="{cc8ad429-257e-4772-8b35-506beb2aea52}" port="{20ecb3ed-db4a-490f-b665-9c4bd8093244}"/>
+  </connection>
+  <connection type="table" uuid="{cb18a230-66d3-4a74-a138-c42a3a0f1e0d}">
+    <source node="{08cba0c1-e145-44cd-ae34-0e1b9f4feb23}" port="{3b9bd8d4-66b3-4d72-ab55-20d57a726706}"/>
+    <destination node="{59733e96-e2dc-4469-afc8-8fab1728945d}" port="{7e08e2d4-ba07-4a2a-ae06-d718a71c3ce7}"/>
+  </connection>
+  <text color="Beige" height="100.0" uuid="{984b32ab-e534-424f-b366-0c04f1306891}" width="300.0" x="2050.0" y="1775.0">Compte the 'correct' column with the corresponding text (note: table row X corresponds to list position X-1 since lists starts from zero.)</text>
+  <text color="Beige" height="76.0" uuid="{e9205347-cbab-46ff-991b-f05850dfa3ae}" width="225.0" x="1728.0" y="1380.0">See confusion matrix for missclassifications between the categories</text>
+  <text color="Beige" height="156.0" uuid="{27ed8c89-b11a-4dd6-be46-b20e82df54a2}" width="348.0" x="360.0" y="1380.0"># News classification
+
+Downloads 18000 old newsgroup articles and perform text classification. Requires an internet connection.</text>
+</flow>

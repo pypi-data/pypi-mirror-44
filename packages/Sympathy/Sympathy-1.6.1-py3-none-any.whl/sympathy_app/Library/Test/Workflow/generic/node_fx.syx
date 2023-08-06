@@ -1,0 +1,1371 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" uuid="{72e31a0e-480a-4c3d-aca6-4e83319b8ae3}">
+  <label>node_fx</label>
+  <author>Unknown</author>
+  <version>1.0</version>
+  <ports/>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{0605f6e1-7089-4bfb-aa9c-16d94617c938}" x="2050.0" y="2350.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg.get().strip() != '\\n'.join(['Forwarding arg: File\\nmore spam\\nmore spam'] *2)"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{971ce90f-5e2f-48f6-bcd3-2d224fe2b87f}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{e9267311-ab28-407c-ae45-728eda56f085}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.vjointablenodes" port_format="1.1" uuid="{0c32575a-9870-4942-8cc2-2911335f3f00}" x="2050.0" y="1825.0">
+    <label>VJoin Tables</label>
+    <version>1.0</version>
+    <description>Vertical join of Tables.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2012 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "fill": {
+        "editor": null,
+        "label": "Complement missing columns",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "fill_strategy": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Complement strategy",
+        "list": ["Complement with nan or empty string", "Mask missing values"],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [1],
+        "value_names": ["Mask missing values"]
+      },
+      "minimum_increment": {
+        "editor": {
+          "max": 1,
+          "min": 0,
+          "step": 1,
+          "type": "spinbox"
+        },
+        "label": "Increment for empty tables",
+        "order": 3,
+        "type": "integer",
+        "value": 1
+      },
+      "output_index": {
+        "editor": {
+          "placeholder": "(none)",
+          "type": "lineedit"
+        },
+        "label": "Output index",
+        "order": 2,
+        "type": "string",
+        "value": ""
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="[table]" type_base="[table]" uuid="{bea23002-b36a-4902-b805-2bbc8f730054}">
+        <label>Input Tables</label>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{3d0dc1de-6163-4b7b-b690-66b113b362ec}">
+        <label>Joined Tables</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{1d945bec-b0a7-4e1f-b058-cf3f03bbd17b}" x="2175.0" y="1825.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: np.all(arg['spam'] != arg['spam1'])"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{71943ad2-dc9d-46a1-bd33-f516158a436a}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{e9983c36-2971-46d7-8246-0c7afe89d628}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.generic.fxlist" port_format="1.1" uuid="{1fa90e28-22a5-49ea-8600-7a41738d5d3a}" x="1925.0" y="1825.0">
+    <label>F(x) List</label>
+    <version>1.0</version>
+    <description>Select and apply functions to List.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx\n\n@fx.decorator(['&lt;table&gt;'])\ndef function(arg, res):\n    res['spam1'] = arg['spam']\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port2" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{dd61e6cc-ce9b-4e54-a987-7e94c159265f}">
+        <label>List with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{8b1ce73a-dcaa-413c-9d9a-cc05c2c2e46c}">
+        <label>List with function(s) applied</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.fx" port_format="1.1" uuid="{2638a278-03b1-43e6-88e2-48128492d8be}" x="1925.0" y="2125.0">
+    <label>F(x) Generic Print</label>
+    <version>1.0</version>
+    <description>Select and apply functions to item.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "clean_output": {
+        "editor": null,
+        "label": "Clean output",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx_wrapper\n\n@fx_wrapper.decorator(['&lt;table&gt;']):\ndef function(arg, res):\n    print('arg', arg, 'res', res)\n    # Put your code here.\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "buttons": true,
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "passthrough": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": ["GenericPrintCalculation"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{59e7016e-941a-4d23-adfd-25eb71cd121f}">
+        <label>Path to Python file with scripted functions.</label>
+      </input>
+      <input key="port2" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{6b0f682e-a802-4822-8fee-700e5cd651e1}">
+        <label>Item with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{826dacf4-628e-4f73-b833-facd8b29f41e}">
+        <label>Item with the results from the applied functions</label>
+      </output>
+      <output key="__sy_out__" scheme="hdf5" type="text" type_base="text" uuid="{89b1df8f-e981-4d41-a4cb-a26866d2da5b}">
+        <label>Output Text</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.generic.fxlist" port_format="1.1" uuid="{26a37355-a362-41c0-8e48-143c75fea566}" x="1925.0" y="1925.0">
+    <label>F(x) List</label>
+    <version>1.0</version>
+    <description>Select and apply functions to List.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx_wrapper\n\n@fx_wrapper.decorator(['table'])\ndef function(arg, res):\n    res['spam1'] = arg['spam'] + 1\n\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": false
+      },
+      "selected_functions": {
+        "editor": {
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port2" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{7fe7cc29-1fb0-482c-b725-658bc858c2f7}">
+        <label>List with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{c2c40469-89ba-4cff-ad15-d1d79bd92494}">
+        <label>List with function(s) applied</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.generic.fxlist" port_format="1.1" uuid="{4342f920-d87a-4eb2-b184-b2d53ce7a273}" x="1925.0" y="2275.0">
+    <label>F(x) List Single Spam</label>
+    <version>1.0</version>
+    <description>Select and apply functions to List.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "clean_output": {
+        "editor": null,
+        "label": "Clean output",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx\n\n@fx.decorator(['&lt;a&gt;'])\ndef function(arg, res):\n    raise NotImplementedError('Replace with your function')\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "same_length_res": {
+        "editor": null,
+        "label": "Put results in common outputs",
+        "order": 2,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "buttons": true,
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "passthrough": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": ["SingleSpamCalculation"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{8e2ab3ab-d93b-4edd-b827-1adc7b5ce05e}">
+        <label>Path to Python file with scripted functions.</label>
+      </input>
+      <input key="port2" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{cb66d752-61dc-473c-ba7e-1eb40ac93235}">
+        <label>List with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{cfa8e264-1486-4806-9d76-d0d3a8f9926f}">
+        <label>List with function(s) applied</label>
+      </output>
+      <output key="__sy_out__" scheme="hdf5" type="text" type_base="text" uuid="{a6419d52-cd00-4968-a01b-c2a5bde21f32}">
+        <label>Output Text</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{4ebda4c2-e383-4243-b116-b20b5d247a76}" x="2175.0" y="2025.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg.column_names() != ['spam1']"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{5ee68279-18a7-4b36-bf3b-8df5fcb962a2}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{265839af-b877-4501-8306-b5df2154e8e7}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{5e3ac22b-69a7-409c-abb9-fe35e0986060}" x="2050.0" y="2200.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg.get().strip() != 'more spam'"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{521acd65-9a4c-4be3-8113-dc7b24b2120e}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{2b0ea9f6-865d-417d-af2a-ce8bf5fd02b6}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.list.getitemlist" port_format="1.1" uuid="{605e2249-aa79-49a5-b218-f530e2b05061}" x="1800.0" y="2125.0">
+    <label>Get Item List</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2015 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "index": {
+        "editor": {
+          "type": "combobox"
+        },
+        "label": "Index",
+        "list": ["0"],
+        "order": 0,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": []
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="list" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{ebcbdf79-09f6-4215-8300-d68a3a3c4d26}">
+        <label>Input List</label>
+      </input>
+      <output key="item" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{b2bf503d-b786-49b7-8dc0-f3fb269d5618}">
+        <label>Output selected Item from List</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.vjointablenodes" port_format="1.1" uuid="{6e653c37-4695-4d27-9045-5c956eb6ded7}" x="2050.0" y="1925.0">
+    <label>VJoin Tables</label>
+    <version>1.0</version>
+    <description>Vertical join of Tables.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2012 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "fill": {
+        "editor": null,
+        "label": "Complement missing columns",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "fill_strategy": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Complement strategy",
+        "list": ["Complement with nan or empty string", "Mask missing values"],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [1],
+        "value_names": ["Mask missing values"]
+      },
+      "minimum_increment": {
+        "editor": {
+          "max": 1,
+          "min": 0,
+          "step": 1,
+          "type": "spinbox"
+        },
+        "label": "Increment for empty tables",
+        "order": 3,
+        "type": "integer",
+        "value": 1
+      },
+      "output_index": {
+        "editor": {
+          "placeholder": "(none)",
+          "type": "lineedit"
+        },
+        "label": "Output index",
+        "order": 2,
+        "type": "string",
+        "value": ""
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="[table]" type_base="[table]" uuid="{21471809-08c7-4573-83c3-a6e2696cd131}">
+        <label>Input Tables</label>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{4a5ee54d-0109-47da-82f8-d330fd5ece6b}">
+        <label>Joined Tables</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{84a3dc63-9065-46f9-a9ac-256ebe96b344}" x="2050.0" y="2125.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg.get().strip() != 'Forwarding arg: File'"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{7699f737-9364-43a4-abdd-e4497324ea4b}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{9d955692-01c0-4e35-8270-ff0494fe1246}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.fx" port_format="1.1" uuid="{8fe27400-a16a-4077-92d2-e937c30b8cf3}" x="1925.0" y="2200.0">
+    <label>F(x) Single Spam</label>
+    <version>1.0</version>
+    <description>Select and apply functions to item.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "clean_output": {
+        "editor": null,
+        "label": "Clean output",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "buttons": true,
+          "filter": true,
+          "passthrough": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": ["SingleSpamCalculation", "GenericPrintCalculation"],
+        "order": 1,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": ["SingleSpamCalculation"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{c5fec3c2-7b86-4388-b571-fbf9604fcf6d}">
+        <label>Path to Python file with scripted functions.</label>
+      </input>
+      <input key="port2" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{e87c66e9-8286-439e-b26b-8e28278f8b00}">
+        <label>Item with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{325f9917-bf86-4595-adeb-5cdc8296c59a}">
+        <label>Item with the results from the applied functions</label>
+      </output>
+      <output key="__sy_out__" scheme="hdf5" type="text" type_base="text" uuid="{b1b2d2ec-9a84-4293-9e70-5b429b591957}">
+        <label>Output Text</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{90db6c68-138c-48ac-afab-2b29b9eed8f9}" x="2175.0" y="1925.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg['spam1'].tolist() != [2, 3]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{73f432be-7c3b-4769-9992-0d1be4303546}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{bb4c61a3-e049-4d70-ac32-f516c73f231e}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.datasources.filedatasource" port_format="1.1" uuid="{9d579c6c-186d-4a42-9ece-bb8b54439053}" x="1550.0" y="2350.0">
+    <label>Datasource</label>
+    <version>1.1</version>
+    <description>Select a data source.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "datasource_type": {
+        "editor": null,
+        "label": "Datasource type",
+        "list": ["File", "Database"],
+        "order": 8,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": []
+      },
+      "db_connection_string": {
+        "editor": null,
+        "label": "Connection string",
+        "order": 7,
+        "type": "string",
+        "value": ""
+      },
+      "db_databasename": {
+        "editor": null,
+        "label": "Database name",
+        "order": 4,
+        "type": "string",
+        "value": ""
+      },
+      "db_driver": {
+        "editor": {
+          "type": "combobox"
+        },
+        "label": "Database driver",
+        "list": ["SQL Server"],
+        "order": 2,
+        "passthrough": false,
+        "type": "list",
+        "value": [0],
+        "value_names": []
+      },
+      "db_password": {
+        "editor": null,
+        "label": "Password",
+        "order": 6,
+        "type": "string",
+        "value": ""
+      },
+      "db_servername": {
+        "editor": null,
+        "label": "Server name",
+        "order": 3,
+        "type": "string",
+        "value": ""
+      },
+      "db_user": {
+        "editor": null,
+        "label": "User",
+        "order": 5,
+        "type": "string",
+        "value": ""
+      },
+      "filename": {
+        "editor": {
+          "filter": ["Any files (*)"],
+          "type": "filename"
+        },
+        "label": "Filename",
+        "order": 1,
+        "type": "string",
+        "value": "fx_functions.py"
+      },
+      "type": "group",
+      "use_relative_path": {
+        "editor": null,
+        "label": "Use relative path",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      }
+    }
+    </parameters>
+    <ports>
+      <output key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{176f2c10-d6b2-4c8d-80b8-6cf75b2b9eaf}">
+        <label>Datasource with path to file</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.fx" port_format="1.1" uuid="{9de3a1c9-22f3-49d0-8a1e-68ef33a70810}" x="1925.0" y="2025.0">
+    <label>F(x) Generic Print</label>
+    <version>1.0</version>
+    <description>Select and apply functions to item.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "clean_output": {
+        "editor": null,
+        "label": "Clean output",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx_wrapper\n\n@fx_wrapper.decorator(['table'])\ndef function(arg, res):\n    res['spam'] = arg['spam'] + 1\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "buttons": true,
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "passthrough": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": ["GenericPrintCalculation"]
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port2" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{2110cec9-ed04-45f4-b76c-a04b3a233e6d}">
+        <label>Item with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{27f4560e-bc59-4547-8db5-595f2d635904}">
+        <label>Item with the results from the applied functions</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.generic.fxlist" port_format="1.1" uuid="{c30c457b-7ddd-4da4-baa1-c65a1631df3f}" x="1925.0" y="2350.0">
+    <label>F(x) List Pass Through</label>
+    <version>1.0</version>
+    <description>Select and apply functions to List.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "clean_output": {
+        "editor": null,
+        "label": "Clean output",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx\n\n@fx.decorator(['&lt;a&gt;'])\ndef function(arg, res):\n    raise NotImplementedError('Replace with your function')\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "same_length_res": {
+        "editor": null,
+        "label": "Put results in common outputs",
+        "order": 2,
+        "type": "boolean",
+        "value": true
+      },
+      "selected_functions": {
+        "editor": {
+          "buttons": true,
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "passthrough",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="text" type="datasource" type_base="datasource" uuid="{df152055-104a-4f53-99d2-a6db3e686228}">
+        <label>Path to Python file with scripted functions.</label>
+      </input>
+      <input key="port2" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{c19d8395-3ec0-4c2b-a4b9-edbe57191203}">
+        <label>List with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="[table]" type_base="[&lt;a&gt;]" uuid="{86cf64ae-53ac-4374-8fa9-5969d5d174cb}">
+        <label>List with function(s) applied</label>
+      </output>
+      <output key="__sy_both__" scheme="hdf5" type="text" type_base="text" uuid="{b9f2e45c-a9aa-41bd-95b5-7f432cd7807e}">
+        <label>Output and Warning Text</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.vsplittablenode" port_format="1.1" uuid="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" x="1675.0" y="2125.0">
+    <label>VSplit Table</label>
+    <version>1.0</version>
+    <description>Vertical split of Table into Tables.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "input_index": {
+        "editor": {
+          "display": null,
+          "edit": true,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Index column",
+        "order": 1,
+        "type": "string",
+        "value": ""
+      },
+      "missing_index": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": ["Multiple tables, one for each row", "Single table, one table for all rows", "Error"],
+          "type": "combobox"
+        },
+        "label": "Action on missing index",
+        "order": 2,
+        "type": "string",
+        "value": "Multiple tables, one for each row"
+      },
+      "no_index": {
+        "editor": null,
+        "label": "One table for each row.",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "remove_fill": {
+        "editor": null,
+        "label": "Remove complement columns",
+        "order": 3,
+        "type": "boolean",
+        "value": false
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{82109c01-fd31-4263-80e3-17026c577080}">
+        <label>Input Table</label>
+      </input>
+      <output key="port1" scheme="hdf5" type="[table]" type_base="[table]" uuid="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}">
+        <label>Split Tables</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.create.createtable" port_format="1.1" uuid="{da2d7aca-92df-4376-8106-4c846a27c5ee}" x="1550.0" y="2125.0">
+    <label>Manually Create Table</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "json_table": {
+        "editor": null,
+        "label": "GUI",
+        "order": 0,
+        "type": "string",
+        "value": "[[\"spam\", \"i\", [1, 2]]]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{0ee3b5e8-c86e-47a9-8852-57450e42b07f}">
+        <label>Manually created table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{e924b9fa-73d4-4418-8c23-cb2e5c0669b3}" x="2050.0" y="2288.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg.get().strip() != '\\n'.join(['more spam'] *2)"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{420f8188-1e31-4a8e-86fb-009f050b06fc}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="text" type_base="&lt;a&gt;" uuid="{ccb9afdc-1242-452b-a484-772afa38d715}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{ecbc6ad4-a91d-41c1-b640-be91970d6df0}" x="2180.0" y="1737.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: set(arg.column_names()).difference(['spam', 'spam1'])"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{10e9a7e1-d913-4698-9e14-cd4a6cee2bb8}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{46cc2cd1-8ed2-48d4-aa13-36d3e73bd204}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{ed03c4ae-174f-4d6d-91a2-6e35dd85cbd6}" x="2050.0" y="2025.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg['spam'][0] != 2"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{7828992c-94e1-49d2-91fe-a0ce963c5f16}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{66dd835e-ee46-4e43-a322-44e18f95ddb6}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <connection type="[table]" uuid="{044a9ca9-e010-4dfb-ac00-bc7f910513bc}">
+    <source node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}"/>
+    <destination node="{4342f920-d87a-4eb2-b184-b2d53ce7a273}" port="{cb66d752-61dc-473c-ba7e-1eb40ac93235}"/>
+  </connection>
+  <connection type="table" uuid="{085f4fc1-bc9e-44f6-bac8-c4fafd7643cb}">
+    <source node="{6e653c37-4695-4d27-9045-5c956eb6ded7}" port="{4a5ee54d-0109-47da-82f8-d330fd5ece6b}"/>
+    <destination node="{90db6c68-138c-48ac-afab-2b29b9eed8f9}" port="{73f432be-7c3b-4769-9992-0d1be4303546}"/>
+  </connection>
+  <connection type="table" uuid="{09921427-a49d-4c93-bf34-27804f1af46d}">
+    <source node="{9de3a1c9-22f3-49d0-8a1e-68ef33a70810}" port="{27f4560e-bc59-4547-8db5-595f2d635904}"/>
+    <destination node="{ed03c4ae-174f-4d6d-91a2-6e35dd85cbd6}" port="{7828992c-94e1-49d2-91fe-a0ce963c5f16}"/>
+  </connection>
+  <connection type="text" uuid="{0b8d6627-f4ef-48ed-a51f-bed1b3ed045f}">
+    <source node="{8fe27400-a16a-4077-92d2-e937c30b8cf3}" port="{b1b2d2ec-9a84-4293-9e70-5b429b591957}"/>
+    <destination node="{5e3ac22b-69a7-409c-abb9-fe35e0986060}" port="{521acd65-9a4c-4be3-8113-dc7b24b2120e}"/>
+  </connection>
+  <connection type="datasource" uuid="{3b425dc6-8b2a-49f3-9a43-a5e2ad749448}">
+    <source node="{9d579c6c-186d-4a42-9ece-bb8b54439053}" port="{176f2c10-d6b2-4c8d-80b8-6cf75b2b9eaf}"/>
+    <destination node="{c30c457b-7ddd-4da4-baa1-c65a1631df3f}" port="{df152055-104a-4f53-99d2-a6db3e686228}"/>
+  </connection>
+  <connection type="text" uuid="{3e619b3c-d16b-49f9-ba32-2e9b7bd38758}">
+    <source node="{4342f920-d87a-4eb2-b184-b2d53ce7a273}" port="{a6419d52-cd00-4968-a01b-c2a5bde21f32}"/>
+    <destination node="{e924b9fa-73d4-4418-8c23-cb2e5c0669b3}" port="{420f8188-1e31-4a8e-86fb-009f050b06fc}"/>
+  </connection>
+  <connection type="[table]" uuid="{457adef1-7373-437a-bd6d-563593cbaf00}">
+    <source node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}"/>
+    <destination node="{605e2249-aa79-49a5-b218-f530e2b05061}" port="{ebcbdf79-09f6-4215-8300-d68a3a3c4d26}"/>
+  </connection>
+  <connection type="[table]" uuid="{47620d85-059e-4f86-8fb8-206a38e3d4a0}">
+    <source node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}"/>
+    <destination node="{26a37355-a362-41c0-8e48-143c75fea566}" port="{7fe7cc29-1fb0-482c-b725-658bc858c2f7}"/>
+  </connection>
+  <connection type="table" uuid="{528cc959-b832-4948-b743-54110da4444e}">
+    <source node="{6e653c37-4695-4d27-9045-5c956eb6ded7}" port="{4a5ee54d-0109-47da-82f8-d330fd5ece6b}"/>
+    <destination node="{4ebda4c2-e383-4243-b116-b20b5d247a76}" port="{5ee68279-18a7-4b36-bf3b-8df5fcb962a2}"/>
+  </connection>
+  <connection type="[table]" uuid="{57305b75-c5af-459d-88a2-d8b87ff55c5f}">
+    <source node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}"/>
+    <destination node="{c30c457b-7ddd-4da4-baa1-c65a1631df3f}" port="{c19d8395-3ec0-4c2b-a4b9-edbe57191203}"/>
+  </connection>
+  <connection type="text" uuid="{631563cc-bff1-4d6a-b198-178ef9cf49ac}">
+    <source node="{2638a278-03b1-43e6-88e2-48128492d8be}" port="{89b1df8f-e981-4d41-a4cb-a26866d2da5b}"/>
+    <destination node="{84a3dc63-9065-46f9-a9ac-256ebe96b344}" port="{7699f737-9364-43a4-abdd-e4497324ea4b}"/>
+  </connection>
+  <connection type="table" uuid="{6aa7e5f3-5a18-4556-95e9-2e003a046bdd}">
+    <source node="{0c32575a-9870-4942-8cc2-2911335f3f00}" port="{3d0dc1de-6163-4b7b-b690-66b113b362ec}"/>
+    <destination node="{1d945bec-b0a7-4e1f-b058-cf3f03bbd17b}" port="{71943ad2-dc9d-46a1-bd33-f516158a436a}"/>
+  </connection>
+  <connection type="[table]" uuid="{7fef06e3-4c83-4c45-9cfd-a0f39b47cd36}">
+    <source node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{0be08d9b-bc2a-49d3-abad-8ee83aeaeed0}"/>
+    <destination node="{1fa90e28-22a5-49ea-8600-7a41738d5d3a}" port="{dd61e6cc-ce9b-4e54-a987-7e94c159265f}"/>
+  </connection>
+  <connection type="[table]" uuid="{8341dffc-ae2b-416d-afd3-4f895e731a3b}">
+    <source node="{26a37355-a362-41c0-8e48-143c75fea566}" port="{c2c40469-89ba-4cff-ad15-d1d79bd92494}"/>
+    <destination node="{6e653c37-4695-4d27-9045-5c956eb6ded7}" port="{21471809-08c7-4573-83c3-a6e2696cd131}"/>
+  </connection>
+  <connection type="table" uuid="{a077d42b-7840-4d9b-ab68-68946541d805}">
+    <source node="{0c32575a-9870-4942-8cc2-2911335f3f00}" port="{3d0dc1de-6163-4b7b-b690-66b113b362ec}"/>
+    <destination node="{ecbc6ad4-a91d-41c1-b640-be91970d6df0}" port="{10e9a7e1-d913-4698-9e14-cd4a6cee2bb8}"/>
+  </connection>
+  <connection type="table" uuid="{aba1b332-4fb0-43de-9695-b2f08463e248}">
+    <source node="{da2d7aca-92df-4376-8106-4c846a27c5ee}" port="{0ee3b5e8-c86e-47a9-8852-57450e42b07f}"/>
+    <destination node="{d16d7f4d-d0a6-4a30-9b35-a908456af8b7}" port="{82109c01-fd31-4263-80e3-17026c577080}"/>
+  </connection>
+  <connection type="datasource" uuid="{b93e528d-83f8-4821-a910-605c22d0f1d8}">
+    <source node="{9d579c6c-186d-4a42-9ece-bb8b54439053}" port="{176f2c10-d6b2-4c8d-80b8-6cf75b2b9eaf}"/>
+    <destination node="{8fe27400-a16a-4077-92d2-e937c30b8cf3}" port="{c5fec3c2-7b86-4388-b571-fbf9604fcf6d}"/>
+  </connection>
+  <connection type="datasource" uuid="{c083aa1f-a429-45bb-9215-e2ec915abaac}">
+    <source node="{9d579c6c-186d-4a42-9ece-bb8b54439053}" port="{176f2c10-d6b2-4c8d-80b8-6cf75b2b9eaf}"/>
+    <destination node="{4342f920-d87a-4eb2-b184-b2d53ce7a273}" port="{8e2ab3ab-d93b-4edd-b827-1adc7b5ce05e}"/>
+  </connection>
+  <connection type="text" uuid="{c666409c-7f1c-4e25-b938-e43e9d2a0ac9}">
+    <source node="{c30c457b-7ddd-4da4-baa1-c65a1631df3f}" port="{b9f2e45c-a9aa-41bd-95b5-7f432cd7807e}"/>
+    <destination node="{0605f6e1-7089-4bfb-aa9c-16d94617c938}" port="{971ce90f-5e2f-48f6-bcd3-2d224fe2b87f}"/>
+  </connection>
+  <connection type="table" uuid="{cf36127c-9649-42cb-8fc1-458022ebc3b5}">
+    <source node="{605e2249-aa79-49a5-b218-f530e2b05061}" port="{b2bf503d-b786-49b7-8dc0-f3fb269d5618}"/>
+    <destination node="{9de3a1c9-22f3-49d0-8a1e-68ef33a70810}" port="{2110cec9-ed04-45f4-b76c-a04b3a233e6d}"/>
+  </connection>
+  <connection type="table" uuid="{dd25ab2c-036f-4cce-9d80-f4c71bafa7b8}">
+    <source node="{605e2249-aa79-49a5-b218-f530e2b05061}" port="{b2bf503d-b786-49b7-8dc0-f3fb269d5618}"/>
+    <destination node="{8fe27400-a16a-4077-92d2-e937c30b8cf3}" port="{e87c66e9-8286-439e-b26b-8e28278f8b00}"/>
+  </connection>
+  <connection type="table" uuid="{e0b64eb0-bf83-45c3-a193-41fd37f73905}">
+    <source node="{605e2249-aa79-49a5-b218-f530e2b05061}" port="{b2bf503d-b786-49b7-8dc0-f3fb269d5618}"/>
+    <destination node="{2638a278-03b1-43e6-88e2-48128492d8be}" port="{6b0f682e-a802-4822-8fee-700e5cd651e1}"/>
+  </connection>
+  <connection type="datasource" uuid="{e92035e0-824c-4b76-b693-7f3830d4f8ba}">
+    <source node="{9d579c6c-186d-4a42-9ece-bb8b54439053}" port="{176f2c10-d6b2-4c8d-80b8-6cf75b2b9eaf}"/>
+    <destination node="{2638a278-03b1-43e6-88e2-48128492d8be}" port="{59e7016e-941a-4d23-adfd-25eb71cd121f}"/>
+  </connection>
+  <connection type="[table]" uuid="{ec7bc23b-5478-4d29-a6c8-44128b50edb5}">
+    <source node="{1fa90e28-22a5-49ea-8600-7a41738d5d3a}" port="{8b1ce73a-dcaa-413c-9d9a-cc05c2c2e46c}"/>
+    <destination node="{0c32575a-9870-4942-8cc2-2911335f3f00}" port="{bea23002-b36a-4902-b805-2bbc8f730054}"/>
+  </connection>
+</flow>

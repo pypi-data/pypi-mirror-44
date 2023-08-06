@@ -1,0 +1,383 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" uuid="{6c0c90c3-2c59-4dbb-90cc-136e8afb0266}">
+  <label></label>
+  <ports/>
+  <node id="org.sysess.sympathy.tuple.tuple2" port_format="1.1" uuid="{1b457897-f850-4aac-9536-fcbae58eda73}" x="1850.0" y="1825.0">
+    <label>Tuple</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Erik der Hagopian</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{17864110-844e-4842-83d5-c2d04f461db6}">
+        <label>Input</label>
+      </input>
+      <input key="input" scheme="hdf5" type="table" type_base="&lt;b&gt;" uuid="{2255945a-034e-4893-a96f-4a89bd180c37}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="(json, table)" type_base="(&lt;a&gt;, &lt;b&gt;)" uuid="{4c5c9aaf-e6b1-41e0-be4d-41c754cd2990}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.adaf.interpolateadaf" only_conf="True" port_format="1.1" uuid="{202df3ab-f311-4153-8a8e-f216cf84ceb2}" x="1700.0" y="1725.0">
+    <label>Interpolate ADAF</label>
+    <version>2.0</version>
+    <description>Interpolation of data</description>
+    <author>Helena Olen</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "bool_interp_method": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "",
+        "list": ["zero", "nearest"],
+        "mode": "selected",
+        "order": 6,
+        "type": "list",
+        "value": [1],
+        "value_names": ["nearest"]
+      },
+      "dt": {
+        "editor": null,
+        "label": "Time step",
+        "order": 2,
+        "type": "float",
+        "value": 0.0
+      },
+      "int_interp_method": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "",
+        "list": ["zero", "nearest", "linear", "quadratic", "cubic"],
+        "mode": "selected",
+        "order": 7,
+        "type": "list",
+        "value": [1],
+        "value_names": ["nearest"]
+      },
+      "interpolation_method": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "",
+        "list": ["zero", "nearest", "linear", "quadratic", "cubic"],
+        "mode": "selected",
+        "order": 8,
+        "type": "list",
+        "value": [2],
+        "value_names": ["linear"]
+      },
+      "new_tb": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": true,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Timebasis to use for interpolation",
+        "list": [],
+        "mode": "selected",
+        "order": 3,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "only_timebasis": {
+        "editor": null,
+        "label": "Export time basis only",
+        "order": 5,
+        "type": "boolean",
+        "value": false
+      },
+      "resample_all_rasters": {
+        "editor": null,
+        "label": "Resample all signals",
+        "order": 0,
+        "type": "boolean",
+        "value": true
+      },
+      "ts": {
+        "editor": {
+          "edit": true,
+          "filter": true,
+          "mode": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Choose signals",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "type": "group",
+      "use_dt": {
+        "editor": null,
+        "label": "Time step approach",
+        "order": 4,
+        "type": "boolean",
+        "value": true
+      }
+    }
+    </parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="adaf" type_base="adaf" uuid="{b3c1bf39-dcf4-46e9-8c26-c5db5513bcd7}">
+        <label>Input ADAF</label>
+      </input>
+      <output key="port1" scheme="hdf5" type="adaf" type_base="adaf" uuid="{97e4910a-41f5-4f87-afd0-5f79a5cf9eb3}">
+        <label>Interpolated ADAF</label>
+      </output>
+      <output key="__sy_conf__" scheme="hdf5" type="json" type_base="json" uuid="{c763fd57-5bfc-4c2b-9173-786954c677e6}">
+        <label>Configuration port</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.builtin.empty" port_format="1.1" uuid="{3bb70571-3431-45de-94f8-4410e9fa40e4}" x="1550.0" y="1725.0">
+    <label>Empty</label>
+    <version>1.1</version>
+    <description>Generate empty data of inferred or defined datatype</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;, Benedikt Ziegler &lt;benedikt.ziegler@combine.se&gt;</author>
+    <copyright>(C) 2016 System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "datatype": {
+        "editor": null,
+        "label": "Datatype",
+        "order": 0,
+        "type": "string",
+        "value": "&lt;a&gt;"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="" scheme="hdf5" type="adaf" type_base="&lt;a&gt;" uuid="{9cc8ad6a-8a39-4945-ba42-0df2a9537d6f}">
+        <label>Output port containing empty data (must be connected or defined)</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.fx" port_format="1.1" uuid="{3cc4b597-6166-4a7d-bde0-60d8cc90156c}" x="2000.0" y="1825.0">
+    <label>F(x)</label>
+    <version>1.0</version>
+    <description>Select and apply functions to item.</description>
+    <author>Erik der Hagopian</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "code": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Python code",
+        "order": 2,
+        "type": "string",
+        "value": "from sympathy.api import fx\n\n@fx.decorator(['&lt;a&gt;'])\ndef function(arg, res):\n    conf = arg[0].get()\n    data = arg[1]\n    \n    conf[\"bool_interp_method\"][\"value\"] = [data['bool_interp_strategy_index'][0]]\n    conf[\"bool_interp_method\"][\"value_names\"] = [data['bool_interp_strategy'][0]]\n    conf[\"interpolation_method\"][\"value\"] = [data['interp_strategy_index'][0]]\n    conf[\"interpolation_method\"][\"value_names\"] = [data['interp_strategy'][0]]\n    res[0].set(conf)\n\n"
+      },
+      "copy_input": {
+        "editor": null,
+        "label": "Copy input",
+        "order": 0,
+        "type": "boolean",
+        "value": false
+      },
+      "selected_functions": {
+        "editor": {
+          "edit": false,
+          "filter": true,
+          "mode": true,
+          "selection": "multi",
+          "type": "listview"
+        },
+        "label": "Select functions",
+        "list": [],
+        "mode": "selected",
+        "order": 1,
+        "type": "list",
+        "value": [],
+        "value_names": []
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="port2" scheme="hdf5" type="(json, table)" type_base="&lt;a&gt;" uuid="{85642a67-3a2b-41fb-aace-63952f14b281}">
+        <label>Item with data to apply functions on</label>
+      </input>
+      <output key="port3" scheme="hdf5" type="(json, table)" type_base="&lt;a&gt;" uuid="{7c016bb5-e258-403f-82e1-9282e2b7832d}">
+        <label>Item with the results from the applied functions</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.create.createtable" port_format="1.1" uuid="{590d57b0-c563-4b43-b7cb-898feafb125f}" x="1550.0" y="1825.0">
+    <label>Manually Create Table</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "json_table": {
+        "editor": null,
+        "label": "GUI",
+        "order": 0,
+        "type": "string",
+        "value": "[[\"interp_strategy\", \"U\", [\"zero\"]], [\"interp_strategy_index\", \"i\", [0]], [\"bool_interp_strategy\", \"U\", [\"zero\"]], [\"bool_interp_strategy_index\", \"i\", [0]]]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{20d0fd8b-6a6d-43ed-b927-43508a5361c1}">
+        <label>Manually created table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.conditionalerror" port_format="1.1" uuid="{67054ccc-e259-4794-b0fa-0683f3e48e14}" x="2450.0" y="1725.0">
+    <label>Conditional error/warning</label>
+    <version>1.0</version>
+    <description>Raise an error if a predicate is True.</description>
+    <author>Magnus Sand&#233;n</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">
+    {
+      "error_msg": {
+        "editor": null,
+        "label": "Error message:",
+        "order": 1,
+        "type": "string",
+        "value": "Error!"
+      },
+      "error_type": {
+        "editor": {
+          "display": null,
+          "edit": false,
+          "filter": false,
+          "include_empty": false,
+          "options": [],
+          "type": "combobox"
+        },
+        "label": "Severity:",
+        "list": ["Error", "Warning", "Output"],
+        "mode": "selected",
+        "order": 2,
+        "type": "list",
+        "value": [0],
+        "value_names": ["Error"]
+      },
+      "predicate": {
+        "editor": {
+          "language": "python",
+          "type": "code"
+        },
+        "label": "Predicate function:",
+        "order": 0,
+        "type": "string",
+        "value": "lambda arg: arg[0].get() == arg[1].get()"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="in" scheme="hdf5" type="(json, json)" type_base="&lt;a&gt;" uuid="{f22a3647-eba9-4084-b92a-6ead9b036a69}">
+        <label>Input</label>
+      </input>
+      <output key="out" scheme="hdf5" type="(json, json)" type_base="&lt;a&gt;" uuid="{4151cb87-4210-4bd5-b9ff-2c7e8daf48c3}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.tuple.firsttuple2" port_format="1.1" uuid="{ebf36494-b8de-4b86-a638-f9f7bdc25b10}" x="2150.0" y="1825.0">
+    <label>First Tuple2</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Erik der Hagopian</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="" scheme="hdf5" type="(json, table)" type_base="(&lt;a&gt;, &lt;b&gt;)" uuid="{7d2edebc-096d-4033-af63-e2fa74f4034d}">
+        <label>Tuple</label>
+      </input>
+      <output key="" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{eaea6a72-0ccd-43b7-96b7-bbc87db9eb82}">
+        <label>First</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.tuple.tuple2" port_format="1.1" uuid="{f4723e85-5007-4047-b0f4-b85a038d6a8b}" x="2300.0" y="1725.0">
+    <label>Tuple</label>
+    <version>1.0</version>
+    <description></description>
+    <author>Erik der Hagopian</author>
+    <copyright>Copyright (c) 2011-2019, System Engineering Software Society</copyright>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="json" type_base="&lt;a&gt;" uuid="{9ed7309d-21c0-40ca-a1c7-c9330850fd55}">
+        <label>Input</label>
+      </input>
+      <input key="input" scheme="hdf5" type="json" type_base="&lt;b&gt;" uuid="{3ffe686a-0c77-4085-aa0c-cccddc5d7d8a}">
+        <label>Input</label>
+      </input>
+      <output key="output" scheme="hdf5" type="(json, json)" type_base="(&lt;a&gt;, &lt;b&gt;)" uuid="{83edb710-1790-4790-b704-392909400c89}">
+        <label>Output</label>
+      </output>
+    </ports>
+  </node>
+  <connection type="json" uuid="{2988b49d-b722-4093-aa9f-cdf35ebeab97}">
+    <source node="{202df3ab-f311-4153-8a8e-f216cf84ceb2}" port="{c763fd57-5bfc-4c2b-9173-786954c677e6}"/>
+    <destination node="{1b457897-f850-4aac-9536-fcbae58eda73}" port="{17864110-844e-4842-83d5-c2d04f461db6}"/>
+  </connection>
+  <connection type="table" uuid="{2d630b8f-8270-43aa-af22-b8df8ea04bdc}">
+    <source node="{590d57b0-c563-4b43-b7cb-898feafb125f}" port="{20d0fd8b-6a6d-43ed-b927-43508a5361c1}"/>
+    <destination node="{1b457897-f850-4aac-9536-fcbae58eda73}" port="{2255945a-034e-4893-a96f-4a89bd180c37}"/>
+  </connection>
+  <connection type="(json, table)" uuid="{79aec5b4-ae05-48c8-92ac-611a07c7231f}">
+    <source node="{1b457897-f850-4aac-9536-fcbae58eda73}" port="{4c5c9aaf-e6b1-41e0-be4d-41c754cd2990}"/>
+    <destination node="{3cc4b597-6166-4a7d-bde0-60d8cc90156c}" port="{85642a67-3a2b-41fb-aace-63952f14b281}"/>
+  </connection>
+  <connection type="(json, json)" uuid="{7c07a9b2-411a-440b-8585-f513ae91cd95}">
+    <source node="{f4723e85-5007-4047-b0f4-b85a038d6a8b}" port="{83edb710-1790-4790-b704-392909400c89}"/>
+    <destination node="{67054ccc-e259-4794-b0fa-0683f3e48e14}" port="{f22a3647-eba9-4084-b92a-6ead9b036a69}"/>
+  </connection>
+  <connection type="json" uuid="{7d865fa5-88e2-4f26-bc80-d063ae8344b0}">
+    <source node="{202df3ab-f311-4153-8a8e-f216cf84ceb2}" port="{c763fd57-5bfc-4c2b-9173-786954c677e6}"/>
+    <destination node="{f4723e85-5007-4047-b0f4-b85a038d6a8b}" port="{9ed7309d-21c0-40ca-a1c7-c9330850fd55}"/>
+  </connection>
+  <connection type="json" uuid="{a6cac242-e6cc-41fe-8d53-29b4d50a760e}">
+    <source node="{ebf36494-b8de-4b86-a638-f9f7bdc25b10}" port="{eaea6a72-0ccd-43b7-96b7-bbc87db9eb82}"/>
+    <destination node="{f4723e85-5007-4047-b0f4-b85a038d6a8b}" port="{3ffe686a-0c77-4085-aa0c-cccddc5d7d8a}"/>
+  </connection>
+  <connection type="adaf" uuid="{d904639b-9fd0-45c6-93c4-31aabf907a50}">
+    <source node="{3bb70571-3431-45de-94f8-4410e9fa40e4}" port="{9cc8ad6a-8a39-4945-ba42-0df2a9537d6f}"/>
+    <destination node="{202df3ab-f311-4153-8a8e-f216cf84ceb2}" port="{b3c1bf39-dcf4-46e9-8c26-c5db5513bcd7}"/>
+  </connection>
+  <connection type="(json, table)" uuid="{f1bad7b1-a541-496e-b86a-55c3b7229088}">
+    <source node="{3cc4b597-6166-4a7d-bde0-60d8cc90156c}" port="{7c016bb5-e258-403f-82e1-9282e2b7832d}"/>
+    <destination node="{ebf36494-b8de-4b86-a638-f9f7bdc25b10}" port="{7d2edebc-096d-4033-af63-e2fa74f4034d}"/>
+  </connection>
+  <text color="Red" height="75.0" uuid="{3ea61ecf-8cc6-4a10-b2d7-66f8f3a2ef0e}" width="225.0" x="1275.0" y="1825.0">Test that data from numpy such as numpy.int64 can be passed directly to JSON</text>
+  <text color="Red" height="75.0" uuid="{c05232ab-d0e2-4ce5-a1a4-7983a58aa3b0}" width="225.0" x="2300.0" y="1625.0">Test that the structure is modified</text>
+</flow>

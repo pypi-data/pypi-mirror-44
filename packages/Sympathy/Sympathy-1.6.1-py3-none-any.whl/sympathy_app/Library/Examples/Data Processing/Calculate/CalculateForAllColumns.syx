@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" height="50.0" uuid="{c6ca09bc-f5e8-4ee4-b250-06cc795730b4}" width="50.0" x="0.0" y="0.0" id="">
+  <label></label>
+  <description></description>
+  <author></author>
+  <copyright></copyright>
+  <version></version>
+  <min_version></min_version>
+  <icon/>
+  <aggregation type="json">null</aggregation>
+  <libraries type="json">[]</libraries>
+  <pythonpaths type="json">[]</pythonpaths>
+  <parameters type="json">{}</parameters>
+  <ports/>
+  <node id="org.sysess.sympathy.data.table.transposetablenew" uuid="{6621359e-2526-4fc9-85ba-4878c7638559}" x="1750.0" y="1950.0">
+    <label>Transpose Table</label>
+    <description></description>
+    <author>Andreas Tagerud &lt;andreas.tagerud@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "use_col_names": {"description": "Set column names from the input table as the first column in the transposed table", "editor": null, "label": "Column names as first column", "order": 0, "type": "boolean", "value": false}, "reverse_col_names": {"description": "Use the selected column from input table as column names in the transposed table, and discarding the selected column from the transpose.", "editor": null, "label": "Use selected column as column names", "order": 1, "type": "boolean", "value": true}, "columns": {"description": "Column that contains the new column names", "label": "Column names column", "mode": "selected", "order": 2, "passthrough": false, "type": "list", "list": ["columns", "min"], "value": [0], "value_names": ["columns"], "editor": {"display": null, "edit": true, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="table" type_base="table" uuid="{8ca34fb8-25d1-4b24-be70-d55e65e85f6c}">
+        <label>The Table to transpose</label>
+        <description>The Table to transpose</description>
+      </input>
+      <output key="output" scheme="hdf5" type="table" type_base="table" uuid="{7d5691f3-42f2-4156-a2f6-341e25be7f7a}">
+        <label>The transposed Table</label>
+        <description>The transposed Table</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.calculatorgeneric" uuid="{9554141b-0c30-459a-a13a-bb23e1fdbdc9}" x="1600.0" y="1950.0">
+    <label>Calculator:
+Minimum of each column</label>
+    <description>Performs user-defined python calculations</description>
+    <author>Greger Cronquist &lt;greger.cronquist@sysess.org&gt;, Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;, Sara Gustafzelius &lt;sara.gustafzelius@combine.se&gt;, Benedikt Ziegler &lt;benedikt.ziegler@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <version>3.0</version>
+    <parameters type="json">{"type": "group", "calc_list": {"description": "List of calculations.", "editor": null, "label": "List of calculations", "mode": "selected", "order": 0, "type": "list", "list": ["columns = ['min({})'.format(col.name) for col in arg.cols()] #ENABLED:1", "min = [np.min(col.data) for col in arg.cols()] #ENABLED:1"], "value": [], "value_names": []}, "calc_attrs_dict": {"description": "Calculation attributes as json dict-list-string!", "editor": null, "label": "", "order": 1, "type": "string", "value": "[]"}, "copy_input": {"description": "If enabled the incoming data will be copied to the output before running the calculations. This requires that the results will all have the same length. An exception will be raised if the lengths of the outgoing results differ.", "editor": null, "label": "Copy input", "order": 2, "type": "boolean", "value": false}, "fail_strategy": {"description": "Decide how a failed calculation should be handled", "label": "Action on calculation failure", "mode": "selected", "order": 3, "type": "list", "list": ["Exception", "Skip calculation"], "value": [0], "value_names": ["Exception"], "editor": {"display": null, "edit": false, "filter": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="port0" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{d79df166-4f7a-42c6-8572-0754cc2b4ed8}">
+        <label>Generic Input</label>
+        <description>Generic Input</description>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{c3b0a265-f847-4a04-933f-157a038d1c13}">
+        <label>Table with results from the calculations.</label>
+        <description>Table with results from the calculations.</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.random.randomtable" uuid="{e94a03a5-fc1d-47bd-9d95-61584f6ab4c8}" x="1450.0" y="1950.0">
+    <label>Random Table</label>
+    <description>Random Table generator.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <version>0.1</version>
+    <parameters type="json">{"type": "group", "column_entries": {"description": "The number of columns in the generated table.", "label": "Columns:", "order": 0, "type": "integer", "value": 5, "editor": {"max": 1000000, "min": 0, "step": 1, "type": "spinbox"}}, "column_length": {"description": "The number of rows in the generated table.", "label": "Rows:", "order": 1, "type": "integer", "value": 5, "editor": {"max": 100000000, "min": 0, "step": 1, "type": "spinbox"}}, "mask_values": {"description": "If checked each value has a 50% chance to be masked.", "editor": null, "label": "Randomly mask values", "order": 2, "type": "boolean", "value": false}}</parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{41a9b3fc-88e0-4f4e-825c-64af6a1c58dc}">
+        <label>Table with random numbers. The specifications of the Table are declared in the configuration.</label>
+        <description>Table with random numbers. The specifications of the Table are declared in the configuration.</description>
+      </output>
+    </ports>
+  </node>
+  <connection type="table" uuid="{5905aa08-d109-4987-881f-4977a706a77e}">
+    <source node="{e94a03a5-fc1d-47bd-9d95-61584f6ab4c8}" port="{41a9b3fc-88e0-4f4e-825c-64af6a1c58dc}"/>
+    <destination node="{9554141b-0c30-459a-a13a-bb23e1fdbdc9}" port="{d79df166-4f7a-42c6-8572-0754cc2b4ed8}"/>
+  </connection>
+  <connection type="table" uuid="{a6a49ef2-7a54-453e-94fe-25ea3c99ef1b}">
+    <source node="{9554141b-0c30-459a-a13a-bb23e1fdbdc9}" port="{c3b0a265-f847-4a04-933f-157a038d1c13}"/>
+    <destination node="{6621359e-2526-4fc9-85ba-4878c7638559}" port="{8ca34fb8-25d1-4b24-be70-d55e65e85f6c}"/>
+  </connection>
+  <text color="Beige" height="150" uuid="{5ac01807-ca7a-4d7c-9cd3-3376dc7d0175}" width="400" x="1425.0" y="1775.0">This flow shows an example of how to do the same key-value calculation to all columns in a table without specifying each one by name.
+
+- Node example: *org.sysess.sympathy.data.table.calculatorgeneric*
+- Node example: *org.sysess.sympathy.data.table.transposetablenew*</text>
+</flow>

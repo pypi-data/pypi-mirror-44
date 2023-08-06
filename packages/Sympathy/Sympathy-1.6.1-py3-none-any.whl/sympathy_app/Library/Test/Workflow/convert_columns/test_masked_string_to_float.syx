@@ -1,0 +1,491 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" height="50.0" uuid="{919c54a3-68f5-4685-9916-af867a52f526}" width="50.0" x="0.0" y="0.0" id="">
+  <label></label>
+  <description></description>
+  <author></author>
+  <copyright></copyright>
+  <version></version>
+  <min_version></min_version>
+  <icon/>
+  <aggregation type="json">null</aggregation>
+  <libraries type="json">[]</libraries>
+  <pythonpaths type="json">[]</pythonpaths>
+  <parameters type="json">{}</parameters>
+  <ports/>
+  <flow cls="Lambda" height="50.0" uuid="{7ddb1831-12b2-4eb9-8fde-aa1d009c00a5}" width="50.0" x="1900.0" y="1775.0" id="">
+    <label>Convert flow</label>
+    <description></description>
+    <author></author>
+    <copyright></copyright>
+    <version></version>
+    <min_version></min_version>
+    <icon/>
+    <aggregation type="json">null</aggregation>
+    <libraries type="json">[]</libraries>
+    <pythonpaths type="json">[]</pythonpaths>
+    <parameters type="json">{}</parameters>
+    <ports>
+      <input index="0" key="Port" optional="False" parent="False" scheme="hdf5" type="table" uuid="{cd2d3250-348e-4fa3-9056-f36af64e611b}" x="1650.0" y="1950.0">
+        <label>Port</label>
+        <description>Port</description>
+      </input>
+      <output index="0" key="Port" optional="False" parent="False" scheme="hdf5" type="table" uuid="{05f5c0fa-d6a6-4982-b74a-36282493dc68}" x="2600.0" y="1900.0">
+        <label>Port</label>
+        <description>Port</description>
+      </output>
+    </ports>
+    <basic_ports>
+      <output key="Function" scheme="hdf5" type="table -&gt; table" type_base="&lt;a&gt;" uuid="{709f9013-a726-4713-a65a-0927cc2ff7e4}">
+        <label>Lambda function</label>
+        <description>Lambda function</description>
+      </output>
+    </basic_ports>
+    <node id="org.sysess.sympathy.data.table.selecttablecolumns" uuid="{32d5714c-b8a4-499c-bb6d-beca8d263d9c}" x="2193.0" y="1853.0">
+      <label>Select columns in Table</label>
+      <description>Select columns from input to propagate to output.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;, Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+      <copyright>(c) 2013, 2017 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [1], "value_names": ["Two"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}}</parameters>
+      <ports>
+        <input key="" scheme="hdf5" type="table" type_base="table" uuid="{09433d64-bb93-489d-9ef4-f799a6eddee3}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="" scheme="hdf5" type="table" type_base="table" uuid="{e1ce54c0-2ef5-46e9-b75e-e6d5ca6d5932}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.selecttablerows" uuid="{40f21098-4a5d-4dae-8bd5-9b3c7f04ae51}" x="2043.0" y="1853.0">
+      <label>get ABCD</label>
+      <description>Reduction of rows in Table according to specified filter.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+      <copyright>(C) 2014 System Engineering Software Society</copyright>
+      <version>1.1</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns for comparison relation", "label": "Columns to filter", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [0], "value_names": ["One"], "editor": {"edit": true, "filter": true, "mode": true, "passthrough": true, "selection": "multi", "type": "listview"}}, "exist": {"description": "Constraint must be satisfied in: Any selected column or All selected columns.", "label": "Constraint must be satisfied in", "order": 1, "type": "string", "value": "all", "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": ["all", "any"]}}, "relation": {"description": "Select comparison operator for relation", "label": "Relation", "mode": "selected", "order": 2, "type": "list", "list": ["equal", "less than", "less than or equal", "greater than", "greater than or equal", "not equal"], "value": [0], "value_names": ["equal"], "editor": {"display": null, "edit": false, "include_empty": false, "options": null, "type": "combobox"}}, "constraint": {"description": "Specify constraint value for comparison relation", "editor": null, "label": "Filter constraint", "order": 3, "type": "string", "value": ""}, "use_custom_predicate": {"description": "Select to use custom filter", "editor": null, "label": "Use custom filter", "order": 4, "type": "boolean", "value": true}, "predicate": {"description": "Write a custom filter as a Python lambda function", "editor": null, "label": "Custom filter", "order": 5, "type": "string", "value": "lambda x: np.char.find(x, 'ABCD')&gt;-1"}, "limit": {"description": "Rows to display", "editor": null, "label": "Preview rows", "order": 6, "type": "integer", "value": 100}}</parameters>
+      <ports>
+        <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{f8ac8137-ebcb-4012-bc12-461341568e7e}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{3dcd655e-0a9c-4f29-860d-356a401ee13f}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.create.createtable" uuid="{42297a04-528f-42b5-8c85-5b49f5c289e9}" x="1650.0" y="1850.0">
+      <label>Manually Create Table</label>
+      <description></description>
+      <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+      <copyright>(c) 2016 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "json_table": {"description": "Configuration window", "editor": null, "label": "GUI", "order": 0, "type": "string", "value": "[[\"One\", \"U\", [\"ABCD\"]], [\"Two\", \"U\", [\"5.0\"]]]"}}</parameters>
+      <ports>
+        <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{aee8f45f-831c-4e4f-a5d5-5d11630e3e70}">
+          <label>Manually created table</label>
+          <description>Manually created table</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.hjointable" uuid="{b1d80c6d-c278-4bc8-a5b2-818090e0e76d}" x="2343.0" y="1903.0">
+      <label>HJoin Table</label>
+      <description>Horizontal join of two Tables</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+      <copyright>(C) 2013 System Engineering Software Society</copyright>
+      <version>1.1</version>
+      <parameters type="json">{"type": "group", "mask": {"description": "Select if rows that are not represented in all Tables should be complemented with masked values", "editor": null, "label": "Complement missing rows", "order": 0, "type": "boolean", "value": true}, "rename": {"description": "If true columns with same name as an earlier column will be renamed and joined, otherwise columns will overwrite existing data", "editor": null, "label": "Rename duplicate columns", "order": 1, "type": "boolean", "value": false}, "name": {"description": "Select which port decides the output table(s) names", "label": "Input port name for joined table", "mode": "selected", "order": 2, "type": "list", "list": ["Lower", "Upper"], "value": [0], "value_names": ["Lower"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+      <ports>
+        <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{4a0a275a-a437-4549-be9c-e2bc3002b03f}">
+          <label>Input Table 1</label>
+          <description>Input Table 1</description>
+        </input>
+        <input key="port2" scheme="hdf5" type="table" type_base="table" uuid="{3aecb85f-a5dc-4503-a08b-f82d467dad75}">
+          <label>Input Table 2</label>
+          <description>Input Table 2</description>
+        </input>
+        <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{5a2e3c15-2c90-4d47-8741-ad7f83fa093f}">
+          <label>Table with horizontally joined data</label>
+          <description>Table with horizontally joined data</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.convertcolumnstable" uuid="{b7706e3c-a0b1-4041-b63c-b8e7a4590b53}" x="2475.0" y="1900.0">
+      <label>Convert to float</label>
+      <description>Select columns to convert to specified data type.</description>
+      <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+      <copyright>(c) 2017 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["Two", "Three"], "value": [1, 0], "value_names": ["Three", "Two"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}, "types": {"description": "Select type.", "label": "Select type", "mode": "selected", "order": 1, "type": "list", "list": ["binary", "bool", "datetime (UTC)", "datetime (naive)", "float", "integer", "text"], "value": [4], "value_names": ["float"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+      <ports>
+        <input key="" scheme="hdf5" type="table" type_base="table" uuid="{022d846d-f3da-4c61-ad51-0ee5ca009dc1}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="" scheme="hdf5" type="table" type_base="table" uuid="{25fa80d1-a139-4431-ab90-f60be5524e85}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.vjointablenode" uuid="{de0a4d25-398d-484d-b133-d3b3c6717ba5}" x="1893.0" y="1928.0">
+      <label>VJoin Table</label>
+      <description>Vertical join of two Tables.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+      <copyright>(C) 2013 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "fill": {"description": "Select if columns that are not represented in all Tables should be complemented", "editor": null, "label": "Complement missing columns", "order": 0, "type": "boolean", "value": true}, "fill_strategy": {"description": "When \"Complement with nan or empty string\" is selected missing columns will be replaced by columns of nan or empty strings. When \"Mask missing values\" is selected missing columns will be result in masked values", "label": "Complement strategy", "mode": "selected", "order": 1, "type": "list", "list": ["Complement with nan or empty string", "Mask missing values"], "value": [1], "value_names": ["Mask missing values"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}, "output_index": {"description": "Specify name for output index column. If left empty, no index column will be created", "label": "Output index", "order": 2, "type": "string", "value": "", "editor": {"placeholder": "(none)", "type": "lineedit"}}, "minimum_increment": {"description": "Specify the increment in the outgoing index column for tables with no rows. Either 1 or 0.", "label": "Increment for empty tables", "order": 3, "type": "integer", "value": 1, "editor": {"max": 1, "min": 0, "step": 1, "type": "spinbox"}}}</parameters>
+      <ports>
+        <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{ace84dc3-4b91-4d4b-80f4-1fa82cc53358}">
+          <label>Input Table 1</label>
+          <description>Input Table 1</description>
+        </input>
+        <input key="port2" scheme="hdf5" type="table" type_base="table" uuid="{e7324acc-4353-4797-a164-8cadb0ff32d6}">
+          <label>Input Table 2</label>
+          <description>Input Table 2</description>
+        </input>
+        <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{49438b45-0c76-4d41-a6fa-af57c8c6e27e}">
+          <label>Joined Table</label>
+          <description>Joined Table</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.selecttablerows" uuid="{ef72d41a-1e9a-42e5-b132-9cee8ffd50e7}" x="2043.0" y="2003.0">
+      <label>get EFGH</label>
+      <description>Reduction of rows in Table according to specified filter.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+      <copyright>(C) 2014 System Engineering Software Society</copyright>
+      <version>1.1</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns for comparison relation", "label": "Columns to filter", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [0], "value_names": ["One"], "editor": {"edit": true, "filter": true, "mode": true, "passthrough": true, "selection": "multi", "type": "listview"}}, "exist": {"description": "Constraint must be satisfied in: Any selected column or All selected columns.", "label": "Constraint must be satisfied in", "order": 1, "type": "string", "value": "all", "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": ["all", "any"]}}, "relation": {"description": "Select comparison operator for relation", "label": "Relation", "mode": "selected", "order": 2, "type": "list", "list": ["equal", "less than", "less than or equal", "greater than", "greater than or equal", "not equal"], "value": [0], "value_names": ["equal"], "editor": {"display": null, "edit": false, "include_empty": false, "options": null, "type": "combobox"}}, "constraint": {"description": "Specify constraint value for comparison relation", "editor": null, "label": "Filter constraint", "order": 3, "type": "string", "value": ""}, "use_custom_predicate": {"description": "Select to use custom filter", "editor": null, "label": "Use custom filter", "order": 4, "type": "boolean", "value": true}, "predicate": {"description": "Write a custom filter as a Python lambda function", "editor": null, "label": "Custom filter", "order": 5, "type": "string", "value": "lambda x: np.char.find(x, 'EFGH')&gt;-1"}, "limit": {"description": "Rows to display", "editor": null, "label": "Preview rows", "order": 6, "type": "integer", "value": 100}}</parameters>
+      <ports>
+        <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{c0490087-5370-4ae3-bf3b-d1733006941c}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{52209868-fbf4-4f02-9920-ce57083189c0}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <node id="org.sysess.sympathy.data.table.selecttablecolumns" uuid="{f4628d0d-7ba4-4a23-bf52-02b068de567d}" x="2193.0" y="2003.0">
+      <label>Select columns in Table</label>
+      <description>Select columns from input to propagate to output.</description>
+      <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;, Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+      <copyright>(c) 2013, 2017 System Engineering Software Society</copyright>
+      <version>1.0</version>
+      <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [2], "value_names": ["Three"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}}</parameters>
+      <ports>
+        <input key="" scheme="hdf5" type="table" type_base="table" uuid="{2d8f8309-f676-4c9e-b3ef-57a122ed95db}">
+          <label>Input</label>
+          <description>Input</description>
+        </input>
+        <output key="" scheme="hdf5" type="table" type_base="table" uuid="{6e635c59-5d70-4a3d-a67b-e74617b2bdd1}">
+          <label>Output</label>
+          <description>Output</description>
+        </output>
+      </ports>
+    </node>
+    <connection type="table" uuid="{0a9080de-e317-434a-a04c-997f83d05a67}">
+      <source node="{32d5714c-b8a4-499c-bb6d-beca8d263d9c}" port="{e1ce54c0-2ef5-46e9-b75e-e6d5ca6d5932}"/>
+      <destination node="{b1d80c6d-c278-4bc8-a5b2-818090e0e76d}" port="{4a0a275a-a437-4549-be9c-e2bc3002b03f}"/>
+    </connection>
+    <connection type="table" uuid="{16a7c870-0269-4fe5-99be-0fb4864005e6}">
+      <source node="{42297a04-528f-42b5-8c85-5b49f5c289e9}" port="{aee8f45f-831c-4e4f-a5d5-5d11630e3e70}"/>
+      <destination node="{de0a4d25-398d-484d-b133-d3b3c6717ba5}" port="{ace84dc3-4b91-4d4b-80f4-1fa82cc53358}"/>
+    </connection>
+    <connection type="table" uuid="{2c134ac0-89b8-4ad7-8388-6b8cf7768c64}">
+      <source node="{b7706e3c-a0b1-4041-b63c-b8e7a4590b53}" port="{25fa80d1-a139-4431-ab90-f60be5524e85}"/>
+      <destination node="{7ddb1831-12b2-4eb9-8fde-aa1d009c00a5}" port="{05f5c0fa-d6a6-4982-b74a-36282493dc68}"/>
+    </connection>
+    <connection type="table" uuid="{41485bdb-2c86-46d5-9ea8-846ff4ecbaaf}">
+      <source node="{de0a4d25-398d-484d-b133-d3b3c6717ba5}" port="{49438b45-0c76-4d41-a6fa-af57c8c6e27e}"/>
+      <destination node="{ef72d41a-1e9a-42e5-b132-9cee8ffd50e7}" port="{c0490087-5370-4ae3-bf3b-d1733006941c}"/>
+    </connection>
+    <connection type="table" uuid="{60257633-2c76-4445-99a1-fb5366a65347}">
+      <source node="{40f21098-4a5d-4dae-8bd5-9b3c7f04ae51}" port="{3dcd655e-0a9c-4f29-860d-356a401ee13f}"/>
+      <destination node="{32d5714c-b8a4-499c-bb6d-beca8d263d9c}" port="{09433d64-bb93-489d-9ef4-f799a6eddee3}"/>
+    </connection>
+    <connection type="table" uuid="{61b13ad6-dae6-43da-a566-5a2156970220}">
+      <source node="{7ddb1831-12b2-4eb9-8fde-aa1d009c00a5}" port="{cd2d3250-348e-4fa3-9056-f36af64e611b}"/>
+      <destination node="{de0a4d25-398d-484d-b133-d3b3c6717ba5}" port="{e7324acc-4353-4797-a164-8cadb0ff32d6}"/>
+    </connection>
+    <connection type="table" uuid="{930df141-936c-4d64-ad0e-b8db53cd8aba}">
+      <source node="{f4628d0d-7ba4-4a23-bf52-02b068de567d}" port="{6e635c59-5d70-4a3d-a67b-e74617b2bdd1}"/>
+      <destination node="{b1d80c6d-c278-4bc8-a5b2-818090e0e76d}" port="{3aecb85f-a5dc-4503-a08b-f82d467dad75}"/>
+    </connection>
+    <connection type="table" uuid="{a002b93b-02f4-4840-ab61-44e94a62555c}">
+      <source node="{b1d80c6d-c278-4bc8-a5b2-818090e0e76d}" port="{5a2e3c15-2c90-4d47-8741-ad7f83fa093f}"/>
+      <destination node="{b7706e3c-a0b1-4041-b63c-b8e7a4590b53}" port="{022d846d-f3da-4c61-ad51-0ee5ca009dc1}"/>
+    </connection>
+    <connection type="table" uuid="{ad4e4222-fcc3-4393-a019-902b3d874c1d}">
+      <source node="{ef72d41a-1e9a-42e5-b132-9cee8ffd50e7}" port="{52209868-fbf4-4f02-9920-ce57083189c0}"/>
+      <destination node="{f4628d0d-7ba4-4a23-bf52-02b068de567d}" port="{2d8f8309-f676-4c9e-b3ef-57a122ed95db}"/>
+    </connection>
+    <connection type="table" uuid="{afeb01a1-6688-419f-95fa-28c49a3e62ed}">
+      <source node="{de0a4d25-398d-484d-b133-d3b3c6717ba5}" port="{49438b45-0c76-4d41-a6fa-af57c8c6e27e}"/>
+      <destination node="{40f21098-4a5d-4dae-8bd5-9b3c7f04ae51}" port="{f8ac8137-ebcb-4012-bc12-461341568e7e}"/>
+    </connection>
+  </flow>
+  <node id="org.sysess.sympathy.create.createtable" uuid="{0a51e5ac-b929-45ad-b113-89e737ce7f9d}" x="1300.0" y="1825.0">
+    <label>Manually Create Table</label>
+    <description></description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "json_table": {"description": "Configuration window", "editor": null, "label": "GUI", "order": 0, "type": "string", "value": "[[\"One\", \"U\", [\"EFGH\"]], [\"Three\", \"U\", [\"10.0\"]]]"}}</parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{66d908de-edd0-4517-a551-02acaebd2fc2}">
+        <label>Manually created table</label>
+        <description>Manually created table</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.vjointablenode" uuid="{1311fa46-5be9-46e5-918a-a05a42e93168}" x="1450.0" y="1700.0">
+    <label>VJoin Table</label>
+    <description>Vertical join of two Tables.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "fill": {"description": "Select if columns that are not represented in all Tables should be complemented", "editor": null, "label": "Complement missing columns", "order": 0, "type": "boolean", "value": true}, "fill_strategy": {"description": "When \"Complement with nan or empty string\" is selected missing columns will be replaced by columns of nan or empty strings. When \"Mask missing values\" is selected missing columns will be result in masked values", "label": "Complement strategy", "mode": "selected", "order": 1, "type": "list", "list": ["Complement with nan or empty string", "Mask missing values"], "value": [1], "value_names": ["Mask missing values"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}, "output_index": {"description": "Specify name for output index column. If left empty, no index column will be created", "label": "Output index", "order": 2, "type": "string", "value": "", "editor": {"placeholder": "(none)", "type": "lineedit"}}, "minimum_increment": {"description": "Specify the increment in the outgoing index column for tables with no rows. Either 1 or 0.", "label": "Increment for empty tables", "order": 3, "type": "integer", "value": 1, "editor": {"max": 1, "min": 0, "step": 1, "type": "spinbox"}}}</parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{be6f43e8-ee8e-4311-93c0-26ba508d853d}">
+        <label>Input Table 1</label>
+        <description>Input Table 1</description>
+      </input>
+      <input key="port2" scheme="hdf5" type="table" type_base="table" uuid="{62c67842-519d-4af4-a36d-9891364299b2}">
+        <label>Input Table 2</label>
+        <description>Input Table 2</description>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{d9c47e89-8e18-41e8-9854-ed9651b54f70}">
+        <label>Joined Table</label>
+        <description>Joined Table</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.assertequaltable" uuid="{1e76f2f1-6909-49a0-8cc9-ab5e1f8f1e77}" x="2200.0" y="1750.0">
+    <label>Assert Equal Table</label>
+    <description></description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>Copyright (c) 2016 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "col_order": {"description": "Differing column order will trigger error", "editor": null, "label": "Compare column order", "order": 0, "type": "boolean", "value": true}, "col_attrs": {"description": "Differing column attributes will trigger error", "editor": null, "label": "Compare column attributes", "order": 1, "type": "boolean", "value": true}, "tbl_names": {"description": "Differing table name will trigger error", "editor": null, "label": "Compare table names", "order": 2, "type": "boolean", "value": true}, "tbl_attrs": {"description": "Differing table attributes will trigger error", "editor": null, "label": "Compare table attributes", "order": 3, "type": "boolean", "value": true}, "inexact_float": {"description": "If any arithemtics is invovled floats should probably be compared approximately.", "editor": null, "label": "Approximate comparison of floats", "order": 4, "type": "boolean", "value": true}, "rel_tol": {"description": "Floats are considered unequal if the relative difference between them is larger than this value.", "editor": null, "label": "Relative tolerance", "order": 5, "type": "float", "value": 1e-05}, "abs_tol": {"description": "Floats are considered unequal if the absolute difference between them is larger than this value.", "editor": null, "label": "Absolute tolerance", "order": 6, "type": "float", "value": 1e-08}}</parameters>
+    <ports>
+      <input key="table1" scheme="hdf5" type="table" type_base="table" uuid="{b66b6076-2c62-45a6-944f-b2a62b480e1e}">
+        <label>Table A</label>
+        <description>Table A</description>
+      </input>
+      <input key="table2" scheme="hdf5" type="table" type_base="table" uuid="{cf27fabf-ac32-49e5-8381-0f2989bea0a3}">
+        <label>Table B</label>
+        <description>Table B</description>
+      </input>
+      <output key="out" scheme="hdf5" type="table" type_base="table" uuid="{6bff7fa4-1558-4a68-9181-06607d7aabf7}">
+        <label>Output Table</label>
+        <description>Output Table</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.selecttablecolumns" uuid="{58b5ec9c-13a7-4b50-9684-fab3f2ea32a2}" x="1750.0" y="1750.0">
+    <label>Select columns in Table</label>
+    <description>Select columns from input to propagate to output.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;, Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(c) 2013, 2017 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [2], "value_names": ["Three"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}}</parameters>
+    <ports>
+      <input key="" scheme="hdf5" type="table" type_base="table" uuid="{6dca9b17-122e-45cd-85c9-3b5bbfd68280}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="" scheme="hdf5" type="table" type_base="table" uuid="{68e97819-a000-4a15-a6ce-6eb9aa45baff}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.hjointable" uuid="{5a67123e-ecd4-41a2-86d4-55ef0225500e}" x="1900.0" y="1675.0">
+    <label>HJoin Table</label>
+    <description>Horizontal join of two Tables</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2013 System Engineering Software Society</copyright>
+    <version>1.1</version>
+    <parameters type="json">{"type": "group", "mask": {"description": "Select if rows that are not represented in all Tables should be complemented with masked values", "editor": null, "label": "Complement missing rows", "order": 0, "type": "boolean", "value": true}, "rename": {"description": "If true columns with same name as an earlier column will be renamed and joined, otherwise columns will overwrite existing data", "editor": null, "label": "Rename duplicate columns", "order": 1, "type": "boolean", "value": false}, "name": {"description": "Select which port decides the output table(s) names", "label": "Input port name for joined table", "mode": "selected", "order": 2, "type": "list", "list": ["Lower", "Upper"], "value": [0], "value_names": ["Lower"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="port1" scheme="hdf5" type="table" type_base="table" uuid="{bad1be85-2feb-4421-92f5-cf0521e2b1c6}">
+        <label>Input Table 1</label>
+        <description>Input Table 1</description>
+      </input>
+      <input key="port2" scheme="hdf5" type="table" type_base="table" uuid="{de412974-42b1-455a-9719-cecdf40274d9}">
+        <label>Input Table 2</label>
+        <description>Input Table 2</description>
+      </input>
+      <output key="port1" scheme="hdf5" type="table" type_base="table" uuid="{23b83f51-a86c-4533-8008-549d14ab763a}">
+        <label>Table with horizontally joined data</label>
+        <description>Table with horizontally joined data</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.convertcolumnstable" uuid="{624695a6-58ce-4f2e-b9a6-ef8fecdad654}" x="2050.0" y="1675.0">
+    <label>Convert to float</label>
+    <description>Select columns to convert to specified data type.</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(c) 2017 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["Two", "Three"], "value": [1, 0], "value_names": ["Three", "Two"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}, "types": {"description": "Select type.", "label": "Select type", "mode": "selected", "order": 1, "type": "list", "list": ["binary", "bool", "datetime (UTC)", "datetime (naive)", "float", "integer", "text"], "value": [4], "value_names": ["float"], "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": []}}}</parameters>
+    <ports>
+      <input key="" scheme="hdf5" type="table" type_base="table" uuid="{7344e46e-ea6e-4eb9-8f04-e5d2b3af5623}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="" scheme="hdf5" type="table" type_base="table" uuid="{bc1686ad-0de0-417a-9f4d-010c28579033}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.selecttablerows" uuid="{62f11196-a0a4-42c6-9f52-143906311dbe}" x="1600.0" y="1625.0">
+    <label>get ABCD</label>
+    <description>Reduction of rows in Table according to specified filter.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2014 System Engineering Software Society</copyright>
+    <version>1.1</version>
+    <parameters type="json">{"type": "group", "columns": {"description": "Select columns for comparison relation", "label": "Columns to filter", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [0], "value_names": ["One"], "editor": {"edit": true, "filter": true, "mode": true, "passthrough": true, "selection": "multi", "type": "listview"}}, "exist": {"description": "Constraint must be satisfied in: Any selected column or All selected columns.", "label": "Constraint must be satisfied in", "order": 1, "type": "string", "value": "all", "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": ["all", "any"]}}, "relation": {"description": "Select comparison operator for relation", "label": "Relation", "mode": "selected", "order": 2, "type": "list", "list": ["equal", "less than", "less than or equal", "greater than", "greater than or equal", "not equal"], "value": [0], "value_names": ["equal"], "editor": {"display": null, "edit": false, "include_empty": false, "options": null, "type": "combobox"}}, "constraint": {"description": "Specify constraint value for comparison relation", "editor": null, "label": "Filter constraint", "order": 3, "type": "string", "value": ""}, "use_custom_predicate": {"description": "Select to use custom filter", "editor": null, "label": "Use custom filter", "order": 4, "type": "boolean", "value": true}, "predicate": {"description": "Write a custom filter as a Python lambda function", "editor": null, "label": "Custom filter", "order": 5, "type": "string", "value": "lambda x: np.char.find(x, 'ABCD')&gt;-1"}, "limit": {"description": "Rows to display", "editor": null, "label": "Preview rows", "order": 6, "type": "integer", "value": 100}}</parameters>
+    <ports>
+      <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{2131adbd-5bd4-4685-a0c7-795755b5ce32}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{32fa3976-2630-471e-b22b-5c119ee393f3}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.builtin.apply" uuid="{6e08b557-96e5-448e-9736-f787505c29d2}" x="2050.0" y="1825.0">
+    <label>Apply</label>
+    <description>Apply Lambda function to Argument</description>
+    <author>Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(C) 2015-2016 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group"}</parameters>
+    <ports>
+      <input key="Function" scheme="hdf5" type="table -&gt; table" type_base="&lt;a&gt; -&gt; &lt;b&gt;" uuid="{ccb0ab7a-1148-4315-a21c-2b6fd4db406b}">
+        <label>Lambda Function to Apply</label>
+        <description>Lambda Function to Apply</description>
+      </input>
+      <input key="Argument" scheme="hdf5" type="table" type_base="&lt;a&gt;" uuid="{5786a9d0-364c-423f-b2d0-74899d74c5d5}">
+        <label>Argument</label>
+        <description>Argument</description>
+      </input>
+      <output key="Output" scheme="hdf5" type="table" type_base="&lt;b&gt;" uuid="{c3ff37dd-297e-4812-838c-e36d83178f36}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.selecttablecolumns" uuid="{6fd340a6-07ab-4838-b8a0-88793a2e1a88}" x="1750.0" y="1625.0">
+    <label>Select columns in Table</label>
+    <description>Select columns from input to propagate to output.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;, Erik der Hagopian &lt;erik.hagopian@sysess.org&gt;</author>
+    <copyright>(c) 2013, 2017 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "columns": {"description": "Select columns.", "label": "Select columns", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [1], "value_names": ["Two"], "editor": {"edit": true, "filter": true, "mode": true, "selection": "multi", "type": "listview"}}}</parameters>
+    <ports>
+      <input key="" scheme="hdf5" type="table" type_base="table" uuid="{f5c9627a-fc2a-4838-ad1b-57051f05641f}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="" scheme="hdf5" type="table" type_base="table" uuid="{1ed628db-b813-41ea-ae82-15ec58ed8b34}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.data.table.selecttablerows" uuid="{b617457d-0fd9-4405-985e-59c146f66cde}" x="1600.0" y="1750.0">
+    <label>get EFGH</label>
+    <description>Reduction of rows in Table according to specified filter.</description>
+    <author>Alexander Busck &lt;alexander.busck@sysess.org&gt;</author>
+    <copyright>(C) 2014 System Engineering Software Society</copyright>
+    <version>1.1</version>
+    <parameters type="json">{"type": "group", "columns": {"description": "Select columns for comparison relation", "label": "Columns to filter", "mode": "selected", "order": 0, "type": "list", "list": ["One", "Two", "Three"], "value": [0], "value_names": ["One"], "editor": {"edit": true, "filter": true, "mode": true, "passthrough": true, "selection": "multi", "type": "listview"}}, "exist": {"description": "Constraint must be satisfied in: Any selected column or All selected columns.", "label": "Constraint must be satisfied in", "order": 1, "type": "string", "value": "all", "editor": {"display": null, "edit": false, "include_empty": false, "type": "combobox", "options": ["all", "any"]}}, "relation": {"description": "Select comparison operator for relation", "label": "Relation", "mode": "selected", "order": 2, "type": "list", "list": ["equal", "less than", "less than or equal", "greater than", "greater than or equal", "not equal"], "value": [0], "value_names": ["equal"], "editor": {"display": null, "edit": false, "include_empty": false, "options": null, "type": "combobox"}}, "constraint": {"description": "Specify constraint value for comparison relation", "editor": null, "label": "Filter constraint", "order": 3, "type": "string", "value": ""}, "use_custom_predicate": {"description": "Select to use custom filter", "editor": null, "label": "Use custom filter", "order": 4, "type": "boolean", "value": true}, "predicate": {"description": "Write a custom filter as a Python lambda function", "editor": null, "label": "Custom filter", "order": 5, "type": "string", "value": "lambda x: np.char.find(x, 'EFGH')&gt;-1"}, "limit": {"description": "Rows to display", "editor": null, "label": "Preview rows", "order": 6, "type": "integer", "value": 100}}</parameters>
+    <ports>
+      <input key="Input" scheme="hdf5" type="table" type_base="table" uuid="{f2925eef-ace4-40ef-a7cb-1b87e8eba135}">
+        <label>Input</label>
+        <description>Input</description>
+      </input>
+      <output key="Output" scheme="hdf5" type="table" type_base="table" uuid="{86ee8e04-af48-4408-836c-f1d889462708}">
+        <label>Output</label>
+        <description>Output</description>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.create.createtable" uuid="{f859de61-8b93-4f98-8769-d8270ac95198}" x="1300.0" y="1650.0">
+    <label>Manually Create Table</label>
+    <description></description>
+    <author>Magnus Sand&#233;n &lt;magnus.sanden@combine.se&gt;</author>
+    <copyright>(c) 2016 System Engineering Software Society</copyright>
+    <version>1.0</version>
+    <parameters type="json">{"type": "group", "json_table": {"description": "Configuration window", "editor": null, "label": "GUI", "order": 0, "type": "string", "value": "[[\"One\", \"U\", [\"ABCD\"]], [\"Two\", \"U\", [\"5.0\"]]]"}}</parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{0fb4a036-b16c-46a4-8b2a-fb5818fb6442}">
+        <label>Manually created table</label>
+        <description>Manually created table</description>
+      </output>
+    </ports>
+  </node>
+  <connection type="table" uuid="{0089f8d5-d71a-483d-9976-f52f9278f0c6}">
+    <source node="{f859de61-8b93-4f98-8769-d8270ac95198}" port="{0fb4a036-b16c-46a4-8b2a-fb5818fb6442}"/>
+    <destination node="{1311fa46-5be9-46e5-918a-a05a42e93168}" port="{be6f43e8-ee8e-4311-93c0-26ba508d853d}"/>
+  </connection>
+  <connection type="table" uuid="{1bfc9daa-423a-4760-a70d-8ecf3268e6bc}">
+    <source node="{6e08b557-96e5-448e-9736-f787505c29d2}" port="{c3ff37dd-297e-4812-838c-e36d83178f36}"/>
+    <destination node="{1e76f2f1-6909-49a0-8cc9-ab5e1f8f1e77}" port="{cf27fabf-ac32-49e5-8381-0f2989bea0a3}"/>
+  </connection>
+  <connection type="table" uuid="{26b5594e-ad2f-496d-b7bd-042b9a635ce3}">
+    <source node="{624695a6-58ce-4f2e-b9a6-ef8fecdad654}" port="{bc1686ad-0de0-417a-9f4d-010c28579033}"/>
+    <destination node="{1e76f2f1-6909-49a0-8cc9-ab5e1f8f1e77}" port="{b66b6076-2c62-45a6-944f-b2a62b480e1e}"/>
+  </connection>
+  <connection type="table" uuid="{28bb9e66-a5dc-4b6d-bcab-c9af8ef0dba3}">
+    <source node="{1311fa46-5be9-46e5-918a-a05a42e93168}" port="{d9c47e89-8e18-41e8-9854-ed9651b54f70}"/>
+    <destination node="{62f11196-a0a4-42c6-9f52-143906311dbe}" port="{2131adbd-5bd4-4685-a0c7-795755b5ce32}"/>
+  </connection>
+  <connection type="table" uuid="{392a674a-2761-4ed9-b62a-b5d58ee4493e}">
+    <source node="{58b5ec9c-13a7-4b50-9684-fab3f2ea32a2}" port="{68e97819-a000-4a15-a6ce-6eb9aa45baff}"/>
+    <destination node="{5a67123e-ecd4-41a2-86d4-55ef0225500e}" port="{de412974-42b1-455a-9719-cecdf40274d9}"/>
+  </connection>
+  <connection type="table" uuid="{40cf7e80-1173-4f27-a1b5-705294adc7d1}">
+    <source node="{0a51e5ac-b929-45ad-b113-89e737ce7f9d}" port="{66d908de-edd0-4517-a551-02acaebd2fc2}"/>
+    <destination node="{6e08b557-96e5-448e-9736-f787505c29d2}" port="{5786a9d0-364c-423f-b2d0-74899d74c5d5}"/>
+  </connection>
+  <connection type="table" uuid="{483d1c8b-9a82-4abf-89ad-276bf02c3de4}">
+    <source node="{1311fa46-5be9-46e5-918a-a05a42e93168}" port="{d9c47e89-8e18-41e8-9854-ed9651b54f70}"/>
+    <destination node="{b617457d-0fd9-4405-985e-59c146f66cde}" port="{f2925eef-ace4-40ef-a7cb-1b87e8eba135}"/>
+  </connection>
+  <connection type="table" uuid="{a199196a-9982-4ff7-b187-c94428624b46}">
+    <source node="{62f11196-a0a4-42c6-9f52-143906311dbe}" port="{32fa3976-2630-471e-b22b-5c119ee393f3}"/>
+    <destination node="{6fd340a6-07ab-4838-b8a0-88793a2e1a88}" port="{f5c9627a-fc2a-4838-ad1b-57051f05641f}"/>
+  </connection>
+  <connection type="table" uuid="{a406f31c-cb70-4020-a9ed-a8d295367a20}">
+    <source node="{b617457d-0fd9-4405-985e-59c146f66cde}" port="{86ee8e04-af48-4408-836c-f1d889462708}"/>
+    <destination node="{58b5ec9c-13a7-4b50-9684-fab3f2ea32a2}" port="{6dca9b17-122e-45cd-85c9-3b5bbfd68280}"/>
+  </connection>
+  <connection type="table" uuid="{b79b7e72-b381-4410-a49a-9190295440e0}">
+    <source node="{5a67123e-ecd4-41a2-86d4-55ef0225500e}" port="{23b83f51-a86c-4533-8008-549d14ab763a}"/>
+    <destination node="{624695a6-58ce-4f2e-b9a6-ef8fecdad654}" port="{7344e46e-ea6e-4eb9-8f04-e5d2b3af5623}"/>
+  </connection>
+  <connection type="table" uuid="{bceb632c-5a60-452a-a6a8-b8f02df41b41}">
+    <source node="{0a51e5ac-b929-45ad-b113-89e737ce7f9d}" port="{66d908de-edd0-4517-a551-02acaebd2fc2}"/>
+    <destination node="{1311fa46-5be9-46e5-918a-a05a42e93168}" port="{62c67842-519d-4af4-a36d-9891364299b2}"/>
+  </connection>
+  <connection type="table" uuid="{d3052e67-0ab4-40b9-ba0b-3ba8269a927f}">
+    <source node="{6fd340a6-07ab-4838-b8a0-88793a2e1a88}" port="{1ed628db-b813-41ea-ae82-15ec58ed8b34}"/>
+    <destination node="{5a67123e-ecd4-41a2-86d4-55ef0225500e}" port="{bad1be85-2feb-4421-92f5-cf0521e2b1c6}"/>
+  </connection>
+  <connection type="table -&gt; table" uuid="{d546d00f-9713-4710-87a1-f735a5118530}">
+    <source node="{7ddb1831-12b2-4eb9-8fde-aa1d009c00a5}" port="{709f9013-a726-4713-a65a-0927cc2ff7e4}"/>
+    <destination node="{6e08b557-96e5-448e-9736-f787505c29d2}" port="{ccb0ab7a-1148-4315-a21c-2b6fd4db406b}"/>
+  </connection>
+  <text color="Purple" height="350.0" uuid="{570bec5b-8cd0-4676-9afb-ab05e339e497}" width="1050.0" x="1250.0" y="1575.0">Check that masked arrays can convert from string to float and produce the same results when running as lambda and normal flow.</text>
+</flow>

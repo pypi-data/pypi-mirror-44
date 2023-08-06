@@ -1,0 +1,456 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<flow xmlns="http://www.sysess.org/sympathyfordata/workflow/1.0" cls="Flow" uuid="{95f2d4ae-2f94-403c-b7cd-a5fb8c37669f}">
+  <label></label>
+  <ports/>
+  <node id="syip.overlay" uuid="{17463050-d3c0-4088-8a15-7c2e9f54f956}" x="2300.0" y="1725.0">
+    <label>Overlay images</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "algorithm": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "subtract"
+      },
+      "type": "group",
+      "use alpha": {
+        "editor": null,
+        "label": "",
+        "order": 1,
+        "type": "boolean",
+        "value": false
+      }
+    }
+    </parameters>
+    <ports>
+      <input key="images" scheme="hdf5" type="image" type_base="image" uuid="{be342cf7-769b-428f-a18e-ea11292ea175}">
+        <label>Input images</label>
+      </input>
+      <input key="images" scheme="hdf5" type="image" type_base="image" uuid="{a392bf8e-bbe0-4010-8699-5555519519b5}">
+        <label>Input images</label>
+      </input>
+      <output key="result" scheme="hdf5" type="image" type_base="image" uuid="{b2f82d5f-dcb0-47fe-8027-1e30ba22ab57}">
+        <label>result after filtering</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.general_filters" uuid="{35538285-721e-491e-8d7c-a265cd9671fb}" x="1700.0" y="1750.0">
+    <label>Filter image</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "algorithm": {
+        "editor": null,
+        "label": "Algorithm",
+        "order": 0,
+        "type": "string",
+        "value": "gaussian"
+      },
+      "border mode": {
+        "editor": null,
+        "label": "border mode",
+        "order": 6,
+        "type": "string",
+        "value": "constant"
+      },
+      "k": {
+        "editor": null,
+        "label": "k",
+        "order": 2,
+        "type": "float",
+        "value": 0.05
+      },
+      "maximum": {
+        "editor": null,
+        "label": "maximum",
+        "order": 5,
+        "type": "float",
+        "value": 1.0
+      },
+      "minimum": {
+        "editor": null,
+        "label": "minimum",
+        "order": 7,
+        "type": "float",
+        "value": 0.0
+      },
+      "offset": {
+        "editor": null,
+        "label": "offset",
+        "order": 8,
+        "type": "float",
+        "value": 0.0
+      },
+      "scale": {
+        "editor": null,
+        "label": "scale",
+        "order": 1,
+        "type": "float",
+        "value": 1.0
+      },
+      "sigma": {
+        "editor": null,
+        "label": "sigma",
+        "order": 9,
+        "type": "float",
+        "value": 1.0
+      },
+      "sigma-x": {
+        "editor": null,
+        "label": "sigma-x",
+        "order": 4,
+        "type": "float",
+        "value": 1.0
+      },
+      "sigma-y": {
+        "editor": null,
+        "label": "sigma-y",
+        "order": 3,
+        "type": "float",
+        "value": 1.0
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="source" scheme="hdf5" type="image" type_base="image" uuid="{e2925444-0d96-41eb-986a-50e66a8ec25d}">
+        <label>source image to filter</label>
+      </input>
+      <output key="result" scheme="hdf5" type="image" type_base="image" uuid="{3f022f8b-5cac-42de-9442-0dd0ed391142}">
+        <label>result after filtering</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.create.createtable" uuid="{43d0db50-6190-4134-b91e-29b8dd3ba41b}" x="1400.0" y="1800.0">
+    <label>Manually Create Table</label>
+    <version>1.0</version>
+    <parameters type="json">
+    {
+      "json_table": {
+        "editor": null,
+        "label": "GUI",
+        "order": 0,
+        "type": "string",
+        "value": "[[\"x\", \"i\", [8]], [\"y\", \"i\", [8]]]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <output key="port0" scheme="hdf5" type="table" type_base="table" uuid="{89f11101-6da2-426e-85f5-1453685b9043}">
+        <label>Manually created table</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.image2list" uuid="{5f136c88-e73b-4086-a9b4-81f7c96ba39f}" x="1850.0" y="1700.0">
+    <label>Image to List</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "algorithm": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "from channels"
+      },
+      "do background": {
+        "editor": null,
+        "label": "",
+        "order": 1,
+        "type": "boolean",
+        "value": true
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="source" scheme="hdf5" type="image" type_base="image" uuid="{09c9465a-d6ba-41bf-a565-4cbb5c97e970}">
+        <label>source image</label>
+      </input>
+      <output key="results" scheme="hdf5" type="[image]" type_base="[image]" uuid="{6e5a87b2-b0e6-450b-a441-24bc2f4d572a}">
+        <label>Resulting list of images</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.imagedraw" uuid="{c17ed348-a03a-4ec0-b510-f65134261bb0}" x="1548.75" y="1755.75">
+    <label>Draw on image</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "N": {
+        "editor": null,
+        "label": "",
+        "order": 10,
+        "type": "string",
+        "value": "4"
+      },
+      "algorithm": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "filled circle"
+      },
+      "alpha value": {
+        "editor": null,
+        "label": "",
+        "order": 9,
+        "type": "string",
+        "value": "1.0"
+      },
+      "blue color": {
+        "editor": null,
+        "label": "",
+        "order": 2,
+        "type": "string",
+        "value": "0.5"
+      },
+      "green color": {
+        "editor": null,
+        "label": "",
+        "order": 4,
+        "type": "string",
+        "value": "1.0"
+      },
+      "radius": {
+        "editor": null,
+        "label": "",
+        "order": 3,
+        "type": "string",
+        "value": "5"
+      },
+      "red color": {
+        "editor": null,
+        "label": "",
+        "order": 5,
+        "type": "string",
+        "value": "1.0"
+      },
+      "type": "group",
+      "x": {
+        "editor": null,
+        "label": "",
+        "order": 7,
+        "type": "string",
+        "value": "x"
+      },
+      "x2": {
+        "editor": null,
+        "label": "",
+        "order": 1,
+        "type": "string",
+        "value": "X2"
+      },
+      "y": {
+        "editor": null,
+        "label": "",
+        "order": 6,
+        "type": "string",
+        "value": "y"
+      },
+      "y2": {
+        "editor": null,
+        "label": "",
+        "order": 8,
+        "type": "string",
+        "value": "Y2"
+      }
+    }
+    </parameters>
+    <ports>
+      <input key="image" scheme="hdf5" type="image" type_base="image" uuid="{9041b1f2-5b53-4d4c-a477-f020a54c5452}">
+        <label>Image to draw on</label>
+      </input>
+      <input key="table" scheme="hdf5" type="table" type_base="table" uuid="{427f879e-8779-44c0-aed5-672b2b1edaa5}">
+        <label>Table used for drawing</label>
+      </input>
+      <output key="output" scheme="hdf5" type="image" type_base="image" uuid="{5b1bd647-2ea6-41a0-ae1f-92e53bc54274}">
+        <label>Resulting image</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.list2image" uuid="{c18d25e4-e048-468c-b69a-7ff7bf212e4d}" x="2150.0" y="1700.0">
+    <label>List to Image</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "algorithm": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "concatenate channels"
+      },
+      "do background": {
+        "editor": null,
+        "label": "",
+        "order": 1,
+        "type": "boolean",
+        "value": true
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="inputs" scheme="hdf5" type="[image]" type_base="[image]" uuid="{a7f35672-ce25-4be0-bcce-4d4ea8fe058f}">
+        <label>Input list of images</label>
+      </input>
+      <output key="result" scheme="hdf5" type="image" type_base="image" uuid="{eb17cc52-1bb5-4db4-9c76-293eb06bdb91}">
+        <label>result image</label>
+      </output>
+    </ports>
+  </node>
+  <node id="org.sysess.sympathy.slice.slicelist" uuid="{c39c3b40-e0b2-45e2-bb09-e55b7f18141e}" x="2000.0" y="1700.0">
+    <label>Slice List</label>
+    <version>1.0</version>
+    <parameters type="json">
+    {
+      "limit": {
+        "editor": null,
+        "label": "Limit preview to",
+        "order": 1,
+        "type": "integer",
+        "value": 100
+      },
+      "slice": {
+        "editor": null,
+        "label": "Slice",
+        "order": 0,
+        "type": "string",
+        "value": "[::-1]"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="list" scheme="hdf5" type="[image]" type_base="[&lt;a&gt;]" uuid="{b7514093-7a4d-4aa4-9872-326dba804039}">
+        <label>Input List</label>
+      </input>
+      <output key="list" scheme="hdf5" type="[image]" type_base="[&lt;a&gt;]" uuid="{ddbecfd6-1186-4682-b950-4a77611931a2}">
+        <label>Sliced output List</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.splitchannels" uuid="{df879f3a-f62d-4f6d-8951-6945f131a1f1}" x="2150.0" y="1775.0">
+    <label>Split image channels</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "selected_channels": {
+        "editor": null,
+        "label": "selected channels",
+        "order": 0,
+        "type": "string",
+        "value": "blue, green, red"
+      },
+      "type": "group"
+    }
+    </parameters>
+    <ports>
+      <input key="input" scheme="hdf5" type="image" type_base="image" uuid="{f53d77d1-0ff9-4119-851f-d7d9b4efa69c}">
+        <label>Input image</label>
+      </input>
+      <output key="output1" scheme="hdf5" type="image" type_base="image" uuid="{09b834f9-bbf1-4a49-ad8d-b98f3ddcead2}">
+        <label>Image with selected channels</label>
+      </output>
+      <output key="output2" scheme="hdf5" type="image" type_base="image" uuid="{d9d53b50-fdb9-4cc2-8ad8-9d41b68ae230}">
+        <label>All non-selected channels</label>
+      </output>
+    </ports>
+  </node>
+  <node id="syip.imagegenerate" uuid="{ed6aad2e-6b50-4e1b-a662-1bbf605892c1}" x="1400.0" y="1725.0">
+    <label>Generate image</label>
+    <version>0.1</version>
+    <parameters type="json">
+    {
+      "algorithm": {
+        "editor": null,
+        "label": "",
+        "order": 0,
+        "type": "string",
+        "value": "empty"
+      },
+      "channels": {
+        "editor": null,
+        "label": "",
+        "order": 1,
+        "type": "integer",
+        "value": 3
+      },
+      "height": {
+        "editor": null,
+        "label": "",
+        "order": 5,
+        "type": "integer",
+        "value": 16
+      },
+      "other size": {
+        "editor": null,
+        "label": "",
+        "order": 4,
+        "type": "integer",
+        "value": 5
+      },
+      "size": {
+        "editor": null,
+        "label": "",
+        "order": 3,
+        "type": "integer",
+        "value": 5
+      },
+      "type": "group",
+      "width": {
+        "editor": null,
+        "label": "",
+        "order": 2,
+        "type": "integer",
+        "value": 16
+      }
+    }
+    </parameters>
+    <ports>
+      <output key="output" scheme="hdf5" type="image" type_base="image" uuid="{a2e2d5ae-d2ca-4d5c-b20e-b0d1555a203a}">
+        <label>Resulting image</label>
+      </output>
+    </ports>
+  </node>
+  <connection type="[image]" uuid="{6637c9b8-d79c-4a3e-9709-6a9136e45418}">
+    <source node="{c39c3b40-e0b2-45e2-bb09-e55b7f18141e}" port="{ddbecfd6-1186-4682-b950-4a77611931a2}"/>
+    <destination node="{c18d25e4-e048-468c-b69a-7ff7bf212e4d}" port="{a7f35672-ce25-4be0-bcce-4d4ea8fe058f}"/>
+  </connection>
+  <connection type="image" uuid="{6f7746ff-531b-41fa-96a2-7b37e9155699}">
+    <source node="{ed6aad2e-6b50-4e1b-a662-1bbf605892c1}" port="{a2e2d5ae-d2ca-4d5c-b20e-b0d1555a203a}"/>
+    <destination node="{c17ed348-a03a-4ec0-b510-f65134261bb0}" port="{9041b1f2-5b53-4d4c-a477-f020a54c5452}"/>
+  </connection>
+  <connection type="image" uuid="{7bb61033-f9fe-47b3-af49-66b4491e27d6}">
+    <source node="{df879f3a-f62d-4f6d-8951-6945f131a1f1}" port="{09b834f9-bbf1-4a49-ad8d-b98f3ddcead2}"/>
+    <destination node="{17463050-d3c0-4088-8a15-7c2e9f54f956}" port="{a392bf8e-bbe0-4010-8699-5555519519b5}"/>
+  </connection>
+  <connection type="[image]" uuid="{7d2ad24e-71de-4a58-9801-c628fa5331b7}">
+    <source node="{5f136c88-e73b-4086-a9b4-81f7c96ba39f}" port="{6e5a87b2-b0e6-450b-a441-24bc2f4d572a}"/>
+    <destination node="{c39c3b40-e0b2-45e2-bb09-e55b7f18141e}" port="{b7514093-7a4d-4aa4-9872-326dba804039}"/>
+  </connection>
+  <connection type="image" uuid="{ad539595-157c-4e04-a9f5-ad9505c50741}">
+    <source node="{c18d25e4-e048-468c-b69a-7ff7bf212e4d}" port="{eb17cc52-1bb5-4db4-9c76-293eb06bdb91}"/>
+    <destination node="{17463050-d3c0-4088-8a15-7c2e9f54f956}" port="{be342cf7-769b-428f-a18e-ea11292ea175}"/>
+  </connection>
+  <connection type="image" uuid="{ea89af18-9839-421c-9378-a03d89e7dc77}">
+    <source node="{35538285-721e-491e-8d7c-a265cd9671fb}" port="{3f022f8b-5cac-42de-9442-0dd0ed391142}"/>
+    <destination node="{5f136c88-e73b-4086-a9b4-81f7c96ba39f}" port="{09c9465a-d6ba-41bf-a565-4cbb5c97e970}"/>
+  </connection>
+  <connection type="image" uuid="{f7347bdc-2837-4d92-bc8d-fe76923d97c4}">
+    <source node="{35538285-721e-491e-8d7c-a265cd9671fb}" port="{3f022f8b-5cac-42de-9442-0dd0ed391142}"/>
+    <destination node="{df879f3a-f62d-4f6d-8951-6945f131a1f1}" port="{f53d77d1-0ff9-4119-851f-d7d9b4efa69c}"/>
+  </connection>
+  <connection type="image" uuid="{fb5fd2db-e9c4-4fcd-99d2-29e7ef0a7779}">
+    <source node="{c17ed348-a03a-4ec0-b510-f65134261bb0}" port="{5b1bd647-2ea6-41a0-ae1f-92e53bc54274}"/>
+    <destination node="{35538285-721e-491e-8d7c-a265cd9671fb}" port="{e2925444-0d96-41eb-986a-50e66a8ec25d}"/>
+  </connection>
+  <connection type="table" uuid="{ff979f85-fcc8-4fb7-8558-4e09b247a6d6}">
+    <source node="{43d0db50-6190-4134-b91e-29b8dd3ba41b}" port="{89f11101-6da2-426e-85f5-1453685b9043}"/>
+    <destination node="{c17ed348-a03a-4ec0-b510-f65134261bb0}" port="{427f879e-8779-44c0-aed5-672b2b1edaa5}"/>
+  </connection>
+</flow>
