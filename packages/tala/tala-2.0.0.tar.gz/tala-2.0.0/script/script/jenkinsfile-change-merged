@@ -1,0 +1,161 @@
+pipeline {
+    agent { label 'tala' }
+
+    options {
+        buildDiscarder(
+            logRotator(
+                artifactDaysToKeepStr: '',
+                artifactNumToKeepStr: '',
+                daysToKeepStr: '',
+                numToKeepStr: '10'
+            )
+        )
+        timestamps()
+        timeout(time: 5, unit: 'MINUTES')
+    }
+
+    triggers {
+        gerrit(
+            customUrl: '',
+            gerritProjects:[
+                [
+                    branches: [
+                        [
+                            compareType: 'ANT',
+                            pattern: 'master'
+                        ]
+                    ],
+                    compareType: 'PLAIN',
+                    disableStrictForbiddenFileVerification: false,
+                    pattern: 'tala'
+                ]
+            ],
+            serverName: 'Talkamatic',
+            triggerOnEvents: [
+                changeMerged()
+            ],
+            skipVote: [
+              onSuccessful: false,
+              onFailed    : false,
+              onUnstable  : false,
+              onNotBuilt  : false
+            ]
+        )
+    }
+
+    stages {
+        stage('clean') {
+            steps {
+                step([$class: 'WsCleanup'])
+            }
+        }
+
+        stage('checkout') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/master']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [
+                        [
+                            $class: 'RelativeTargetDirectory',
+                            relativeTargetDir: 'tala'
+                        ],[
+                            $class: 'SubmoduleOption',
+                            disableSubmodules: false,
+                            parentCredentials: true
+                        ]
+                    ],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        credentialsId: 'jenkinsatgerrit',
+                        url: 'ssh://jenkins@gerrit.talkamatic.se:29418/tala'
+                    ]]
+                ])
+            }
+        }
+
+        stage('build') {
+            steps {
+                sh '''#!/bin/bash -ex
+                    virtualenv venv
+                    source venv/bin/activate
+
+                    pip wheel --wheel-dir dist --no-deps ./tala
+                '''
+            }
+        }
+
+
+        stage('install') {
+            steps {
+                sh '''#!/bin/bash -ex
+                    source venv/bin/activate
+
+                    pip install --editable ./tala
+                '''
+
+                sh '''#!/bin/bash -ex
+                    source venv/bin/activate
+
+                    pip install -r tala/dev-requirements.txt
+                '''
+            }
+        }
+
+        stage('tests') {
+            failFast true
+            parallel {
+                stage('code checks') {
+                    steps {
+                        sh '''#!/bin/bash -ex
+                            source venv/bin/activate
+
+                            cd tala
+                            flake8 .
+                        '''
+                    }
+                }
+
+                stage('lint') {
+                    steps {
+                        sh '''#!/bin/bash -ex
+                            source venv/bin/activate
+
+                            cd tala
+                            pylint tala
+                        '''
+                    }
+                }
+
+                stage('unit test') {
+                    steps {
+                        sh '''#!/bin/bash -ex
+                            source venv/bin/activate
+
+                            cd tala
+                            py.test tala
+                        '''
+                    }
+                }
+
+                stage('integration test') {
+                    steps {
+                        sh '''#!/bin/bash -ex
+                            source venv/bin/activate
+
+                            cd tala
+                            py.test integration_tests
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('archive artifacts') {
+            steps {
+                archiveArtifacts 'dist/tala*.whl'
+            }
+        }
+    }
+}
