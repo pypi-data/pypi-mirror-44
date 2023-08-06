@@ -1,0 +1,98 @@
+Metadata-Version: 2.1
+Name: KatFetch
+Version: 1.2.8
+Summary: A minimal and customizable fetch script.
+Home-page: https://gitlab.com/kathamer/katfetch
+Author: Katelyn Hamer
+License: MIT
+Keywords: fetch info system
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Operating System :: POSIX :: Linux
+Description-Content-Type: text/markdown
+Requires-Dist: distro
+Requires-Dist: hurry.filesize
+Requires-Dist: psutil
+Requires-Dist: click
+
+# KatFetch
+
+KatFetch is a minimal and customizable fetch script.
+
+## What is a fetch script?
+
+A fetch script is a script that **fetches** some information about your system. It is commonly used when taking screenshots of your desktop and is designed to show off your terminal and it's colours.
+
+## Installation
+
+You can install KatFetch using Pip. Simply run ```pip3 install katfetch``` as root (or use the --user option if ~/.local/bin is in your path).
+
+KatFetch also includes an installer. To use it, simply run `python3 setup.py install` and KatFetch will be installed to `/usr/bin` along with all dependencies.
+
+## Dependencies
+
+Note: If you install KatFetch using `setup.py`, all dependencies are installed automatically. To remove unwanted dependencies, you can simply remove them from the `install_requires` list.
+
+To display all information entries, KatFetch requires some dependencies, however all of these are optional (with the exception of Click). If you don't want to install a specific module, simply remove
+the offending entry from `get_info()` and the `entries` array in `main()`.
+
+|      Module      |                        Used for                       |
+|:----------------:|:-----------------------------------------------------:|
+|     `distro`     |               Getting Linux Distribution              |
+|     `cpuinfo`    |                Getting CPU information                |
+| `hurry.filesize` |     Displaying RAM usage as a human readable value    |
+|     `psutil`     |                   Getting RAM usage                   |
+|     `click`      |Displaying entries in colour, colour bar and arguments |
+
+## Command line arguments
+
+-  --color TEXT      Accent color.
+-  --nobar           Don't show bar.
+-  --barlen INTEGER  Number of colour blocks to display.
+-  --showbg          Show background colour block in colour bar.
+-  --block TEXT      Block character to use in bar.
+-  --height INTEGER  Height of bar.
+-  --fg              Colour the foreground of the block character.
+-  --nocol           Disable accent colours.
+-  --stdout          Combine --nobar and --nocol to output text with no fancy
+                     formatting.
+-  --help            Show help message and exit.
+
+## Adding and removing entries
+
+Adding an extra line of information is super simple. Each entry is stored in a list. First, you need to add some code that will get you the information you want to add as a function. Then, add some code similar to this to the `display_entries()` function.
+
+```python
+display_entry("Greeting", "Hello, World!", color)
+```
+This will output something like:
+
+**Greeting** Hello, World!
+
+Where "Greeting" uses the colour you specified (if `color` is set to `None`, no colour will be displayed).
+
+Removing entries is very similar and even easier, simply remove them from the `display_entries()` function.
+
+## Improving speed
+
+Out of the box, KatFetch can be a little slow to run. On my system, it can take up to 1 second for KatFetch to finish displaying info. This is caused by the function that gets processor information and is out of my control.
+
+If you don't really need to see processor information, you can simply remove it from `get_info()` and the `entries` list (see adding and removing entries above) for a massive speed boost.
+
+## Running on Windows
+
+KatFetch will not run on Windows. I currently have no intentions to support Windows, however, if you would like to, you can make a fork and add the necessary code.
+
+## Things planned for the future
+
+There are a couple more things I need to implement. Pull requests for these features would be super helpful.
+
+- Find a way to get pretty terminal application instead of TERM variable.
+
+## Screenshots
+
+![KatFetch Screenshot](https://gitlab.com/KatHamer/katfetch/raw/master/Screenshots/2019-03-27-003156_482x266_scrot.png)
+
+
+
