@@ -1,0 +1,97 @@
+- project:
+    templates:
+      - check-requirements
+      - openstack-cover-jobs-neutron
+      - openstack-lower-constraints-jobs-neutron
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - openstack-python36-jobs-neutron
+      - openstack-python37-jobs-neutron
+      - periodic-stable-jobs-neutron
+      - publish-openstack-docs-pti
+      - release-notes-jobs-python3
+    check:
+      jobs:
+        - neutron-vpnaas-dsvm-functional-sswan
+        - neutron-vpnaas-tempest
+        - neutron-vpnaas-tempest-libreswan-centos:
+            # Cinder DB migration fails on CentOS 7 (bug 1808709)
+            voting: false
+    gate:
+      jobs:
+        - neutron-vpnaas-dsvm-functional-sswan
+        - neutron-vpnaas-tempest
+    experimental:
+      jobs:
+        - neutron-vpnaas-dsvm-rally
+
+- job:
+    name: neutron-vpnaas-tempest
+    parent: devstack-tempest
+    timeout: 3900
+    required-projects:
+      - openstack/neutron
+      - openstack/tempest
+      - openstack/neutron-tempest-plugin
+    vars:
+      tempest_test_regex: ^neutron_vpnaas\.
+      tox_envlist: all-plugin
+      devstack_plugins:
+        neutron-vpnaas: git://git.openstack.org/openstack/neutron-vpnaas
+        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+      devstack_localrc:
+        IPSEC_PACKAGE: strongswan
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^neutron_vpnaas/tests/unit/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-vpnaas-tempest-libreswan-centos
+    parent: neutron-vpnaas-tempest
+    nodeset: devstack-single-node-centos-7
+    vars:
+      devstack_localrc:
+        IPSEC_PACKAGE: libreswan
+      # VPNaaS 4in6 and 6in4 scenarios would fail after LibreSwan 3.18.
+      # Base node using Libreswan 3.20 on CentOS 7.4.
+      # Refer to https://github.com/libreswan/libreswan/issues/175.
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            neutron_vpnaas_plugin_options:
+              skip_4in6_6in4_tests: true
+
+- job:
+    name: neutron-vpnaas-dsvm-functional-sswan
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/neutron-vpnaas-dsvm-functional-sswan/run.yaml
+    post-run: playbooks/legacy/neutron-vpnaas-dsvm-functional-sswan/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-vpnaas
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^neutron_vpnaas/tests/unit/.*$
+      - ^releasenotes/.*$
+
+- job:
+    name: neutron-vpnaas-dsvm-rally
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/neutron-vpnaas-dsvm-rally/run.yaml
+    post-run: playbooks/legacy/neutron-vpnaas-dsvm-rally/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/neutron-vpnaas
+      - openstack/rally
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^neutron_vpnaas/tests/unit/.*$
+      - ^releasenotes/.*$
