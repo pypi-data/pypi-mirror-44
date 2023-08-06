@@ -1,0 +1,113 @@
+# Crypto Address Validation
+
+Simple crypto address validator. Currently it supports the following crypto addresses:
+
+* Bitcoin
+* Ethereum
+* Litecoin
+
+
+## Supported Python versions
+
+Only supported in `python >= 3.5`.
+
+
+## Installation
+
+```bash
+$ pip install cryptoaddress
+```
+
+
+## API
+
+### The BitcoinAddress class
+
+**BitcoinAddress(address [, network_type='mainnet'])**
+
+_Parameters_
+
+* `address`: the Bitcoin address to validate.
+* `network_type`: Optional. Use either 'mainnet' or 'testnet'.
+
+> Raises `ValueError` if the provided address is not a valid Bitcoin address
+
+
+### The EthereumAddress class
+
+**EthereumAddress(address)**
+
+_Parameters_
+
+* `address`: the Ethereum address to validate.
+
+> Raises `ValueError` if the provided address is not a valid Ethereum address
+
+
+### The LitecoinAddress class
+
+**LitecoinAddress(address [, network_type='mainnet'])**
+
+_Parameters_
+
+* `address`: the Litecoin address to validate.
+* `network_type`: Optional. Use either 'mainnet' or 'testnet'.
+
+> Raises `ValueError` if the provided address is not a valid Litecoin address
+
+
+## Usage example
+
+You can use directly a subclass of `CryptoAddress`:
+
+```python
+from cryptoaddress import BitcoinAddress
+
+try:
+    bitcoin_address = BitcoinAddress('17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem', network_type='mainnet')
+    print('The address "%s" is valid.' % str(bitcoin_address))
+except ValueError:
+    print('The address is invalid.')
+
+# Prints 'The address "17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem" is valid.'
+```
+
+Or you can use the `get_crypto_address` utility function:
+
+```python
+from cryptoaddress import get_crypto_address
+
+try:
+    bitcoin_address = get_crypto_address('BTC', '17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem', network_type='mainnet')
+    print('The address "%s" is valid.' % str(bitcoin_address))
+except ValueError:
+    print('The address is invalid.')
+
+# Prints 'The address "17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem" is valid.'
+```
+
+
+## Upload to pypi
+
+After creating a semantic versioning tag proceed in the following way:
+
+* Install all required packages:
+
+```bash
+$ python3 -m pip install --user --upgrade setuptools wheel twine
+```
+
+* Generate the package:
+
+```bash
+$ python3 setup.py sdist bdist_wheel
+```
+
+This will create a `dist/` folder whose content has to be uploaded.
+
+
+* Upload the new package to pypi:
+
+```bash
+$ python3 -m twine upload dist/*
+````
