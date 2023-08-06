@@ -1,0 +1,39 @@
+# Usage
+
+## Installation
+
+```
+pip install jovian-data --upgrade
+```
+
+## Create dataset
+
+Create a snapshot of a folder to be reused as a dataset
+
+```
+jvnd create_dataset <folder_name>
+```
+
+## List datasets
+
+List all the datasets with versions
+
+```
+jvnd list_datasets
+```
+
+## Mount dataset
+
+Mounts a specific version of dataset
+
+```
+jvnd mount_dataset <dataset_name/version>
+```
+
+## Aliases
+
+```
+cd : create_dataset
+ld : list_datasets
+md : mount_dataset
+```
