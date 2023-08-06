@@ -1,0 +1,72 @@
+Metadata-Version: 2.1
+Name: waverunner
+Version: 0.2b5
+Summary: Package for sending (hardware) experiment requests across the network and receiving the results
+Home-page: http://gitlab.com/bjmuld/waverunner/
+Author: Barry Muldrey
+Author-email: barry@muldrey.net
+License: GPLv3
+Project-URL: Bug Tracker, https://gitlab.com/bjmuld/waverunner/issues
+Project-URL: Documentation, https://gitlab.com/bjmuld/waverunner
+Keywords: scientific experiements analysis data management
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
+Requires-Dist: netifaces
+Requires-Dist: numpy
+Requires-Dist: cloudpickle
+Requires-Dist: dill
+Requires-Dist: futures ; python_version == "2.7"
+
+# Waverunner is a symmetrical client/server RPC tool
+### securely advertises and executes arbitrary remote python modules
+
+### server-side code:
+create a script (let's call it `batch-script.py`) that looks like this:
+```python
+import numpy
+import fancyInstrumentControl
+from waverunner import SecureMethod
+
+@SecureMethod
+def get_measurement(stimulus):
+    return fancyInstrumentControl.pass(stimulus)
+```
+
+then run waverunner:
+
+```bash
+$ python -m waverunner \
+     --srv-path /path/to/batch-script.py \
+     --notify 123.345.543.2
+     --password mybestfriendsgirlfriendisamediocresong
+
+found batch-script.get_measurement
+serving at 142.555.432.1
+sending notifications to 123.345.543.2
+```
+
+waverunner will now serve 'batch-script.get_measurement()' and advertise to
+any waverunner that might be running at 123.345.543.2
+
+### client-side code:
+
+```python
+
+from waverunner import Server
+
+server = Server(
+            password='mybestfriendsgirlfriendisamediocresong',
+            user_ips='142.555.432.1')
+
+request = (
+    'batch-script.get_measurement',
+    np.stack([np.random.randn(100) for i in range(100)]),
+)
+
+result = server.external_request('http://142.555.432.1', *request)
+print(result)
+```
+
+
+
+
