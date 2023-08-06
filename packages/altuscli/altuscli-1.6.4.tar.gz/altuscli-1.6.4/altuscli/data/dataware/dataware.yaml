@@ -1,0 +1,782 @@
+swagger: '2.0'
+x-interface-model: cluster
+x-endpoint-name: dataware
+x-releases: PUBLIC
+info:
+  version: 0.1-SNAPSHOT
+  title: Cloudera Altus Data Warehouse
+  license:
+    name: Apache 2.0
+  description: Cloudera Altus Data Warehouse is a web service that makes it easy to deploy and use a data warehouse over externally stored data.
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /dataware/createAWSCluster:
+    post:
+      summary: Creates a new AWS cluster.
+      description: Creates a new AWS cluster.
+      operationId: createAWSCluster
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateAWSClusterRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/CreateAWSClusterResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /dataware/createAzureCluster:
+    post:
+      summary: Creates a new Azure cluster.
+      description: Creates a new Azure cluster.
+      operationId: createAzureCluster
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateAzureClusterRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/CreateAzureClusterResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /dataware/deleteCluster:
+    post:
+      summary: Deletes a cluster.
+      description: Deletes a cluster.
+      operationId: deleteCluster
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeleteClusterRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/DeleteClusterResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /dataware/listClusters:
+    post:
+      summary: Lists clusters.
+      description: Lists clusters. If no cluster names are specified, the call lists all clusters.
+      operationId: listClusters
+      x-right: dataware/listClusters
+      x-paginates: true
+      x-paging-default-max-items: 100
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListClustersRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListClustersResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /dataware/describeCluster:
+    post:
+      summary: Describe a cluster.
+      description: Describe a cluster.
+      operationId: describeCluster
+      x-right: dataware/listClusters
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DescribeClusterRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/DescribeClusterResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /dataware/getClusterAccessTokens:
+    post:
+      summary: Retrieves the access tokens to the specified cluster.
+      description: Retrieves the access tokens to the specified cluster. These can be used to authorise a JDBC/ODBC connection or to log into Hue on the cluster.
+      operationId: getClusterAccessTokens
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetClusterAccessTokensRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/GetClusterAccessTokensResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Error:
+    type: object
+    description: An object returned on an error.
+    properties:
+      code:
+        type: string
+        description: The error code.
+      message:
+        type: string
+        description: The error message.
+  EnvironmentType:
+    type: string
+    description: The type of environment.
+    enum:
+      - AWS
+      - AZURE
+  ClusterSummary:
+    type: object
+    description: Information about a cluster.
+    required:
+      - clusterName
+      - crn
+      - creationDate
+      - cdhVersion
+      - instanceType
+      - workersGroupSize
+      - status
+      - environmentType
+      - environmentCrn
+      - securityConfiguration
+    properties:
+      clusterName:
+        type: string
+        description: The name of the cluster.
+      crn:
+        type: string
+        description: The CRN of the cluster.
+      creationDate:
+        type: string
+        format: date-time
+        description: The date when the cluster was created.
+      status:
+        $ref: '#/definitions/ClusterStatus'
+        description: The status of the cluster.
+      cdhVersion:
+        type: string
+        description: The CDH version for the cluster.
+      instanceType:
+        type: string
+        description: The instance type for the worker instances.
+      workersGroupSize:
+        type: integer
+        format: int32
+        description: The worker group size.
+      environmentType:
+        $ref: '#/definitions/EnvironmentType'
+        description: The type of the environment.
+      environmentCrn:
+        type: string
+        description: The CRN of the environment.
+      securityConfiguration:
+        type: object
+        description: The cluster's security configuration.
+        required:
+          - enabled
+        properties:
+          enabled:
+            type: boolean
+            description: Whether cluster security is enabled. If enabled, cluster services require authentication and wire encryption is enabled. Cluster volumes are encrypted in a cloud provider specific manner.
+      namespaceCrn:
+        type: string
+        description: The CRN of the cluster's Altus SDX namespace.
+      publicIpsAssociated:
+        type: boolean
+        description: The public IP address of the instance. This will be set to 'none' if the instance was created as part of a cluster without public IP addresses.
+  Cluster:
+    type: object
+    description: Information about a cluster.
+    required:
+      - clusterName
+      - crn
+      - creationDate
+      - cdhVersion
+      - instanceType
+      - workersGroupSize
+      - status
+      - environmentType
+      - environmentCrn
+      - hasInstanceBootstrapScript
+      - securityConfiguration
+    properties:
+      clusterName:
+        type: string
+        description: The name of the cluster.
+      crn:
+        type: string
+        description: The CRN of the cluster.
+      creationDate:
+        type: string
+        format: date-time
+        description: The date when the cluster was created.
+      status:
+        $ref: '#/definitions/ClusterStatus'
+        description: The status of the cluster.
+      cdhVersion:
+        type: string
+        description: The CDH version for the cluster.
+      instanceType:
+        type: string
+        description: The instance type for the worker instances.
+      hasInstanceBootstrapScript:
+        type: boolean
+        description: A flag indicating if a bootstrap script was provided or not during the cluster create request. The script content is not returned because it may be sensitive.
+      workersGroupSize:
+        type: integer
+        format: int32
+        description: The worker group size.
+      environmentType:
+        $ref: '#/definitions/EnvironmentType'
+        description: The type of the environment.
+      environmentCrn:
+        type: string
+        description: The CRN of the environment.
+      securityConfiguration:
+        type: object
+        description: The cluster's security configuration.
+        required:
+          - enabled
+        properties:
+          enabled:
+            type: boolean
+            description: Whether cluster security is enabled. If enabled, cluster services require authentication and wire encryption is enabled. Cluster volumes are encrypted in a cloud provider specific manner.
+          awsDetails:
+            type: object
+            description: AWS-specific security configuration. This will only be populated for AWS clusters with security enabled.
+            properties:
+              ebsEncryptionKmsKey:
+                type: string
+                description: The ARN of the KMS key used to encrypt non-root EBS volumes. If not set, and security is enabled, the default AWS managed CMK for EBS was used.
+      publicKey:
+        type: string
+        description: The SSH public key to connect to the cluster. The user uses the private key that corresponds to the public key to SSH into the cluster.
+        x-skip-logging: true
+      failureCodes:
+        type: array
+        items:
+          type: string
+        description: If the cluster's status is FAILED, this will be set with related failure codes.
+      failureReason:
+        type: string
+        description: If the cluster's status is FAILED, this will be set with a message explaining the reason.
+      logArchiveLocation:
+        type: string
+        description: The S3 location where cluster logs will be placed.
+      clouderaManagerEndpoint:
+        $ref: '#/definitions/Endpoint'
+        description: The connection endpoint of the cluster's Cloudera Manager.
+      workersConfiguration:
+        type: object
+        description: Workers group configuration.
+        properties:
+          awsDetails:
+            description: AWS-specific instance configuration.
+            $ref: '#/definitions/AWSInstanceConfiguration'
+          azureDetails:
+            description: Azure-specific instance configuration.
+            $ref: '#/definitions/AzureInstanceConfiguration'
+      namespaceCrn:
+        type: string
+        description: The CRN of the cluster's Altus SDX namespace.
+      additionalClusterResourceTags:
+        type: array
+        description: Tags that were added to cluster-associated resources at cluster creation time. This list does not include those that the Altus service sets.
+        items:
+          $ref: '#/definitions/ClusterResourceTagResponse'
+      publicIpsAssociated:
+        type: boolean
+        description: The public IP address of the instance. This will be set to 'none' if the instance was created as part of a cluster without public IP addresses.
+  Endpoint:
+    type: object
+    description: A network endpoint that has both a public and a private IP address.
+    required:
+      - privateIpAddress
+      - publicIpAddress
+      - port
+    properties:
+      privateIpAddress:
+        type: string
+        description: A private IP address. This is only accessible from within the local network.
+      publicIpAddress:
+        type: string
+        description: A public IP address. This is internet routable. 'none' if the cluster was created without public IP addresses.
+      port:
+        type: integer
+        format: int32
+        description: A port.
+  ClusterStatus:
+    type: string
+    description: The status of a cluster.
+    enum:
+      - CREATING
+      - CREATED
+      - TERMINATING
+      - FAILED
+  AWSInstanceConfiguration:
+    type: object
+    description: AWS-specific instance configuration.
+    properties:
+      ebsConfiguration:
+        $ref: '#/definitions/EbsConfiguration'
+        description: The per-instance EBS configuration.
+  EbsConfiguration:
+    type: object
+    description: An EBS configuration for an instance. Any EBS disks configured are added in addition to the root volume.
+    required:
+      - sizeInGiB
+      - volumeType
+      - volumesPerInstance
+    properties:
+      sizeInGiB:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 16384
+        description: Size for each volume in GiB.
+      volumeType:
+        type: string
+        description: The volume type.
+        x-supported-options:
+          - gp2
+          - st1
+          - sc1
+      volumesPerInstance:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 15
+        description: Number of volumes per instance. The default and minimum number is 1. The maximum number is 15.
+  EbsConfigurationRequest:
+    type: object
+    description: Object used to describe EBS configuration request. Any EBS disks configured here are added in addition to the root volume.
+    required:
+      - sizeInGiB
+      - volumeType
+    properties:
+      sizeInGiB:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 16384
+        description: Size for each volume in GiB.
+      volumeType:
+        type: string
+        description: The volume type.
+        x-supported-options:
+          - gp2
+          - st1
+          - sc1
+      volumesPerInstance:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 15
+        description: Number of volumes per instance. The default and minimum number is 1. The maximum number is 15.
+  CreateAWSClusterRequest:
+    type: object
+    description: Request object for a create AWS cluster request.
+    required:
+      - clusterName
+      - cdhVersion
+      - workersGroupSize
+      - instanceType
+      - environmentName
+    properties:
+      clusterName:
+        type: string
+        description: The name of the cluster. This name must be unique, must have a maximum of 128 characters, and must contain only alphanumeric characters and hyphens. Names are case-sensitive.
+      cdhVersion:
+        type: string
+        description: The CDH version.
+      instanceType:
+        type: string
+        description: The EC2 instance type for the worker nodes.
+        x-supported-options:
+          - c4.2xlarge
+          - c4.4xlarge
+          - c4.8xlarge
+          - c5.2xlarge
+          - c5.4xlarge
+          - c5.9xlarge
+          - c5.18xlarge
+          - m4.xlarge
+          - m4.2xlarge
+          - m4.4xlarge
+          - m4.10xlarge
+          - m4.16xlarge
+          - m5.xlarge
+          - m5.2xlarge
+          - m5.4xlarge
+          - m5.12xlarge
+          - m5.24xlarge
+          - r4.large
+          - r4.xlarge
+          - r4.2xlarge
+          - r4.4xlarge
+          - r4.8xlarge
+          - r4.16xlarge
+          - r5.large
+          - r5.xlarge
+          - r5.2xlarge
+          - r5.4xlarge
+          - r5.12xlarge
+          - r5.24xlarge
+      environmentName:
+        type: string
+        description: Name or CRN of the environment to use when creating the the cluster. The environment must be an AWS environment.
+      workersGroupSize:
+        type: integer
+        format: int32
+        x-service-side-minimum: 3
+        description: The worker nodes group size.
+      publicKey:
+        type: string
+        description: The SSH public key to connect to the cluster. The user uses the private key that corresponds to the public key to SSH into the cluster.
+        x-skip-logging: true
+      instanceBootstrapScript:
+        type: string
+        description: Instance bootstrap script that is executed on all the cluster instances immediately after startup before any services are configured and started. You can use it to install additional OS packages or application dependencies. This is not intended to be a mechanism for cluster configuration.
+        x-sensitive: true
+      workersConfiguration:
+        type: object
+        description: Defines workers group configuration, such as, custom volume configurations.
+        properties:
+          ebsConfiguration:
+            description: Defines an EBS configuration. Any EBS disks configured here are added in addition to the root volume.
+            $ref: '#/definitions/EbsConfigurationRequest'
+      namespaceName:
+        type: string
+        description: A name or a CRN of an existing Altus SDX namespace.
+      clouderaManagerUsername:
+        type: string
+        description: The username to login to cluster's Cloudera Manager as readonly user. The default is \'guest\'.
+      clouderaManagerPassword:
+        type: string
+        description: The password to login to cluster's Cloudera Manager as readonly user. The default is autogenerated random UUID.
+        x-sensitive: true
+      additionalClusterResourceTags:
+        type: array
+        description: Tags added to cluster-associated resources at cluster creation time. These tags are in addition to those that the Altus service sets. See the AWS documentation for tagging restrictions.
+        items:
+          $ref: '#/definitions/ClusterResourceTagRequest'
+        maxLength: 45
+  CreateAWSClusterResponse:
+    type: object
+    description: Response object for a create AWS cluster request.
+    required:
+      - cluster
+      - clouderaManagerUsername
+      - clouderaManagerPassword
+    properties:
+      cluster:
+        $ref: '#/definitions/Cluster'
+        description: The cluster that was created.
+      clouderaManagerUsername:
+        type: string
+        description: The username that was created to login to cluster's Cloudera Manager as a readonly user. This value cannot be retrieved later.
+      clouderaManagerPassword:
+        type: string
+        description: The password that was created to login to cluster's Cloudera Manager as a readonly user. This value cannot be retrieved later.
+        x-sensitive: true
+  DeleteClusterRequest:
+    type: object
+    description: Request object for a delete cluster request.
+    required:
+      - clusterName
+    properties:
+      clusterName:
+        type: string
+        description: The name or CRN of the cluster.
+  DeleteClusterResponse:
+    type: object
+    description: Response object for a delete cluster request.
+  DiskConfiguration:
+    type: object
+    description: A Disk storage configuration for an instance. Any disks configured are added in addition to the root volume.
+    required:
+      - sizeGB
+      - storageAccountType
+      - dataDisksPerInstance
+    properties:
+      sizeGB:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 4095
+        description: Size of each data disk in GB.
+      dataDisksPerInstance:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 15
+        description: Number of data disks per instance. The default and minimum number is 1. The maximum number is 15.
+      storageAccountType:
+        type: string
+        description: The storage account type.
+        x-supported-options:
+          - Premium_LRS
+          - Standard_LRS
+  AzureInstanceConfiguration:
+    type: object
+    description: Azure-specific instance configuration.
+    properties:
+      diskConfiguration:
+        $ref: '#/definitions/DiskConfiguration'
+        description: The per-instance Azure Disk storage configuration.
+  DiskConfigurationRequest:
+    type: object
+    description: Object used to describe Disk storage configuration request. Any disks configured here are added in addition to the root volume.
+    required:
+      - sizeGB
+      - storageAccountType
+    properties:
+      sizeGB:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 4095
+        description: Size of each data disk in GB.
+      storageAccountType:
+        type: string
+        description: The storage account type.
+        x-supported-options:
+          - Premium_LRS
+          - Standard_LRS
+      dataDisksPerInstance:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 15
+        description: Number of data disks per instance. The default and minimum number is 1. The maximum number is 15.
+  CreateAzureClusterRequest:
+    type: object
+    description: Request object for a create Azure cluster request.
+    required:
+      - clusterName
+      - cdhVersion
+      - workersGroupSize
+      - instanceType
+      - environmentName
+    properties:
+      clusterName:
+        type: string
+        description: The name of the cluster. This name must be unique, must have a maximum of 128 characters, and must contain only alphanumeric characters and hyphens. Names are case-sensitive.
+      cdhVersion:
+        type: string
+        description: The CDH version.
+      instanceType:
+        type: string
+        description: The instance type for the worker nodes.
+        x-supported-options:
+          - STANDARD_DS12_V2
+          - STANDARD_DS13_V2
+          - STANDARD_DS14_V2
+          - STANDARD_DS15_V2
+      environmentName:
+        type: string
+        description: Name or CRN of the environment to use when creating the the cluster. The environment must be an Azure environment.
+      workersGroupSize:
+        type: integer
+        format: int32
+        x-service-side-minimum: 3
+        description: The worker nodes group size.
+      publicKey:
+        type: string
+        description: The SSH public key to connect to the cluster. The user uses the private key that corresponds to the public key to SSH into the cluster.
+        x-skip-logging: true
+      instanceBootstrapScript:
+        type: string
+        description: Instance bootstrap script that is executed on all the cluster instances immediately after startup before any services are configured and started. You can use it to install additional OS packages or application dependencies. This is not intended to be a mechanism for cluster configuration.
+        x-sensitive: true
+      workersConfiguration:
+        type: object
+        description: Defines workers group configuration, such as, custom volume configurations.
+        properties:
+          diskConfiguration:
+            description: Defines a Disk storage configuration. Any disks configured here are added in addition to the root volume.
+            $ref: '#/definitions/DiskConfigurationRequest'
+      coordinatorsConfiguration:
+        type: object
+        description: Defines coordinators group configuration, such as, custom volume configurations.
+        properties:
+          diskConfiguration:
+            description: Defines a Disk storage configuration. Any disks configured here are added in addition to the root volume.
+            $ref: '#/definitions/DiskConfigurationRequest'
+      namespaceName:
+        type: string
+        description: A name or a CRN of an existing Altus SDX namespace.
+      clouderaManagerUsername:
+        type: string
+        description: The username to login to cluster's Cloudera Manager as readonly user. The default is 'guest'.
+      clouderaManagerPassword:
+        type: string
+        description: The password to login to cluster's Cloudera Manager as readonly user. The default is autogenerated random UUID.
+        x-sensitive: true
+      additionalClusterResourceTags:
+        type: array
+        description: Tags added to cluster-associated resources at cluster creation time. These tags are in addition to those that the Altus service sets. See the Azure documentation for tagging restrictions.
+        items:
+          $ref: '#/definitions/ClusterResourceTagRequest'
+        maxLength: 45
+  CreateAzureClusterResponse:
+    type: object
+    description: Response object for a create Azure cluster request.
+    required:
+      - cluster
+      - clouderaManagerUsername
+      - clouderaManagerPassword
+    properties:
+      cluster:
+        $ref: '#/definitions/Cluster'
+        description: The cluster that was created.
+      clouderaManagerUsername:
+        type: string
+        description: The username that was created to login to cluster's Cloudera Manager as a readonly user. This value cannot be retrieved later.
+      clouderaManagerPassword:
+        type: string
+        description: The password that was created to login to cluster's Cloudera Manager as a readonly user. This value cannot be retrieved later.
+        x-sensitive: true
+  ListClustersRequest:
+    type: object
+    description: Request object for a list clusters request.
+    properties:
+      clusterNames:
+        type: array
+        items:
+          type: string
+        description: The names or CRNs of the clusters.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListClustersResponse:
+    type: object
+    description: Response object for a list clusters request.
+    required:
+      - clusters
+    properties:
+      clusters:
+        type: array
+        items:
+          $ref: '#/definitions/ClusterSummary'
+        x-paging-result: true
+        description: The clusters.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If not present, there are no additional results.
+  DescribeClusterRequest:
+    type: object
+    description: Request object for a describe cluster request.
+    required:
+      - clusterName
+    properties:
+      clusterName:
+        type: string
+        description: The name or CRN of the cluster.
+  DescribeClusterResponse:
+    type: object
+    description: Response object for a describe cluster request.
+    required:
+      - cluster
+    properties:
+      cluster:
+        $ref: '#/definitions/Cluster'
+        description: The cluster.
+  LdapTokenDetails:
+    type: object
+    description: Details about a cluster LDAP access token. This is used to authorise a JDBC/ODBC connection or to log into Hue on the cluster.
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+        description: The LDAP username to use.
+      password:
+        type: string
+        description: The LDAP password for the user.
+        x-sensitive: true
+  GetClusterAccessTokensRequest:
+    type: object
+    description: Request object for a get cluster access tokens request.
+    required:
+      - clusterName
+    properties:
+      clusterName:
+        type: string
+        description: The name or CRN of the cluster.
+  GetClusterAccessTokensResponse:
+    type: object
+    description: Response object for a get cluster access tokens request.
+    required:
+      - ldapTokenDetails
+    properties:
+      ldapTokenDetails:
+        $ref: '#/definitions/LdapTokenDetails'
+        description: The LDAP token details
+  ClusterResourceTagRequest:
+    type: object
+    description: Tag for a cluster resource.
+    required:
+      - key
+      - value
+    properties:
+      key:
+        type: string
+        description: The key of tag.
+      value:
+        type: string
+        description: The value of the tag.
+  ClusterResourceTagResponse:
+    type: object
+    description: Tag for a cluster resource.
+    required:
+      - key
+      - value
+    properties:
+      key:
+        type: string
+        description: The key of tag.
+      value:
+        type: string
+        description: The value of the tag.

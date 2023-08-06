@@ -1,0 +1,250 @@
+swagger: '2.0'
+x-endpoint-name: sdx
+x-releases: PUBLIC,SDX
+info:
+  version: 0.1-SNAPSHOT
+  title: Cloudera Altus SDX Service
+  license:
+    name: Apache 2.0
+  description: Cloudera Altus SDX is a web service that manages Altus metadata namespaces.
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /sdx/createConfiguredNamespace:
+    post:
+      summary: Creates a new configured namespace.
+      description: Creates a new configured namespace. A configured namespace points to external metadata databases which are maintained outside of Altus.
+      operationId: createConfiguredNamespace
+      x-right: sdx/createNamespace
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateConfiguredNamespaceRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/CreateConfiguredNamespaceResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /sdx/deleteNamespace:
+    post:
+      summary: Deletes an existing namespace.
+      description: Deletes an existing namespace.
+      operationId: deleteNamespace
+      x-right: sdx/deleteNamespace
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeleteNamespaceRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/DeleteNamespaceResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /sdx/listNamespaces:
+    post:
+      summary: Lists namespaces.
+      description: Lists namespaces. If no namespace names are specified, the call lists all namespaces.
+      operationId: listNamespaces
+      x-paginates: true
+      x-paging-default-max-items: 100
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListNamespacesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListNamespacesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Error:
+    type: object
+    description: An object returned on an error.
+    properties:
+      code:
+        type: string
+        description: The error code.
+      message:
+        type: string
+        description: The error message.
+  Namespace:
+    type: object
+    description: Information about a metadata namespace.
+    required:
+      - namespaceName
+      - crn
+      - creationDate
+      - status
+    properties:
+      namespaceName:
+        type: string
+        description: The name of the namespace.
+      crn:
+        type: string
+        description: The CRN of the namespace.
+      status:
+        $ref: '#/definitions/NamespaceStatus'
+        description: The status of the namespace.
+      creationDate:
+        type: string
+        format: date-time
+        description: The date when this namespace record was created.
+      adminGroupCrn:
+        type: string
+        description: The CRN of the namespace admin group.
+      type:
+        $ref: '#/definitions/NamespaceType'
+        description: The type of the namespace.
+      configuredDetails:
+        type: object
+        description: Configured namespace specific information.
+        properties:
+          hmsJdbcUrlDetails:
+            $ref: '#/definitions/JdbcUrlConfigurationDetails'
+            description: Passthrough connection details for the HMS database.
+          sentryJdbcUrlDetails:
+            $ref: '#/definitions/JdbcUrlConfigurationDetails'
+            description: Passthrough connection details for the Sentry database.
+  NamespaceStatus:
+    type: string
+    description: The status of the namespace.
+    enum:
+      - CREATING
+      - CREATED
+      - DELETING
+      - FAILED
+  NamespaceType:
+    type: string
+    description: The type of namespace.
+    enum:
+      - MANAGED
+      - CONFIGURED
+  JdbcUrlConfigurationDetails:
+    type: object
+    description: JDBC connection details.
+    required:
+      - jdbcUrl
+      - username
+    properties:
+      jdbcUrl:
+        type: string
+        description: JDBC URL for the database.
+      username:
+        type: string
+        description: JDBC connection username for the database.
+  JdbcUrlConfiguration:
+    type: object
+    description: Object used to specify a JDBC connection using a JDBC URL.
+    required:
+      - jdbcUrl
+      - username
+      - password
+    properties:
+      jdbcUrl:
+        type: string
+        description: The JDBC URL for connection.
+      username:
+        type: string
+        description: The JDBC connection username.
+      password:
+        type: string
+        description: The JDBC connection password.
+        x-sensitive: true
+  CreateConfiguredNamespaceRequest:
+    type: object
+    description: Request object for a create configured namespace request.
+    required:
+      - namespaceName
+      - hmsJdbcUrlConfig
+      - sentryJdbcUrlConfig
+    properties:
+      namespaceName:
+        type: string
+        description: The name of the configured namespace. This name must be unique, must have a maximum of 128 characters, and must contain only alphanumeric characters, hyphens and underscores. Names are case-sensitive.
+        minLength: 1
+        maxLength: 128
+      hmsJdbcUrlConfig:
+        $ref: '#/definitions/JdbcUrlConfiguration'
+        description: The JDBC configuration for an existing HMS database to be used by the configured namespace.
+      sentryJdbcUrlConfig:
+        $ref: '#/definitions/JdbcUrlConfiguration'
+        description: The JDBC configuration for an existing Sentry database to be used by the configured namespace.
+  CreateConfiguredNamespaceResponse:
+    type: object
+    description: Response object for a create configured namespace request.
+    required:
+      - namespace
+    properties:
+      namespace:
+        $ref: '#/definitions/Namespace'
+        description: The configured namespace that was created.
+  DeleteNamespaceRequest:
+    type: object
+    description: Request object for a delete namespace request.
+    required:
+      - namespaceName
+    properties:
+      namespaceName:
+        type: string
+        description: The name or CRN of the the namespace.
+  DeleteNamespaceResponse:
+    type: object
+    description: Response object for a delete namespace request.
+  ListNamespacesRequest:
+    type: object
+    description: Request object for a list namespaces request.
+    properties:
+      namespaceNames:
+        type: array
+        items:
+          type: string
+        description: The names or CRNs of the namespaces.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListNamespacesResponse:
+    type: object
+    description: Response object for a list namespaces request.
+    required:
+      - namespaces
+    properties:
+      namespaces:
+        type: array
+        items:
+          $ref: '#/definitions/Namespace'
+        x-paging-result: true
+        description: The namespaces.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
