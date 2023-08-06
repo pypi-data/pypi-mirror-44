@@ -1,0 +1,13 @@
+- name: Create storage archive
+  shell:
+    'yes'
+  async: 15
+  poll: 1
+  register: tar_status
+
+- name: 'YUM - check on async task'
+  async_status:
+    jid: "{{ tar_status.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 20

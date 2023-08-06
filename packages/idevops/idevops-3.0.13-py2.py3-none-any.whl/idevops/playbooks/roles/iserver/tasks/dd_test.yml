@@ -1,0 +1,36 @@
+- name: Perform disk IO test using dd':' write
+  shell:
+    dd if=/dev/urandom of=/tmp/testfile bs=512M count=2 iflag=fullblock oflag=direct
+  when:
+    - io | d(false)
+  register: result
+
+- set_fact:
+    io_res: "{{ io_res | d({}) | combine( { 'write': result.stderr | d() | regex_search('\\d+(\\.\\d+)? \\wB/([^\\u0000-\\u007F]|\\w)') } ) }}"
+
+- name: Perform disk IO test using dd':' read(1)
+  shell:
+    dd if=/tmp/testfile of=/dev/null bs=512M count=2 iflag=fullblock
+  when:
+    - io | d(false)
+  register: result
+
+- set_fact:
+    io_res: "{{ io_res | d({}) | combine( { 'read(1)': result.stderr | d() | regex_search('\\d+(\\.\\d+)? \\wB/([^\\u0000-\\u007F]|\\w)') } ) }}"
+
+- name: Perform disk IO test using dd':' read(2)
+  shell:
+    dd if=/tmp/testfile of=/dev/null bs=512M count=2 iflag=fullblock
+  when:
+    - io | d(false)
+  register: result
+
+- set_fact:
+    io_res: "{{ io_res | d({}) | combine( { 'read(2)': result.stderr | d() | regex_search('\\d+(\\.\\d+)? \\wB/([^\\u0000-\\u007F]|\\w)') } ) }}"
+
+- name: Cleanup
+  file:
+    path: /tmp/testfile
+    state: absent
+  when:
+    - io | d(false)

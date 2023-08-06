@@ -1,0 +1,39 @@
+- hosts: builder
+  run_once: true
+  become: false
+  tasks:
+    - name: Check whether docker builder exists
+      set_fact:
+        use_builder: "{{ 'builder' in groups }}"
+      when:
+        - skip is not defined
+
+    - include_role:
+        name: builder
+        tasks_from: "{{ task }}"
+      with_items:
+        - make
+        - push_image
+      loop_control:
+        loop_var: task
+      when:
+        - use_builder
+        - skip is not defined
+
+- hosts:
+    - master
+    - slave
+  serial: "{{ serial | default('100%') }}"
+  vars:
+    use_builder: "{{ 'builder' in groups }}"
+    image: "{{ 'builder' in groups and hostvars[groups['builder'][0]]['image'] }}"
+  tasks:
+    - include_role:
+        name: iserver
+        tasks_from: make
+      when:
+        - not use_builder
+        - skip is not defined
+    - include_role:
+        name: iserver
+        tasks_from: create_docker
