@@ -1,0 +1,96 @@
+---
+- name: This is a recipe for how to cook with packit
+  hosts: all
+  vars:
+    user_name: packit
+    home_path: /home/{{ user_name }}
+
+    ansible_bender:
+      base_image: fedora:29
+      target_image:
+        name: docker.io/usercont/packit-service
+        environment:
+          FLASK_APP: packit.service.web_hook
+          LD_PRELOAD: libnss_wrapper.so
+          NSS_WRAPPER_PASSWD: '{{ home_path }}/passwd'
+          NSS_WRAPPER_GROUP: /etc/group
+          USER: '{{ user_name }}'
+          HOME: '{{ home_path }}'
+        cmd: flask-3 run -h 0.0.0.0
+      working_container:
+        volumes:
+        - '{{ playbook_dir }}:/src:Z'
+  tasks:
+  - name: Install all packages needed to hack on packit.
+    dnf:
+      name:
+      - python3-pip
+      - python3-setuptools
+      - git
+      - python3-setuptools_scm
+      - python3-setuptools_scm_git_archive
+      - python3-wheel  # for bdist_wheel
+      - python3-ipdb  # for easy debugging
+      - python3-fedmsg
+      - python3-pyyaml
+      - python3-requests
+      - python3-pygithub
+      - python3-libpagure
+      - rpm-build
+      - rebase-helper
+      - fedpkg
+      - python3-flask
+      - nss_wrapper
+      state: present
+
+  - user:
+      name: '{{ user_name }}'
+      create_home: yes
+      home: '{{ home_path }}'
+  - file:
+      state: directory
+      path: /home
+      mode: 0777
+      recurse: yes
+  - copy:
+      src: ./files/passwd
+      dest: '{{ home_path }}/passwd'
+      mode: 0777
+
+  - name: Install latest twine for sake of check command
+    pip:
+      name:
+      - twine  # we need newest twine, b/c of the check command
+      - readme_renderer[md]
+      state: latest
+  # TODO: we should do a git config instead
+  - name: "Set up git: user.email"
+    command: git config --global user.email "user-cont-team@redhat.com"
+  - name: "Set up git: user.name"
+    command: git config --global user.name "Pack It"
+  - name: Create .ssh
+    file:
+      state: directory
+      path: /root/.ssh
+      mode: 0700
+  - name: Copy ssh_config
+    copy:
+      src: files/ssh_config
+      dest: /etc/ssh/ssh_config.d/01-packit.conf
+  - name: stat /src
+    stat:
+      path: /src
+    tags:
+    - no-cache
+    register: src_path
+  - name: Let's make sure /src is present
+    assert:
+      that:
+      - 'src_path.stat.isdir'
+  - name: Install ogr from master
+    pip:
+      name: git+http://github.com/packit-service/ogr.git
+  # this requires to have sources mounted inside at /src
+  - name: Install packit from the current working directory
+    pip:
+      name: /src
