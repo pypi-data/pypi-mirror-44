@@ -1,0 +1,65 @@
+# Introduction
+
+This repository contains custom [Pygments](http://pygments.org/) lexers required to generate documentation for the Brightspot platform. It also contains Handlebars and Less files you can use for testing.
+
+# Building Distribution Packages
+
+## Preprequisites
+
+* A Python virtual environment (a best practice).
+* pip; see [Creating Virtual Environments](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
+
+
+## Procedure
+
+1. Build the package: `python3 setup.py sdist bdist_wheel`
+1. Install the package into the environment: `pip install `
+
+# Installation
+
+This installation procedure describes how to install the enhanced lexers into your existing Pygments package.
+
+1. Ensure you have Pygments installed. 
+
+   * `pip show Pygments` to verify
+   * `pip install Pygments` to install
+
+1. Find where your python packages are installed: 
+
+   `python -m site | grep site-packages`
+
+   For OS X users, the packages are probably installed in one of the following locations: 
+
+   * venv-directory/lib/pythonX.X/site-packages/
+   * /Users/username/Library/Python/X.X/lib/python/site-packages/
+   * /Library/Python/X.X/site-packages/
+
+1. Change to the directory you identified in step 2.
+1. Change to `pygments/lexers/`.
+1. Rename the files you are overwriting:
+
+   * `mv css.py css.py.old`
+   * `mv templates.py templates.py.old`
+
+1. Change to a different directory, and clone or download this repository.
+1. Copy the cloned files `css.py` and `templates.py` into the directory you identified in step 4.
+
+# Testing
+
+1. Update the file `templates.py` or `css.py`.
+1. Run pygments locally using your updated file. This requires the `-l` and `-x` switches at the command line. Examples:
+
+   `pygmentize -l templates.py:HandlebarsLexer -x test1.hbs`
+   
+   `pygmentize -l css.py:LessCssLexer -x test1.less`
+
+   `pygmentize -o trash.html -l css.py:LessCssLexer -x test1.less`
+
+   In the previous command samples, the option `-x` points to a test file. You can use the test files provided by this repository in the directory `test-files/`.
+
+1. Commit the updated lexers.
+1. Install the updated lexers in the directory `pygments/lexers/` you determined from the section "Installation," above.
+
+# Contributing
+
+Interested in creating or fixing a custom lexer? See Pygments' [Write your own lexer](http://pygments.org/docs/lexerdevelopment/).
