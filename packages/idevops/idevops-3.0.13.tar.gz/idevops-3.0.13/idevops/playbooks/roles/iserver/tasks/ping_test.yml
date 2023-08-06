@@ -1,0 +1,15 @@
+- name: Perform ping latency test
+  shell:
+    ping -b {{ item }} -c 1 -q | grep -Po "= \S+ ms" | cut -d/ -f 2
+  when:
+    - inventory_hostname != item
+    - latency | d(false)
+  with_items:
+    - "{{ groups.master }}"
+    - "{{ groups.slave }}"
+  register: result
+
+- set_fact:
+    lt_res: "{{ lt_res | d({}) | combine( { item.item: item.stdout | d() } ) }}"
+  with_items:
+    - "{{ result.results }}"

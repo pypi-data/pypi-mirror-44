@@ -1,0 +1,38 @@
+- name: Generate iserver config files using template locally
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: "{{ local.config }}/config/iserver.yml.j2"
+      dest: "{{ local.config }}/config/iserver.yml_{{ inventory_hostname }}"
+    - src: "{{ local.config }}/config/genesis.yml.j2"
+      dest: "{{ local.config }}/config/genesis.yml"
+  delegate_to: localhost
+
+- name: Generate genesis archive
+  run_once: true
+  delegate_to: localhost
+  block:
+    - tempfile:
+        state: directory
+      register: result
+    - set_fact:
+        temp_dir: "{{ result.path }}"
+    - file:
+        path: "{{ temp_dir }}/genesis"
+        state: directory
+    - template:
+        src: "{{ local.config }}/config/genesis.yml.j2"
+        dest: "{{ temp_dir }}/genesis/genesis.yml"
+    - unarchive:
+        src: "{{ local.config }}/config/contract.tgz"
+        dest: "{{ temp_dir }}/genesis"
+    - archive:
+        path: "{{ temp_dir }}/genesis"
+        dest: "{{ local.config }}/config/genesis.tgz"
+
+  always:
+    - name: Delete temp dir
+      file:
+        path: "{{ temp_dir }}"
+        state: absent
