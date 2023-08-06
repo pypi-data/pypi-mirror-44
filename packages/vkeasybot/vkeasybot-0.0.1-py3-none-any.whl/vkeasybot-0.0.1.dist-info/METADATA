@@ -1,0 +1,37 @@
+Metadata-Version: 2.1
+Name: vkeasybot
+Version: 0.0.1
+Summary: vkeasybot - модуль для работы с api Вконтакте
+Home-page: https://github.com/Ilya001/vkeasybot
+Author: ilya001
+Author-email: ilja.sonin2018@yandex.ru
+License: Copyright (c) 2019 The Python Packaging Authority, see LICENSE file
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+
+# vkeasybot
+
+## Быстрый старт
+
+### LongPoll
+```python
+from vkeasybot import VkEasyBot
+from vkeasybot.longpull import LongPoll
+
+vk = VkEasyBot(token=token, v=5.92) #Your access_token
+longpoll = LongPoll(vk=vk, group_id=1) #Your group_id 
+
+@longpoll.message_new
+def message(event):
+    if event.text.lower() == "привет":
+        return "Привет!"
+
+    if event.attachments:
+        return "Ты мне прислал вложение"
+
+    return "Я тебя не понял, что ты написал!"
+
+longpoll.start_listen()
+```
+
