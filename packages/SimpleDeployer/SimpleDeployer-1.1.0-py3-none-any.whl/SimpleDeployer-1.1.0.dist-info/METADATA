@@ -1,0 +1,37 @@
+Metadata-Version: 2.1
+Name: SimpleDeployer
+Version: 1.1.0
+Summary: Dead simple deployment system
+Home-page: https://github.com/mikedombo/simpledeployer
+Author: Michael Dombrowski
+Author-email: michael@mikedombrowski.com
+License: BSD-3-Clause
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
+Requires-Dist: gitpython (>=2.1.11)
+Requires-Dist: pyyaml (>=5.1)
+Requires-Dist: click (>=7.0)
+
+# SimpleDeployer
+
+Edit `~/.deployer/deployer.yaml` this is your config file.
+
+```yaml
+definitions:
+    - outDir: /var/www/graphPlayground
+      repository: https://github.com/MikeDombo/graphPlayground.git
+      sourceDir: .
+      ignore:
+          - .*/* # Ignore all directories starting with ".". Ex. .git and .vscode
+      noOverwrite:
+          - .gitlab-ci.yml # If you have a local config file, for example and don't want it overwritten every time you deploy, add it here
+      postInstall: # Commands to run after the copy happens. Use this to update node_modules and similar.
+          - npm ci
+          - npm run build
+```
+
+Additional options:
+
+- branch: The branch to clone from Git
+
+
