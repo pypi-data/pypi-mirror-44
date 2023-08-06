@@ -1,0 +1,855 @@
+Metadata-Version: 2.1
+Name: RNG
+Version: 0.2.0
+Summary: Random Number Generator: Python3 API for the C++ Random library as a c-extension
+Home-page: https://sharpdesigndigital.com
+Author: Broken aka Robert Sharp
+Author-email: webmaster@sharpdesigndigital.com
+License: Free for non-commercial use
+Description: # Random Number Generator: RNG Storm Engine
+        
+        
+        **RNG is not suitable for cryptography, but it could be perfect for other random stuff, data science, experimental programming, A.I. and games.**
+        
+        
+        *Recommended Installation:* `$ pip install RNG`
+        
+        
+        Number Types, Precision & Size:
+        - Float: Python float -> double at the C++ layer.
+            - Min Float: -1.7976931348623157e+308
+            - Max Float:  1.7976931348623157e+308
+            - Min Below Zero: -5e-324
+            - Min Above Zero:  5e-324
+        
+        - Integer: Python int -> long long at the C++ layer.
+            - Input & Output Range: `(-2**63, 2**63)` or approximately +/- 9.2 billion billion.
+            - Min Integer: -9223372036854775807
+            - Max Integer:  9223372036854775807
+        
+        
+        #### Random Binary Function
+        - `bernoulli(truth_factor: float) -> bool`
+            - Bernoulli distribution.
+            - @param truth_factor :: the probability of True. Expected input range: [0.0, 1.0]
+            - @return :: True or False
+        
+        
+        #### Random Integer Functions
+        - `randint(left_limit: int, right_limit: int) -> int`
+            - Flat uniform distribution.
+            - Parameter order does not matter, that is to say, it is no longer required that lo < hi, it just works.
+            - @param left_limit :: input A.
+            - @param right_limit :: input B. 
+            - @return :: random integer in the inclusive range [A, B] or [B, A]
+        - `randbelow(upper_bound: int) -> int`
+            - Flat uniform distribution.
+            - @param upper_bound :: inout A
+            - @return :: random integer in exclusive range [0, A) or (A, 0] if A < 0
+        - `binomial(number_of_trials: int, probability: float) -> int`
+            - Based on the idea of flipping a coin and counting how many heads come up after some number of flips.
+            - @param number_of_trials :: how many times to flip a coin.
+            - @param probability :: how likely heads will be flipped. 0.5 is a fair coin. 1.0 is a double headed coin.
+            - @return :: count of how many heads came up.
+        - `negative_binomial(trial_successes: int, probability: float) -> int`
+            - Based on the idea of flipping a coin as long as it takes to succeed.
+            - @param trial_successes :: the required number of heads flipped to succeed.
+            - @param probability :: how likely heads will be flipped. 0.50 is a fair coin.
+            - @return :: the count of how many tails came up before the required number of heads.
+        - `geometric(probability: float) -> int`
+            - Same as random_negative_binomial(1, probability). 
+        - `poisson(mean: float) -> int`
+            - @param mean :: sets the average output of the function.
+            - @return :: random integer, poisson distribution centered on the mean.
+        - `discrete(count: int, xmin: int, xmax: int, step: int) -> int`
+            - @param count :: number of weighted values
+            - @param xmin :: smallest weight of the set
+            - @param xmin :: largest weight of the set
+            - @param step :: step size
+        
+        
+        #### Random Floating Point Functions
+        - `random() -> float`
+            - Evenly distributes real values of maximum precision.
+            - @return :: random Float in range {0.0, 1.0} biclusive. The spec defines the output range to be [0.0, 1.0).
+                - biclusive: feature/bug rendering the exclusivity of this function a bit more mysterious than desired. This is a known compiler bug.
+        - `uniform(left_limit: float, right_limit: float) -> float`
+            - Suffers from the same biclusive feature/bug noted for generate_canonical().
+            - @param left_limit :: input A 
+            - @param right_limit :: input B
+            - @return :: random Float in range {A, B} biclusive. The spec defines the output range to be [A, B).
+        - `normalvariate(mean: float, std_dev: float) -> float`
+            - @param mean :: sets the average output of the function.
+            - @param std_dev :: standard deviation. Specifies spread of data from the mean.
+        - `lognormvariate(log_mean: float, log_deviation: float) -> float`
+            - @param log_mean :: sets the log of the mean of the function.
+            - @param log_deviation :: log of the standard deviation. Specifies spread of data from the mean.
+        - `exponential(lambda_rate: float) -> float`
+            - Produces random non-negative floating-point values, distributed according to probability density function.
+            - @param lambda_rate :: λ constant rate of a random event per unit of time/distance.
+            - @return :: The time/distance until the next random event. For example, this distribution describes the time between the clicks of a Geiger counter or the distance between point mutations in a DNA strand.
+        - `gammavariate(shape: float, scale: float) -> float`
+            - Generalization of the exponential distribution.
+            - Produces random positive floating-point values, distributed according to probability density function.    
+            - @param shape :: α the number of independent exponentially distributed random variables.
+            - @param scale :: β the scale factor or the mean of each of the distributed random variables.
+            - @return :: the sum of α independent exponentially distributed random variables, each of which has a mean of β.
+        - `weibullvariate(shape: float, scale: float) -> float`
+            - Generalization of the exponential distribution.
+            - Similar to the gamma distribution but uses a closed form distribution function.
+            - Popular in reliability and survival analysis.
+        - `extreme_value(location: float, scale: float) -> float`
+            - Based on Extreme Value Theory. 
+            - Used for statistical models of the magnitude of earthquakes and volcanoes.
+        - `chi_squared(degrees_of_freedom: float) -> float`
+            - Used with the Chi Squared Test and Null Hypotheses to test if sample data fits an expected distribution.
+        - `cauchy(location: float, scale: float) -> float`
+            - @param location :: It specifies the location of the peak. The default value is 0.0.
+            - @param scale :: It represents the half-width at half-maximum. The default value is 1.0.
+            - @return :: Continuous Distribution.
+        - `fisher_f(degrees_of_freedom_1: float, degrees_of_freedom_2: float) -> float`
+            - F distributions often arise when comparing ratios of variances.
+        - `student_t(degrees_of_freedom: float) -> float`
+            - T distribution. Same as a normal distribution except it uses the sample standard deviation rather than the population standard deviation.
+            - As degrees_of_freedom goes to infinity it converges with the normal distribution.
+        - `piecewise_constant_distribution` coming soonish
+            - Produces real values distributed on constant subintervals. 
+        - `piecewise_linear_distribution` coming soonish
+            - Produces real values distributed on defined subintervals. 
+        
+        
+        #### Engines
+        - `mersenne_twister_engine`
+            - Implements 64 bit Mersenne twister algorithm. Default engine on most systems.
+        - `linear_congruential_engine`
+            - Implements linear congruential algorithm.
+        - `subtract_with_carry_engine`
+            - Implements a subtract-with-carry (lagged Fibonacci) algorithm.
+        - `storm_engine`
+            - RNG: Custom Engine
+            - Default Standard
+        
+        
+        #### Engine Adaptors
+        Engine adaptors generate pseudo-random numbers using another random number engine as entropy source. They are generally used to alter the spectral characteristics of the underlying engine.
+        - `discard_block_engine`
+            - Discards some output of a random number engine.
+        - `independent_bits_engine`
+            - Packs the output of a random number engine into blocks of a specified number of bits.
+        - `shuffle_order_engine`
+            - Delivers the output of a random number engine in a different order.
+        
+        
+        #### Seeds & Entropy Source
+        - `random_device`
+            - Non-deterministic uniform random bit generator, although implementations are allowed to implement random_device using a pseudo-random number engine if there is no support for non-deterministic random number generation.
+        - `seed_seq`
+            - General-purpose bias-eliminating scrambled seed sequence generator.
+        
+        
+        #### Distribution & Performance Test Suite
+        - `distribution_timer(func: staticmethod, *args, **kwargs) -> None`
+            - For statistical analysis of non-deterministic numeric functions.
+            - @param func :: Function method or lambda to analyze. `func(*args, **kwargs)`
+            - @optional_kw num_cycles :: Total number of samples for distribution analysis.
+            - @optional_kw post_processor :: Used to scale a large set of data into a smaller set of groupings.
+        - `quick_test(n=10000)` 
+            - Runs a battery of tests for every random distribution function in the module.
+            - @param n :: the total number of samples to collect for each test. Default: 10,000
+        
+        
+        ## Development Log
+        ##### RNG 0.2.0
+        - Major Rebuild.
+        
+        ##### RNG 0.1.22
+        - The RNG Storm Engine is now the default standard.
+        - Experimental Vortex Engine added for testing.
+        
+        ##### RNG 0.1.21 beta
+        - Small update to the testing suite.
+        
+        ##### RNG 0.1.20 beta
+        - Changed default inputs for random_int and random_below to sane values.
+            - random_int(left_limit=1, right_limit=20) down from `-2**63, 2**63 - 1`
+            - random_below(upper_bound=10) down from `2**63 - 1`
+        
+        ##### RNG 0.1.19 beta
+        - Broke some fixed typos, for a change of pace.
+        
+        ##### RNG 0.1.18 beta
+        - Fixed some typos.
+        
+        ##### RNG 0.1.17 beta
+        - Major Refactoring.
+        - New primary engine: Hurricane.
+        - Experimental engine Typhoon added: random_below() only.
+        
+        ##### RNG 0.1.16 beta
+        - Internal Engine Performance Tuning. 
+        
+        ##### RNG 0.1.15 beta
+        - Engine Testing.
+        
+        ##### RNG 0.1.14 beta
+        - Fixed a few typos.
+        
+        ##### RNG 0.1.13 beta
+        - Fixed a few typos.
+        
+        ##### RNG 0.1.12 beta
+        - Major Test Suite Upgrade.
+        - Major Bug Fixes.
+            - Removed several 'foot-guns' in prep for fuzz testing in future releases.
+        
+        ##### RNG 0.1.11 beta
+        - Fixed small bug in the install script.
+        
+        ##### RNG 0.1.10 beta
+        - Fixed some typos.
+        
+        ##### RNG 0.1.9 beta
+        - Fixed some typos.
+        
+        ##### RNG 0.1.8 beta
+        - Fixed some typos.
+        - More documentation added.
+        
+        ##### RNG 0.1.7 beta
+        - The `random_floating_point` function renamed to `random_float`.
+        - The function `c_rand()` has been removed as well as all the cruft it required.
+        - Major Documentation Upgrade.
+        - Fixed an issue where keyword arguments would fail to propagate. Both, positional args and kwargs now work as intended.
+        - Added this Dev Log.
+        
+        ##### RNG 0.0.6 alpha
+        - Minor ABI changes.
+        
+        ##### RNG 0.0.5 alpha
+        - Tests redesigned slightly for Float functions.
+        
+        ##### RNG 0.0.4 alpha
+        - Random Float Functions Implemented.
+        
+        ##### RNG 0.0.3 alpha
+        - Random Integer Functions Implemented.
+        
+        ##### RNG 0.0.2 alpha
+        - Random Bool Function Implemented.
+        
+        ##### RNG 0.0.1 pre-alpha
+        - Planning & Design.
+        
+        
+        ## Distribution and Performance Test Suite
+        ```
+        Quick Test: RNG Storm Engine
+         Min Integer: -9223372036854775807
+         Max Integer:  9223372036854775807
+         Min Float: -1.7976931348623157e+308
+         Max Float:  1.7976931348623157e+308
+         Min Below Zero: -5e-324
+         Min Above Zero:  5e-324
+        
+        
+        Binary Tests
+        
+        Output Distribution: bernoulli(0.3333333333333333)
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 125ns
+        Raw Samples: True, False, False, True, True
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: False
+         Median: False
+         Maximum: True
+         Mean: 0.3298
+         Std Deviation: 0.4701638708009588
+        Sample Distribution:
+         False: 67.02%
+         True: 32.98%
+        
+        
+        Integer Tests
+        
+        Output Distribution: Random.randint(1, 6)
+        Approximate Single Execution Time: Min: 1406ns, Mid: 1609ns, Max: 2250ns
+        Raw Samples: 6, 5, 3, 5, 1
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 1
+         Median: 3
+         Maximum: 6
+         Mean: 3.482
+         Std Deviation: 1.7009307206737296
+        Sample Distribution:
+         1: 16.9%
+         2: 16.39%
+         3: 17.19%
+         4: 16.85%
+         5: 16.47%
+         6: 16.2%
+        
+        Output Distribution: randint(1, 6)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 93ns
+        Raw Samples: 1, 2, 1, 4, 5
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 1
+         Median: 4
+         Maximum: 6
+         Mean: 3.5006
+         Std Deviation: 1.7051364722622362
+        Sample Distribution:
+         1: 16.7%
+         2: 16.47%
+         3: 16.65%
+         4: 16.97%
+         5: 16.67%
+         6: 16.54%
+        
+        Output Distribution: Random.randrange(6)
+        Approximate Single Execution Time: Min: 812ns, Mid: 843ns, Max: 1062ns
+        Raw Samples: 1, 3, 4, 5, 4
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 2
+         Maximum: 5
+         Mean: 2.4764
+         Std Deviation: 1.7017439975693542
+        Sample Distribution:
+         0: 16.59%
+         1: 17.29%
+         2: 16.78%
+         3: 17.05%
+         4: 15.81%
+         5: 16.48%
+        
+        Output Distribution: randbelow(6)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 250ns
+        Raw Samples: 3, 5, 1, 1, 3
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 3
+         Maximum: 5
+         Mean: 2.5202
+         Std Deviation: 1.7011999788786778
+        Sample Distribution:
+         0: 16.23%
+         1: 16.24%
+         2: 17.09%
+         3: 17.16%
+         4: 16.28%
+         5: 17.0%
+        
+        Output Distribution: binomial(4, 0.5)
+        Approximate Single Execution Time: Min: 156ns, Mid: 156ns, Max: 375ns
+        Raw Samples: 3, 3, 2, 1, 2
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 2
+         Maximum: 4
+         Mean: 2.013
+         Std Deviation: 1.0004654382382787
+        Sample Distribution:
+         0: 6.06%
+         1: 24.77%
+         2: 37.43%
+         3: 25.29%
+         4: 6.45%
+        
+        Output Distribution: negative_binomial(5, 0.75)
+        Approximate Single Execution Time: Min: 125ns, Mid: 125ns, Max: 281ns
+        Raw Samples: 3, 2, 1, 1, 1
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 1
+         Maximum: 13
+         Mean: 1.6589
+         Std Deviation: 1.5055821026256837
+        Sample Distribution:
+         0: 24.51%
+         1: 28.64%
+         2: 22.76%
+         3: 12.98%
+         4: 6.35%
+         5: 2.65%
+         6: 1.24%
+         7: 0.55%
+         8: 0.18%
+         9: 0.06%
+         10: 0.03%
+         11: 0.04%
+         13: 0.01%
+        
+        Output Distribution: geometric(0.75)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 156ns
+        Raw Samples: 0, 0, 0, 0, 2
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 0
+         Maximum: 7
+         Mean: 0.3328
+         Std Deviation: 0.6725246381649478
+        Sample Distribution:
+         0: 75.32%
+         1: 18.35%
+         2: 4.54%
+         3: 1.43%
+         4: 0.27%
+         5: 0.07%
+         6: 0.01%
+         7: 0.01%
+        
+        Output Distribution: poisson(4.5)
+        Approximate Single Execution Time: Min: 125ns, Mid: 156ns, Max: 1843ns
+        Raw Samples: 5, 2, 1, 6, 1
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 15
+         Mean: 4.4792
+         Std Deviation: 2.0852822831022237
+        Sample Distribution:
+         0: 1.17%
+         1: 4.9%
+         2: 11.45%
+         3: 16.48%
+         4: 18.88%
+         5: 17.92%
+         6: 12.88%
+         7: 8.08%
+         8: 4.68%
+         9: 1.97%
+         10: 1.15%
+         11: 0.32%
+         12: 0.06%
+         13: 0.04%
+         14: 0.01%
+         15: 0.01%
+        
+        Output Distribution: discrete(7, 1, 30, 1)
+        Approximate Single Execution Time: Min: 656ns, Mid: 687ns, Max: 1125ns
+        Raw Samples: 2, 2, 4, 6, 6
+        Test Samples: 10000
+        Sample Statistics:
+         Minimum: 0
+         Median: 4
+         Maximum: 6
+         Mean: 4.0281
+         Std Deviation: 1.719362094092184
+        Sample Distribution:
+         0: 3.58%
+         1: 6.67%
+         2: 10.06%
+         3: 15.03%
+         4: 17.77%
+         5: 21.49%
+         6: 25.4%
+        
+        
+        Floating Point Tests
+        
+        Output Distribution: Random.random()
+        Approximate Single Execution Time: Min: 31ns, Mid: 46ns, Max: 93ns
+        Raw Samples: 0.28191876901126556, 0.34571049244439367, 0.5761883274557041, 0.5805467771548505, 0.9142637634051997
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 6.997243834505618e-05
+         Median: (0.4980955259203752, 0.4981058794530985)
+         Maximum: 0.9998432526044941
+         Mean: 0.49774923104713104
+         Std Deviation: 0.28818355339000473
+        Post-processor Distribution using round method:
+         0: 50.2%
+         1: 49.8%
+        
+        Output Distribution: random()
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 62ns
+        Raw Samples: 0.9277214931837745, 0.6509596650539976, 0.3884877983068201, 0.3001884108775585, 0.1926429270120671
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00012157670983074331
+         Median: (0.5015995486843443, 0.5016697332763964)
+         Maximum: 0.9998875813469635
+         Mean: 0.5009411253451888
+         Std Deviation: 0.28731500760837936
+        Post-processor Distribution using round method:
+         0: 49.86%
+         1: 50.14%
+        
+        Output Distribution: uniform(0.0, 10.0)
+        Approximate Single Execution Time: Min: 31ns, Mid: 62ns, Max: 375ns
+        Raw Samples: 9.52326631756773, 5.788502600367225, 7.415690772199376, 7.569192571902404, 6.5217292266843785
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 4.3133609512452766e-05
+         Median: (4.958204426955742, 4.958965795675051)
+         Maximum: 9.999683844464784
+         Mean: 5.005599483579845
+         Std Deviation: 2.914603141441438
+        Post-processor Distribution using ceil method:
+         1: 10.22%
+         2: 10.04%
+         3: 9.91%
+         4: 10.12%
+         5: 10.14%
+         6: 9.53%
+         7: 9.45%
+         8: 10.0%
+         9: 9.98%
+         10: 10.61%
+        
+        Output Distribution: Random.expovariate(1.0)
+        Approximate Single Execution Time: Min: 406ns, Mid: 437ns, Max: 718ns
+        Raw Samples: 1.32394193144772, 0.8401838247284389, 0.3453007881938971, 0.5768026156187437, 1.389079549244938
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00021917169276148592
+         Median: (0.6867670428429513, 0.6868587576520037)
+         Maximum: 8.993301902164722
+         Mean: 0.9987437574625477
+         Std Deviation: 0.995794178653755
+        Post-processor Distribution using floor_mod_10 method:
+         0: 63.38%
+         1: 22.64%
+         2: 8.84%
+         3: 3.2%
+         4: 1.37%
+         5: 0.34%
+         6: 0.19%
+         7: 0.02%
+         8: 0.02%
+        
+        Output Distribution: expovariate(1.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 187ns
+        Raw Samples: 0.7449181736161731, 2.1499135794632815, 1.9209513819104198, 0.11374160460575472, 0.032772819469421156
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 7.509111316908552e-05
+         Median: (0.7012021063239969, 0.7013754068583695)
+         Maximum: 10.051181350277634
+         Mean: 1.0123974449763105
+         Std Deviation: 0.9948400311997716
+        Post-processor Distribution using floor_mod_10 method:
+         0: 62.44%
+         1: 23.97%
+         2: 8.94%
+         3: 2.87%
+         4: 1.1%
+         5: 0.45%
+         6: 0.14%
+         7: 0.06%
+         8: 0.02%
+         9: 0.01%
+        
+        Output Distribution: Random.gammavariate(1.0, 1.0)
+        Approximate Single Execution Time: Min: 468ns, Mid: 500ns, Max: 656ns
+        Raw Samples: 0.4248242549456541, 0.33886371041571733, 2.6616762762556223, 1.64457361834173, 0.46794770217911014
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00031988918156716393
+         Median: (0.6949624128501429, 0.6950700498245157)
+         Maximum: 9.853792287175022
+         Mean: 0.9960981136961425
+         Std Deviation: 0.9785418021506311
+        Post-processor Distribution using floor_mod_10 method:
+         0: 63.05%
+         1: 23.38%
+         2: 8.87%
+         3: 3.02%
+         4: 1.13%
+         5: 0.34%
+         6: 0.15%
+         7: 0.04%
+         9: 0.02%
+        
+        Output Distribution: gammavariate(1.0, 1.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 62ns, Max: 125ns
+        Raw Samples: 0.1848643722791521, 0.08642349625604238, 1.7451548721325887, 0.4092167346467269, 2.7151799826636407
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00011452760428491575
+         Median: (0.6963156440769845, 0.6964168743660308)
+         Maximum: 9.268602662993539
+         Mean: 0.9986252847849186
+         Std Deviation: 1.0059055124912586
+        Post-processor Distribution using floor_mod_10 method:
+         0: 63.48%
+         1: 22.88%
+         2: 8.69%
+         3: 3.14%
+         4: 1.08%
+         5: 0.47%
+         6: 0.13%
+         7: 0.08%
+         8: 0.02%
+         9: 0.03%
+        
+        Output Distribution: weibullvariate(1.0, 1.0)
+        Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 250ns
+        Raw Samples: 0.0024417756831744118, 0.45388273365845716, 0.3746197787223339, 0.18553781359441182, 0.3433004659304176
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.00016580833555425683
+         Median: (0.698439109055173, 0.6992482552444275)
+         Maximum: 8.679623833163621
+         Mean: 1.0037492539881026
+         Std Deviation: 1.002106144986341
+        Post-processor Distribution using floor_mod_10 method:
+         0: 63.57%
+         1: 23.05%
+         2: 8.29%
+         3: 3.22%
+         4: 1.18%
+         5: 0.39%
+         6: 0.2%
+         7: 0.08%
+         8: 0.02%
+        
+        Output Distribution: extreme_value(0.0, 1.0)
+        Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 187ns
+        Raw Samples: -0.11241366431993004, -0.6419972165998858, -0.5915740518117466, 1.8516325182456397, 1.4911620758558133
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -2.3190180335156594
+         Median: (0.38956671577541396, 0.38972187184305407)
+         Maximum: 7.924377123063762
+         Mean: 0.5908199593570642
+         Std Deviation: 1.2786545980930044
+        Post-processor Distribution using round method:
+         -2: 1.02%
+         -1: 17.94%
+         0: 34.61%
+         1: 26.02%
+         2: 12.6%
+         3: 5.03%
+         4: 1.7%
+         5: 0.68%
+         6: 0.25%
+         7: 0.09%
+         8: 0.06%
+        
+        Output Distribution: Random.gauss(5.0, 2.0)
+        Approximate Single Execution Time: Min: 687ns, Mid: 718ns, Max: 1281ns
+        Raw Samples: 4.596778666373776, 5.574956391552119, 4.927272977874008, 3.3576119610202855, 2.4100020707684218
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -3.6083886202460214
+         Median: (5.033226242209256, 5.0335060153604045)
+         Maximum: 12.632576601043258
+         Mean: 5.046530547342325
+         Std Deviation: 2.004364914617757
+        Post-processor Distribution using round method:
+         -4: 0.01%
+         -3: 0.01%
+         -2: 0.03%
+         -1: 0.21%
+         0: 0.73%
+         1: 2.69%
+         2: 6.59%
+         3: 11.78%
+         4: 17.96%
+         5: 18.44%
+         6: 17.64%
+         7: 13.08%
+         8: 6.58%
+         9: 2.9%
+         10: 0.95%
+         11: 0.31%
+         12: 0.08%
+         13: 0.01%
+        
+        Output Distribution: normalvariate(5.0, 2.0)
+        Approximate Single Execution Time: Min: 62ns, Mid: 93ns, Max: 312ns
+        Raw Samples: 5.038030209503104, 3.359561942445354, 4.572812939693202, 8.126416493515116, 4.216197473154431
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -2.8244138455476255
+         Median: (5.010628778981261, 5.011392832574677)
+         Maximum: 13.269369959352195
+         Mean: 5.0215758697664
+         Std Deviation: 1.9947500854542106
+        Post-processor Distribution using round method:
+         -3: 0.01%
+         -2: 0.05%
+         -1: 0.21%
+         0: 0.96%
+         1: 2.39%
+         2: 6.48%
+         3: 12.26%
+         4: 17.68%
+         5: 19.43%
+         6: 17.81%
+         7: 11.93%
+         8: 6.7%
+         9: 2.62%
+         10: 1.12%
+         11: 0.28%
+         12: 0.06%
+         13: 0.01%
+        
+        Output Distribution: Random.lognormvariate(1.6, 0.25)
+        Approximate Single Execution Time: Min: 812ns, Mid: 875ns, Max: 1187ns
+        Raw Samples: 4.474956815444135, 5.406628012593374, 4.3147748443859975, 5.229698007026149, 5.805648508074925
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 2.1592473372696683
+         Median: (4.981247654229032, 4.981431587007508)
+         Maximum: 12.671163322520604
+         Mean: 5.132779483395387
+         Std Deviation: 1.3094393573417653
+        Post-processor Distribution using round method:
+         2: 0.23%
+         3: 7.61%
+         4: 26.52%
+         5: 31.34%
+         6: 20.31%
+         7: 8.77%
+         8: 3.51%
+         9: 1.18%
+         10: 0.35%
+         11: 0.15%
+         12: 0.02%
+         13: 0.01%
+        
+        Output Distribution: lognormvariate(1.6, 0.25)
+        Approximate Single Execution Time: Min: 93ns, Mid: 125ns, Max: 406ns
+        Raw Samples: 4.938919260086636, 5.434117630265477, 6.292684741793481, 5.591227647047072, 6.383314060542857
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 1.9012210055454757
+         Median: (4.930393438457221, 4.930698683927044)
+         Maximum: 12.24543656869312
+         Mean: 5.0809499926488515
+         Std Deviation: 1.2940795405602143
+        Post-processor Distribution using round method:
+         2: 0.37%
+         3: 8.09%
+         4: 27.58%
+         5: 31.01%
+         6: 19.6%
+         7: 8.6%
+         8: 3.14%
+         9: 1.23%
+         10: 0.28%
+         11: 0.07%
+         12: 0.03%
+        
+        Output Distribution: chi_squared(1.0)
+        Approximate Single Execution Time: Min: 125ns, Mid: 156ns, Max: 281ns
+        Raw Samples: 0.6805083519116017, 1.9550487232090856, 3.1923066239705897, 0.7482375804617535, 0.05893635106952869
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 1.2950679446718288e-08
+         Median: (0.4447742902987775, 0.4447876206214249)
+         Maximum: 17.282815421421066
+         Mean: 0.9852303311570941
+         Std Deviation: 1.4162939999610573
+        Post-processor Distribution using floor_mod_10 method:
+         0: 69.18%
+         1: 15.69%
+         2: 7.22%
+         3: 3.71%
+         4: 1.92%
+         5: 1.02%
+         6: 0.49%
+         7: 0.46%
+         8: 0.2%
+         9: 0.11%
+        
+        Output Distribution: cauchy(0.0, 1.0)
+        Approximate Single Execution Time: Min: 93ns, Mid: 93ns, Max: 343ns
+        Raw Samples: 0.3685024684657171, 2.136219163967241, -7.187956700268334, 0.5046978970967958, 0.25077902780286254
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -4053.635265519228
+         Median: (-0.016399201162256117, -0.01628035430859785)
+         Maximum: 2460.8880793857484
+         Mean: -0.2140735774162542
+         Std Deviation: 55.57660735278535
+        Post-processor Distribution using floor_mod_10 method:
+         0: 25.92%
+         1: 11.41%
+         2: 5.87%
+         3: 3.64%
+         4: 3.01%
+         5: 2.89%
+         6: 3.83%
+         7: 5.64%
+         8: 11.32%
+         9: 26.47%
+        
+        Output Distribution: fisher_f(8.0, 8.0)
+        Approximate Single Execution Time: Min: 187ns, Mid: 218ns, Max: 250ns
+        Raw Samples: 0.9903817011827296, 1.676148670773987, 0.5863562883570347, 0.4007789603150157, 0.8292160403875725
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: 0.03385437523363254
+         Median: (0.9992376778614822, 0.9994361477620272)
+         Maximum: 21.51882952241599
+         Mean: 1.3380931208465716
+         Std Deviation: 1.1949223974559842
+        Post-processor Distribution using floor_mod_10 method:
+         0: 50.06%
+         1: 32.12%
+         2: 10.59%
+         3: 4.03%
+         4: 1.63%
+         5: 0.67%
+         6: 0.46%
+         7: 0.18%
+         8: 0.16%
+         9: 0.1%
+        
+        Output Distribution: student_t(8.0)
+        Approximate Single Execution Time: Min: 156ns, Mid: 156ns, Max: 187ns
+        Raw Samples: -2.3130996405163233, -0.2087723821531655, -3.5190475767973295, 0.7309835695070587, 0.28003380239529446
+        Test Samples: 10000
+        Pre-processor Statistics:
+         Minimum: -6.946803668089897
+         Median: (-0.014189823253801227, -0.01365902594078134)
+         Maximum: 6.934129090915844
+         Mean: -0.012459466691732571
+         Std Deviation: 1.1542721013079078
+        Post-processor Distribution using round method:
+         -7: 0.01%
+         -6: 0.01%
+         -5: 0.09%
+         -4: 0.29%
+         -3: 1.49%
+         -2: 6.53%
+         -1: 23.85%
+         0: 36.72%
+         1: 22.35%
+         2: 6.65%
+         3: 1.65%
+         4: 0.29%
+         5: 0.05%
+         6: 0.01%
+         7: 0.01%
+        
+        
+        =========================================================================
+        Total Test Time: 1.0982 seconds
+        
+        ```
+        
+Keywords: rng,Mersenne Twister,random number generator,cpp random library,random integer,Bernoulli,binomial,negative_binomial,geometric,poisson,discrete,normal,distribution,log normal,gamma,exponential,weibull,extreme value,chi squared,cauchy,fisher f,student t
+Platform: Darwin
+Platform: Linux
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Cython
+Classifier: Programming Language :: C++
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires: Cython
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
