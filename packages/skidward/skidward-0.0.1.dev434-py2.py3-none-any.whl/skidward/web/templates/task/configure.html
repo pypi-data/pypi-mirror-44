@@ -1,0 +1,71 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+
+    <h1>Add Configuration for {{ name }} </h1><br>
+
+    {% from "macro_render_field.html" import render_field %}
+
+    <form method="POST">
+
+        <div class="parent_form">
+            <a href="javascript:void(0);" class="add_button"><button type="button" class="btn btn-sm btn-primary">Add New Field</button></a>
+            <br><br>
+
+            <div class="static_key_value">
+                {{ form.hidden_tag() }}
+                {% if form.context.data %}
+                    {% for k,v in form.context.data.items() %}
+                        <div>
+                            <label>Key</label> {{ render_field(form.key(value=k)) }}&emsp;
+                            <label>Value</label> {{ render_field(form.value(value=v)) }}&emsp;
+                            <a href="javascript:void(0);" class="remove_button"><button type="button" class="btn btn-sm btn-default">Remove</button></a>
+                            <br><br>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="dynamic_key_value">
+                <div>
+                    {{ form.hidden_tag() }}
+                    {{ render_field(form.key) }}&emsp;
+                    {{ render_field(form.value) }}&emsp;
+                    <a href="javascript:void(0);" class="remove_button"><button type="button" class="btn btn-sm btn-default">Remove</button></a>
+                    <br><br>
+                </div>
+            </div>
+        </div>
+
+        <input type="submit" class="btn btn-success" value="Save">
+        <a href='/admin/task'><button type="button" class="btn btn-danger">Cancel</button></a>
+
+    <script>
+
+        $(document).ready(function() {
+            let maxFields = 5;
+            let fieldNum = 1;
+            let dynamicFields = $('.dynamic_key_value').clone();
+
+            $('.parent_form').on('click', '.add_button', function(e) {
+                e.preventDefault();
+                if(fieldNum <= maxFields) {
+                    fieldNum++;
+                    $('.parent_form').append(dynamicFields.html());
+                }
+            });
+
+            $('.parent_form').on('click', '.remove_button', function(e) {
+                e.preventDefault();
+                $(this).parent('div').remove();
+                fieldNum--;
+            });
+        });
+
+    </script>
+
+    </form>
+
+{% endblock %}
