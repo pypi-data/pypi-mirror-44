@@ -1,0 +1,40 @@
+"""LICENSE
+Copyright 2018 Hermann Krumrey <hermann@krumreyh.com>
+
+This file is part of bokkichat.
+
+bokkichat is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+bokkichat is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with bokkichat.  If not, see <http://www.gnu.org/licenses/>.
+LICENSE"""
+
+import argparse
+from bokkichat.entities.Address import Address
+from bokkichat.entities.message.TextMessage import TextMessage
+from bokkichat.settings.impl.CliSettings import CliSettings
+from bokkichat.connection.impl.CliConnection import CliConnection
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices={"send", "echo"})
+    parser.add_argument("--message", default="Hello World")
+    args = parser.parse_args()
+
+    settings = CliSettings()
+    connection = CliConnection(settings)
+
+    if args.mode == "send":
+        message = TextMessage(Address(""), Address(""), args.message)
+        connection.send(message)
+    else:
+        connection.loop(lambda con, msg: print(msg.body))
