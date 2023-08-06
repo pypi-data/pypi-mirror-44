@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import os, sys ; sys.path.insert(0, os.getcwd())
+
+import readline
+
+from bot import __version__
+from bot.irc import IRC
+from bot.run import kernel
+from obj.shell import Shell, start, startup, reset
+
+startup()
+
+try:
+    irc = IRC()
+    irc.walk("obj.cmds")
+    irc.walk("bot.cmds")
+    bot = start("bot", [irc], version=__version__)
+except (KeyboardInterrupt, EOFError):
+    print("")
+
+reset()
+os._exit(0)
