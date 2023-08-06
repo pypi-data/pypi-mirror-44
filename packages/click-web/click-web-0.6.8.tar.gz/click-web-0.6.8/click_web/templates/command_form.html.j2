@@ -1,0 +1,46 @@
+{% import 'form_macros.html.j2' as macros %}
+<h1>{{ command.name|title }}</h1>
+<div class="command-help">{{ command.html_help }}</div>
+
+<form id="inputform"
+      method="post"
+      action="{{ request.url }}"
+      onsubmit="return postAndRead('{{ request.url }}');"
+      class="pure-form pure-form-aligned"
+      enctype="multipart/form-data">
+    {% for level in levels %}
+        <fieldset name="{{ level.command.name }}">
+            {% if loop.index == 1 %}
+                {# do not print root command as it most likely is juse "cli" #}
+                <legend class="command-header"></legend>
+            {% else %}
+                <legend class="command-header">{{ level.command.name }}</legend>
+            {% endif %}
+
+            {% for field in level.fields %}
+                <div class="parameter {{ field.param }} {{ field.type }}">
+                    <div class="pure-control-group">
+                        {% if field.nargs == -1 %}
+                            {{ macros.add_variadic_field_input(field) }}
+                        {% else %}
+                            <label for="{{ field.name }}">
+                                {{ field.human_readable_name|capitalize }}
+                            </label>
+                            {% for arg in range(field.nargs) %}
+                                {{ macros.add_field_input(field) }}
+                            {% endfor %}
+                            <div class="help" style="display: inline-block">
+                                {{ field.desc|default('', true)|capitalize }}</div>
+
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </fieldset>
+    {% endfor %}
+    <button type="submit" id="submit_btn" class="pure-button pure-button-primary">Run</button>
+</form>
+
+<div id="output-header" hidden="true"></div>
+<div class="script-output" id="output" hidden="true"></div>
+<div id="output-footer" hidden="true"></div>
