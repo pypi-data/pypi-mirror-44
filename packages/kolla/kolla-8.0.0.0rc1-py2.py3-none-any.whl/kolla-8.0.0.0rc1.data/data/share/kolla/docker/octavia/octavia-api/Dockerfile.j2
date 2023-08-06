@@ -1,0 +1,70 @@
+FROM {{ namespace }}/{{ image_prefix }}octavia-base:{{ tag }}
+LABEL maintainer="{{ maintainer }}" name="{{ image_name }}" build-date="{{ build_date }}"
+
+{% block octavia_api_header %}{% endblock %}
+
+{% import "macros.j2" as macros with context %}
+
+{% if install_type == 'binary' %}
+    {% if base_package_type == 'rpm' %}
+        {% set octavia_api_packages = [
+            'openstack-octavia-api',
+            'httpd',
+            'mod_ssl'
+        ] %}
+        {% if distro_python_version.startswith('3') %}
+        {% set octavia_api_packages = octavia_api_packages + [
+            'python3-mod_wsgi'
+        ] %}
+        {% else %}
+        {% set octavia_api_packages = octavia_api_packages + [
+            'mod_wsgi'
+        ] %}
+        {% endif %}
+    {% elif base_package_type == 'deb' %}
+RUN echo '{{ install_type }} not yet available for {{ base_distro }}' \
+            && /bin/false
+    {% endif %}
+
+
+{% elif install_type == 'source' %}
+    {% if base_package_type == 'rpm' %}
+        {% set octavia_api_packages = [
+            'httpd',
+            'mod_ssl'
+        ] %}
+        {% if distro_python_version.startswith('3') %}
+        {% set octavia_api_packages = octavia_api_packages + [
+            'python3-mod_wsgi'
+        ] %}
+        {% else %}
+        {% set octavia_api_packages = octavia_api_packages + [
+            'mod_wsgi'
+        ] %}
+        {% endif %}
+
+    {% elif base_package_type == 'deb' %}
+        {% set octavia_api_packages = [
+            'apache2',
+            'libapache2-mod-wsgi'
+        ] %}
+    {% endif %}
+
+{% endif %}
+
+{{ macros.install_packages(octavia_api_packages | customizable("packages")) }}
+
+{% if base_package_type == 'rpm' %}
+RUN sed -i -r 's,^(Listen 80),#\1,' /etc/httpd/conf/httpd.conf \
+            && sed -i -r 's,^(Listen 443),#\1,' /etc/httpd/conf.d/ssl.conf
+{% elif base_package_type == 'deb' %}
+RUN echo > /etc/apache2/ports.conf
+{% endif %}
+
+COPY extend_start.sh /usr/local/bin/kolla_octavia_extend_start
+RUN chmod 755 /usr/local/bin/kolla_octavia_extend_start
+
+{% block octavia_api_footer %}{% endblock %}
+{% block footer %}{% endblock %}
+
+USER octavia
