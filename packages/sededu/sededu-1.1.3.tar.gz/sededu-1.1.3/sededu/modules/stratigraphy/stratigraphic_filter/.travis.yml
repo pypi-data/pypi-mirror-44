@@ -1,0 +1,25 @@
+language: python
+
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+
+os:
+  - linux
+  # - osx
+
+install:
+  # install the package using the local setup.py script
+  - pip install -r requirements.txt
+
+before_script:
+  - pip install pytest pytest-mpl
+  # configure a headless display to test plot generation
+  - "export DISPLAY=:99.0"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ( sudo Xvfb :99 -ac -screen 0 1024x768x8; echo ok )& fi
+  - sleep 5 # give xvfb some time to start
+
+script:
+  - pytest --mpl --mpl-results-path=tests/results
