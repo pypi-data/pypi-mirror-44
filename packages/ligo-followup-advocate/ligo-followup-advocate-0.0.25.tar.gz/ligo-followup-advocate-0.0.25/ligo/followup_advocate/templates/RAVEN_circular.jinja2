@@ -1,0 +1,32 @@
+{% from 'macros.jinja2' import naturalfar, grbmission, propername %}
+{% include 'authors.jinja2' %}
+
+{% include 'initial_body.jinja2' %}
+
+{% filter rewrap %}
+A search performed by the RAVEN pipeline found a temporal coincidence between
+{{gracedb_id}} and a {% if SNEWS %}SNEWS supernova{% elif GRB %}{% if subthreshold %}sub-threshold {% endif %}{{grbmission(external_pipeline)}}{% endif %} {{propername(external_trigger)}} **CITE ORIGINAL GCN FOR THE EXTERNAL TRIGGER FROM https://gcn.gsfc.nasa.gov/gcn3_archive.html, e.g., (Bhalerao et al., GCN Circular XXXXX)**.
+The {% if SNEWS %}neutrino{% elif GRB %}GRB{% endif %} trigger time is {{latency}} seconds {{beforeafter}} the GW candidate event.
+{% if GRB %}
+The estimated joint false alarm rate for the time coincidence is {{naturalfar(time_coinc_FAR)}}.
+{% endif %}
+
+{% if GRB %}{%- include 'classification_info.jinja2' -%}{% endif %}
+
+{% if combined_skymap is not defined %}
+{% include 'userguide_conclusion.jinja2'%}
+{% else %}
+A combined skymap is also available:
+ * {{combined_skymap}}, the normalized product of the GW and GRB localizations.
+
+For the {{combined_skymap}} skymap, the {{cl}}% credible region is {{combined_skymap_greedy_area|round|int}} deg2.
+{% if space_time_coinc_FAR is not none %}
+Considering the overlap of the individual skymaps, the estimated joint false alarm rate for the spatial and temporal coincidence is {{naturalfar(space_time_coinc_FAR)}}.
+{% else %}
+The spatial and temporal coincidence is not yet available.
+{% endif %}
+
+{% include 'userguide_conclusion.jinja2'%}
+{% endif %}
+{% include 'numbered_pipeline_citations.jinja2' %}
+{% endfilter %}
