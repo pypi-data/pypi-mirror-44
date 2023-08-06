@@ -1,0 +1,22 @@
+notify_audit: false
+locked: false
+name: '[${environment}] Kubelet unhealthy'
+thresholds: {critical: 5}
+tags: ['${environment}', reactiveops]
+new_host_delay: 300
+notify_no_data: false
+renotify_interval: 0
+query: '"kubernetes.kubelet.check".over("${cluster_tag}:${cluster}").by("host").last(6).count_by_status()'
+message: |
+  {{#is_alert}}
+  Kubelet has been unhealthy for 3 consecutive checks.
+  {{/is_alert}}
+  {{^is_alert}}
+  Kubelets are healthy again
+  {{/is_alert}}
+  ${notifications}
+type: service check
+no_data_timeframe: 2
+timeout_h: 0
+definition_defaults:
+  cluster_tag: kubernetescluster

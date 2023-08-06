@@ -1,0 +1,63 @@
+{#- Copyright 2018 ReactiveOps
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -#}
+
+resource "datadog_downtime" "{{ resource_name }}" {
+  scope           = [{% for target in scope %}"{{ target }}",{% endfor %}]
+  {%- if start_date %}
+  start_date      = "{{ start_date }}"
+  {%- endif %}
+  {%- if end_date %}
+  end_date        = "{{ end_date }}"
+  {%- endif %}
+  {%- if start %}
+  start           = {{ start }}
+  {%- endif %}
+  {%- if end %}
+  end             = {{ end }}
+  {%- endif %}
+  {%- if active %}
+  active          = "{{ active }}"
+  {%- endif %}
+
+  {%- if recurrence_type %}
+  recurrence {
+    type          = "{{ recurrence_type }}"
+    period        = {{ recurrence_period }}
+    {%- if recurrence_week_days %}
+    week_days     = [{% for day in recurrence_week_days %}"{{ day }}",{% endfor %}]
+    {%- endif %}
+    {%- if recurrence_until %}
+    until_date    = "{{ recurrence_until }}"
+    {%- endif %}
+  }
+  {%- endif %}
+
+  {%- if message %}
+  message = <<EOF
+  {{ message }}
+  EOF
+  {%- endif %}
+
+  {%- if monitor_id %}
+  monitor_id      = {{ monitor_id }}
+  {%- endif %}
+
+  # Datadog API will reject dates in the past so let's ignore `start` and `end`
+  # arguments during lifecycle. To update or extend an existing downtime, temporarily
+  # remove the `ignore` section, apply timestamp changes, and re-apply the `ignore`
+  # section.
+  lifecycle {
+    ignore_changes = ["start", "end"]
+  }
+}
