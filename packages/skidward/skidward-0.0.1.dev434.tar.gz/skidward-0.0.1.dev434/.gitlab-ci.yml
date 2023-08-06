@@ -1,0 +1,60 @@
+# This file is a template, and might need editing before it works on your project.
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+image: python:3.6.7
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+  WEB_TESTING: "True"
+
+  POSTGRES_USER: "skidward"
+  POSTGRES_PASSWORD: "123"
+  POSTGRES_DB: "skidwardDB_TEST"
+
+  SQLALCHEMY_DATABASE_URI: "postgres://skidward:123@postgres/skidwardDB_TEST"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+stages:
+  - test
+  - upload
+
+before_script:
+  - python -V               # Print out python version for debugging
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - cp .env.default .env
+
+pytest:
+  stage: test
+  services:
+    - postgres:11
+  script:
+    - python setup.py install_egg_info
+    - pip install pytest pytest-cov
+    - pip install -e .
+    - pytest -s tests --cov skidward --cov-report term-missing --tb=native
+
+security:
+  stage: test
+  script:
+    - pip install safety
+    - pip install -e .
+    - safety check
+
+pypi:
+  stage: upload
+  only:
+    - master
+    - tags
+  script:
+    - pip install twine wheel
+    - python setup.py sdist bdist_wheel
+    - twine upload dist/*
+

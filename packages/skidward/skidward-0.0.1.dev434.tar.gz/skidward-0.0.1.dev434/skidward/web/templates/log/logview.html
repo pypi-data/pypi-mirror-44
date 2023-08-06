@@ -1,0 +1,33 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <h1>Log viewer for Job {{ job_id }} </h1><br>
+
+    <textarea id="log-area" rows="35" style="width: 100%;" readonly="readonly"></textarea>
+    <script>
+    let job_id = {{ job_id }}
+    let path = location.pathname.split("/")
+    path[3] = "get_logs"
+    path = path.join("/")
+
+    let url = location.origin + path
+
+    let getLogs = () => {
+        $.getJSON(
+            url, (response) => {
+                let new_text = "";
+                for (let msg in response) {
+                    new_text += response[msg] + "\n";
+                }
+
+                $('#log-area').val(new_text);
+            }
+        );
+    };
+
+    setInterval(() => {
+        getLogs();
+    }, 1500);
+    </script>
+{% endblock %}
