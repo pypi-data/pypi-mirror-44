@@ -1,0 +1,81 @@
+<!--
+    Copyright (C) 2017 University of Dundee & Open Microscopy Environment.
+    All rights reserved.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+      <link rel="stylesheet" type="text/css" href="{% static 'omero_iviewer/css/all.min.css'|add:iviewer_url_suffix %}" />
+
+      <script type="text/javascript">
+        window.INITIAL_REQUEST_PARAMS = {};
+        {% for key, value in params.items %}
+            window.INITIAL_REQUEST_PARAMS['{{key}}'] = "{{value}}";
+        {% endfor %}
+
+        window.OME = {}
+        OME.OPEN_WITH = [];
+
+        // Helper can be used by 'open with' plugins to add isEnabled()
+        // handlers to the OPEN_WITH object.
+        OME.setOpenWithEnabledHandler = function(label, fn) {
+            // look for label in OPEN_WITH
+            OME.OPEN_WITH.forEach(function(ow){
+                if (ow.label === label) {
+                    ow.isEnabled = function() {
+                        // wrap fn with try/catch, since error here will break jsTree menu
+                        var args = Array.from(arguments);
+                        var enabled = false;
+                        try {
+                            enabled = fn.apply(this, args);
+                        } catch (e) {
+                            // Give user a clue as to what went wrong
+                            console.log("Open with " + label + ": " + e);
+                        }
+                        return enabled;
+                    }
+                }
+            });
+        };
+        // Helper can be used by 'open with' plugins to provide
+        // a url for the selected objects
+        OME.setOpenWithUrlProvider = function(id, fn) {
+            // look for label in OPEN_WITH
+            OME.OPEN_WITH.forEach(function(ow){
+                if (ow.id === id) {
+                    ow.getUrl = fn;
+                }
+            });
+        };
+      </script>
+
+      <title>OMERO.iviewer</title>
+  </head>
+
+  <body class="container-fluid">
+      <script type="text/javascript"
+              src="{% static 'omero_iviewer/init.js'|add:iviewer_url_suffix %}">
+      </script>
+      <script type="text/javascript"
+              src="{% static 'omero_iviewer/main.js'|add:iviewer_url_suffix %}">
+      </script>
+      <script type="text/javascript"
+              src="{% static 'omero_iviewer/deps.js'|add:iviewer_url_suffix %}">
+      </script>
+  </body>
+
+</html>
