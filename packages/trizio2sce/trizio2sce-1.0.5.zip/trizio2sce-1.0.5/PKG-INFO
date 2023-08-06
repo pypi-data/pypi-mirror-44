@@ -1,0 +1,197 @@
+Metadata-Version: 1.2
+Name: trizio2sce
+Version: 1.0.5
+Summary: Convierte mapas de aventuras de texto generados por Trizbort.io en código fuente para el DAAD.
+Home-page: http://www.zonafi.rockersuke.com/trizio2sce/index.html
+Author: Pedro Fernández
+Author-email: rockersuke@gmail.com
+License: MIT
+Description: Trizio2sce
+        **********
+        
+        English instructions below.
+        
+        Triz2sce versión 1.0.5rc2 190410 (c) 2018 Pedro Fernández
+        
+        Trizio2sce.py es un script de Python 3.x que transforma un fichero generado con la utilidad on-line para mapear aventuras Trizbort.io en un código fuente compatible con el compilador del DAAD. Está basado en Triz2sce, que usa los ficheros XML de la aplicación de escritorio Trizbort.
+        No es un diseñador visual de aventuras ni una aplicación para su desarrollo completo. Está concebido como herramienta para hacer prototipos iniciales de aventuras con rapidez y facilidad y, a su vez, como herramienta de apoyo a autores nóveles, ideal para su uso en talleres de aprendizaje.
+        
+        Uso:
+        ====
+        
+        Usar "Python trizio2sce.py -h" en una linea de comandos o powershell para ver las opciones.
+        
+        El script requiere como argumentos un fichero de entrada (que debe ser un mapa generado por la utilidad Trizbort.io en formato json) y, opcionalmente, el nombre de un fichero de salida, que será un código fuente en formato .SCE compatible con la versión 2.40-2.42 del compilador del DAAD. Si no se especifica se creará un fichero con el mismo nombre y la extensión .SCE
+        
+        La opción -p1 generará un listado SCE con los mensajes del sistema en primera persona. Por defecto éstos se crearán en segunda persona.
+        La opción -e generará un listado SCE con los textos y el vocabulario en inglés. Por defecto se crearán en español.
+        La opción -md añadirá código (de compilación condicional) para el modo "dibujo invisible" en los Amstrad CPC.
+        
+        - Trizbort.io:
+        
+         - http://trizbort.io/
+        
+        - DAAD
+        
+         - http://wiki.caad.es/DAAD
+         - http://www.caad.es/fichas/daad.html
+         - http://www.rockersuke.com/if/ebbp/
+         - http://8-bit.info/infinite-imaginations-aventuras-ad/
+        
+        
+        Hasta el momento parece convertir correctamente:
+        
+        - Habitaciones, incluyendo sus descripciones y estableciendo la localidad de comienzo.
+        - Conexiones comunes por puntos cardinales (N,S,E,O,NE,NO,SE,SO).
+        - Conexiones up/down o in/out.
+        - Conexiones de una sola dirección.
+        - Objetos incluidos en las habitaciones.
+        - Localidades marcadas como "oscuras".
+        
+        Trizio2sce añade por su cuenta una barra de estado con el nombre de la localidad actual y el número de turnos transcurridos en la aventura.
+        También añade un listado automático de salidas y soporte para respuestas por defecto a los comandos "SALIDAS", "MIRAR","EXAMINAR", "AYUDA", "METER", "SACAR" Y "VACIAR". Esto gastará un número variable de mensajes en la sección /MTX y las banderas 100 y 101.
+        
+        Trizio2sce usa los textos del cuadro de diálogo "map settings" como pantalla de presentación y créditos (añadiendo frases por defecto en caso de que estuviesen vacíos). Creará un texto por defecto de introducción a la aventura editable en el mensaje nº 14.
+        
+        A su vez usará el campo "subtitle" de cada localidad como texto para su descripción corta en la barra de estado (máximo 26 caracteres). Si no lo hubiera usará el campo "name" y si éste fuera el elegido por defecto "Room" lo cambiará por "Localidad xx". A su vez usará el campo "description" para la descripción larga de la localidad en la ventana de texto de la aventura (usando de nuevo un texto por defecto "Descripción localidad xx" si no encontrase ninguno).
+        
+        Igualmente, trizio2sce usará el campo "Name" de los objetos como su palabra en el vocabulario. El campo "Description" se usará en los listados de objetos. Se recomienda usar el mismo nombre con el artículo indeterminado apropiado según género y número para su óptimo procesamiento por el motor del DAAD. Ej: "Libro" -> "Un libro", "Gafas" -> "Unas gafas".
+        Siguiendo las convenciones del Trizbort original, Trizio2sce buscará las cadenas [w] y [c] en el nombre de los objetos para añadirles los atributos ropa y contenedor.
+        
+        Y por el momento trizio2sce no puede manejarse con:
+        
+        - Textos personalizados en los extremos de las conexiones.
+        - Conexiones con puntos intermedios en los espacios del mapa. Cualquier cosa que no sea una conexión directa entre una habitación y otra la ignorará.
+        
+        Bugs conocidos:
+        ===============
+        
+        - Debido al comportamiento ligeramente distinto del intérprete inglés, intentar meter un objeto contenedor dentro de sí mismo (o de un objeto inexistente) en una obra inglesa, en lugar de un mensaje de error hace que el jugador deje el objeto en la localidad actual.
+        
+        - Debido a que los condactos para meter y/o sacar objetos de contenedores usan un único mensaje del sistema, es probable que haya disonancias con el número (singular/plural) del objeto.
+        
+        HISTORIA
+        ========
+        
+        - **1.0.5** 190410
+        
+         - Comentarios en el código fuente sustancialmente mejorados (aunque aún no definitivos).
+         - Soporte para localidades "oscuras".
+         - Soporte para el modo "dibujo invisible" en Amstrad CPC.
+        
+        - **1.0.4** 190323
+        
+         - Pleno soporte para objetos ropa y contenedores.
+        
+        - **1.0.3** 180916
+        
+         - Arreglado: error en el texto de presentación por defecto de la aventura.
+        
+        - **1.0.2** 180911
+        
+         - Parche para que el contador de turnos pase de 65535 a 0 en lugar de 65200 y algo.
+         - Corregido bug que mantiene la localidad inicial a 0 si no se especifica ninguna. Ahora pone por defecto la 1.
+         - Comprueba que el título del juego no sea "Untitled map"
+        
+        - **1.0.1** 180822
+        
+         - Cambios menores.
+        
+        - **1.0** 180819
+        
+         - Lanzamiento inicial.
+         
+        
+        
+        Trizio2sce english doc
+        **********************
+        
+        Trizio2sce version 1.0.5rc2 190410 (c) 2018 Pedro Fernández
+        
+        Trizio2sce is a Python 3.x script that transforms a file generated with the on-line text-adventure mapping tool Trizbort.io into a source code compatible with the DAAD compilator. It's based in Triz2sce, which uses XML files from the Trizbort desktop application.
+        It's not meant to be either an adventure visual designer or a complete development tool. It's conceived as a fast and easy text-adventura prototyping tool, and also as a supporting tool for novel authors, specially suitable for learning workshops.
+        
+        Usage:
+        ======
+        
+        Type "Python trizio2sce.py -h" in a command line or powershell window to see the options.
+        
+        The script requires as an argument a file (wwhich must be a map generated with the Trizbort.io utility in json format) and, optionally, the name of an output file which will be a SCE formatted source code compatible with version 2.40-2.42 of the DAAD compiler. If it's not specified, a file with the same name and a .SCE extension will be created. 
+        
+        Option -p1 will create a SCE listing with first-person system messages. Default is second-person.
+        Option -e will create a SCE listing with english texts and vocabulary. Default is spanish.
+        Option -md will add some conditional code to support "Invisible string" mode in Amstrad CPC.
+        
+        - Trizbort.io:
+        
+         - http://trizbort.io/
+        
+        - DAAD
+        
+         - http://wiki.caad.es/DAAD
+         - http://www.caad.es/fichas/daad.html (download)
+        
+        So far it seems to convert correctly:
+        
+        - Rooms, including descriptions and setting the initial location.
+        - Common cardinal points connections (N,S,E,W,NE,NW,SE,SW).
+        - Up/down and in/out connections.
+        - One way connections
+        - Objects included in locations.
+        - Locations labelled as "dark".
+        
+        Trizio2sce adds on its own a status line with the current location name and the number of used turns.
+        It also adds an automatic exits listing and support for default answers to the "EXITS", "LOOK", "EXAMINE", "HELP" AND "EMPTY" commands. This will use a variable amount of messages in the /MTX section and flags 100 and 101.
+        
+        Trizio2sce uses the fields in the "map settings" dialogue as an introduction screen and credits (adding default sentences if they were empty). It will create a default adventure introduction text the user can edit at message number 14.
+        
+        It will also use each location "subtitle" field as a text for its short description at the status line (max. 26 characters). If it wasn't provided it will use the "name" field and if this was the default text "Room" it will be changed to "Loaction xx". In turn, the "description" field will form the long room description in the adventure text window (again using a default "Location xx description" if there wasn't any)
+        
+        Equally, trizio2sce will use the objects field "name" as its word in the vocabulary. "description" will be used in the objects listing. It's highly recommended tu use the same name with an appropriate indefinite article in order to secure an optimized processing by the DAAD engine. Examples: "Book" -> "a book", "trousers" - "some trousers".
+        Following original Trizbort standards, Trizio2sce will search for the [w] and [c] strings inside objects name, giving then wearable and container atributes.
+        
+        And for the moment trizio2sce cannot handle:
+        
+        - Personalized texts at the connections extremes.
+        - Connections with intermediate points along the map. Anything other than a direct connection between a room and another will be ignored.
+        
+        Known bugs:
+        ===========
+        
+        - Due to the slighty different behavior of the english interpreter, trying to put a container object inside itself (or into a non-existent object) in an english work, instead of displaying an error message will make player drop the object at current location.
+        
+        - Number (singular/plural) discordances are to be expected due to the fact that putting in and out condacts use just one system message for both cases.
+        
+        HISTORY
+        =======
+        
+        - **1.0.5** 190410
+        
+         - Substantially updated comments in the sce source code (not definitive yet).
+         - Support for locations labelled as "dark".
+         - Support for "invisible string" mode in Amstrad CPC.
+        
+        - **1.0.4** 190322
+        
+         - Full wearable and container objects support.
+         - Extra checks to avoid invalid object names (null string, blank spaces).
+        
+        - **1.0.3** 180916
+        
+         - Fixed: wrong default adventure introduction text.
+        
+        - **1.0.2**
+        
+         - Fix the turns counter so it skips from 65535 to 0 instead of 65200 something.
+         - Fixed bug that kept initial location as 0 if no one was indicated. Now default is 1.
+         - Checks the game's title is not the default "Untitled map".
+        
+        - **1.0.1** 180822
+        
+         - Minor polishing
+        
+        - **1.0.** 180819
+        
+         - Initial release
+Platform: UNKNOWN
+Requires-Python: >=3.5
