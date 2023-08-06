@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+from setuptools import find_packages, setup
+setup(
+    name='jieba_path',
+    version='0.0.2.0.1.18',
+    description='结巴分词预处理目录下的文档',
+    author='author',  # 作者
+    author_email='napoler2008@gmail.com',
+    url='https://www.terrychan.org/p/977',
+    # packages=find_packages(),
+    packages=['jieba_path'],  # 这里是所有代码所在的文件夹名称
+    install_requires=['jieba'])
+
+# python3 setup.py sdist
+#twine upload dist/*
+#rm -rf dist/*
+# #python setup.py install
+# python setup.py sdist upload
+#https://wxnacy.com/2018/07/13/python-create-pip/
+
+#
