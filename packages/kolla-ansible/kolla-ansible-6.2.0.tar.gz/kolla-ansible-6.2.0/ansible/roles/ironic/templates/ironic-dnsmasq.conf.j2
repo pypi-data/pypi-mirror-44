@@ -1,0 +1,12 @@
+port=0
+interface={{ ironic_dnsmasq_interface }}
+dhcp-range={{ ironic_dnsmasq_dhcp_range }}
+{% if ironic_dnsmasq_default_gateway is not none %}
+dhcp-option=3,{{ ironic_dnsmasq_default_gateway }}
+{% endif %}
+dhcp-option=option:tftp-server,{{ api_interface_address }}
+dhcp-option=option:server-ip-address,{{ api_interface_address }}
+bind-interfaces
+dhcp-sequential-ip
+dhcp-option=option:bootfile-name,{{ ironic_dnsmasq_boot_file }}
+dhcp-option=210,/tftpboot/
