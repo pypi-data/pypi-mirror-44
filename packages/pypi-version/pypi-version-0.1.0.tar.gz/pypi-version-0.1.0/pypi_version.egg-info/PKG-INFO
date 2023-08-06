@@ -1,0 +1,260 @@
+Metadata-Version: 2.1
+Name: pypi-version
+Version: 0.1.0
+Summary: Check if you haven't forgotten to bump the PyPi package version number before you merge a release pull request.
+Home-page: https://github.com/dmytrostriletskyi/pypi-version
+Author: Dmytro Striletskyi
+Author-email: dmytro.striletskyi@gmail.com
+License: MIT
+Description: # pypi-version
+        
+        [![Release](https://img.shields.io/github/release/dmytrostriletskyi/pypi-version.svg)](https://github.com/dmytrostriletskyi/pypi-version/releases)
+        [![PyPI version shields.io](https://img.shields.io/pypi/v/pypi-version.svg)](https://pypi.python.org/pypi/pypi-version/)
+        [![Build Status](https://travis-ci.com/dmytrostriletskyi/pypi-version.svg?branch=develop)](https://travis-ci.com/dmytrostriletskyi/pypi-version)
+        [![codecov](https://codecov.io/gh/dmytrostriletskyi/pypi-version/branch/develop/graph/badge.svg)](https://codecov.io/gh/dmytrostriletskyi/pypi-version)
+        
+        [![Downloads](https://pepy.tech/badge/pypi-version)](https://pepy.tech/project/pypi-version)
+        [![PyPI license](https://img.shields.io/pypi/l/pypi-version.svg)](https://pypi.python.org/pypi/pypi-version/)
+        [![PyPI pyversions](https://img.shields.io/pypi/pyversions/pypi-version.svg)](https://pypi.python.org/pypi/pypi-version/)
+        
+          * [Getting started](#getting-started)
+            * [What is pypi-version](#what-is-pypi-version)
+              * [Gitflow workflow](#gitflow-workflow)
+              * [Upload to PyPi](#upload-to-pypi)
+              * [Motivation](#motivation)
+            * [How to install](#how-to-install)
+          * [Usage](#usage)
+            * [Command line interface](#command-line-interface)
+            * [Configuration file](#configuration-file)
+          * [Contributing](#contributing)
+        
+        ## Getting started
+        
+        ### What is pypi-version
+        
+        ``pypi-version`` checks if you haven't forgotten to bump the ``PyPi package version number`` before you merge a release 
+        pull request. 
+        
+        It would be useful if you:
+        
+        * develop [Python package](https://packaging.python.org/overview/),
+        * follow [Gitflow workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow),
+        * upload package to the [Python Package Index (PyPi)](https://pypi.org/),
+        * use the following continuous integration services: [Travis CI](https://travis-ci.com/dashboard).
+        
+        #### Python package
+        
+        `Python package` is redistributed and reused couple of the `Python` scripts. They exist to solve the typical problems. So if
+        you have common problem in your project — instead of writing own code and spend a time for it, use the package that already have required functionality. The examples of `Python packages` you should know are [requests](https://github.com/kennethreitz/requests) and [Django](https://github.com/django/django). 
+        
+        #### Gitflow workflow
+        
+        Instead of a single `master` branch, this workflow uses two branches to record the history of the project. The `master` branch stores the official release history, and the `develop` branch serves as an integration branch for features.
+        
+        <img src="https://wac-cdn.atlassian.com/dam/jcr:a9cea7b7-23c3-41a7-a4e0-affa053d9ea7/04%20(1).svg?cdnVersion=le" width="700" height="300">
+        
+        So when you complete the feature, you open the pull request from `feature` branch to the `develop` branch. When you complete the bunch of features, you open the pull request from `develop` branch to `master` branch which are going to merge this bunch of features that means you do new release. According to the changes that contains new features, you should increase your version number (e.g. from `1.0.0` to `1.1.0`) in the file called `setup.py` in the same pull request (from `develop` to `master`) to new features and bumped version numbers become to the release branch together.
+        
+        ![Example of the release pull request](https://habrastorage.org/webt/5c/xw/_0/5cxw_0splygaifsyxlur3cxupx0.png)
+        
+        As you illustrated above, there is a pull request from `develop` branch to `master` branch. `develop` branch contains 
+        a couple of features and the last commit is bumping the version commit.
+        
+        #### Upload to PyPi
+        
+        When you features with increased version number have been merged to the `master` branch, you are going to upload your source code to the `Python Package Index`. 
+        
+        Being in the root of you project,
+        
+        ```
+        package
+         |
+         - ...
+         - source
+         - README.md
+         - setup.py
+         ...
+        ```
+        
+        you do the following command:
+        
+        ```
+        $ python3 setup.py sdist
+        $ twine upload dist/*
+        ```
+        
+        And if you haven't forgotten to bump the ``PyPi package version number``, the upload is successful. 
+        
+        <img src="https://habrastorage.org/webt/55/pk/jn/55pkjnoezzvidqcyordvtyyhgw0.png" width="700" height="300">
+        
+        #### Continuous integration services
+        
+        Continuous integration services are useful when you want add some robotic checking for your pull request changes. 
+        For instance, you can run checking code style with [flake8](https://github.com/PyCQA/flake8) and run tests with [pytest](https://github.com/pytest-dev/pytest) to check your changes does not break existing functionality on the few version 
+        of `Python`. The configuration file example for `Travis CI` is presented below.
+        
+        ```yml
+        language: python
+        
+        python:
+          - "3.4"
+          - "3.5"
+          - "3.6"
+          - "3.7-dev"
+        
+        install:
+          - pip install -r requirements-dev.txt
+          - pip install -r requirements-tests.txt
+        
+        script:
+          - cat requirements-tests.txt requirements-dev.txt | safety check --stdin
+          - radon cc accessify -nb --total-average
+          - isort -rc accessify --diff && isort -rc tests --diff
+          - flake8 accessify
+          - coverage run -m pytest -vv tests
+        
+        after_success:
+          - coverage report -m && coverage xml
+          - bash <(curl -s https://codecov.io/bash)
+        ```
+        
+        Each pull request the checking report will be presented. By clicking on the `details` you will see full report.
+        
+        ![Pull request checks](https://habrastorage.org/webt/jj/ux/1b/jjux1b8mezmnnf8g8zq3elr9fv8.png)
+        
+        #### Motivation
+        
+        `Python packages` have version number such as `0.1.0` or `1.3.3`. `Python packages` commonly are uploaded to `PyPi`.
+        Sometimes after adding new functionality to your package you forget to increase the version number of the package. 
+        So when you try to upload it, you get the error message `Package version number already in use`. It is okay if 
+        you develop the package locally and alone, you just modify the version number and upload it again. But if you work 
+        develop the package using particular development flow such as `Gitflow workflow` and continuous integration 
+        services — then you should create separated pull request to bump the version, the resources and time you will spend 
+        on it are increasing in few times. The cost of the mistake is high.
+        
+        So if you integrate the `pypi-version` to your continuous integration service by checking the version using simple command line tool, it will `never` allow you pull request to be merged if you forget to increase the version.
+        
+        ### How to install
+        
+        Install the `pypi-package` with the following command using `pip3`:
+        
+        ```bash
+        $ pip3 install pypi-version
+        ```
+        
+        ## Usage
+        
+        ### Command line interface
+        
+        To check if you haven't forgotten to bump the ``PyPi package version number`` before you merge a release 
+        pull request:
+        
+        ```bash
+        $ pypi-version check
+        ```
+        
+        To fetch the version of the `pypi-version` package:
+        
+        ```bash
+        $ pypi-version --version
+        pypi-version, version 0.1.0
+        ```
+        
+        To fetch all available package commands, use the following command:
+        
+        ```bash
+        $ pypi-version --help
+        Usage: pypi-version [OPTIONS] COMMAND [ARGS]...
+        
+          Command line interface for PyPi version checking.
+        
+        Options:
+          --version  Show the version and exit.
+          --help     Show this message and exit.
+        
+        Commands:
+          check  Check if you haven't forgotten to bump the PyPi package version.
+        ```
+        
+        ### Configuration file
+        
+        `pypi-version` requires a configuration file called `.pypi-verion.yml` to be located in the root of the project:
+        
+        ```
+        package
+         |
+         - ...
+         - source
+         - README.md
+         - setup.py
+         - .pypi-verion.yml
+         ...
+        ```
+        
+        The configuration file should contains the section with your `PyPi package` name that is the same with the name in the 
+        `setup.py`:
+         
+        ```yml
+        package:
+          name: pypi-version
+        ```
+        
+        The configuration file should contains name of the continuous integration service you use. Available options are: `travis`.
+        
+        ```yml
+        ci:
+          name: travis
+        ```
+        
+        The configuration file should contains `development` and `release` branch names. In the illustration below configurations
+        means `package version number` will be checked only when you do a pull request from `develop` to `master`.
+        
+        ```yml
+        branches:
+          development: develop
+          release: master
+        ```
+        
+        The example of the configuration file is:
+        
+        ```yml
+        package:
+          name: pypi-version
+        
+        ci:
+          name: travis
+        
+        branches:
+          development: develop
+          release: master
+        ```
+        
+        ## Contributing
+        
+        Clone the project and install requirements:
+        
+        ```bash
+        $ git clone git@github.com:dmytrostriletskyi/pypi-version.git && cd pypi-version
+        $ pip3 install -r requirements.txt
+        $ pip3 install -r requirements-dev.txt
+        $ pip3 install -r requirements-tests.txt
+        ```
+        
+        When you will make changes, ensure your code pass [the checkers](https://github.com/dmytrostriletskyi/pypi-version/blob/develop/.travis.yml#L15) and is covered by tests using [pytest](https://docs.pytest.org/en/latest).
+        
+        If you are new for the contribution, please read:
+        
+        * Read about pull requests — https://help.github.com/en/articles/about-pull-requests
+        * Read how to provide pull request — https://help.github.com/en/articles/creating-a-pull-request-from-a-fork
+        * Also the useful article about how to contribute — https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/
+        
+Platform: UNKNOWN
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Description-Content-Type: text/markdown
