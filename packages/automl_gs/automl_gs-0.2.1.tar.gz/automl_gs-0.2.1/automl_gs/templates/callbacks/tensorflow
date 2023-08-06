@@ -1,0 +1,37 @@
+class meta_callback(Callback):
+    """Keras Callback used during model training to save current weights
+    and metrics after each training epoch.
+
+    Metrics metadata is saved in the /metadata folder.
+    """
+
+    def __init__(self, args, X_val, y_val):
+        self.f = open(os.path.join('metadata', 'results.csv'), 'w')
+        self.w= csv.writer(self.f)
+        self.w.writerow(['epoch', 'time_completed'] + {{ metrics }})
+        self.in_automl = args.context == 'automl-gs'
+        self.X_val = X_val
+        self.y_val = y_val
+
+    def on_train_end(self, logs={}):
+        self.f.close()
+        self.model.save_weights('model_weights.hdf5')
+
+    def on_epoch_end(self, epoch, logs={}):
+        y_true = self.y_val
+        {% if tpu_address %}
+        y_pred = self.model.sync_to_cpu().predict(self.X_val)
+        {% else %}
+        y_pred = self.model.predict(self.X_val)
+        {% endif %}
+
+        {% include 'callbacks/problem_types/' ~ problem_type %}
+
+        time_completed = "{:%Y-%m-%d %H:%M:%S}".format(datetime.utcnow())
+        self.w.writerow([epoch+1, time_completed] + metrics)
+
+        # Only run while using automl-gs, which tells it an epoch is finished
+        # and data is recorded.
+        if self.in_automl:
+            sys.stdout.flush()
+            print("\nEPOCH_END")
