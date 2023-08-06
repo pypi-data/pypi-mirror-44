@@ -1,0 +1,47 @@
+# ChatTerminal
+
+
+Chat with Servers via SSH.
+
+[ChatTerminal](https://github.com/chuanwu/ChatTerminal) aims to simulate a real terminal in maximal degree. If you favor ChatOps, [ChatTerminal](https://github.com/chuanwu/ChatTerminal) will be an interesting experience.
+
+
+### QuickStart
+
+```
+pip3 install ChatTerminal
+```
+
+Here is the sample usages:
+
+```
+>>> from ChatTerminal import Session
+>>> # You should have permissions to ssh YOUR_HOST_IP directly.
+>>> chat_ssesion = Session("YOUR_HOST_IP")
+>>> [d for d in chat_ssesion.execute("pwd")]
+['/root']
+```
+
+
+### Wanna Contribute?
+
+```
+git clone https://github.com/chuanwu/ChatTerminal ChatTerminal
+cd ChatTerminal
+make init
+make develop
+```
+
+### ToDo
+
+- [ ] Execute simple commands like ls, cat, etc.
+- [ ] Monitor logs, like tail.
+- [ ] Support interactive mode, e.g. Docker, k8s.
+- [ ] Provide Web IDE Environment based on open source projects.
+- [ ] Download files from the server or from the Internet using you-get.
+
+
+### Acknowledgement
+
+
+This project uses [pyenv](https://github.com/pyenv/pyenv) as its package dependency management.
