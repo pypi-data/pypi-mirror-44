@@ -1,0 +1,124 @@
+{% import 'widgets.jinja2' as widgets %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Application performance, exception and error monitoring for Python,
+        Django, Flask and Javascript - AppEnlight{% endblock %}</title>
+    {% block meta %}
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <meta name="robots" content="all">
+        <meta name="Description"
+              content="AppEnlight provides a helpful interface to let you and your team save time spent on debugging and reproducing issues from a production environment.">
+        <meta name="Keywords"
+              content="monitoring, debugging, alerting, errors, programming, python, ruby, django, flask, profiling">
+        <meta name="Author" content="RhodeCode - sales@rhodecode.com">
+        <meta name="Copyright" content="RhodeCode">
+        <base href="{{ request.route_path('/') }}">
+        <link rel="shortcut icon" href="{{ request.static_url('appenlight:webassets/appenlight/favicon.ico')}}"/>
+    {% endblock %}
+    {% block styles %}
+        <link href="{{ request.static_url('appenlight:webassets/appenlight/css/front.css', _query={'rev':css_hash}) }}" rel="stylesheet" type="text/css"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% endblock %}
+    <script type="text/javascript">
+        var AE = {};
+        AE.urls = {{ url_list|tojson|safe }};
+        AE.ws_url = '{{ request.registry.settings['cometd.ws_url'] }}';
+        AE.flash_messages = {{ flash_msgs|toJSONUnsafe }};
+        AE.timeOptions = {{ h.time_options|toJSONUnsafe }};
+        AE.plugins = {{ appenlight_plugins|toJSONUnsafe }};
+    </script>
+    {% if request.registry.settings.get('appenlight.public_api_key') %}
+        <script type="application/javascript">
+            var initAppEnlight = function () {
+                if(this.readyState!='loading'){
+                    AppEnlight.init({
+                        apiKey:'{{ request.registry.settings.get('appenlight.public_api_key') }}',
+                        windowOnError: 1 // enable to hook to window.onerror
+                    });
+                    // setting request info is completly optional
+                    AppEnlight.setRequestInfo({
+                        server:"{{ request.environ.get('SERVER_NAME', '<unknown>') }}",
+                        {% if request.user %}
+                            username:'{{ request.user.user_name }}',
+                        {% endif %}
+                        ip: "{{ request.environ.get('REMOTE_ADDR', '') }}",
+                        request_id:"{{ request.environ.get('appenlight.request_id', '') }}"
+                    });
+
+                    AppEnlight.addGlobalTags({framework:'angular', 'language':'javascript'});
+                    AppEnlight.addGlobalExtra({some_key:'on every request'});
+
+                }
+            };
+            //  load the script asynchroneously
+            var scrElem = document.createElement('script');
+            scrElem.type = 'text/javascript';
+            scrElem.async = true;
+            scrElem.onload = scrElem.onreadystatechange = initAppEnlight;
+            scrElem.src = "//cdn.jsdelivr.net/appenlight/latest/appenlight-client.min.js";
+            var p = document.getElementsByTagName('script')[0];
+            p.parentNode.insertBefore(scrElem, p);
+        </script>
+    {% endif %}
+    <script src="{{ request.static_url('appenlight:webassets/appenlight/js/appenlight.js', _query={'rev':js_hash}) }}"></script>
+    {% for plugin in appenlight_plugins %}
+    <script src="{{ request.static_url('appenlight:webassets/{}/js/{}'.format(plugin['name'], plugin['config']['javascript']['src']), _query={'rev':js_hash}) }}"></script>
+        {% if plugin['config']['header_html'] %}
+            {{ plugin['config']['header_html']|safe }}
+        {% endif %}
+    {% endfor %}
+    <script>
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', AE.urls.userSelf);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                kickstartAE(JSON.parse(xhr.responseText));
+                angular.bootstrap(document, ['appenlight']);
+            }
+            else {
+                kickstartAE(null);
+                angular.bootstrap(document, ['appenlight']);
+            }
+        };
+        // do not run angular on register page
+
+        var noAngularRoutes = [
+                AE.urls.otherRoutes.register,
+                AE.urls.otherRoutes.lostPassword,
+            AE.urls.otherRoutes.lostPasswordGenerate,
+        ];
+        shouldRunAngular = true;
+        for (var i=0; i< noAngularRoutes.length; i++){
+            if (window.location.toString().indexOf(noAngularRoutes[i]) !== -1) {
+                shouldRunAngular = false;
+            }
+        }
+        if (shouldRunAngular) {
+            xhr.send();
+        }
+    </script>
+</head>
+<body class="{% block section_name %}{% endblock %} {% raw %}top-state-{{$state.current.name.split('.')[0].replace('.', '-').replace('.', '-')}} state-{{$state.current.name.replace('.', '-').replace('.', '-')}}{% endraw %} {% if request.user %}user-logged {% else %}user-unlogged{% endif %}" id="html_body">
+<div id="holder">
+{% block app_block %}
+    <appenlight-app>
+    <div class="text-center">
+        <span class="fa fa-cog fa-spin fa-5x loader"></span>
+    </div>
+    </appenlight-app>
+{% endblock %}
+
+{% block non_angular_content %}
+{% if not request.user %}
+    {% include "/header.jinja2" with context %}
+    <div id="outer-content">
+        {% block outer_content %}{% endblock %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% include "/footer.jinja2" %}
+</div>
+</body>
+</html>
