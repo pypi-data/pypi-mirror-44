@@ -1,0 +1,70 @@
+Metadata-Version: 2.1
+Name: semver-tool
+Version: 3.0.1
+Summary: semantic version helper tool
+Home-page: https://gitlab.com/aanatoly/semver-tool
+Author: Anatoly Asviyan
+Author-email: aanatoly@gmail.com
+License: GPLv2
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Software Development :: Version Control
+Description-Content-Type: text/markdown
+Provides-Extra: dev
+Requires-Dist: tox ; extra == 'dev'
+Requires-Dist: cmarkgfm ; extra == 'dev'
+Requires-Dist: twine ; extra == 'dev'
+
+## semver-tool
+
+Print SemVer version for a git project. Git tags must match `v?M.N.P` pattern.
+You can print specific version components using fotmat string.
+
+Full format string is MNPRBD, where:
+ * M - major
+ * N - minor
+ * P - patch
+ * R - prerelease
+ * B - build
+
+
+## Usage
+
+Examples:
+```
+$ semver-tool
+4.1.2-rc.2+git.b10c717
+$ semver-tool -f MNPR
+4.1.2-rc.2
+```
+
+## Use Cases
+### Build docker images
+I use this tool to build docker images using SemVer schema.
+The flow is this:
+ * build `image:latest` with `Commit` label
+ * push it as `image:M.N.P-R`
+ * push it as `image:M.N.P`
+ * push it as `image:M.N`
+
+My build script has this code
+```bash
+current=$(semver_tool -f MNPR)
+docker build --label Commit=$(semver_tool) -t image:$current
+docker tag image:$current image $(semver_tool -f MNP)
+docker tag image:$current image $(semver_tool -f MN)
+```
+which results in these images
+```
+image   1.2.3-rc.2
+image   1.2.3
+image   1.2
+```
+Each image has `Commit` label with semver description, eg, `1.2.3-rc.2+git.22eeff`
+
+
