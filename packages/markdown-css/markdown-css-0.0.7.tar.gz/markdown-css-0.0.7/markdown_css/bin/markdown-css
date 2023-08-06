@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+from __future__ import absolute_import, print_function
+
+import os
+import codecs
+from docopt import docopt
+from pyquery import PyQuery
+from markdown_css import parse_style
+
+
+def special_process_wechat_ol_ul(html):
+    while len(html("ul")) > 0:
+        result = []
+        for li in html("ul").eq(0).find("li"):
+            result.append(u'<span style="display:block" ><span style="margin-right: 10px;" >•</span>' + PyQuery(li).html() + '</span>')
+
+        html("ul").eq(0).replaceWith('<p>' + ''.join(result) + '</p>')
+
+    while len(html("ol")) > 0:
+        result = []
+        index = 1
+        for li in html("ol").eq(0).find("li"):
+            result.append(u'<span style="display:block" ><span style="margin-right: 10px;" >' +
+                          str(index) + '.</span>' + PyQuery(li).html() + '</span>')
+            index += 1
+
+        html("ol").eq(0).replaceWith('<p>' + ''.join(result) + '</p>')
+
+    return html
+
+
+def main(input_file, out, style, name, render):
+    if not os.path.isdir(out):
+        print(u'warning : %s is not a dir' % out)
+        return
+
+    if not name.endswith('.html'):
+        name += '.html'
+
+    out_path = os.path.join(out, name)
+    if not os.path.isfile(style):
+        print(u'warning : %s is not file' % style)
+        return
+
+    in_f = codecs.open(input_file, 'r', 'utf-8')
+    out_f = codecs.open(out_path, 'w', 'utf-8')
+    e_list, e_dict, p_list = parse_style(codecs.open(style, 'r', 'utf-8').read())
+    content = in_f.read()
+    html = PyQuery(content)
+    if render == 'wechat':
+        html = special_process_wechat_ol_ul(html)
+    for k in e_list:
+        for css in e_dict[k].split(';'):
+            name_value = css.split(':')
+            if not name_value:
+                continue
+            if len(name_value) != 2:
+                continue
+            html(k).css(name_value[0], name_value[1])
+
+    if p_list:
+        style = PyQuery('<style type="text/css"></style>')
+        style('style').html('\n'.join(p_list))
+        html('head').append(style)
+
+    out_f.write(html.html(method='html'))
+
+
+if __name__ == '__main__':
+    helpdoc = """markdown-css command line.
+    Usage:
+    markdown-css (-h | --help)
+    markdown-css <input> [--out=<out>] [--name=<name>] [--style=<style>] [--render=<render>]
+
+    Options:
+    -h,  --help        Show help document
+    --out=<out> Html out path [default: 'public']
+    --name=<name> Out file name [default: <input>]
+    --style=<style> Markdown css file [default: 'style.css']
+    --render=<render> Html render by wechat or not [default: 'wechat']
+    """
+    rgs = docopt(helpdoc)
+    input_file = rgs.get('<input>')
+    out = rgs.get('--out')
+    style = rgs.get('--style')
+    name = rgs.get('--name')
+    render = rgs.get('--render')
+    if not out:
+        out = 'public'
+    if not style:
+        style = 'style.css'
+    if not name:
+        name = input_file
+    if not render:
+        render = 'wechat'
+
+    main(input_file, out, style, name, render)
