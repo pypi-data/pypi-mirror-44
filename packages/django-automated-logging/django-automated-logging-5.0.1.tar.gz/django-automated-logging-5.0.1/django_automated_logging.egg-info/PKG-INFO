@@ -1,0 +1,202 @@
+Metadata-Version: 1.1
+Name: django-automated-logging
+Version: 5.0.1
+Summary: Django Database Based Automated Logging - finally solved and done in a proper way.
+Home-page: https://github.com/indietyp/django-automated-logging
+Author: Bilal Mahmoud
+Author-email: opensource@indietyp.com
+License: MIT
+Description: =======================================
+        Django Database Based Automated Logging
+        =======================================
+        .. image:: https://img.shields.io/pypi/v/django-automated-logging.svg
+          :target: https://pypi.python.org/pypi?name=django-automated-logging
+        
+        .. image:: https://img.shields.io/pypi/l/django-automated-logging.svg
+          :target: https://pypi.python.org/pypi?name=django-automated-logging
+        
+        .. image:: https://img.shields.io/pypi/pyversions/django-automated-logging.svg
+          :target: https://pypi.python.org/pypi?name=django-automated-logging
+        
+        .. image:: https://travis-ci.org/indietyp/django-automated-logging.svg?branch=master
+          :target: https://travis-ci.org/indietyp/django-automated-logging
+        
+        .. image:: https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master
+          :target: https://coveralls.io/github/indietyp/django-automated-logging?branch=master
+        
+        .. image:: https://landscape.io/github/indietyp/django-automated-logging/master/landscape.svg?style=flat
+          :target: https://landscape.io/github/indietyp/django-automated-logging/master
+          :alt: Code Health
+        
+        .. image:: https://api.codacy.com/project/badge/Grade/96fdb764fc34486399802b2f8267efcc
+          :target: https://www.codacy.com/app/bilalmahmoud/django-automated-logging?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=indietyp/django-automated-logging&amp;utm_campaign=Badge_Grade
+        
+        .. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
+          :target: https://pypi.python.org/pypi?name=django-automated-logging
+        
+        .. image:: https://img.shields.io/badge/Support%20the%20Project-PayPal-green.svg
+          :target: https://paypal.me/indietyp/5
+        
+        What is DAL?
+        ============
+        In a nutshell, this package **automatically** tracks *requests, model changes, and every other message supplied* - to a database or to another logger.
+        **It is your choice what to do.**
+        
+        Introduction
+        ------------
+        Django Automated Logging - **finally** solved and done in a proper way.
+        
+        How to install? It is simple just ``pip3 install django-automated-logging``.
+        
+        What is the purpose?
+        --------------------
+        The goal of the django application is it to provide an easy and accessible way to log. Therefore you do not need to reinvent the wheel over and over.
+        The application is written to use minimal requirements - which is just Django currently.
+        
+        How does it work?
+        -----------------
+        This application uses a custom logging handler - called DatabaseHandler. Instead of outputting it into a file, it outputs everything through the Django ORM.
+        It knows how to do so by using signals - that are provided by Django itself and annotating the actual model object with the changelog.
+        
+        This enables us to actually monitor Many-Two-Many changes, which are kind of tricky.
+        
+        Wait!
+        -----
+        What if I just want to log the changes to a file and not to a database?
+        
+        This is very understandable. It is possible without a problem because we exclude the actual database portion to a handler. You can just use a file logger instead. This module uses native logging statements and extra paramenters. You can easily build your own logger and access them in a formatting statement in the logger. Pretty neat, huh?
+        
+        Detailed Information
+        ====================
+        
+        Features
+        --------
+        1. Easy to setup
+        2. Extensible
+        3. Feature-rich
+        4. Completely automated
+        5. Comes with an built-in database logger
+        6. No custom code needs to be inserted into your codebase
+        7. Catches logging messages unrelated to the package itself if desired
+        8. Does what it needs to do - **nothing more**.
+        
+        
+        Setup
+        -----
+        Everything changed needs to be changed in the ``settings.py``
+        
+        1. In the variable ``MIDDLEWARE`` append: ``'automated_logging.middleware.AutomatedLoggingMiddleware'``
+        2. In the variable ``INSTALLED_APPS`` append ``'automated_logging'``
+        3. In the variable ``LOGGING`` add in the ``handlers`` section (this is only required if you want database based logging):
+        
+           .. code:: python
+        
+            'db': {
+                'level': 'INFO',
+                'class': 'automated_logging.handlers.DatabaseHandler',
+            }
+        4. In the variable ``LOGGING`` add to the ``loggers`` section (this is only required if you want database based logging):
+        
+           .. code:: python
+        
+            'automated_logging': {
+                'level': 'INFO',
+                'handlers': ['db'],
+                'propagate': True,
+            },
+            'django': {
+                'level': 'INFO',
+                'handlers': ['db'],
+                'propagate': True,
+            },
+        5. `python3 manage.py migrate automated_logging`
+        
+        ``LOGGING`` attributes are just for recommondations and can be of course modified to your liking.
+        
+        
+        Configuration
+        -------------
+        
+        You can configure the plugin by adding the variable ``AUTOMATED_LOGGING``
+        The defaults are present in the example.
+        
+        .. code:: python
+        
+            from logging import INFO
+            AUTOMATED_LOGGING = {
+                'exclude': {'model': ['admin', 'session', 'automated_logging', 'basehttp', 'contenttypes', 'migrations'],
+                            'request': ['GET', 200],
+                            'unspecified': []},
+                'modules': ['request', 'model', 'unspecified'],
+                'to_database': True,
+                'loglevel': {'model': INFO,
+                             'request': INFO},
+                'save_na': True,
+                'request': {
+                  'query': False
+                }
+            }
+        
+        In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries, furthermore it is recommended to include ``session``, ``contenttypes`` and ``migrations`` to disable recorded information of applied migrations and session operations.
+        Three modules are available: ``request``, ``unspecified`` and ``model``, these can be disabled, if needed.
+        The database integration can be disabled. *Note: the handler than also needs to be removed*.
+        The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
+        
+        *New in version 4.x.x:* **all strings** in ``AUTOMATED_LOGGING`` are case-insensitive.
+        
+        *New in version 5.x.x:* You can now specify a maximum age for database entries created via ``maxage`` in the ``LOGGING`` variable. maxage needs to be an `ISO8601 duration string <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
+        
+        Changelog
+        =========
+        Version 5.0.0
+        -------------
+        - **Added:** `maxage` handler setting to automatically remove database entries after a certain amount of time.
+        - **Added:** query string in requests can now be enabled/disabled (are now disabled by default)
+        - **Fixed:** Value and URI could be longer than 255 characters. DAL would throw an exception. This is fixed.
+        
+        Roadmap
+        =======
+        
+        Version 4.x.x
+        -------------
+        [x] remove the LDAP model
+        [x] exclusion for request module
+        [x] exclusion for unspecified module
+        [x] performance considerations
+        [x] implement requested features
+        
+        Version 5.x.x
+        -------------
+        [x] prevent migration logs
+        [ ] optional batch insertion of database entries
+        [ ] adding options to Meta field
+        --> ignored fields
+        --> ignored operations
+        
+        Version 6.x.x
+        -------------
+        [ ] implementation of an git like versioning interface
+        
+        Version 7.x.x
+        -------------
+        [ ] temporary world domination
+        
+        
+        Support the Project
+        
+Keywords: django automation tools backend logging
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.10
+Classifier: Framework :: Django :: 1.11
+Classifier: Framework :: Django :: 2.1
+Classifier: Framework :: Django :: 2.2
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
