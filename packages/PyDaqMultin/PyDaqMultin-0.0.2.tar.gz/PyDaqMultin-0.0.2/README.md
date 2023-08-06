@@ -1,0 +1,3 @@
+This is a package containing a simple set of classes to handle data transfer between PC and National Instruments DAQ board. It was initially developed and somewhat tested for NI USB 6361. The intention is to show the basic principles of writing scripts for data transfer using PyDAQmx library. For furhter examples and details, please see: https://pythonhosted.org/PyDAQmx/ http://zone.ni.com/reference/en-XX/help/370471AA-01/
+
+Most function names are the same as in C library for NI.
